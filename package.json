@@ -18,7 +18,9 @@
   },
   "scripts": {
     "prepare": "husky",
-    "lint": "eslint 'frontend/**/*.{js,jsx}' 'backend/**/*.{js,jsx}'",
+    "lint:frontend": "eslint 'frontend/**/*.{js,jsx}' --config frontend/eslint.config.mjs",
+    "lint:backend": "eslint 'backend/**/*.{js,jsx}' --config backend/eslint.config.mjs",
+    "lint": "npm run lint:frontend && npm run lint:backend",
     "lint:fix": "eslint 'src/**/*.{js,jsx}' --fix",
     "format": "prettier --write 'src/**/*.{js,jsx,css,scss}'",
     "format:check": "prettier --check 'src/**/*.{js,jsx,css,scss}'"

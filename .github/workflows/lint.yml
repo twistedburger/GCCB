@@ -1,4 +1,4 @@
-name: CI Build and Test
+name: Check Lint and Format
 
 on:
   pull_request:
