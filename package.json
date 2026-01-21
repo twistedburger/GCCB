@@ -18,7 +18,7 @@
   },
   "scripts": {
     "prepare": "husky",
-    "lint": "eslint 'src/**/*.{js,jsx}'",
+    "lint": "eslint 'frontend/**/*.{js,jsx}' 'backend/**/*.{js,jsx}'",
     "lint:fix": "eslint 'src/**/*.{js,jsx}' --fix",
     "format": "prettier --write 'src/**/*.{js,jsx,css,scss}'",
     "format:check": "prettier --check 'src/**/*.{js,jsx,css,scss}'"
