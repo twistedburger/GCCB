@@ -1,17 +1,13 @@
 import js from "@eslint/js";
 import globals from "globals";
-import pluginReact from "eslint-plugin-react";
 import eslintConfigPrettier from "eslint-config-prettier";
 
 export default [
   js.configs.recommended,
-  pluginReact.configs.flat.recommended,
   {
-    files: ["**/*.{js,jsx}"],
+    files: ["**/*.js"],
     languageOptions: { 
-      globals: globals.browser 
-    },
-    rules: {
+      globals: globals.node
     }
   },
   eslintConfigPrettier
