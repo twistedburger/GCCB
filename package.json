@@ -22,8 +22,8 @@
     "lint:backend": "eslint backend/**/*.{js} --config backend/eslint.config.mjs",
     "lint": "npm run lint:frontend && npm run lint:backend",
     "lint:fix": "eslint 'src/**/*.{js,jsx}' --fix",
-    "format": "prettier --write 'src/**/*.{js,jsx,css,scss}'",
-    "format:check": "prettier --check 'src/**/*.{js,jsx,css,scss}'"
+    "format": "prettier --write '**/*.{js,jsx,css,scss}'",
+    "format:check": "prettier --check '**/*.{js,jsx,css,scss}'"
   },
   "name": "gccb",
   "description": "GC²B is a community-focused application designed to help students safely and efficiently coordinate shared travel to campus events and activities. Users are able to create, explore, and join group communites using various transportation methods (carpooling, cycling, public transit, etc.).",
