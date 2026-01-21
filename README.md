@@ -10,3 +10,4 @@ GC²B is a community-focused application designed to help students safely and ef
 
 # Team Members
 - Aaron Tsang
+- Dylan Reimer
