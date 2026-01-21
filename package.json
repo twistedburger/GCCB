@@ -10,7 +10,8 @@
     "backend"
   ],
   "lint-staged": {
-    "*.{js,jsx}": "eslint --fix",
+    "frontend/**/*.{js,jsx}": "eslint --config frontend/eslint.config.mjs --fix",
+    "backend/**/*.{js,jsx}": "eslint --config backend/eslint.config.mjs --fix",
     "**/*.+(js|jsx|json|css)": [
       "prettier --write"
     ]
