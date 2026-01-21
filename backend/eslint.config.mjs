@@ -7,7 +7,7 @@ export default [
   js.configs.recommended,
   pluginReact.configs.flat.recommended,
   {
-    files: ["**/*.{js,jsx}"],
+    files: ["**/*.{js}"],
     languageOptions: { 
       globals: globals.browser 
     },
