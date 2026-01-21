@@ -1,4 +1,4 @@
-name: Check Lint and Format
+name: Lint and Format Check
 
 on:
   pull_request:
@@ -6,21 +6,56 @@ on:
       - dev
 
 jobs:
-  build:
+  lint-frontend:
+    name: Lint Frontend
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      
-    - name: Install dependencies
-      run: npm install
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+        
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ESLint on Frontend
+        run: npm run lint:frontend
 
-    - name: List backend files
-      run: ls -la backend
+  lint-backend:
+    name: Lint Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+        
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ESLint on Backend
+        run: npm run lint:backend
 
-    - name: Run ESLint
-      run: npm run lint
-
-    - name: Run Prettier Check
-      run: npm run format:check
+  prettier-check:
+    name: Format Check (Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+        
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run Prettier Check
+        run: npm run format:check
