@@ -22,15 +22,20 @@ export default [
   {
     files: ["**/*.{js,jsx}"],
     plugins: {
-      'react-hooks' : reactHooks,
+      'react-hooks': reactHooks,
     },
-    languageOptions: { 
-      globals: globals.browser 
+    languageOptions: {
+      globals: globals.browser
     },
     settings: {
       react: {
         version: 'detect'
-      }
+      },
+      'import/resolver': {
+        vite: {
+          viteConfigPath: path.resolve(__dirname, './vite.config.js'),
+        },
+      },
     },
     rules: {
       "react/react-in-jsx-scope": "off",
