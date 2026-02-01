@@ -1,41 +1,67 @@
-import js from "@eslint/js"
-import globals from "globals"
-import pluginReact from "eslint-plugin-react"
-import reactHooks from 'eslint-plugin-react-hooks'
-import eslintConfigPrettier from "eslint-config-prettier"
-import airbnb from 'eslint-config-airbnb'
-import { FlatCompat } from '@eslint/eslintrc'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import js from "@eslint/js";
+import globals from "globals";
+import pluginReact from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import eslintConfigPrettier from "eslint-config-prettier";
+import { FlatCompat } from "@eslint/eslintrc";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
-  baseDirectory: __dirname
-})
-
+  baseDirectory: __dirname,
+});
 
 export default [
+  { ignores: ["dist", "node_modules", "vite.config.js"] },
+  
   js.configs.recommended,
   pluginReact.configs.flat.recommended,
-  ...compat.extends('airbnb'),
+  
+  ...compat.extends("airbnb").map((config) => ({
+    ...config,
+    files: ["src/**/*.{js,jsx}"],
+  })),
+
   {
     files: ["**/*.{js,jsx}"],
     plugins: {
-      'react-hooks' : reactHooks,
+      "react-hooks": reactHooks,
     },
-    languageOptions: { 
-      globals: globals.browser 
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
     },
     settings: {
-      react: {
-        version: 'detect'
-      }
+      react: { version: "detect" },
+      "import/resolver": {
+        node: {
+          extensions: [".js", ".jsx"],
+        },
+      },
     },
     rules: {
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn'
-    }
+      "react/react-in-jsx-scope": "off",
+      "react/jsx-uses-react": "off",
+
+      "import/extensions": "off",
+
+      "import/no-unresolved": "off",
+
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+
+      "import/no-extraneous-dependencies": "off",
+    },
   },
+  
   eslintConfigPrettier,
 ];
