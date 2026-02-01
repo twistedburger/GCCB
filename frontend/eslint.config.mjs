@@ -1,60 +1,67 @@
-import js from "@eslint/js"
-import globals from "globals"
-import pluginReact from "eslint-plugin-react"
-import reactHooks from 'eslint-plugin-react-hooks'
-import eslintConfigPrettier from "eslint-config-prettier"
-import { FlatCompat } from '@eslint/eslintrc'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import js from "@eslint/js";
+import globals from "globals";
+import pluginReact from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import eslintConfigPrettier from "eslint-config-prettier";
+import { FlatCompat } from "@eslint/eslintrc";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
-  baseDirectory: __dirname
-})
+  baseDirectory: __dirname,
+});
 
 export default [
+  { ignores: ["dist", "node_modules", "vite.config.js"] },
+  
   js.configs.recommended,
-  {
-    languageOptions: { 
-      globals: globals.browser 
-    }
-  },
+  pluginReact.configs.flat.recommended,
+  
+  ...compat.extends("airbnb").map((config) => ({
+    ...config,
+    files: ["src/**/*.{js,jsx}"],
+  })),
 
   {
-    files: ["frontend/src/**/*.{js,jsx}"], // Target your source folder specifically
+    files: ["**/*.{js,jsx}"],
     plugins: {
-      'react-hooks': reactHooks,
+      "react-hooks": reactHooks,
+    },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
     },
     settings: {
-      react: { version: 'detect' },
-      'import/resolver': {
-        vite: {
-          viteConfigPath: path.resolve(__dirname, './vite.config.js'),
+      react: { version: "detect" },
+      "import/resolver": {
+        node: {
+          extensions: [".js", ".jsx"],
         },
       },
     },
     rules: {
-      ...pluginReact.configs.flat.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-    }
+
+      "import/extensions": "off",
+
+      "import/no-unresolved": "off",
+
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+
+      "import/no-extraneous-dependencies": "off",
+    },
   },
-
-  ...compat.extends('airbnb').map(config => ({
-    ...config,
-    files: ["frontend/src/**/*.{js,jsx}"], // Only run strict Airbnb on source code
-  })),
-
+  
   eslintConfigPrettier,
-
-  {
-    files: ["frontend/vite.config.js", "frontend/eslint.config.mjs"],
-    rules: {
-      "import/no-unresolved": "off", // Vite config can handle itself
-      "import/no-extraneous-dependencies": "off"
-    }
-  }
 ];
