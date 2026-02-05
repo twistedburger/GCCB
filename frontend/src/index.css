@@ -1,5 +1,20 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-blue-primary: #6fa4ea;
+  --color-blue-secondary: #f0f6ff;
+  --color-orange-primary: #feac7a;
+  --color-orange-secondary: #ffe3d2;
+  --color-purple-primary: #7c3aed;
+  --color-purple-secondary: #f2efff;
+  --color-green-primary: #2e7d32;
+  --color-green-secondary: #e2f2e2;
+  --color-text-primary: #333333;
+  --color-text-secondary: #666666;
+  --color-background-off-white: #f9fafb;
+  --color-card-shadow: #e2e2e2;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
