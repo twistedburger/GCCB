@@ -6,7 +6,7 @@ import {
   DirectionsWalk,
 } from '@mui/icons-material'
 
-const CommuteIcon = ({ transit_type }) => {
+const CommuteIcon = ({ type }) => {
   const icons = {
     car: DirectionsCar,
     bike: DirectionsBike,
@@ -14,17 +14,17 @@ const CommuteIcon = ({ transit_type }) => {
     walk: DirectionsWalk,
   }
 
-  const SelectedIcon = icons[transit_type]
+  const SelectedIcon = icons[type]
 
   return (
-    <div className="commute-icon" data-type={transit_type}>
+    <div className="commute-icon" data-type={type}>
       {SelectedIcon ? <SelectedIcon /> : null}
     </div>
   )
 }
 
 CommuteIcon.propTypes = {
-  transit_type: PropTypes.oneOf(['car', 'bike', 'bus', 'walk']).isRequired,
+  type: PropTypes.oneOf(['car', 'bike', 'bus', 'walk']).isRequired,
 }
 
 export default CommuteIcon
