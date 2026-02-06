@@ -40,3 +40,37 @@
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 }
+
+.commute-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+
+.commute-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.commute-icon[data-type='bus'] {
+  background-color: var(--color-orange-secondary);
+  color: var(--color-orange-primary);
+}
+
+.commute-icon[data-type='walk'] {
+  background-color: var(--color-blue-secondary);
+  color: var(--color-blue-primary);
+}
+
+.commute-icon[data-type='bike'] {
+  background-color: var(--color-purple-secondary);
+  color: var(--color-purple-primary);
+}
+
+.commute-icon[data-type='car'] {
+  background-color: var(--color-green-secondary);
+  color: var(--color-green-primary);
+}
