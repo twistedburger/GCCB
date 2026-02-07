@@ -7,9 +7,7 @@ import Dashboard from './pages/Dashboard'
 function App() {
   return (
     <Router>
-      <div className="app-container">
-        <NavigationBar />
-
+      <div className="app-container relative h-screen">
         {/* pages */}
         <main className="content bg-background-off-white">
           <Routes>
@@ -17,6 +15,7 @@ function App() {
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
+          <NavigationBar className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-md" />
         </main>
       </div>
     </Router>
