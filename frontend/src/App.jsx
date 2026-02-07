@@ -11,7 +11,7 @@ function App() {
         <NavigationBar />
 
         {/* pages */}
-        <main className="content">
+        <main className="content bg-background-off-white">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/mytrip" element={<MyTrip />} />
