@@ -57,9 +57,7 @@ function Analytics() {
   const [role, setRole] = useState('student') // "student" || "admin"
   const navigate = useNavigate()
 
-  const goToCo2Savings = () => {
-    navigate('/dashboard/analytics/co2-savings', { state: { role } })
-  }
+  const goTo = path => navigate(path, { state: { role } })
 
   return (
     <>
@@ -77,39 +75,39 @@ function Analytics() {
       </button>
       <hr />
       {role === 'admin' ? (
-        <AdminAnalytics onGoToCo2Savings={goToCo2Savings} />
+        <AdminAnalytics goTo={goTo} />
       ) : (
-        <StudentAnalytics onGoToCo2Savings={goToCo2Savings} />
+        <StudentAnalytics goTo={goTo} />
       )}
     </>
   )
 }
 
-function AdminAnalytics({ onGoToCo2Savings }) {
+function AdminAnalytics({ goTo }) {
   const metrics = [
     {
       title: 'Total CO₂ Saved (est.)',
       value: '1,234 kg',
       actionLabel: 'View details',
-      onAction: onGoToCo2Savings,
+      onAction: () => goTo('/dashboard/analytics/co2-savings'),
     },
     {
       title: 'Total User Commutes',
       value: '4,567 trips',
       actionLabel: 'View details',
-      onAction: () => console.log('TODO: commute details'),
+      onAction: () => goTo('/dashboard/analytics/commutes'),
     },
     {
       title: 'Trip Frequency',
       value: '2.3 trips / user',
       actionLabel: 'View details',
-      onAction: () => console.log('TODO: trip frequency'),
+      onAction: () => goTo('/dashboard/analytics/trip-frequency'),
     },
     {
       title: 'Active Users',
       value: '25 commuters',
       actionLabel: 'View details',
-      onAction: () => console.log('TODO: active users'),
+      onAction: () => goTo('/dashboard/analytics/activity'),
     },
   ]
 
@@ -122,34 +120,34 @@ function AdminAnalytics({ onGoToCo2Savings }) {
 }
 
 AdminAnalytics.propTypes = {
-  onGoToCo2Savings: PropTypes.func.isRequired,
+  goTo: PropTypes.func.isRequired,
 }
 
-function StudentAnalytics({ onGoToCo2Savings }) {
+function StudentAnalytics({ goTo }) {
   const metrics = [
     {
       title: 'My CO₂ Saved (est.)',
       value: '123 kg',
       actionLabel: 'View details',
-      onAction: onGoToCo2Savings,
+      onAction: () => goTo('/dashboard/analytics/co2-savings'),
     },
     {
       title: 'My Total Commutes',
       value: '12 trips',
       actionLabel: 'View details',
-      onAction: () => console.log('TODO: my commute history'),
+      onAction: () => goTo('/dashboard/analytics/commutes'),
     },
     {
       title: 'My Total Distance',
       value: '32.1 km',
       actionLabel: 'View details',
-      onAction: () => console.log('TODO: my distance'),
+      onAction: () => goTo('/dashboard/analytics/activity'),
     },
     {
       title: 'My Trip Frequency',
       value: '1.8 trips / day',
       actionLabel: 'View details',
-      onAction: () => console.log('TODO: my trip frequency'),
+      onAction: () => goTo('/dashboard/analytics/trip-frequency'),
     },
   ]
 
@@ -162,7 +160,7 @@ function StudentAnalytics({ onGoToCo2Savings }) {
 }
 
 StudentAnalytics.propTypes = {
-  onGoToCo2Savings: PropTypes.func.isRequired,
+  goTo: PropTypes.func.isRequired,
 }
 
 export default Analytics
