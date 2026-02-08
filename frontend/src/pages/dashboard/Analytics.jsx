@@ -55,9 +55,9 @@ function Co2InfoModal({ open, onClose }) {
           borderRadius: 8,
         }}
       >
-        <h1>
+        <h2>
           <strong>How CO₂ is calculated</strong>
-        </h1>
+        </h2>
 
         <p>Methodology goes here!</p>
 
@@ -95,7 +95,6 @@ function Co2InfoModal({ open, onClose }) {
         </ul>
 
         <button type="button" onClick={onClose}>
-          <br />
           <strong>Close</strong>
         </button>
       </div>
