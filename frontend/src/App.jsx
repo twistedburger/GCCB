@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import NavigationBar from './components/NavigationBar'
 import Home from './pages/Home'
 import MyTrip from './pages/MyTrips'
-import Dashboard from './pages/Dashboard'
+import Dashboard from './pages/dashboard/Dashboard'
 
 function App() {
   return (
