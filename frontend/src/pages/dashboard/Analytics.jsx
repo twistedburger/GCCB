@@ -8,13 +8,11 @@ function MetricCard({ title, value, actionLabel, onAction }) {
         <strong>{title}</strong>
       </p>
       <p>{value}</p>
-
       {actionLabel && onAction && (
         <button type="button" onClick={onAction}>
           {actionLabel}
         </button>
       )}
-
       <hr />
     </>
   )
@@ -27,10 +25,6 @@ MetricCard.propTypes = {
   onAction: PropTypes.func,
 }
 
-MetricCard.defaultProps = {
-  actionLabel: undefined,
-  onAction: undefined,
-}
 function Co2InfoModal({ open, onClose }) {
   if (!open) return null
 
@@ -101,7 +95,7 @@ function Co2InfoModal({ open, onClose }) {
         </ul>
 
         <button type="button" onClick={onClose}>
-          <br></br>
+          <br />
           <strong>Close</strong>
         </button>
       </div>
@@ -113,18 +107,38 @@ Co2InfoModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
 }
+function MetricsDisplay({ metrics }) {
+  return (
+    <>
+      {metrics.map(m => (
+        <MetricCard
+          key={m.title}
+          title={m.title}
+          value={m.value}
+          actionLabel={m.actionLabel}
+          onAction={m.onAction}
+        />
+      ))}
+    </>
+  )
+}
 
+MetricsDisplay.propTypes = {
+  metrics: PropTypes.arrayOf(
+    PropTypes.shape({
+      title: PropTypes.string.isRequired,
+      value: PropTypes.string.isRequired,
+      actionLabel: PropTypes.string,
+      onAction: PropTypes.func,
+    })
+  ).isRequired,
+}
 function Analytics() {
   const [role, setRole] = useState('student') // "student" || "admin" || possibly "moderator"
   const [isCo2ModalOpen, setIsCo2ModalOpen] = useState(false)
-
-  function openCo2Modal() {
-    setIsCo2ModalOpen(true)
-  }
-
-  function closeCo2Modal() {
-    setIsCo2ModalOpen(false)
-  }
+  const handleOpenCo2Info = () => setIsCo2ModalOpen(true)
+  const handleCloseCo2Info = () => setIsCo2ModalOpen(false)
+  const commonProps = { onOpenCo2Info: handleOpenCo2Info }
 
   return (
     <>
@@ -136,30 +150,22 @@ function Analytics() {
       <button type="button" onClick={() => setRole('student')}>
         View as Student
       </button>{' '}
-      <br></br>
+      <br />
       <button type="button" onClick={() => setRole('admin')}>
         View as Admin
       </button>
       <hr />
       {role === 'admin' ? (
-        <AdminAnalytics onOpenCo2Info={openCo2Modal} />
+        <AdminAnalytics {...commonProps} />
       ) : (
-        <StudentAnalytics onOpenCo2Info={openCo2Modal} />
+        <StudentAnalytics {...commonProps} />
       )}
-      <Co2InfoModal open={isCo2ModalOpen} onClose={closeCo2Modal} />
+      <Co2InfoModal open={isCo2ModalOpen} onClose={handleCloseCo2Info} />
     </>
   )
 }
 
 function AdminAnalytics({ onOpenCo2Info }) {
-  AdminAnalytics.propTypes = {
-    onOpenCo2Info: PropTypes.func.isRequired,
-  }
-
-  StudentAnalytics.propTypes = {
-    onOpenCo2Info: PropTypes.func.isRequired,
-  }
-
   const metrics = [
     {
       title: 'Total CO₂ Saved (est.)',
@@ -190,29 +196,15 @@ function AdminAnalytics({ onOpenCo2Info }) {
   return (
     <>
       <h3>Admin Overview (All Users)</h3>
-
-      {metrics.map(m => (
-        <MetricCard
-          key={m.title}
-          title={m.title}
-          value={m.value}
-          actionLabel={m.actionLabel}
-          onAction={m.onAction}
-        />
-      ))}
+      <MetricsDisplay metrics={metrics} />
     </>
   )
 }
+AdminAnalytics.propTypes = {
+  onOpenCo2Info: PropTypes.func.isRequired,
+}
 
 function StudentAnalytics({ onOpenCo2Info }) {
-  AdminAnalytics.propTypes = {
-    onOpenCo2Info: PropTypes.func.isRequired,
-  }
-
-  StudentAnalytics.propTypes = {
-    onOpenCo2Info: PropTypes.func.isRequired,
-  }
-
   const metrics = [
     {
       title: 'My CO₂ Saved (est.)',
@@ -243,18 +235,12 @@ function StudentAnalytics({ onOpenCo2Info }) {
   return (
     <>
       <h3>My Impact (Personal)</h3>
-
-      {metrics.map(m => (
-        <MetricCard
-          key={m.title}
-          title={m.title}
-          value={m.value}
-          actionLabel={m.actionLabel}
-          onAction={m.onAction}
-        />
-      ))}
+      <MetricsDisplay metrics={metrics} />
     </>
   )
+}
+StudentAnalytics.propTypes = {
+  onOpenCo2Info: PropTypes.func.isRequired,
 }
 
 export default Analytics
