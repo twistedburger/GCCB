@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import PropTypes from 'prop-types'
+import { useNavigate } from 'react-router-dom'
 
 function MetricCard({ title, value, actionLabel, onAction }) {
   return (
@@ -25,87 +26,6 @@ MetricCard.propTypes = {
   onAction: PropTypes.func,
 }
 
-function Co2InfoModal({ open, onClose }) {
-  if (!open) return null
-
-  return (
-    <div
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-      style={{
-        // Temporary: style to be changed/updated via Tailwind
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        zIndex: 1000,
-      }}
-    >
-      <div
-        style={{
-          background: 'white',
-          color: 'black',
-          width: '100%',
-          maxWidth: 600,
-          padding: 16,
-          borderRadius: 8,
-        }}
-      >
-        <h2>
-          <strong>How CO₂ is calculated</strong>
-        </h2>
-
-        <p>Methodology goes here!</p>
-
-        <h3>
-          <strong>Baseline</strong>
-        </h3>
-        <p>
-          We estimate &quot;savings&quot; by comparing a trip against a standard
-          solo-passenger vehicle baseline (~250g CO₂ per km). The difference is
-          treated as CO₂ saved.
-        </p>
-
-        <h3>
-          <strong>Carpooling</strong>
-        </h3>
-        <p>
-          A possible calculation is to scale savings by (passengers - 1), since
-          one carpool trip may replace multiple solo trips depending on number
-          of passengers.
-        </p>
-
-        <h3>
-          <strong>Notes:</strong>
-        </h3>
-        <ul>
-          <li>
-            Walking/Cycling is assumed zero operational emissions for
-            calculations.
-          </li>
-          <li>
-            Transit is treated as lower than solo-car (placeholder; will
-            deliberate).
-          </li>
-          <li>Current baseline is directly from EPA.gov.</li>
-        </ul>
-
-        <button type="button" onClick={onClose}>
-          <strong>Close</strong>
-        </button>
-      </div>
-    </div>
-  )
-}
-
-Co2InfoModal.propTypes = {
-  open: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-}
 function MetricsDisplay({ metrics }) {
   return (
     <>
@@ -132,12 +52,14 @@ MetricsDisplay.propTypes = {
     })
   ).isRequired,
 }
+
 function Analytics() {
-  const [role, setRole] = useState('student') // "student" || "admin" || possibly "moderator"
-  const [isCo2ModalOpen, setIsCo2ModalOpen] = useState(false)
-  const handleOpenCo2Info = () => setIsCo2ModalOpen(true)
-  const handleCloseCo2Info = () => setIsCo2ModalOpen(false)
-  const commonProps = { onOpenCo2Info: handleOpenCo2Info }
+  const [role, setRole] = useState('student') // "student" || "admin"
+  const navigate = useNavigate()
+
+  const goToCo2Savings = () => {
+    navigate('/dashboard/analytics/co2-savings', { state: { role } })
+  }
 
   return (
     <>
@@ -145,7 +67,7 @@ function Analytics() {
       <p>
         Current Role: <strong>{role}</strong>
       </p>
-      {/* Temporary: role toggle for UI testing */}
+      {/* Temporary: role toggle for UI testing; route via Auth/Permissions */}
       <button type="button" onClick={() => setRole('student')}>
         View as Student
       </button>{' '}
@@ -155,22 +77,21 @@ function Analytics() {
       </button>
       <hr />
       {role === 'admin' ? (
-        <AdminAnalytics {...commonProps} />
+        <AdminAnalytics onGoToCo2Savings={goToCo2Savings} />
       ) : (
-        <StudentAnalytics {...commonProps} />
+        <StudentAnalytics onGoToCo2Savings={goToCo2Savings} />
       )}
-      <Co2InfoModal open={isCo2ModalOpen} onClose={handleCloseCo2Info} />
     </>
   )
 }
 
-function AdminAnalytics({ onOpenCo2Info }) {
+function AdminAnalytics({ onGoToCo2Savings }) {
   const metrics = [
     {
       title: 'Total CO₂ Saved (est.)',
       value: '1,234 kg',
-      actionLabel: "How it's calculated",
-      onAction: onOpenCo2Info,
+      actionLabel: 'View details',
+      onAction: onGoToCo2Savings,
     },
     {
       title: 'Total User Commutes',
@@ -199,17 +120,18 @@ function AdminAnalytics({ onOpenCo2Info }) {
     </>
   )
 }
+
 AdminAnalytics.propTypes = {
-  onOpenCo2Info: PropTypes.func.isRequired,
+  onGoToCo2Savings: PropTypes.func.isRequired,
 }
 
-function StudentAnalytics({ onOpenCo2Info }) {
+function StudentAnalytics({ onGoToCo2Savings }) {
   const metrics = [
     {
       title: 'My CO₂ Saved (est.)',
       value: '123 kg',
-      actionLabel: "How it's calculated",
-      onAction: onOpenCo2Info,
+      actionLabel: 'View details',
+      onAction: onGoToCo2Savings,
     },
     {
       title: 'My Total Commutes',
@@ -238,8 +160,9 @@ function StudentAnalytics({ onOpenCo2Info }) {
     </>
   )
 }
+
 StudentAnalytics.propTypes = {
-  onOpenCo2Info: PropTypes.func.isRequired,
+  onGoToCo2Savings: PropTypes.func.isRequired,
 }
 
 export default Analytics
