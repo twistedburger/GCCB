@@ -31,6 +31,76 @@ MetricCard.defaultProps = {
   actionLabel: undefined,
   onAction: undefined,
 }
+function Co2InfoModal({ open, onClose }) {
+  if (!open) return null
+
+  return (
+    <div
+      onMouseDown={e => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+      style={{
+        // Temporary: style to be changed/updated via Tailwind
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          background: 'white',
+          color: 'black',
+          width: '100%',
+          maxWidth: 600,
+          padding: 16,
+          borderRadius: 8,
+        }}
+      >
+        <h2>How CO₂ is calculated</h2>
+
+        <p>Methodology goes here!</p>
+
+        <h3>Baseline idea</h3>
+        <p>
+          We estimate &quot;savings&quot; by comparing a trip against a standard
+          solo-passenger vehicle baseline (~250g CO₂ per km). The difference is
+          treated as CO₂ saved.
+        </p>
+
+        <h3>Carpool (draft rule)</h3>
+        <p>
+          A possible calculation is to scale savings by
+          <strong>(passengers - 1)</strong>, since one carpool trip may replace
+          multiple solo trips depending on number of passengers.
+        </p>
+
+        <h3>Notes</h3>
+        <ul>
+          <li>Walking/cycling assumed near-zero operational emissions.</li>
+          <li>
+            Transit is treated as lower than solo-car (placeholder; will
+            deliberate).
+          </li>
+          <li>Current baseline is directly from EPA.gov.</li>
+        </ul>
+
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    </div>
+  )
+}
+
+Co2InfoModal.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+}
 
 function Analytics() {
   const [role, setRole] = useState('student') // "student" || "admin" || possibly "moderator"
