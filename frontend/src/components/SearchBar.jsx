@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { SearchOutlined } from '@mui/icons-material'
+import SearchOutlined from '@mui/icons-material/SearchOutlined'
 
 export default function SearchBar({ onChange }) {
   return (
