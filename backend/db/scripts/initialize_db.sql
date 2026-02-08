@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS "event" (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     creator_id INT NOT NULL,
+    event_time TIMESTAMP NOT NULL,
     location VARCHAR(255) NOT NULL,
     verified BOOLEAN NOT NULL,
     need_approval BOOLEAN NOT NULL,
