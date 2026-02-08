@@ -3,6 +3,9 @@ import NavigationBar from './components/NavigationBar'
 import Home from './pages/Home'
 import MyTrip from './pages/MyTrips'
 import Dashboard from './pages/dashboard/Dashboard'
+import Analytics from './pages/dashboard/Analytics'
+import Profile from './pages/dashboard/Profile'
+import Settings from './pages/dashboard/Settings'
 
 function App() {
   return (
@@ -14,6 +17,10 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
+
+            <Route path="/dashboard/analytics" element={<Analytics />} />
+            <Route path="/dashboard/profile" element={<Profile />} />
+            <Route path="/dashboard/settings" element={<Settings />} />
           </Routes>
         </main>
         <NavigationBar />
