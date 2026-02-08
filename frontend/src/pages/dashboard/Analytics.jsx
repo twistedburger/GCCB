@@ -61,27 +61,38 @@ function Co2InfoModal({ open, onClose }) {
           borderRadius: 8,
         }}
       >
-        <h2>How CO₂ is calculated</h2>
+        <h1>
+          <strong>How CO₂ is calculated</strong>
+        </h1>
 
         <p>Methodology goes here!</p>
 
-        <h3>Baseline idea</h3>
+        <h3>
+          <strong>Baseline</strong>
+        </h3>
         <p>
           We estimate &quot;savings&quot; by comparing a trip against a standard
           solo-passenger vehicle baseline (~250g CO₂ per km). The difference is
           treated as CO₂ saved.
         </p>
 
-        <h3>Carpool (draft rule)</h3>
+        <h3>
+          <strong>Carpooling</strong>
+        </h3>
         <p>
-          A possible calculation is to scale savings by
-          <strong>(passengers - 1)</strong>, since one carpool trip may replace
-          multiple solo trips depending on number of passengers.
+          A possible calculation is to scale savings by (passengers - 1), since
+          one carpool trip may replace multiple solo trips depending on number
+          of passengers.
         </p>
 
-        <h3>Notes</h3>
+        <h3>
+          <strong>Notes:</strong>
+        </h3>
         <ul>
-          <li>Walking/cycling assumed near-zero operational emissions.</li>
+          <li>
+            Walking/Cycling is assumed zero operational emissions for
+            calculations.
+          </li>
           <li>
             Transit is treated as lower than solo-car (placeholder; will
             deliberate).
@@ -90,7 +101,8 @@ function Co2InfoModal({ open, onClose }) {
         </ul>
 
         <button type="button" onClick={onClose}>
-          Close
+          <br></br>
+          <strong>Close</strong>
         </button>
       </div>
     </div>
@@ -104,6 +116,15 @@ Co2InfoModal.propTypes = {
 
 function Analytics() {
   const [role, setRole] = useState('student') // "student" || "admin" || possibly "moderator"
+  const [isCo2ModalOpen, setIsCo2ModalOpen] = useState(false)
+
+  function openCo2Modal() {
+    setIsCo2ModalOpen(true)
+  }
+
+  function closeCo2Modal() {
+    setIsCo2ModalOpen(false)
+  }
 
   return (
     <>
@@ -120,18 +141,31 @@ function Analytics() {
         View as Admin
       </button>
       <hr />
-      {role === 'admin' ? <AdminAnalytics /> : <StudentAnalytics />}
+      {role === 'admin' ? (
+        <AdminAnalytics onOpenCo2Info={openCo2Modal} />
+      ) : (
+        <StudentAnalytics onOpenCo2Info={openCo2Modal} />
+      )}
+      <Co2InfoModal open={isCo2ModalOpen} onClose={closeCo2Modal} />
     </>
   )
 }
 
-function AdminAnalytics() {
+function AdminAnalytics({ onOpenCo2Info }) {
+  AdminAnalytics.propTypes = {
+    onOpenCo2Info: PropTypes.func.isRequired,
+  }
+
+  StudentAnalytics.propTypes = {
+    onOpenCo2Info: PropTypes.func.isRequired,
+  }
+
   const metrics = [
     {
       title: 'Total CO₂ Saved (est.)',
       value: '1,234 kg',
       actionLabel: "How it's calculated",
-      onAction: () => console.log('TODO: CO2 calculation info'),
+      onAction: onOpenCo2Info,
     },
     {
       title: 'Total User Commutes',
@@ -170,13 +204,21 @@ function AdminAnalytics() {
   )
 }
 
-function StudentAnalytics() {
+function StudentAnalytics({ onOpenCo2Info }) {
+  AdminAnalytics.propTypes = {
+    onOpenCo2Info: PropTypes.func.isRequired,
+  }
+
+  StudentAnalytics.propTypes = {
+    onOpenCo2Info: PropTypes.func.isRequired,
+  }
+
   const metrics = [
     {
       title: 'My CO₂ Saved (est.)',
       value: '123 kg',
       actionLabel: "How it's calculated",
-      onAction: () => console.log('TODO: CO2 calculation info'),
+      onAction: onOpenCo2Info,
     },
     {
       title: 'My Total Commutes',
