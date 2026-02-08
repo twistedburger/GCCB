@@ -1,4 +1,36 @@
 import { useState } from 'react'
+import PropTypes from 'prop-types'
+
+function MetricCard({ title, value, actionLabel, onAction }) {
+  return (
+    <>
+      <p>
+        <strong>{title}</strong>
+      </p>
+      <p>{value}</p>
+
+      {actionLabel && onAction && (
+        <button type="button" onClick={onAction}>
+          {actionLabel}
+        </button>
+      )}
+
+      <hr />
+    </>
+  )
+}
+
+MetricCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  actionLabel: PropTypes.string,
+  onAction: PropTypes.func,
+}
+
+MetricCard.defaultProps = {
+  actionLabel: undefined,
+  onAction: undefined,
+}
 
 function Analytics() {
   const [role, setRole] = useState('student') // "student" || "admin" || possibly "moderator"
@@ -9,9 +41,11 @@ function Analytics() {
       <p>
         Current Role: <strong>{role}</strong>
       </p>
+      {/* Temporary: role toggle for UI testing */}
       <button type="button" onClick={() => setRole('student')}>
         View as Student
       </button>{' '}
+      <br></br>
       <button type="button" onClick={() => setRole('admin')}>
         View as Admin
       </button>
@@ -22,20 +56,92 @@ function Analytics() {
 }
 
 function AdminAnalytics() {
+  const metrics = [
+    {
+      title: 'Total CO₂ Saved (est.)',
+      value: '1,234 kg',
+      actionLabel: "How it's calculated",
+      onAction: () => console.log('TODO: CO2 calculation info'),
+    },
+    {
+      title: 'Total User Commutes',
+      value: '4,567 trips',
+      actionLabel: 'View details',
+      onAction: () => console.log('TODO: commute details'),
+    },
+    {
+      title: 'Trip Frequency',
+      value: '2.3 trips / user',
+      actionLabel: 'View details',
+      onAction: () => console.log('TODO: trip frequency'),
+    },
+    {
+      title: 'Active Users',
+      value: '25 commuters',
+      actionLabel: 'View details',
+      onAction: () => console.log('TODO: active users'),
+    },
+  ]
+
   return (
-    <div>
+    <>
       <h3>Admin Overview (All Users)</h3>
-      <p>Placeholder admin analytics.</p>
-    </div>
+
+      {metrics.map(m => (
+        <MetricCard
+          key={m.title}
+          title={m.title}
+          value={m.value}
+          actionLabel={m.actionLabel}
+          onAction={m.onAction}
+        />
+      ))}
+    </>
   )
 }
 
 function StudentAnalytics() {
+  const metrics = [
+    {
+      title: 'My CO₂ Saved (est.)',
+      value: '123 kg',
+      actionLabel: "How it's calculated",
+      onAction: () => console.log('TODO: CO2 calculation info'),
+    },
+    {
+      title: 'My Total Commutes',
+      value: '12 trips',
+      actionLabel: 'View details',
+      onAction: () => console.log('TODO: my commute history'),
+    },
+    {
+      title: 'My Total Distance',
+      value: '32.1 km',
+      actionLabel: 'View details',
+      onAction: () => console.log('TODO: my distance'),
+    },
+    {
+      title: 'My Trip Frequency',
+      value: '1.8 trips / day',
+      actionLabel: 'View details',
+      onAction: () => console.log('TODO: my trip frequency'),
+    },
+  ]
+
   return (
-    <div>
+    <>
       <h3>My Impact (Personal)</h3>
-      <p>Placeholder student analytics.</p>
-    </div>
+
+      {metrics.map(m => (
+        <MetricCard
+          key={m.title}
+          title={m.title}
+          value={m.value}
+          actionLabel={m.actionLabel}
+          onAction={m.onAction}
+        />
+      ))}
+    </>
   )
 }
 
