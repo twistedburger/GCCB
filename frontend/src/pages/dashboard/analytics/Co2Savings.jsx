@@ -35,25 +35,38 @@ function Co2InfoModal({ open, onClose }) {
           <strong>How CO₂ is calculated</strong>
         </h2>
 
-        <p>Methodology goes here!</p>
+        <p>
+          CO₂ savings are estimated by comparing each route against a
+          solo-passenger vehicle baseline.
+        </p>
 
         <h3>
           <strong>Baseline</strong>
         </h3>
         <p>
-          We estimate &quot;savings&quot; by comparing a trip against a standard
-          solo-passenger vehicle baseline (~250g CO₂ per km). The difference is
-          treated as CO₂ saved.
+          We estimate savings using a standard solo vehicle baseline of ~250g
+          CO₂ per km. The difference between this baseline and the selected
+          transportation mode is treated as CO₂ saved.
         </p>
 
         <h3>
           <strong>Carpooling</strong>
         </h3>
         <p>
-          A possible calculation is to scale savings by (passengers - 1), since
-          one carpool trip may replace multiple solo trips depending on number
-          of passengers.
+          Savings may be scaled by (passengers − 1), since a single carpool trip
+          can replace multiple solo trips depending on participation.
         </p>
+
+        <h3>
+          <strong>Notes</strong>
+        </h3>
+        <ul>
+          <li>
+            Walking and cycling are treated as zero operational emissions.
+          </li>
+          <li>Transit uses a reduced per-passenger estimate (placeholder).</li>
+          <li>Baseline values are provisional and subject to refinement.</li>
+        </ul>
 
         <button type="button" onClick={onClose}>
           Close
@@ -76,6 +89,28 @@ export default function Co2Savings() {
   const role = location.state?.role ?? 'student'
   const isAdmin = role === 'admin'
 
+  // Placeholder KPIs
+  const kpis = isAdmin
+    ? [
+        { label: 'Total CO₂ saved (30d)', value: '1,234 kg' },
+        { label: 'Avg CO₂ saved / route', value: '0.27 kg' },
+        { label: 'Routes contributing to savings', value: '4,567' },
+        { label: 'Top saving mode', value: 'Cycling' },
+      ]
+    : [
+        { label: 'My CO₂ saved (30d)', value: '123 kg' },
+        { label: 'Avg CO₂ saved / trip', value: '0.30 kg' },
+        { label: 'Trips contributing to savings', value: '12' },
+        { label: 'My top saving mode', value: 'Cycling' },
+      ]
+
+  const modeSplit = [
+    { mode: 'Walk', share: '22%' },
+    { mode: 'Cycle', share: '31%' },
+    { mode: 'Transit', share: '27%' },
+    { mode: 'Carpool', share: '20%' },
+  ]
+
   return (
     <>
       <button type="button" onClick={() => navigate(-1)}>
@@ -83,6 +118,9 @@ export default function Co2Savings() {
       </button>
 
       <h1>CO₂ Savings</h1>
+      <p>
+        Viewing as: <strong>{role}</strong>
+      </p>
 
       <p>
         <strong>
@@ -97,20 +135,39 @@ export default function Co2Savings() {
 
       <hr />
 
-      {isAdmin ? (
-        <>
-          <h3>Admin breakdown</h3>
-          <p>
-            Placeholder: totals by commute mode, date filters, active users
-            impact.
-          </p>
-        </>
-      ) : (
-        <>
-          <h3>My breakdown</h3>
-          <p>Placeholder: my trips by mode, my weekly/monthly trend.</p>
-        </>
-      )}
+      <h3>Key impact metrics</h3>
+      <ul>
+        {kpis.map(k => (
+          <li key={k.label}>
+            <strong>{k.label}:</strong> {k.value}
+          </li>
+        ))}
+      </ul>
+
+      <hr />
+
+      <h3>CO₂ savings by transportation mode (placeholder)</h3>
+      <ul>
+        {modeSplit.map(row => (
+          <li key={row.mode}>
+            <strong>{row.mode}:</strong> {row.share}
+          </li>
+        ))}
+      </ul>
+
+      <hr />
+
+      <h3>Trends (placeholders)</h3>
+      <ul>
+        <li>
+          <strong>CO₂ saved over time:</strong> line chart (weekly/monthly)
+        </li>
+        <li>
+          <strong>Cumulative CO₂ saved:</strong> cumulative line chart
+        </li>
+      </ul>
+
+      <hr />
 
       <Co2InfoModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
