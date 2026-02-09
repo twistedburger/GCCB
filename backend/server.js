@@ -19,6 +19,20 @@ const config = {
   //   },
 }
 
+app.use(auth(config))
+
+const config = {
+  authRequired: false,
+  auth0Logout: true,
+  secret: process.env.AUTH0_SECRET,
+  baseURL: 'http://localhost:3000',
+  clientID: process.env.AUTH0_CLIENT_ID,
+  issuerBaseURL: process.env.AUTH0_DOMAIN,
+  // authorizationParams: {
+  //     connection: 'google-oauth2',
+  //   },
+}
+
 app.use(
   cors({
     origin: 'http://localhost:5173',
