@@ -21,7 +21,7 @@ function MetricCard({ title, value, actionLabel, onAction }) {
 
 MetricCard.propTypes = {
   title: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
+  value: PropTypes.node.isRequired,
   actionLabel: PropTypes.string,
   onAction: PropTypes.func,
 }
