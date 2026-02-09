@@ -1,4 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
+import KpiGrid from '../../../components/analytics/KpiGrid'
+import ChartCard from '../../../components/analytics/ChartCard'
+import ChartPlaceholder from '../../../components/analytics/ChartPlaceholder'
 
 function Activity() {
   const navigate = useNavigate()
@@ -6,7 +10,7 @@ function Activity() {
   const role = location.state?.role ?? 'student'
   const isAdmin = role === 'admin'
 
-  // Safeguard: Handle with auth or redirect
+  // Safeguard: handle via auth or redirect later
   if (!isAdmin) {
     return (
       <>
@@ -40,41 +44,48 @@ function Activity() {
 
       <hr />
 
-      <h3>Filters (placeholder)</h3>
-      <ul>
-        <li>
-          <strong>Date range:</strong> Last 7 days / Last 30 days / All Time
-        </li>
-        <li>
-          <strong>Status:</strong> Upcoming / Completed / Rejected
-        </li>
-      </ul>
-
-      <hr />
-
-      <h3>Key metrics</h3>
-      <ul>
-        {kpis.map(k => (
-          <li key={k.label}>
-            <strong>{k.label}:</strong> {k.value}
+      <AnalyticsBlock title="Filters" description="Placeholder controls">
+        <ul>
+          <li>
+            <strong>Date range:</strong> Last 7 days / Last 30 days / All Time
           </li>
-        ))}
-      </ul>
+          <li>
+            <strong>Status:</strong> Upcoming / Completed / Rejected
+          </li>
+        </ul>
+      </AnalyticsBlock>
 
-      <hr />
+      <AnalyticsBlock
+        title="Key metrics"
+        description="Summary values (placeholder)"
+      >
+        <KpiGrid items={kpis} />
+      </AnalyticsBlock>
 
-      <h3>Charts (placeholders)</h3>
-      <ul>
-        <li>
-          <strong>Active creators over time:</strong> line chart (DAU/WAU)
-        </li>
-        <li>
-          <strong>Upcoming vs completed routes:</strong> stacked bars by week
-        </li>
-        <li>
-          <strong>Rejection reasons:</strong> bar chart (top reasons)
-        </li>
-      </ul>
+      <AnalyticsBlock title="Charts" description="Chart placeholders">
+        <div style={{ display: 'grid', gap: 12 }}>
+          <ChartCard
+            title="Active creators over time"
+            subtitle="DAU/WAU-style plot (placeholder)"
+          >
+            <ChartPlaceholder label="Line chart placeholder" />
+          </ChartCard>
+
+          <ChartCard
+            title="Upcoming vs completed routes"
+            subtitle="(placeholder)"
+          >
+            <ChartPlaceholder label="Stacked bar placeholder" />
+          </ChartCard>
+
+          <ChartCard
+            title="Rejection reasons"
+            subtitle="Top reasons (placeholder)"
+          >
+            <ChartPlaceholder label="Bar chart placeholder" />
+          </ChartCard>
+        </div>
+      </AnalyticsBlock>
 
       <hr />
     </>
