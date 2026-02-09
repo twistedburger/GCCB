@@ -8,7 +8,7 @@ function ChartPlaceholder({ label, height }) {
         border: '1px dashed #ddd',
         borderRadius: 10,
         display: 'flex',
-        alightItems: 'center',
+        alignItems: 'center',
         justifyContent: 'center',
         fontSize: 12,
         opacity: 0.85,
