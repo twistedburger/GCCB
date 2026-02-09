@@ -8,7 +8,7 @@ function MetricCard({ title, value, actionLabel, onAction }) {
       <p>
         <strong>{title}</strong>
       </p>
-      <p>{value}</p>
+      <div>{value}</div>
       {actionLabel && onAction && (
         <button type="button" onClick={onAction}>
           {actionLabel}
@@ -46,7 +46,7 @@ MetricsDisplay.propTypes = {
   metrics: PropTypes.arrayOf(
     PropTypes.shape({
       title: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired,
+      value: PropTypes.node.isRequired,
       actionLabel: PropTypes.string,
       onAction: PropTypes.func,
     })
@@ -87,25 +87,45 @@ function AdminAnalytics({ goTo }) {
   const metrics = [
     {
       title: 'Total CO₂ Saved (est.)',
-      value: '1,234 kg',
+      value: (
+        <>
+          <div>1,234 kg</div>
+          <div>Last 30 days</div>
+        </>
+      ),
       actionLabel: 'View details',
       onAction: () => goTo('/dashboard/analytics/co2-savings'),
     },
     {
       title: 'Total User Commutes',
-      value: '4,567 trips',
+      value: (
+        <>
+          <div>4,567 trips</div>
+          <div>67 this week</div>
+        </>
+      ),
       actionLabel: 'View details',
       onAction: () => goTo('/dashboard/analytics/commutes'),
     },
     {
       title: 'Trip Frequency',
-      value: '2.3 trips / user',
+      value: (
+        <>
+          <div>2.3 trips / user</div>
+          <div>Last 30 days</div>
+        </>
+      ),
       actionLabel: 'View details',
       onAction: () => goTo('/dashboard/analytics/trip-frequency'),
     },
     {
       title: 'Active Users',
-      value: '25 commuters',
+      value: (
+        <>
+          <div>25 users</div>
+          <div>18 upcoming routes</div>
+        </>
+      ),
       actionLabel: 'View details',
       onAction: () => goTo('/dashboard/analytics/activity'),
     },
@@ -132,17 +152,19 @@ function StudentAnalytics({ goTo }) {
       onAction: () => goTo('/dashboard/analytics/co2-savings'),
     },
     {
-      title: 'My Total Commutes',
-      value: '12 trips',
+      title: 'My Commutes & Distance',
+      value: (
+        <>
+          <div>12 trips</div>
+          <div>32.1 km</div>
+          <div>Avg: 2.7 km / trip</div>
+        </>
+      ),
+
       actionLabel: 'View details',
       onAction: () => goTo('/dashboard/analytics/commutes'),
     },
-    {
-      title: 'My Total Distance',
-      value: '32.1 km',
-      actionLabel: 'View details',
-      onAction: () => goTo('/dashboard/analytics/activity'),
-    },
+
     {
       title: 'My Trip Frequency',
       value: '1.8 trips / day',
