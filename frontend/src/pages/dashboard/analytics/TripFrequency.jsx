@@ -1,4 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
+import KpiGrid from '../../../components/analytics/KpiGrid'
+import ChartCard from '../../../components/analytics/ChartCard'
+import ChartPlaceholder from '../../../components/analytics/ChartPlaceholder'
 
 function TripFrequency() {
   const navigate = useNavigate()
@@ -33,58 +37,75 @@ function TripFrequency() {
 
       <hr />
 
-      <h3>Filters (placeholder)</h3>
-      <ul>
-        <li>
-          <strong>Date range:</strong> Last 7 days / Last 30 days / All Time
-        </li>
-        <li>
-          <strong>Mode:</strong> Walk / Cycle / Carpool / Transit
-        </li>
-      </ul>
-
-      <hr />
-
-      <h3>Key metrics</h3>
-      <ul>
-        {kpis.map(k => (
-          <li key={k.label}>
-            <strong>{k.label}:</strong> {k.value}
+      <AnalyticsBlock title="Filters" description="Placeholder controls">
+        <ul>
+          <li>
+            <strong>Date range:</strong> Last 7 days / Last 30 days / All Time
           </li>
-        ))}
-      </ul>
+          <li>
+            <strong>Mode:</strong> Walk / Cycle / Carpool / Transit
+          </li>
+        </ul>
+      </AnalyticsBlock>
 
-      <hr />
+      <AnalyticsBlock
+        title="Key metrics"
+        description="Summary values (placeholder)"
+      >
+        <KpiGrid items={kpis} />
+      </AnalyticsBlock>
 
-      <h3>Charts (placeholders)</h3>
-      <ul>
-        {isAdmin ? (
-          <>
-            <li>
-              <strong>Routes per creator distribution:</strong> histogram (0, 1,
-              2-3, 4+)
-            </li>
-            <li>
-              <strong>Active creators over time:</strong> line chart
-            </li>
-            <li>
-              <strong>Routes per day/week:</strong> line or bar chart
-            </li>
-          </>
-        ) : (
-          <>
-            <li>
-              <strong>My routes per week:</strong> bar chart
-            </li>
-            <li>
-              <strong>My streak over time:</strong> line chart
-            </li>
-            <li>
-              <strong>My busiest day/time:</strong> bar chart by weekday/hour
-            </li>
-          </>
-        )}
-      </ul>
+      <AnalyticsBlock title="Charts" description="Chart placeholders">
+        <div style={{ display: 'grid', gap: 12 }}>
+          {isAdmin ? (
+            <>
+              <ChartCard
+                title="Routes per creator distribution"
+                subtitle="Histogram buckets (0, 1, 2-3, 4+)"
+              >
+                <ChartPlaceholder label="Histogram / bar chart placeholder" />
+              </ChartCard>
+
+              <ChartCard
+                title="Active creators over time"
+                subtitle="Trend over time (placeholder)"
+              >
+                <ChartPlaceholder label="Line chart placeholder" />
+              </ChartCard>
+
+              <ChartCard
+                title="Routes per day/week"
+                subtitle="Platform-level frequency (placeholder)"
+              >
+                <ChartPlaceholder label="Line / bar chart placeholder" />
+              </ChartCard>
+            </>
+          ) : (
+            <>
+              <ChartCard
+                title="My routes per week"
+                subtitle="Weekly volume (placeholder)"
+              >
+                <ChartPlaceholder label="Bar chart placeholder" />
+              </ChartCard>
+
+              <ChartCard
+                title="My streak over time"
+                subtitle="Consistency trend (placeholder)"
+              >
+                <ChartPlaceholder label="Line chart placeholder" />
+              </ChartCard>
+
+              <ChartCard
+                title="My busiest day/time"
+                subtitle="Weekday/hour distribution (placeholder)"
+              >
+                <ChartPlaceholder label="Bar chart placeholder" />
+              </ChartCard>
+            </>
+          )}
+        </div>
+      </AnalyticsBlock>
 
       <hr />
     </>
