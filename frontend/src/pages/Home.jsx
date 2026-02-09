@@ -1,7 +1,13 @@
+import SearchBar from '../components/SearchBar'
+import staticMap from '../assets/static-map.jpg'
+import SliderCard from '../components/SliderCard'
+
 function Home() {
   return (
-    <div>
-      <h2>This is Home page!</h2>
+    <div className="relative w-full h-full">
+      <img src={staticMap} className="absolute w-full h-full object-cover" />
+      <SearchBar />
+      <SliderCard />
     </div>
   )
 }

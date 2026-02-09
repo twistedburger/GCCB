@@ -7,17 +7,16 @@ import Dashboard from './pages/Dashboard'
 function App() {
   return (
     <Router>
-      <div className="app-container">
-        <NavigationBar />
-
+      <div className="app-container h-screen">
         {/* pages */}
-        <main className="content">
+        <main className="content bg-background-off-white">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </main>
+        <NavigationBar />
       </div>
     </Router>
   )

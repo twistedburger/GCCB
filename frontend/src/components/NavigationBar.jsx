@@ -1,9 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import {
-  HomeOutlined,
-  CommuteOutlined,
-  PersonOutlineOutlined,
-} from '@mui/icons-material'
+import HomeOutlined from '@mui/icons-material/HomeOutlined'
+import CommuteOutlined from '@mui/icons-material/CommuteOutlined'
+import PersonOutlineOutlined from '@mui/icons-material/PersonOutlineOutlined'
 
 export default function NavigationBar() {
   const navigate = useNavigate()
@@ -21,7 +19,7 @@ export default function NavigationBar() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 flex justify-around w-full bg-background-off-white h-20 border-t border-light-grey">
+    <nav className="fixed bottom-0 left-0 flex justify-around w-full bg-background-off-white h-20 border-t border-light-grey z-20">
       {navigationItems.map(({ id, Icon, label, path }) => {
         const isSelected = location.pathname === path
         return (

@@ -1,0 +1,20 @@
+import PropTypes from 'prop-types'
+import SearchOutlined from '@mui/icons-material/SearchOutlined'
+
+export default function SearchBar({ onChange }) {
+  return (
+    <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 w-9/10">
+      <div className="w-full flex flex-row justify-start bg-white rounded-xl px-2 py-3 shadow-md shadow-light-grey">
+        <SearchOutlined className="text-text-primary" />
+        <input
+          type="text"
+          placeholder="Search location..."
+          onChange={onChange}
+          className="flex-1 pl-2 focus:outline-none"
+        />
+      </div>
+    </div>
+  )
+}
+
+SearchBar.propTypes = { onChange: PropTypes.func }
