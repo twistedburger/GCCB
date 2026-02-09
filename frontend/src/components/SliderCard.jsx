@@ -1,7 +1,7 @@
 import { motion, useAnimation, useDragControls } from 'framer-motion'
 import PropTypes from 'prop-types'
 
-export default function SliderCard({ sliderInformation }) {
+export default function SliderCard({ children }) {
   const controls = useAnimation()
   const dragControls = useDragControls()
 
@@ -34,10 +34,10 @@ export default function SliderCard({ sliderInformation }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-32 flex flex-col gap-4">
-        {sliderInformation}
+        {children}
       </div>
     </motion.div>
   )
 }
 
-SliderCard.propTypes = { sliderInformation: PropTypes.node }
+SliderCard.propTypes = { children: PropTypes.node }
