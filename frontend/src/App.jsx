@@ -13,8 +13,6 @@ import Activity from './pages/dashboard/analytics/Activity'
 import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import { useState, useEffect } from 'react'
-import Login from './pages/Login'
-import { useState, useEffect } from 'react'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
