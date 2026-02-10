@@ -1,6 +1,7 @@
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
+const cors = require('cors')
 
 const app = express()
 const db = require('./db')
