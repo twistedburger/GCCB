@@ -1,7 +1,6 @@
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
-const cors = require('cors')
 
 const app = express()
 const db = require('./db')
@@ -19,7 +18,25 @@ const config = {
   //   },
 }
 
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  })
+)
 app.use(auth(config))
+
+app.get('/loginRoute', (req, res) => {
+  const connection = req.query.connection
+  localStorage.setItem('school', connection)
+  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  res.oidc.login({
+    returnTo: returnTo,
+    authorizationParams: {
+      connection: 'Username-Password-Authentication',
+    },
+  })
+})
 
 const config = {
   authRequired: false,
