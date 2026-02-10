@@ -6,7 +6,7 @@ import VerifiedOutlined from '@mui/icons-material/VerifiedOutlined'
 export default function EventCard({ event }) {
   const dateObj = new Date(event.date)
   return (
-    <div className="flex flex-col w-full rounded-xl h--auto min-h-50 overflow-hidden shadow-sm shadow-light-grey bg-white">
+    <div className="flex flex-col w-full rounded-xl h--auto min-h-50 overflow-hidden shadow-md shadow-medium-grey bg-white">
       <img src={bcitCover} className="h-24 w-full object-cover" />
       <div className="flex p-4 gap-4">
         <div className="flex flex-col justify-center text-center px-2">
@@ -17,9 +17,6 @@ export default function EventCard({ event }) {
           </span>
           <span className="text-2xl text-text-primary font-bold -mt-1">
             {dateObj.getDate()}
-          </span>
-          <span className="text-xs text-medium-grey">
-            {dateObj.getFullYear()}
           </span>
           <span className="text-xs text-text-secondary mt-1 whitespace-nowrap">
             {dateObj.toLocaleTimeString('en-US', {
