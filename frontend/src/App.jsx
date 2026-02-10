@@ -15,11 +15,10 @@ function App() {
 
   const authenticateUser = async () => {
     const response = await fetch('http://localhost:3000/authenticateUser', {
-      credentials: 'include', // Send cookies with request
+      credentials: 'include',
     })
     const responseJSON = await response.json()
     if (responseJSON) {
-      console.log(responseJSON.isAuthenticated)
       setUserAuthenticated(responseJSON.isAuthenticated)
     }
   }
