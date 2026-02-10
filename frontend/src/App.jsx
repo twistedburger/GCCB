@@ -3,15 +3,34 @@ import NavigationBar from './components/NavigationBar'
 import Home from './pages/Home'
 import MyTrip from './pages/MyTrips'
 import Dashboard from './pages/Dashboard'
+import Login from './pages/Login'
+import { useState, useEffect } from 'react'
 
 function App() {
+  const [userAuthenticated, setUserAuthenticated] = useState(false)
+
+  useEffect(() => {
+    authenticateUser()
+  })
+
+  const authenticateUser = async () => {
+    const response = await fetch('http://localhost:3000/authenticateUser', {
+      credentials: 'include', // Send cookies with request
+    })
+    const responseJSON = await response.json()
+    if (responseJSON) {
+      console.log(responseJSON.isAuthenticated)
+      setUserAuthenticated(responseJSON.isAuthenticated)
+    }
+  }
+
   return (
     <Router>
       <div className="app-container h-screen">
         {/* pages */}
         <main className="content bg-background-off-white">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={HomePage(userAuthenticated)} />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
@@ -20,6 +39,13 @@ function App() {
       </div>
     </Router>
   )
+}
+
+function HomePage(userAuthenticated) {
+  if (userAuthenticated) {
+    return <Home />
+  }
+  return <Login />
 }
 
 export default App
