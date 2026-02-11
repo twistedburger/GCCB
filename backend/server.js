@@ -43,7 +43,13 @@ app.get('/', (req, res) => {
 })
 
 app.get('/authenticateUser', (req, res) => {
-  res.json({ isAuthenticated: req.oidc.isAuthenticated() })
+  if (!req.oidc.isAuthenticated()) {
+    res.json({ isAuthenticated: false })
+    return
+  }
+  console.log(req.oidc.user)
+  // db.query(`SELECT * FROM user WHERE email like ${req.oidc.user}`)
+  res.json({ isAuthenticated: true })
 })
 
 app.get('/sample_query', (req, res) => {
