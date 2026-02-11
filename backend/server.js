@@ -27,40 +27,7 @@ app.use(
 app.use(auth(config))
 
 app.get('/loginRoute', (req, res) => {
-  const connection = req.query.connection
-  localStorage.setItem('school', connection)
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
-  res.oidc.login({
-    returnTo: returnTo,
-    authorizationParams: {
-      connection: 'Username-Password-Authentication',
-    },
-  })
-})
-
-const config = {
-  authRequired: false,
-  auth0Logout: true,
-  secret: process.env.AUTH0_SECRET,
-  baseURL: 'http://localhost:3000',
-  clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: process.env.AUTH0_DOMAIN,
-  // authorizationParams: {
-  //     connection: 'google-oauth2',
-  //   },
-}
-
-app.use(
-  cors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-  })
-)
-app.use(auth(config))
-
-app.get('/loginRoute', (req, res) => {
   // const connection = req.query.connection // This would allow us to connect to a specific SSO provider
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
   res.oidc.login({
     returnTo: returnTo,
     authorizationParams: {
@@ -69,20 +36,8 @@ app.get('/loginRoute', (req, res) => {
   })
 })
 
-app.get('/authenticateUser', async (req, res) => {
-  let isAuthenticated = req.oidc.isAuthenticated()
-  let user = null
-  if (!isAuthenticated) {
-    return res.json({ isAuthenticated: isAuthenticated, user: user })
-  }
-  try {
-    user = await selectUser(req)
-  } catch (error) {
-    console.log(error)
-    return res.status(500).send('Oops, something went wrong placeholder')
-  }
-
-  res.json({ isAuthenticated: isAuthenticated, user: user })
+app.get('/', (req, res) => {
+  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out')
 })
 
 /**
