@@ -2,6 +2,11 @@ export const en = {
   userGuide: {
     pageTitle: 'Getting Started',
     pageDescription: 'Your guide to sustainable commuting and connecting.',
+    miniNav: {
+      commute: 'Commute',
+      events: 'Events',
+      impact: 'Impact',
+    },
     commuting: {
       title: 'Commute Together',
       subtitle: 'Coordinate Sustainable Trips',
