@@ -1,6 +1,6 @@
 -- 1. Transportation (Static Data)
 INSERT INTO "transportation" (mode, carbon_savings) VALUES
-('Transit', 0.85),
+('Bus', 0.85),
 ('Car', 0.00),
 ('Bicycle', 1.0),
 ('Walk', 1.0);
@@ -26,7 +26,7 @@ INSERT INTO "event" (title, creator_id, event_time, location, verified, need_app
 
 -- 5. Routes ("path" column uses GeoJSON format)
 INSERT INTO "route" (title, creator_id, transportation_mode, origin, destination, distance, depart_time, max_ppl, completed, path) VALUES
-('Morning BCIT Commute', 1, 'Transit', '49.2662,-123.1558', '555 Seymour St, Vancouver, BC', 6.5, '2026-04-10 08:30:00', 0, true, 
+('Morning BCIT Commute', 1, 'Bus', '49.2662,-123.1558', '555 Seymour St, Vancouver, BC', 6.5, '2026-04-10 08:30:00', 0, true, 
  '{"type": "LineString", "coordinates": [[-123.1558, 49.2662], [-123.1322, 49.2785], [-123.1156, 49.2845]]}'),
 
 ('Carpool to Tech Mixer', 2, 'Car', '3768 Welwyn St, Vancouver, BC V5N 3Y8', '555 Seymour St, Vancouver, BC V6B 3H6', 12.2, '2026-04-10 16:45:00', 3, false, 
