@@ -27,8 +27,7 @@ app.use(
 app.use(auth(config))
 
 app.get('/loginRoute', (req, res) => {
-  const connection = req.query.connection
-  localStorage.setItem('school', connection)
+  // const connection = req.query.connection // This would allow us to connect to a specific SSO provider
   const returnTo = req.query.returnTo || 'http://localhost:5173/'
   res.oidc.login({
     returnTo: returnTo,
@@ -43,13 +42,47 @@ app.get('/', (req, res) => {
 })
 
 app.get('/authenticateUser', (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    res.json({ isAuthenticated: false })
+  let isAuthenticated = req.oidc.isAuthenticated()
+  let reason = ''
+  let user = null
+  if (!isAuthenticated) {
+    reason = 'invalid login placeholder'
+    res.json({ isAuthenticated: isAuthenticated, user: user, reason: reason })
     return
   }
-  console.log(req.oidc.user)
-  // db.query(`SELECT * FROM user WHERE email like ${req.oidc.user}`)
-  res.json({ isAuthenticated: true })
+  db.query(
+    'SELECT * FROM "user" WHERE email = $1',
+    [req.oidc.user.email],
+    (error, results) => {
+      if (error) {
+        console.log(error)
+        reason = 'Query error placeholder'
+        isAuthenticated = false
+      } else if (results.rowCount === 0) {
+        db.query(
+          'INSERT INTO "user" (email, role, name, nickname) VALUES ($1, $2, $3, $4) RETURNING *',
+          [
+            req.oidc.user.email,
+            'user',
+            req.oidc.user.name,
+            req.oidc.user.nickname,
+          ],
+          (error, results) => {
+            if (error) {
+              console.log(error)
+              reason = 'Query error placeholder'
+              isAuthenticated = false
+              return
+            }
+            user = results.rows[0]
+          }
+        )
+      } else {
+        user = results.rows[0]
+      }
+      res.json({ isAuthenticated: isAuthenticated, user: user, reason: reason })
+    }
+  )
 })
 
 app.get('/sample_query', (req, res) => {

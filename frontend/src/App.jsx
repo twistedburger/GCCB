@@ -27,6 +27,7 @@ function App() {
     const responseJSON = await response.json()
     if (responseJSON) {
       setUserAuthenticated(responseJSON.isAuthenticated)
+      console.log(responseJSON.user)
     }
   }
 
