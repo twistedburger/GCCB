@@ -1,22 +1,29 @@
-import { motion, useDragControls } from 'framer-motion'
+import { motion, useAnimation, useDragControls } from 'framer-motion'
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useEffect, useMemo } from 'react'
 
 export default function SliderCard({ children, isExpanded }) {
+  const controls = useAnimation()
   const dragControls = useDragControls()
 
   const handleHeight = 124
 
-  const [localExpanded, setLocalExpanded] = useState(isExpanded)
+  const MAX_TOP = useMemo(() => '5%', [])
+  const MAX_BOTTOM = useMemo(() => `calc(100% - ${handleHeight}px)`, [])
 
-  const variants = {
-    opened: { y: '5%' },
-    closed: { y: `calc(100% - ${handleHeight}px)` },
-  }
+  useEffect(() => {
+    // automatically opens/closes using isExpanded
+    if (isExpanded) {
+      controls.start({ y: MAX_TOP })
+    } else {
+      controls.start({ y: MAX_BOTTOM })
+    }
+  }, [isExpanded, controls, MAX_TOP, MAX_BOTTOM])
 
   const handleDragEnd = (event, info) => {
+    // no in-between, slider card only snaps to open or close
     const shouldExpand = info.offset.y < -100
-    setLocalExpanded(shouldExpand)
+    controls.start({ y: shouldExpand ? MAX_TOP : MAX_BOTTOM })
   }
 
   return (
@@ -25,9 +32,8 @@ export default function SliderCard({ children, isExpanded }) {
       dragControls={dragControls}
       dragListener={false}
       dragConstraints={{ top: 0, bottom: 800 }}
-      variants={variants}
-      animate={localExpanded ? 'opened' : 'closed'}
-      initial="closed"
+      initial={{ y: MAX_BOTTOM }}
+      animate={controls}
       onDragEnd={handleDragEnd}
       dragMomentum={false}
       transition={{ type: 'spring', damping: 50, stiffness: 400 }}
