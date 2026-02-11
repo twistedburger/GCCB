@@ -9,7 +9,7 @@ import {
 const CommuteIcon = ({ type }) => {
   const icons = {
     car: DirectionsCar,
-    bike: DirectionsBike,
+    bicycle: DirectionsBike,
     bus: DirectionsBus,
     walk: DirectionsWalk,
   }
@@ -24,7 +24,7 @@ const CommuteIcon = ({ type }) => {
 }
 
 CommuteIcon.propTypes = {
-  type: PropTypes.oneOf(['car', 'bike', 'bus', 'walk']).isRequired,
+  type: PropTypes.oneOf(['car', 'bicycle', 'bus', 'walk']).isRequired,
 }
 
 export default CommuteIcon
