@@ -4,12 +4,12 @@ import OutlinedFlagRounded from '@mui/icons-material/OutlinedFlagRounded'
 import VerifiedOutlined from '@mui/icons-material/VerifiedOutlined'
 
 export default function EventCard({ event }) {
-  const dateObj = new Date(event.date)
+  const dateObj = new Date(event.event_time)
   return (
-    <div className="flex flex-col w-full rounded-xl h--auto min-h-50 overflow-hidden shadow-md shadow-medium-grey bg-white">
-      <img src={bcitCover} className="h-24 w-full object-cover" />
+    <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white">
+      <img src={bcitCover} className="h-24 w-full object-cover rounded-t-xl" />
       <div className="flex p-4 gap-4">
-        <div className="flex flex-col justify-center text-center px-2">
+        <div className="flex flex-col justify-center text-center px-2 shrink-0">
           <span className="text-dark-grey font-medium">
             {dateObj
               .toLocaleDateString('en-US', { month: 'short' })
@@ -27,12 +27,12 @@ export default function EventCard({ event }) {
           </span>
         </div>
         <div className="border-r text-text-secondary -my-1"></div>
-        <div className="flex flex-col">
-          <div className="text-text-secondary flex text-xs items-center gap-1">
-            <OutlinedFlagRounded fontSize="small" />
-            {event.location}
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="text-text-secondary flex text-xs items-center gap-1 min-w-0">
+            <OutlinedFlagRounded fontSize="small" className="shrink-0" />
+            <p className="truncate">{event.location}</p>
           </div>
-          <div className="flex flex-row items-center ">
+          <div className="flex flex-row items-center">
             <h3 className="font-semibold text-xl text-text-primary mr-1">
               {event.title}
             </h3>
