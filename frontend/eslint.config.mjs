@@ -24,11 +24,16 @@ export default [
     files: ["src/**/*.{js,jsx}"],
   })),
 
+    ...compat.config({
+    plugins: ["react-hooks"],
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  }),
+
   {
     files: ["**/*.{js,jsx}"],
-    plugins: {
-      "react-hooks": reactHooks,
-    },
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -51,14 +56,8 @@ export default [
     rules: {
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
-
       "import/extensions": "off",
-
       "import/no-unresolved": "off",
-
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
-
       "import/no-extraneous-dependencies": "off",
     },
   },
