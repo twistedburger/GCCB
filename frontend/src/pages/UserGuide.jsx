@@ -45,12 +45,14 @@ const GuideCard = ({ id, data }) => {
             <h4 className="font-bold text-gray-800 text-lg mb-3 tracking-wide">
               {item.term}
             </h4>
+
             {/* Image for each point */}
             <img
               className="w-full max-w-[260px] rounded-2xl mb-4 shadow-md border border-background-off-white transition-transform"
               src={item.image}
               alt={item.term}
             />
+
             {/* Description for each point */}
             <p className="text-sm leading-relaxed px-2 text-text-secondary">
               {item.desc}
@@ -61,13 +63,12 @@ const GuideCard = ({ id, data }) => {
     </section>
   )
 }
-
 function UserGuide() {
   const { userGuide } = t
 
   return (
-    <div className="flex flex-col h-screen w-full bg-background-off-white overflow-hidden">
-      <header className="text-center pt-8 pb-4 px-6 w-full shrink-0 bg-background-off-white">
+    <div className="relative flex flex-col h-screen w-full bg-background-off-white overflow-hidden">
+      <header className="text-center pt-8 pb-4 px-6 w-full shrink-0">
         <h1 className="text-3xl font-extrabold text-text-primary">
           {userGuide.pageTitle}
         </h1>
@@ -75,17 +76,19 @@ function UserGuide() {
           {userGuide.pageDescription}
         </p>
       </header>
-      {/* Show sticky navigation buttons on md-sm view for smooth scrolling */}
-      <nav className="backdrop-blur-md flex lg:hidden justify-center gap-2 mb-4 w-full shrink-0 px-6 bg-background-off-white">
-        <div className="flex gap-2 bg-white rounded-full shadow-sm">
+
+      {/* Show floating navigation on md-sm view for smooth scrolling */}
+      <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 lg:hidden">
+        <div className="flex gap-2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg border border-gray-200">
           <NavButton target="commuting" label={userGuide.miniNav.commute} />
           <NavButton target="events" label={userGuide.miniNav.events} />
           <NavButton target="analysis" label={userGuide.miniNav.impact} />
         </div>
       </nav>
 
-      {/* Vertical stacking on md-sm view, Horizontal on lg and above */}
-      <main className="flex-1 overflow-y-auto scroll-smooth px-6 pb-24">
+      <main className="flex-1 overflow-y-auto scroll-smooth px-6 pb-32">
+        {' '}
+        {/* Increased padding-bottom so content isn't hidden by nav */}
         <div className="flex flex-col lg:flex-row lg:items-start items-center justify-center gap-8 w-full max-w-7xl mx-auto pt-4">
           <GuideCard id="commuting" data={userGuide.commuting} />
           <GuideCard id="events" data={userGuide.events} />
