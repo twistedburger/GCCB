@@ -70,7 +70,10 @@ function Home() {
               <EventCard key={item.id} event={item} />
             ))}
             {routes.map(item => (
-              <RouteCard key={item.id} route={item} />
+              <RouteCard key={item.id} route={item} individualView={true} />
+            ))}
+            {routes.map(item => (
+              <RouteCard key={item.id} route={item} individualView={false} />
             ))}
           </>
         )}

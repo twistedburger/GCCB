@@ -6,7 +6,7 @@ import {
   GroupsOutlined,
 } from '@mui/icons-material'
 
-export default function RouteCard({ route }) {
+export default function RouteCard({ route, individualView }) {
   const dateObj = new Date(route.depart_time)
   const transportationMap = {
     Bicycle: 'bike',
@@ -16,14 +16,18 @@ export default function RouteCard({ route }) {
   }
 
   return (
-    <div className="flex flex-row items-center w-full rounded-xl shadow-md shadow-medium-grey bg-white py-2 px-4">
+    <div
+      className={`flex flex-row items-center w-full rounded-xl shadow-md shadow-medium-grey bg-white p-4 ${individualView ? 'py-2' : 'py-4'}`}
+    >
       <span className="shrink-0 scale-115">
         <CommuteIcon type={transportationMap[route.transportation_mode]} />
       </span>
       <div className="flex flex-col ml-4">
-        <span className="text-text-primary font-medium mb-1">
-          {route.title}
-        </span>
+        {individualView && (
+          <span className="text-text-primary font-medium mb-1">
+            {route.title}
+          </span>
+        )}
         <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
           <PlaceOutlined className="mr-1 -ml-1" fontSize="small" />
           <p>{`${route.origin} @ ${dateObj.toLocaleTimeString('en-US', {
@@ -32,10 +36,12 @@ export default function RouteCard({ route }) {
             hour12: true,
           })}`}</p>
         </div>
-        <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
-          <OutlinedFlagRounded className="mr-1 -ml-1" fontSize="small" />
-          <p>{route.destination}</p>
-        </div>
+        {individualView && (
+          <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
+            <OutlinedFlagRounded className="mr-1 -ml-1" fontSize="small" />
+            <p>{route.destination}</p>
+          </div>
+        )}
         <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
           <GroupsOutlined className="mr-1 -ml-1" fontSize="small" />
           <p>
@@ -49,4 +55,7 @@ export default function RouteCard({ route }) {
   )
 }
 
-RouteCard.propTypes = { route: PropTypes.object.isRequired }
+RouteCard.propTypes = {
+  route: PropTypes.object.isRequired,
+  individualView: PropTypes.bool,
+}
