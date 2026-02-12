@@ -37,6 +37,13 @@ app.get('/loginRoute', (req, res) => {
   })
 })
 
+app.get('/logoutRoute', (req, res) => {
+  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  res.oidc.logout({
+    returnTo: returnTo,
+  })
+})
+
 app.get('/authenticateUser', async (req, res) => {
   let isAuthenticated = req.oidc.isAuthenticated()
   let user = null
