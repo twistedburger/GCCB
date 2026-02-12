@@ -36,19 +36,16 @@ app.get('/loginRoute', (req, res) => {
   })
 })
 
-app.get('/', (req, res) => {
-  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out')
-})
-
-app.get('/authenticateUser', (req, res) => {
+app.get('/authenticateUser', async (req, res) => {
   let isAuthenticated = req.oidc.isAuthenticated()
   let user = null
   if (!isAuthenticated) {
     return res.json({ isAuthenticated: isAuthenticated, user: user })
   }
   try {
-    user = selectUser(req)
-  } catch {
+    user = await selectUser(req)
+  } catch (error) {
+    console.log(error)
     return res.status(500).send('Oops, something went wrong placeholder')
   }
 
