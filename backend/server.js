@@ -51,40 +51,77 @@ app.get('/authenticateUser', (req, res) => {
     res.json({ isAuthenticated: isAuthenticated, user: user, reason: reason })
     return
   }
+  try {
+    user = selectUser(req)
+  } catch (err) {
+    console.log(err)
+    reason = 'Query error placeholder'
+    isAuthenticated = false
+  }
+
+  res.json({ isAuthenticated: isAuthenticated, user: user, reason: reason })
+})
+
+/**
+ * Select the current user from the DB. user must be authenticated
+ * @returns the user fetched from the DB, or null
+ */
+function selectUser(req) {
+  let user = null
   db.query(
     'SELECT * FROM "user" WHERE email = $1',
     [req.oidc.user.email],
     (error, results) => {
       if (error) {
-        console.log(error)
-        reason = 'Query error placeholder'
-        isAuthenticated = false
-      } else if (results.rowCount === 0) {
-        db.query(
-          'INSERT INTO "user" (email, role, name, nickname) VALUES ($1, $2, $3, $4) RETURNING *',
-          [
-            req.oidc.user.email,
-            'user',
-            req.oidc.user.name,
-            req.oidc.user.nickname,
-          ],
-          (error, results) => {
-            if (error) {
-              console.log(error)
-              reason = 'Query error placeholder'
-              isAuthenticated = false
-              return
-            }
-            user = results.rows[0]
-          }
-        )
+        throw error
+      }
+      if (results.rowCount !== 0) {
+        user = results.rows[0]
+      }
+    }
+  )
+  return user
+}
+
+;(app.get('/createNewUser'),
+  (req, res) => {
+    if (!req.oidc.isAuthenticated()) {
+      return res.status(403).send('Access Denied placeholder')
+    }
+
+    let user = null
+
+    try {
+      user = selectUser(req)
+      if (!user) {
+        insertUser(req)
+      }
+    } catch {
+      return res.status(500).send('Oops, something went wrong placeholder')
+    }
+
+    res.json({ user: user })
+  })
+
+/**
+ * Insert the current user into the DB. User must be authenticated and not exist in the DB
+ * @returns the user fetched from the DB, or null
+ */
+function insertUser(req) {
+  let user = null
+  db.query(
+    'INSERT INTO "user" (email, role, name, nickname) VALUES ($1, $2, $3, $4) RETURNING *',
+    [req.oidc.user.email, 'user', req.oidc.user.name, req.oidc.user.nickname],
+    (error, results) => {
+      if (error) {
+        throw error
       } else {
         user = results.rows[0]
       }
-      res.json({ isAuthenticated: isAuthenticated, user: user, reason: reason })
     }
   )
-})
+  return user
+}
 
 app.get('/sample_query', (req, res) => {
   db.query('SELECT *', (error, results) => {
