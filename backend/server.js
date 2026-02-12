@@ -40,6 +40,21 @@ app.get('/', (req, res) => {
   res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out')
 })
 
+app.get('/authenticateUser', (req, res) => {
+  let isAuthenticated = req.oidc.isAuthenticated()
+  let user = null
+  if (!isAuthenticated) {
+    return res.json({ isAuthenticated: isAuthenticated, user: user })
+  }
+  try {
+    user = selectUser(req)
+  } catch {
+    return res.status(500).send('Oops, something went wrong placeholder')
+  }
+
+  res.json({ isAuthenticated: isAuthenticated, user: user })
+})
+
 /**
  * Select the current user from the DB. user must be authenticated
  * @returns the user fetched from the DB, or null
