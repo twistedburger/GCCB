@@ -44,22 +44,17 @@ app.get('/', (req, res) => {
 
 app.get('/authenticateUser', (req, res) => {
   let isAuthenticated = req.oidc.isAuthenticated()
-  let reason = ''
   let user = null
   if (!isAuthenticated) {
-    reason = 'invalid login placeholder'
-    res.json({ isAuthenticated: isAuthenticated, user: user, reason: reason })
-    return
+    return res.json({ isAuthenticated: isAuthenticated, user: user })
   }
   try {
     user = selectUser(req)
-  } catch (err) {
-    console.log(err)
-    reason = 'Query error placeholder'
-    isAuthenticated = false
+  } catch {
+    return res.status(500).send('Oops, something went wrong placeholder')
   }
 
-  res.json({ isAuthenticated: isAuthenticated, user: user, reason: reason })
+  res.json({ isAuthenticated: isAuthenticated, user: user })
 })
 
 /**
