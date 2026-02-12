@@ -107,4 +107,83 @@ export const adminAnalyticsEn = {
       },
     },
   },
+  tripFrequency: {
+    pageTitle: {
+      admin: 'Trip Frequency (All Users)',
+      student: 'My Trip Frequency',
+    },
+
+    filters: {
+      blockTitle: 'Filters',
+      blockDescription: 'Placeholder controls',
+      dateRangeLabel: 'Date range:',
+      dateRangeValue: 'Last 7 days / Last 30 days / All Time',
+      modeLabel: 'Mode:',
+      modeValue: 'Walk / Cycle / Carpool / Transit',
+    },
+
+    metrics: {
+      blockTitle: 'Key metrics',
+      blockDescription: 'Summary values (placeholder)',
+
+      admin: {
+        avgRoutesPerCreator30d: 'Avg routes / creator (30d)',
+        medianRoutesPerCreator30d: 'Median routes / creator (30d)',
+        activeCreators30d: 'Active creators (30d)',
+        creatorsWith2PlusRoutes30d: 'Creators with 2+ routes (30d)',
+      },
+
+      student: {
+        myRoutesPerWeek: 'My routes / week',
+        myAvgRoutesPerDay7d: 'My avg routes / day (7d)',
+        myWeeklyStreak: 'My weekly streak',
+        myMostActiveDay: 'My most active day',
+      },
+
+      values: {
+        tuesday: 'Tuesday',
+      },
+    },
+
+    charts: {
+      blockTitle: 'Charts',
+      blockDescription: 'Chart placeholders',
+
+      admin: {
+        distribution: {
+          title: 'Routes per creator distribution',
+          subtitle: 'Histogram buckets (0, 1, 2-3, 4+)',
+          placeholderLabel: 'Histogram / bar chart placeholder',
+        },
+        activeCreatorsOverTime: {
+          title: 'Active creators over time',
+          subtitle: 'Trend over time (placeholder)',
+          placeholderLabel: 'Line chart placeholder',
+        },
+        routesPerDayWeek: {
+          title: 'Routes per day/week',
+          subtitle: 'Platform-level frequency (placeholder)',
+          placeholderLabel: 'Line / bar chart placeholder',
+        },
+      },
+
+      student: {
+        routesPerWeek: {
+          title: 'My routes per week',
+          subtitle: 'Weekly volume (placeholder)',
+          placeholderLabel: 'Bar chart placeholder',
+        },
+        streakOverTime: {
+          title: 'My streak over time',
+          subtitle: 'Consistency trend (placeholder)',
+          placeholderLabel: 'Line chart placeholder',
+        },
+        busiestDayTime: {
+          title: 'My busiest day/time',
+          subtitle: 'Weekday/hour distribution (placeholder)',
+          placeholderLabel: 'Bar chart placeholder',
+        },
+      },
+    },
+  },
 }

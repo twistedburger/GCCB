@@ -1,3 +1,4 @@
+import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../../components/analytics/KpiGrid'
@@ -10,97 +11,121 @@ function TripFrequency() {
   const role = location.state?.role ?? 'student'
   const isAdmin = role === 'admin'
 
+  const S = adminAnalyticsEn.tripFrequency
+
   const kpis = isAdmin
     ? [
-        { label: 'Avg routes / creator (30d)', value: '2.3' },
-        { label: 'Median routes / creator (30d)', value: '1.0' },
-        { label: 'Active creators (30d)', value: '41' },
-        { label: 'Creators with 2+ routes (30d)', value: '18' },
+        { label: S.metrics.admin.avgRoutesPerCreator30d, value: '2.3' },
+        { label: S.metrics.admin.medianRoutesPerCreator30d, value: '1.0' },
+        { label: S.metrics.admin.activeCreators30d, value: '41' },
+        { label: S.metrics.admin.creatorsWith2PlusRoutes30d, value: '18' },
       ]
     : [
-        { label: 'My routes / week', value: '2-3' },
-        { label: 'My avg routes / day (7d)', value: '1.8' },
-        { label: 'My weekly streak', value: '3 weeks' },
-        { label: 'My most active day', value: 'Tuesday' },
+        { label: S.metrics.student.myRoutesPerWeek, value: '2-3' },
+        { label: S.metrics.student.myAvgRoutesPerDay7d, value: '1.8' },
+        { label: S.metrics.student.myWeeklyStreak, value: '3 weeks' },
+        {
+          label: S.metrics.student.myMostActiveDay,
+          value: S.metrics.values.tuesday,
+        },
       ]
 
   return (
     <>
       <button type="button" onClick={() => navigate(-1)}>
-        Back
+        {adminAnalyticsEn.common.back}
       </button>
 
-      <h1>{isAdmin ? 'Trip Frequency (All Users)' : 'My Trip Frequency'}</h1>
+      <h1>{isAdmin ? S.pageTitle.admin : S.pageTitle.student}</h1>
       <p>
         Viewing as: <strong>{role}</strong>
       </p>
 
       <hr />
 
-      <AnalyticsBlock title="Filters" description="Placeholder controls">
+      <AnalyticsBlock
+        title={S.filters.blockTitle}
+        description={S.filters.blockDescription}
+      >
         <ul>
           <li>
-            <strong>Date range:</strong> Last 7 days / Last 30 days / All Time
+            <strong>{S.filters.dateRangeLabel}</strong>{' '}
+            {S.filters.dateRangeValue}
           </li>
           <li>
-            <strong>Mode:</strong> Walk / Cycle / Carpool / Transit
+            <strong>{S.filters.modeLabel}</strong> {S.filters.modeValue}
           </li>
         </ul>
       </AnalyticsBlock>
 
       <AnalyticsBlock
-        title="Key metrics"
-        description="Summary values (placeholder)"
+        title={S.metrics.blockTitle}
+        description={S.metrics.blockDescription}
       >
         <KpiGrid items={kpis} />
       </AnalyticsBlock>
 
-      <AnalyticsBlock title="Charts" description="Chart placeholders">
+      <AnalyticsBlock
+        title={S.charts.blockTitle}
+        description={S.charts.blockDescription}
+      >
         <div style={{ display: 'grid', gap: 12 }}>
           {isAdmin ? (
             <>
               <ChartCard
-                title="Routes per creator distribution"
-                subtitle="Histogram buckets (0, 1, 2-3, 4+)"
+                title={S.charts.admin.distribution.title}
+                subtitle={S.charts.admin.distribution.subtitle}
               >
-                <ChartPlaceholder label="Histogram / bar chart placeholder" />
+                <ChartPlaceholder
+                  label={S.charts.admin.distribution.placeholderLabel}
+                />
               </ChartCard>
 
               <ChartCard
-                title="Active creators over time"
-                subtitle="Trend over time (placeholder)"
+                title={S.charts.admin.activeCreatorsOverTime.title}
+                subtitle={S.charts.admin.activeCreatorsOverTime.subtitle}
               >
-                <ChartPlaceholder label="Line chart placeholder" />
+                <ChartPlaceholder
+                  label={S.charts.admin.activeCreatorsOverTime.placeholderLabel}
+                />
               </ChartCard>
 
               <ChartCard
-                title="Routes per day/week"
-                subtitle="Platform-level frequency (placeholder)"
+                title={S.charts.admin.routesPerDayWeek.title}
+                subtitle={S.charts.admin.routesPerDayWeek.subtitle}
               >
-                <ChartPlaceholder label="Line / bar chart placeholder" />
+                <ChartPlaceholder
+                  label={S.charts.admin.routesPerDayWeek.placeholderLabel}
+                />
               </ChartCard>
             </>
           ) : (
             <>
               <ChartCard
-                title="My routes per week"
-                subtitle="Weekly volume (placeholder)"
+                title={S.charts.student.routesPerWeek.title}
+                subtitle={S.charts.student.routesPerWeek.subtitle}
               >
-                <ChartPlaceholder label="Bar chart placeholder" />
+                <ChartPlaceholder
+                  label={S.charts.student.routesPerWeek.placeholderLabel}
+                />
               </ChartCard>
 
               <ChartCard
-                title="My streak over time"
-                subtitle="Consistency trend (placeholder)"
+                title={S.charts.student.streakOverTime.title}
+                subtitle={S.charts.student.streakOverTime.subtitle}
               >
-                <ChartPlaceholder label="Line chart placeholder" />
+                <ChartPlaceholder
+                  label={S.charts.student.streakOverTime.placeholderLabel}
+                />
               </ChartCard>
 
               <ChartCard
-                title="My busiest day/time"
-                subtitle="Weekday/hour distribution (placeholder)"
+                title={S.charts.student.busiestDayTime.title}
+                subtitle={S.charts.student.busiestDayTime.subtitle}
               >
-                <ChartPlaceholder label="Bar chart placeholder" />
+                <ChartPlaceholder
+                  label={S.charts.student.busiestDayTime.placeholderLabel}
+                />
               </ChartCard>
             </>
           )}
