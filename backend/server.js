@@ -37,19 +37,16 @@ app.get('/loginRoute', (req, res) => {
   })
 })
 
-app.get('/', (req, res) => {
-  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out')
-})
-
-app.get('/authenticateUser', (req, res) => {
+app.get('/authenticateUser', async (req, res) => {
   let isAuthenticated = req.oidc.isAuthenticated()
   let user = null
   if (!isAuthenticated) {
     return res.json({ isAuthenticated: isAuthenticated, user: user })
   }
   try {
-    user = selectUser(req)
-  } catch {
+    user = await selectUser(req)
+  } catch (error) {
+    console.log(error)
     return res.status(500).send('Oops, something went wrong placeholder')
   }
 
@@ -60,61 +57,48 @@ app.get('/authenticateUser', (req, res) => {
  * Select the current user from the DB. user must be authenticated
  * @returns the user fetched from the DB, or null
  */
-function selectUser(req) {
-  let user = null
-  db.query(
-    'SELECT * FROM "user" WHERE email = $1',
-    [req.oidc.user.email],
-    (error, results) => {
-      if (error) {
-        throw error
-      }
-      if (results.rowCount !== 0) {
-        user = results.rows[0]
-      }
-    }
-  )
-  return user
+async function selectUser(req) {
+  const results = await db.query('SELECT * FROM "user" WHERE email = $1', [
+    req.oidc.user.email,
+  ])
+
+  if (results.rowCount !== 0) {
+    return results.rows[0]
+  }
+  return null
 }
 
-;(app.get('/createNewUser'),
-  (req, res) => {
-    if (!req.oidc.isAuthenticated()) {
-      return res.status(403).send('Access Denied placeholder')
+app.get('/createNewUser', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send('Access Denied placeholder')
+  }
+
+  let user = null
+
+  try {
+    user = await selectUser(req)
+    if (!user) {
+      user = await insertUser(req)
     }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send('Oops, something went wrong placeholder')
+  }
 
-    let user = null
-
-    try {
-      user = selectUser(req)
-      if (!user) {
-        insertUser(req)
-      }
-    } catch {
-      return res.status(500).send('Oops, something went wrong placeholder')
-    }
-
-    res.json({ user: user })
-  })
+  res.json({ user: user })
+})
 
 /**
  * Insert the current user into the DB. User must be authenticated and not exist in the DB
  * @returns the user fetched from the DB, or null
  */
-function insertUser(req) {
-  let user = null
-  db.query(
+async function insertUser(req) {
+  const results = db.query(
     'INSERT INTO "user" (email, role, name, nickname) VALUES ($1, $2, $3, $4) RETURNING *',
-    [req.oidc.user.email, 'user', req.oidc.user.name, req.oidc.user.nickname],
-    (error, results) => {
-      if (error) {
-        throw error
-      } else {
-        user = results.rows[0]
-      }
-    }
+    [req.oidc.user.email, 'user', req.oidc.user.name, req.oidc.user.nickname]
   )
-  return user
+
+  return results.rowCount !== 0 ? results.rows[0] : null
 }
 
 app.get('/sample_query', (req, res) => {
