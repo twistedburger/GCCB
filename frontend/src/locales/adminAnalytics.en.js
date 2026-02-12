@@ -12,7 +12,12 @@ export const adminAnalyticsEn = {
 
   analyticsHub: {
     title: 'Analytics',
+    currentRoleLabel: 'Current Role:',
+    viewAsStudent: 'View as Student', // to be removed
+    viewAsAdmin: 'View as Admin', // to be removed
     subtitle: 'Track engagement and sustainability impact.',
+    adminSectionTitle: 'Admin Overview (All Users)',
+    studentSectionTitle: 'My Impact (Personal)',
   },
 
   kpis: {
@@ -20,6 +25,13 @@ export const adminAnalyticsEn = {
     activeUsers: 'Active users',
     co2Saved: 'CO₂ saved (est.)',
     tripsByMode: 'Trips by mode',
+
+    totalUserCommutes: 'Total User Commutes',
+    tripFrequency: 'Trip Frequency',
+
+    myCo2Saved: 'My CO₂ Saved (est.)',
+    myCommutesDistance: 'My Commutes & Distance',
+    myTripFrequency: 'My Trip Frequency',
   },
 
   actions: {

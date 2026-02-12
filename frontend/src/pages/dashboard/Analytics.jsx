@@ -1,3 +1,4 @@
+import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
 import { useState } from 'react'
 import PropTypes from 'prop-types'
 import { useNavigate } from 'react-router-dom'
@@ -61,17 +62,17 @@ function Analytics() {
 
   return (
     <>
-      <h1>This is the Analytics Page</h1>
+      <h1>{adminAnalyticsEn.analyticsHub.title}</h1>
       <p>
-        Current Role: <strong>{role}</strong>
+        {adminAnalyticsEn.analyticsHub.currentRoleLabel} <strong>{role}</strong>
       </p>
       {/* Temporary: role toggle for UI testing; route via Auth/Permissions */}
       <button type="button" onClick={() => setRole('student')}>
-        View as Student
+        {adminAnalyticsEn.analyticsHub.viewAsStudent}
       </button>{' '}
       <br />
       <button type="button" onClick={() => setRole('admin')}>
-        View as Admin
+        {adminAnalyticsEn.analyticsHub.viewAsAdmin}
       </button>
       <hr />
       {role === 'admin' ? (
@@ -86,54 +87,54 @@ function Analytics() {
 function AdminAnalytics({ goTo }) {
   const metrics = [
     {
-      title: 'Total CO₂ Saved (est.)',
+      title: adminAnalyticsEn.kpis.co2Saved,
       value: (
         <>
           <div>1,234 kg</div>
           <div>Last 30 days</div>
         </>
       ),
-      actionLabel: 'View details',
+      actionLabel: adminAnalyticsEn.actions.viewDetails,
       onAction: () => goTo('/dashboard/analytics/co2-savings'),
     },
     {
-      title: 'Total User Commutes',
+      title: adminAnalyticsEn.kpis.totalUserCommutes,
       value: (
         <>
           <div>4,567 trips</div>
           <div>67 this week</div>
         </>
       ),
-      actionLabel: 'View details',
+      actionLabel: adminAnalyticsEn.actions.viewDetails,
       onAction: () => goTo('/dashboard/analytics/commutes'),
     },
     {
-      title: 'Trip Frequency',
+      title: adminAnalyticsEn.kpis.tripFrequency,
       value: (
         <>
           <div>2.3 trips / user</div>
           <div>Last 30 days</div>
         </>
       ),
-      actionLabel: 'View details',
+      actionLabel: adminAnalyticsEn.actions.viewDetails,
       onAction: () => goTo('/dashboard/analytics/trip-frequency'),
     },
     {
-      title: 'Active Users',
+      title: adminAnalyticsEn.kpis.activeUsers,
       value: (
         <>
           <div>25 users</div>
           <div>18 upcoming routes</div>
         </>
       ),
-      actionLabel: 'View details',
+      actionLabel: adminAnalyticsEn.actions.viewDetails,
       onAction: () => goTo('/dashboard/analytics/activity'),
     },
   ]
 
   return (
     <>
-      <h3>Admin Overview (All Users)</h3>
+      <h3>{adminAnalyticsEn.analyticsHub.adminSectionTitle}</h3>
       <MetricsDisplay metrics={metrics} />
     </>
   )
@@ -146,13 +147,13 @@ AdminAnalytics.propTypes = {
 function StudentAnalytics({ goTo }) {
   const metrics = [
     {
-      title: 'My CO₂ Saved (est.)',
+      title: adminAnalyticsEn.kpis.myCo2Saved,
       value: '123 kg',
-      actionLabel: 'View details',
+      actionLabel: adminAnalyticsEn.actions.viewDetails,
       onAction: () => goTo('/dashboard/analytics/co2-savings'),
     },
     {
-      title: 'My Commutes & Distance',
+      title: adminAnalyticsEn.kpis.myCommutesDistance,
       value: (
         <>
           <div>12 trips</div>
@@ -160,22 +161,20 @@ function StudentAnalytics({ goTo }) {
           <div>Avg: 2.7 km / trip</div>
         </>
       ),
-
-      actionLabel: 'View details',
+      actionLabel: adminAnalyticsEn.actions.viewDetails,
       onAction: () => goTo('/dashboard/analytics/commutes'),
     },
-
     {
-      title: 'My Trip Frequency',
+      title: adminAnalyticsEn.kpis.myTripFrequency,
       value: '1.8 trips / day',
-      actionLabel: 'View details',
+      actionLabel: adminAnalyticsEn.actions.viewDetails,
       onAction: () => goTo('/dashboard/analytics/trip-frequency'),
     },
   ]
 
   return (
     <>
-      <h3>My Impact (Personal)</h3>
+      <h3>{adminAnalyticsEn.analyticsHub.studentSectionTitle}</h3>
       <MetricsDisplay metrics={metrics} />
     </>
   )
