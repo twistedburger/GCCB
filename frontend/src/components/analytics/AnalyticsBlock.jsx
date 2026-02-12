@@ -2,11 +2,12 @@ import PropTypes from 'prop-types'
 
 function AnalyticsBlock({ title, description, children }) {
   return (
-    <section style={{ marginTop: 16 }}>
-      <div style={{ marginBottom: 8 }}>
-        <h3 style={{ margin: 0 }}>{title}</h3>
+    <section className="mt-6">
+      <div className="mb-3">
+        <h3 className="text-lg font-bold text-text-primary">{title}</h3>
+
         {description && (
-          <p style={{ margin: '6px 0 0', fontSize: 13, opacity: 0.85 }}>
+          <p className="mt-1 text-sm font-medium text-text-secondary">
             {description}
           </p>
         )}

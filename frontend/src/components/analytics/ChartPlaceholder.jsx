@@ -3,16 +3,10 @@ import PropTypes from 'prop-types'
 function ChartPlaceholder({ label, height }) {
   return (
     <div
-      style={{
-        height,
-        border: '1px dashed #ddd',
-        borderRadius: 10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 12,
-        opacity: 0.85,
-      }}
+      className="w-full rounded-2xl border border-dashed border-gray-300 
+                 bg-background-off-white flex items-center justify-center
+                 text-xs font-medium text-text-secondary"
+      style={{ height }}
     >
       {label}
     </div>
@@ -25,7 +19,7 @@ ChartPlaceholder.propTypes = {
 }
 
 ChartPlaceholder.defaultProps = {
-  height: 200,
+  height: 220,
 }
 
 export default ChartPlaceholder

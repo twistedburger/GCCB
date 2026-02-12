@@ -2,17 +2,13 @@ import PropTypes from 'prop-types'
 
 function KpiCard({ label, value, subvalue }) {
   return (
-    <div
-      style={{
-        border: '1px solid #ddd',
-        borderRadius: 10,
-        padding: 12,
-      }}
-    >
-      <div style={{ fontSize: 12, opacity: 0.85 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>{value}</div>
+    <div className="bg-gray-100 rounded-3xl p-5 shadow-sm border border-gray-400">
+      <div className="text-xs font-medium text-text-secondary">{label}</div>
+
+      <div className="mt-1 text-xl font-bold text-text-primary">{value}</div>
+
       {subvalue && (
-        <div style={{ fontSize: 12, opacity: 0.8, marginTop: 6 }}>
+        <div className="mt-3 text-xs font-medium text-text-secondary">
           {subvalue}
         </div>
       )}
@@ -22,19 +18,13 @@ function KpiCard({ label, value, subvalue }) {
 
 KpiCard.propTypes = {
   label: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
+  value: PropTypes.node.isRequired,
   subvalue: PropTypes.string,
 }
 
 function KpiGrid({ items }) {
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: 12,
-      }}
-    >
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {items.map(k => (
         <KpiCard
           key={k.label}
@@ -51,7 +41,7 @@ KpiGrid.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({
       label: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired,
+      value: PropTypes.node.isRequired,
       subvalue: PropTypes.string,
     })
   ).isRequired,

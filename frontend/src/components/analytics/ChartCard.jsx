@@ -2,19 +2,17 @@ import PropTypes from 'prop-types'
 
 function ChartCard({ title, subtitle, children }) {
   return (
-    <section
-      style={{
-        border: '1px solid #ddd',
-        borderRadius: 10,
-        padding: 12,
-      }}
-    >
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ fontWeight: 700 }}>{title}</div>
+    <section className="w-full bg-gray-100 rounded-3xl p-5 shadow-sm border border-gray-400">
+      <div className="mb-4">
+        <h4 className="text-base font-bold text-text-primary">{title}</h4>
+
         {subtitle && (
-          <div style={{ fontSize: 12, opacity: 0.8 }}>{subtitle}</div>
+          <p className="mt-1 text-xs font-medium text-text-secondary">
+            {subtitle}
+          </p>
         )}
       </div>
+
       {children}
     </section>
   )
@@ -25,4 +23,5 @@ ChartCard.propTypes = {
   subtitle: PropTypes.string,
   children: PropTypes.node.isRequired,
 }
+
 export default ChartCard

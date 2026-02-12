@@ -18,46 +18,39 @@ function Co2InfoModal({ open, onClose }) {
       onMouseDown={e => {
         if (e.target === e.currentTarget) onClose()
       }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        zIndex: 1000,
-      }}
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={S.modal.title}
     >
-      <div
-        style={{
-          background: 'white',
-          color: 'black',
-          width: '100%',
-          maxWidth: 700,
-          padding: 16,
-          borderRadius: 8,
-        }}
-      >
-        <h2>
-          <strong>{S.modal.title}</strong>
+      <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-lg border border-gray-100">
+        <h2 className="text-xl font-extrabold text-text-primary">
+          {S.modal.title}
         </h2>
 
-        <p>{S.modal.intro}</p>
+        <p className="mt-3 text-sm font-medium text-text-secondary">
+          {S.modal.intro}
+        </p>
 
-        <h3>
-          <strong>{S.modal.baselineTitle}</strong>
-        </h3>
-        <p>{S.modal.baselineBody}</p>
+        <div className="mt-6 space-y-6">
+          <div>
+            <h3 className="text-sm font-extrabold text-text-primary">
+              {S.modal.baselineTitle}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+              {S.modal.baselineBody}
+            </p>
+          </div>
 
-        <h3>
-          <strong>{S.modal.carpoolTitle}</strong>
-        </h3>
-        <p>{S.modal.carpoolBody}</p>
-
-        <button type="button" onClick={onClose}>
-          {adminAnalyticsEn.common.close}
-        </button>
+          <div>
+            <h3 className="text-sm font-extrabold text-text-primary">
+              {S.modal.carpoolTitle}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+              {S.modal.carpoolBody}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
