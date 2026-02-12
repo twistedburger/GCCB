@@ -1,3 +1,5 @@
+import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
+
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import PropTypes from 'prop-types'
@@ -8,6 +10,8 @@ import ChartPlaceholder from '../../../components/analytics/ChartPlaceholder'
 
 function Co2InfoModal({ open, onClose }) {
   if (!open) return null
+
+  const S = adminAnalyticsEn.co2
 
   return (
     <div
@@ -36,31 +40,23 @@ function Co2InfoModal({ open, onClose }) {
         }}
       >
         <h2>
-          <strong>How CO₂ is calculated</strong>
+          <strong>{S.modal.title}</strong>
         </h2>
 
-        <p>Methodology goes here!</p>
+        <p>{S.modal.intro}</p>
 
         <h3>
-          <strong>Baseline</strong>
+          <strong>{S.modal.baselineTitle}</strong>
         </h3>
-        <p>
-          We estimate &quot;savings&quot; by comparing a trip against a standard
-          solo-passenger vehicle baseline (~250g CO₂ per km). The difference is
-          treated as CO₂ saved.
-        </p>
+        <p>{S.modal.baselineBody}</p>
 
         <h3>
-          <strong>Carpooling</strong>
+          <strong>{S.modal.carpoolTitle}</strong>
         </h3>
-        <p>
-          A possible calculation is to scale savings by (passengers - 1), since
-          one carpool trip may replace multiple solo trips depending on number
-          of passengers.
-        </p>
+        <p>{S.modal.carpoolBody}</p>
 
         <button type="button" onClick={onClose}>
-          Close
+          {adminAnalyticsEn.common.close}
         </button>
       </div>
     </div>
@@ -80,85 +76,105 @@ function Co2Savings() {
   const role = location.state?.role ?? 'student'
   const isAdmin = role === 'admin'
 
+  const S = adminAnalyticsEn.co2
+
   const headline = isAdmin ? '1,234 kg' : '123 kg'
 
   const kpis = isAdmin
     ? [
-        { label: 'Total CO₂ saved (30d)', value: '1,234 kg' },
-        { label: 'Avg CO₂ saved / route', value: '0.27 kg' },
-        { label: 'Routes contributing (30d)', value: '4,567' },
-        { label: 'Top saving mode', value: 'Cycling' },
+        { label: S.metrics.admin.totalSaved30d, value: '1,234 kg' },
+        { label: S.metrics.admin.avgSavedPerRoute, value: '0.27 kg' },
+        { label: S.metrics.admin.routesContributing30d, value: '4,567' },
+        {
+          label: S.metrics.admin.topSavingMode,
+          value: S.metrics.values.cycling,
+        },
       ]
     : [
-        { label: 'My CO₂ saved (30d)', value: '123 kg' },
-        { label: 'Avg CO₂ saved / trip', value: '0.30 kg' },
-        { label: 'Trips contributing (30d)', value: '12' },
-        { label: 'My top saving mode', value: 'Cycling' },
+        { label: S.metrics.student.mySaved30d, value: '123 kg' },
+        { label: S.metrics.student.avgSavedPerTrip, value: '0.30 kg' },
+        { label: S.metrics.student.tripsContributing30d, value: '12' },
+        {
+          label: S.metrics.student.myTopSavingMode,
+          value: S.metrics.values.cycling,
+        },
       ]
 
   return (
     <>
       <button type="button" onClick={() => navigate(-1)}>
-        Back
+        {adminAnalyticsEn.common.back}
       </button>
 
-      <h1>CO₂ Savings</h1>
+      <h1>{S.pageTitle}</h1>
+
       <p>
         Viewing as: <strong>{role}</strong>
       </p>
 
       <p>
         <strong>
-          {isAdmin ? 'Total CO₂ Saved (All Users)' : 'My CO₂ Saved'}:
+          {isAdmin ? S.headline.adminLabel : S.headline.studentLabel}:
         </strong>{' '}
         {headline}
       </p>
 
       <button type="button" onClick={() => setIsModalOpen(true)}>
-        How it&apos;s calculated
+        {S.actions.howCalculated}
       </button>
 
       <hr />
 
-      <AnalyticsBlock title="Filters" description="Placeholder controls">
+      <AnalyticsBlock
+        title={S.filters.blockTitle}
+        description={S.filters.blockDescription}
+      >
         <ul>
           <li>
-            <strong>Date range:</strong> Last 7 days / Last 30 days / All Time
+            <strong>{S.filters.dateRangeLabel}</strong>{' '}
+            {S.filters.dateRangeValue}
           </li>
           <li>
-            <strong>Mode:</strong> Walk / Cycle / Carpool / Transit
+            <strong>{S.filters.modeLabel}</strong> {S.filters.modeValue}
           </li>
         </ul>
       </AnalyticsBlock>
 
       <AnalyticsBlock
-        title="Key impact metrics"
-        description="Summary values (placeholder)"
+        title={S.metrics.blockTitle}
+        description={S.metrics.blockDescription}
       >
         <KpiGrid items={kpis} />
       </AnalyticsBlock>
 
-      <AnalyticsBlock title="Charts" description="Chart placeholders">
+      <AnalyticsBlock
+        title={S.charts.blockTitle}
+        description={S.charts.blockDescription}
+      >
         <div style={{ display: 'grid', gap: 12 }}>
           <ChartCard
-            title="CO₂ saved over time"
-            subtitle="Weekly/monthly trend (placeholder)"
+            title={S.charts.overTime.title}
+            subtitle={S.charts.overTime.subtitle}
           >
-            <ChartPlaceholder label="Line chart placeholder" />
+            <ChartPlaceholder label={S.charts.overTime.placeholderLabel} />
           </ChartCard>
 
           <ChartCard
-            title="CO₂ saved by mode"
-            subtitle="Share by transportation mode (placeholder)"
+            title={S.charts.byMode.title}
+            subtitle={S.charts.byMode.subtitle}
           >
-            <ChartPlaceholder label="Pie/Stacked bar placeholder" />
+            <ChartPlaceholder label={S.charts.byMode.placeholderLabel} />
           </ChartCard>
 
           <ChartCard
-            title={isAdmin ? 'Top contributors (admin)' : 'My progress'}
-            subtitle="Optional breakdown (placeholder)"
+            title={
+              isAdmin
+                ? S.charts.contributors.adminTitle
+                : S.charts.contributors.studentTitle
+            }
+            subtitle={S.charts.contributors.subtitle}
           >
-            <ChartPlaceholder label="Table/Bar chart placeholder" />
+            <ChartPlaceholder label={S.charts.contributors.placeholderLabel} />
           </ChartCard>
         </div>
       </AnalyticsBlock>
