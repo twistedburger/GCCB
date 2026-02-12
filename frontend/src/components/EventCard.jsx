@@ -33,7 +33,7 @@ export default function EventCard({ event }) {
             <p className="truncate">{event.location}</p>
           </div>
           <div className="flex flex-row items-center">
-            <h3 className="font-semibold text-xl text-text-primary mr-1">
+            <h3 className="font-semibold text-lg text-text-primary mr-1">
               {event.title}
             </h3>
             {event.verified && <VerifiedOutlined fontSize="small" />}

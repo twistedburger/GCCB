@@ -5,12 +5,14 @@ import ArriveDepartToggle from '../components/ArriveDepartToggle'
 import { PlaceOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
+import RouteCard from '../components/RouteCard'
 
 function Home() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isArriving, setIsArriving] = useState(true)
   const [location, setLocation] = useState('')
   const [events, setEvents] = useState([])
+  const [routes, setRoutes] = useState([])
 
   const handleSearch = newLocation => {
     setLocation(newLocation)
@@ -29,8 +31,20 @@ function Home() {
       }
     }
 
+    const fetchRoutes = async () => {
+      try {
+        const response = await fetch('/api/routes')
+        const data = await response.json()
+        setRoutes(data)
+      } catch (error) {
+        console.error('Error fetching routes:', error)
+        setRoutes([])
+      }
+    }
+
     if (location) {
       fetchEvents()
+      fetchRoutes()
     }
   }, [location])
 
@@ -54,6 +68,9 @@ function Home() {
             </div>
             {events.map(item => (
               <EventCard key={item.id} event={item} />
+            ))}
+            {routes.map(item => (
+              <RouteCard key={item.id} route={item} />
             ))}
           </>
         )}
