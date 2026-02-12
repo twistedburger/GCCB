@@ -1,17 +1,6 @@
 import { PropTypes } from 'prop-types'
 
 import { t } from '../locales'
-import commute_img from '../assets/commute_img.png'
-import events_img from '../assets/events_img.png'
-import analysis_img from '../assets/analysis_img.png'
-
-import map_img from '../assets/map_img.png'
-import toggle_img from '../assets/toggle_img.png'
-import choose_pin_img from '../assets/choose_pin_img.png'
-import join_img from '../assets/join_img.png'
-import organize_img from '../assets/organize_img.png'
-import dashboard_img from '../assets/dashboard_img.png'
-import badge_img from '../assets/badge_img.png'
 
 const NavButton = ({ target, label }) => (
   <a
@@ -30,19 +19,6 @@ NavButton.propTypes = {
 
 // Individual cards for each topic in user guide
 const GuideCard = ({ id, data }) => {
-  const hasPoints = data.points && data.points.length > 0
-
-  // Image for each points in card
-  const getPointImage = index => {
-    if (id === 'commuting') return index === 0 ? map_img : toggle_img
-    if (id === 'events') {
-      if (index === 0) return choose_pin_img
-      if (index === 1) return join_img
-      return organize_img
-    }
-    return index === 0 ? dashboard_img : badge_img
-  }
-
   return (
     <section
       id={id}
@@ -51,13 +27,7 @@ const GuideCard = ({ id, data }) => {
       {/* Topic image for each card */}
       <img
         className="w-full h-48 object-contain rounded-lg mb-6"
-        src={
-          id === 'commuting'
-            ? commute_img
-            : id === 'events'
-              ? events_img
-              : analysis_img
-        }
+        src={data.image}
         alt={data.title}
       />
 
@@ -69,25 +39,24 @@ const GuideCard = ({ id, data }) => {
 
       {/* Points for each card */}
       <div className="mt-6 w-full space-y-12">
-        {hasPoints &&
-          data.points.map((item, index) => (
-            <div key={index} className="flex flex-col items-center">
-              {/* Title for each point */}
-              <h4 className="font-bold text-gray-800 text-lg mb-3 tracking-wide">
-                {item.term}
-              </h4>
-              {/* Image for each point */}
-              <img
-                className="w-full max-w-[260px] rounded-2xl mb-4 shadow-md border border-background-off-white transition-transform"
-                src={getPointImage(index)}
-                alt={item.term}
-              />
-              {/* Description for each point */}
-              <p className="text-sm leading-relaxed px-2 text-text-secondary">
-                {item.desc}
-              </p>
-            </div>
-          ))}
+        {data.points.map((item, index) => (
+          <div key={index} className="flex flex-col items-center">
+            {/* Title for each point */}
+            <h4 className="font-bold text-gray-800 text-lg mb-3 tracking-wide">
+              {item.term}
+            </h4>
+            {/* Image for each point */}
+            <img
+              className="w-full max-w-[260px] rounded-2xl mb-4 shadow-md border border-background-off-white transition-transform"
+              src={item.image}
+              alt={item.term}
+            />
+            {/* Description for each point */}
+            <p className="text-sm leading-relaxed px-2 text-text-secondary">
+              {item.desc}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   )
@@ -130,12 +99,14 @@ function UserGuide() {
 GuideCard.propTypes = {
   id: PropTypes.string.isRequired,
   data: PropTypes.shape({
+    image: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
     subtitle: PropTypes.string.isRequired,
     points: PropTypes.arrayOf(
       PropTypes.shape({
         term: PropTypes.string,
         desc: PropTypes.string,
+        image: PropTypes.string,
       })
     ).isRequired,
   }).isRequired,
