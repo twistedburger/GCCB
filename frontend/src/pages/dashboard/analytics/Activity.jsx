@@ -1,3 +1,4 @@
+import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../../components/analytics/KpiGrid'
@@ -10,79 +11,94 @@ function Activity() {
   const role = location.state?.role ?? 'student'
   const isAdmin = role === 'admin'
 
+  const S = adminAnalyticsEn.activity
+
   // Safeguard: handle via auth or redirect later
   if (!isAdmin) {
     return (
       <>
         <button type="button" onClick={() => navigate(-1)}>
-          Back
+          {adminAnalyticsEn.common.back}
         </button>
 
-        <h1>Platform Activity</h1>
-        <p>This should only be viewable by administrators.</p>
+        <h1>{S.guard.pageTitle}</h1>
+        <p>{S.guard.message}</p>
       </>
     )
   }
 
   const kpis = [
-    { label: 'Active route creators (7d)', value: '25' },
-    { label: 'Upcoming routes', value: '18' },
-    { label: 'Completion rate (30d)', value: '74%' },
-    { label: 'Rejected routes (30d)', value: '9' },
+    { label: S.metrics.activeRouteCreators7d, value: '25' },
+    { label: S.metrics.upcomingRoutes, value: '18' },
+    { label: S.metrics.completionRate30d, value: '74%' },
+    { label: S.metrics.rejectedRoutes30d, value: '9' },
   ]
 
   return (
     <>
       <button type="button" onClick={() => navigate(-1)}>
-        Back
+        {adminAnalyticsEn.common.back}
       </button>
 
-      <h1>Activity (Platform)</h1>
+      <h1>{S.pageTitle}</h1>
       <p>
         Viewing as: <strong>{role}</strong>
       </p>
 
       <hr />
 
-      <AnalyticsBlock title="Filters" description="Placeholder controls">
+      <AnalyticsBlock
+        title={S.filters.blockTitle}
+        description={S.filters.blockDescription}
+      >
         <ul>
           <li>
-            <strong>Date range:</strong> Last 7 days / Last 30 days / All Time
+            <strong>{S.filters.dateRangeLabel}</strong>{' '}
+            {S.filters.dateRangeValue}
           </li>
           <li>
-            <strong>Status:</strong> Upcoming / Completed / Rejected
+            <strong>{S.filters.statusLabel}</strong> {S.filters.statusValue}
           </li>
         </ul>
       </AnalyticsBlock>
 
       <AnalyticsBlock
-        title="Key metrics"
-        description="Summary values (placeholder)"
+        title={S.metrics.blockTitle}
+        description={S.metrics.blockDescription}
       >
         <KpiGrid items={kpis} />
       </AnalyticsBlock>
 
-      <AnalyticsBlock title="Charts" description="Chart placeholders">
+      <AnalyticsBlock
+        title={S.charts.blockTitle}
+        description={S.charts.blockDescription}
+      >
         <div style={{ display: 'grid', gap: 12 }}>
           <ChartCard
-            title="Active creators over time"
-            subtitle="DAU/WAU-style plot (placeholder)"
+            title={S.charts.activeCreatorsOverTime.title}
+            subtitle={S.charts.activeCreatorsOverTime.subtitle}
           >
-            <ChartPlaceholder label="Line chart placeholder" />
+            <ChartPlaceholder
+              label={S.charts.activeCreatorsOverTime.placeholderLabel}
+            />
           </ChartCard>
 
           <ChartCard
-            title="Upcoming vs completed routes"
-            subtitle="(placeholder)"
+            title={S.charts.upcomingVsCompleted.title}
+            subtitle={S.charts.upcomingVsCompleted.subtitle}
           >
-            <ChartPlaceholder label="Stacked bar placeholder" />
+            <ChartPlaceholder
+              label={S.charts.upcomingVsCompleted.placeholderLabel}
+            />
           </ChartCard>
 
           <ChartCard
-            title="Rejection reasons"
-            subtitle="Top reasons (placeholder)"
+            title={S.charts.rejectionReasons.title}
+            subtitle={S.charts.rejectionReasons.subtitle}
           >
-            <ChartPlaceholder label="Bar chart placeholder" />
+            <ChartPlaceholder
+              label={S.charts.rejectionReasons.placeholderLabel}
+            />
           </ChartCard>
         </div>
       </AnalyticsBlock>

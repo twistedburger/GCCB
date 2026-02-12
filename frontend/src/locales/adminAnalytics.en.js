@@ -1,4 +1,9 @@
 export const adminAnalyticsEn = {
+  /*
+  A lot of these user-facing strings are placeholders. This is to be used for 
+  a centralized file to replace strings for related page(s). 
+  */
+
   common: {
     back: 'Back',
     close: 'Close',
@@ -253,6 +258,56 @@ export const adminAnalyticsEn = {
         cycle: 'Cycle',
         carpool: 'Carpool',
         transit: 'Transit',
+      },
+    },
+  },
+  activity: {
+    guard: {
+      pageTitle: 'Platform Activity',
+      message: 'This should only be viewable by administrators.', // redundant when permissions set up
+    },
+
+    pageTitle: 'Activity (Platform)',
+
+    filters: {
+      blockTitle: 'Filters',
+      blockDescription: 'Placeholder controls',
+      dateRangeLabel: 'Date range:',
+      dateRangeValue: 'Last 7 days / Last 30 days / All Time',
+      statusLabel: 'Status:',
+      statusValue: 'Upcoming / Completed / Rejected',
+    },
+
+    metrics: {
+      blockTitle: 'Key metrics',
+      blockDescription: 'Summary values (placeholder)',
+
+      activeRouteCreators7d: 'Active route creators (7d)',
+      upcomingRoutes: 'Upcoming routes',
+      completionRate30d: 'Completion rate (30d)',
+      rejectedRoutes30d: 'Rejected routes (30d)',
+    },
+
+    charts: {
+      blockTitle: 'Charts',
+      blockDescription: 'Chart placeholders',
+
+      activeCreatorsOverTime: {
+        title: 'Active creators over time',
+        subtitle: 'DAU/WAU-style plot (placeholder)',
+        placeholderLabel: 'Line chart placeholder',
+      },
+
+      upcomingVsCompleted: {
+        title: 'Upcoming vs completed routes',
+        subtitle: '(placeholder)',
+        placeholderLabel: 'Stacked bar placeholder',
+      },
+
+      rejectionReasons: {
+        title: 'Rejection reasons',
+        subtitle: 'Top reasons (placeholder)',
+        placeholderLabel: 'Bar chart placeholder',
       },
     },
   },
