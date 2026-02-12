@@ -94,7 +94,7 @@ app.get('/createNewUser', async (req, res) => {
  * @returns the user fetched from the DB, or null
  */
 async function insertUser(req) {
-  const results = db.query(
+  const results = await db.query(
     'INSERT INTO "user" (email, role, name, nickname) VALUES ($1, $2, $3, $4) RETURNING *',
     [req.oidc.user.email, 'user', req.oidc.user.name, req.oidc.user.nickname]
   )
