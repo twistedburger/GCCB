@@ -186,4 +186,74 @@ export const adminAnalyticsEn = {
       },
     },
   },
+  commutes: {
+    pageTitle: {
+      admin: 'Commutes (All Users)',
+      student: 'My Commutes',
+    },
+
+    filters: {
+      blockTitle: 'Filters',
+      blockDescription: 'Placeholder controls',
+      dateRangeLabel: 'Date range:',
+      dateRangeValue: 'Last 7 days / Last 30 days / All Time',
+      modeLabel: 'Mode:',
+      modeValue: 'Walk / Cycle / Carpool / Transit',
+      statusLabel: 'Status:',
+      statusValue: 'Upcoming / Completed / Rejected',
+    },
+
+    metrics: {
+      blockTitle: 'Key metrics',
+      blockDescription: 'Summary values (placeholder)',
+
+      admin: {
+        routesScheduled30d: 'Routes scheduled (30d)',
+        totalDistance30d: 'Total distance (30d)',
+        avgDistancePerRoute: 'Avg distance / route',
+        completionRate30d: 'Completion rate (30d)',
+      },
+
+      student: {
+        myRoutes30d: 'My routes (30d)',
+        myDistance30d: 'My distance (30d)',
+        avgDistancePerRoute: 'Avg distance / route',
+        myCompletionRate30d: 'My completion rate (30d)',
+      },
+    },
+
+    charts: {
+      blockTitle: 'Charts',
+      blockDescription: 'Chart placeholders',
+
+      routesOverTime: {
+        title: 'Routes over time',
+        subtitle: 'Daily/weekly volume (placeholder)',
+        placeholderLabel: 'Bar/Line chart placeholder',
+      },
+      distanceOverTime: {
+        title: 'Distance over time',
+        subtitle: 'Total km per day/week (placeholder)',
+        placeholderLabel: 'Line chart placeholder',
+      },
+      modeSplit: {
+        title: 'Mode split',
+        subtitle: 'Share of routes by transportation mode (placeholder)',
+        placeholderLabel: 'Pie/Stacked bar placeholder',
+      },
+    },
+
+    modeBreakdown: {
+      blockTitle: 'Mode Breakdown by Type',
+      blockDescription: 'Placeholder breakdown',
+      rowLabelSuffix: ':',
+
+      modes: {
+        walk: 'Walk',
+        cycle: 'Cycle',
+        carpool: 'Carpool',
+        transit: 'Transit',
+      },
+    },
+  },
 }

@@ -1,3 +1,4 @@
+import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../../components/analytics/KpiGrid'
@@ -10,95 +11,112 @@ function Commutes() {
   const role = location.state?.role ?? 'student'
   const isAdmin = role === 'admin'
 
+  const S = adminAnalyticsEn.commutes
+
   // Placeholder values
   const kpis = isAdmin
     ? [
-        { label: 'Routes scheduled (30d)', value: '4,567' },
-        { label: 'Total distance (30d)', value: '12,340 km' },
-        { label: 'Avg distance / route', value: '2.7 km' },
-        { label: 'Completion rate (30d)', value: '74%' },
+        { label: S.metrics.admin.routesScheduled30d, value: '4,567' },
+        { label: S.metrics.admin.totalDistance30d, value: '12,340 km' },
+        { label: S.metrics.admin.avgDistancePerRoute, value: '2.7 km' },
+        { label: S.metrics.admin.completionRate30d, value: '74%' },
       ]
     : [
-        { label: 'My routes (30d)', value: '12' },
-        { label: 'My distance (30d)', value: '32.1 km' },
-        { label: 'Avg distance / route', value: '2.7 km' },
-        { label: 'My completion rate (30d)', value: '80%' },
+        { label: S.metrics.student.myRoutes30d, value: '12' },
+        { label: S.metrics.student.myDistance30d, value: '32.1 km' },
+        { label: S.metrics.student.avgDistancePerRoute, value: '2.7 km' },
+        { label: S.metrics.student.myCompletionRate30d, value: '80%' },
       ]
 
   const modeBreakdown = [
-    { mode: 'Walk', share: '22%' },
-    { mode: 'Cycle', share: '31%' },
-    { mode: 'Carpool', share: '20%' },
-    { mode: 'Transit', share: '27%' },
+    { mode: S.modeBreakdown.modes.walk, share: '22%' },
+    { mode: S.modeBreakdown.modes.cycle, share: '31%' },
+    { mode: S.modeBreakdown.modes.carpool, share: '20%' },
+    { mode: S.modeBreakdown.modes.transit, share: '27%' },
   ]
 
   return (
     <>
       <button type="button" onClick={() => navigate(-1)}>
-        Back
+        {adminAnalyticsEn.common.back}
       </button>
 
-      <h1>{isAdmin ? 'Commutes (All Users)' : 'My Commutes'}</h1>
+      <h1>{isAdmin ? S.pageTitle.admin : S.pageTitle.student}</h1>
       <p>
         Viewing as: <strong>{role}</strong>
       </p>
 
       <hr />
 
-      <AnalyticsBlock title="Filters" description="Placeholder controls">
+      <AnalyticsBlock
+        title={S.filters.blockTitle}
+        description={S.filters.blockDescription}
+      >
         <ul>
           <li>
-            <strong>Date range:</strong> Last 7 days / Last 30 days / All Time
+            <strong>{S.filters.dateRangeLabel}</strong>{' '}
+            {S.filters.dateRangeValue}
           </li>
           <li>
-            <strong>Mode:</strong> Walk / Cycle / Carpool / Transit
+            <strong>{S.filters.modeLabel}</strong> {S.filters.modeValue}
           </li>
           <li>
-            <strong>Status:</strong> Upcoming / Completed / Rejected
+            <strong>{S.filters.statusLabel}</strong> {S.filters.statusValue}
           </li>
         </ul>
       </AnalyticsBlock>
 
       <AnalyticsBlock
-        title="Key metrics"
-        description="Summary values (placeholder)"
+        title={S.metrics.blockTitle}
+        description={S.metrics.blockDescription}
       >
         <KpiGrid items={kpis} />
       </AnalyticsBlock>
 
-      <AnalyticsBlock title="Charts" description="Chart placeholders">
+      <AnalyticsBlock
+        title={S.charts.blockTitle}
+        description={S.charts.blockDescription}
+      >
         <div style={{ display: 'grid', gap: 12 }}>
           <ChartCard
-            title="Routes over time"
-            subtitle="Daily/weekly volume (placeholder)"
+            title={S.charts.routesOverTime.title}
+            subtitle={S.charts.routesOverTime.subtitle}
           >
-            <ChartPlaceholder label="Bar/Line chart placeholder" />
+            <ChartPlaceholder
+              label={S.charts.routesOverTime.placeholderLabel}
+            />
           </ChartCard>
 
           <ChartCard
-            title="Distance over time"
-            subtitle="Total km per day/week (placeholder)"
+            title={S.charts.distanceOverTime.title}
+            subtitle={S.charts.distanceOverTime.subtitle}
           >
-            <ChartPlaceholder label="Line chart placeholder" />
+            <ChartPlaceholder
+              label={S.charts.distanceOverTime.placeholderLabel}
+            />
           </ChartCard>
 
           <ChartCard
-            title="Mode split"
-            subtitle="Share of routes by transportation mode (placeholder)"
+            title={S.charts.modeSplit.title}
+            subtitle={S.charts.modeSplit.subtitle}
           >
-            <ChartPlaceholder label="Pie/Stacked bar placeholder" />
+            <ChartPlaceholder label={S.charts.modeSplit.placeholderLabel} />
           </ChartCard>
         </div>
       </AnalyticsBlock>
 
       <AnalyticsBlock
-        title="Mode Breakdown by Type"
-        description="Placeholder breakdown"
+        title={S.modeBreakdown.blockTitle}
+        description={S.modeBreakdown.blockDescription}
       >
         <ul>
           {modeBreakdown.map(row => (
             <li key={row.mode}>
-              <strong>{row.mode}:</strong> {row.share}
+              <strong>
+                {row.mode}
+                {S.modeBreakdown.rowLabelSuffix}
+              </strong>{' '}
+              {row.share}
             </li>
           ))}
         </ul>
