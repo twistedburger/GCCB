@@ -69,6 +69,9 @@ function Home() {
             {events.map(item => (
               <EventCard key={item.id} event={item} />
             ))}
+            {events.map(item => (
+              <EventCard key={item.id} event={item} view={'moderate'} />
+            ))}
             {routes.map(item => (
               <RouteCard key={item.id} route={item} individualView={true} />
             ))}

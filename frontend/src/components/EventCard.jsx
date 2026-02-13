@@ -1,9 +1,15 @@
 import PropTypes from 'prop-types'
 import bcitCover from '../assets/bcit.jpg'
-import OutlinedFlagRounded from '@mui/icons-material/OutlinedFlagRounded'
-import VerifiedOutlined from '@mui/icons-material/VerifiedOutlined'
+import {
+  OutlinedFlagRounded,
+  VerifiedOutlined,
+  CheckCircleOutlineRounded,
+  CancelOutlined,
+  AccountCircleOutlined,
+} from '@mui/icons-material'
+import GenericButton from '../components/GenericButton'
 
-export default function EventCard({ event }) {
+export default function EventCard({ event, view }) {
   const dateObj = new Date(event.event_time)
   return (
     <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white">
@@ -43,8 +49,29 @@ export default function EventCard({ event }) {
           </span>
         </div>
       </div>
+
+      {/* Additional information for moderation view */}
+      {view == 'moderate' && (
+        <div className="flex justify-between mx-4 mb-3 gap-1">
+          <div className="flex items-center gap-1">
+            <AccountCircleOutlined fontSize="large" />
+            {event.creator_name}
+          </div>
+          <div className="flex justify-end">
+            <GenericButton onClick={() => {}} unstyled={true}>
+              <CheckCircleOutlineRounded fontSize="large" />
+            </GenericButton>
+            <GenericButton onClick={() => {}} unstyled={true}>
+              <CancelOutlined fontSize="large" />
+            </GenericButton>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-EventCard.propTypes = { event: PropTypes.object.isRequired }
+EventCard.propTypes = {
+  event: PropTypes.object.isRequired,
+  view: PropTypes.string,
+}
