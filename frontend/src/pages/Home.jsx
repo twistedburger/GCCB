@@ -20,9 +20,10 @@ function Home() {
   }
 
   useEffect(() => {
+    // for display purposes, not everything will be displaying on home feed like this
     const fetchEvents = async () => {
       try {
-        const response = await fetch('/api/events')
+        const response = await fetch('http://localhost:3000/api/events')
         const data = await response.json()
         setEvents(data)
       } catch (error) {
@@ -33,7 +34,7 @@ function Home() {
 
     const fetchRoutes = async () => {
       try {
-        const response = await fetch('/api/routes')
+        const response = await fetch('http://localhost:3000/api/routes')
         const data = await response.json()
         setRoutes(data)
       } catch (error) {

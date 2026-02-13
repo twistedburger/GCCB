@@ -50,7 +50,7 @@ export default function SliderCard({ children, isExpanded }) {
         <div className="bg-text-primary rounded-full h-1.5 w-20"></div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-32 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto px-6 pb-36 flex flex-col gap-4">
         {children}
       </div>
     </motion.div>
