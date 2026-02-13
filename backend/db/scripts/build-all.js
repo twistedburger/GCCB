@@ -9,7 +9,18 @@ const config = {
   scripts: ['initialize_db.sql', 'add_dummy_data.sql'],
 }
 
+function makeDatabase() {
+  try {
+    execSync(`psql -U ${config.user} -c "CREATE DATABASE ${config.db};"`, {
+      stdio: 'pipe',
+    })
+  } catch (err) {
+    console.log(err.message + ' ^^^^^ Not a real error :) ^^^^^')
+  }
+}
+
 function runScripts() {
+  makeDatabase()
   config.scripts.forEach(file => {
     try {
       console.log(`\nRunning: ${file}`)

@@ -17,6 +17,10 @@
   --color-light-grey: #e2e2e2; /* for card shadows, unfocused text, etc. */
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -25,22 +29,6 @@
 
 .content {
   flex: 1;
-  padding-bottom: 70px; /* can change based on navbar height! */
-}
-
-.navbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background-color: #ffffff;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  border-top: 1px solid #ddd;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
 }
 
 .commute-icon {
