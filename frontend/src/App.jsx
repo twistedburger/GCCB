@@ -10,15 +10,44 @@ import Co2Savings from './pages/dashboard/analytics/Co2Savings'
 import Commutes from './pages/dashboard/analytics/Commutes'
 import TripFrequency from './pages/dashboard/analytics/TripFrequency'
 import Activity from './pages/dashboard/analytics/Activity'
+import Login from './pages/Login'
+import CreateUser from './pages/CreateUser'
+import { useState, useEffect } from 'react'
 
 function App() {
+  const [userAuthenticated, setUserAuthenticated] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
+
+  useEffect(() => {
+    authenticateUser()
+  }, [])
+
+  async function authenticateUser() {
+    const response = await fetch('http://localhost:3000/authenticateUser', {
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.log(response.status + ' ' + errorText)
+      return
+    }
+    const responseJSON = await response.json()
+    if (responseJSON) {
+      setUserAuthenticated(responseJSON.isAuthenticated)
+      setCurrentUser(responseJSON.user)
+    }
+  }
+
   return (
     <Router>
       <div className="app-container h-screen">
         {/* pages */}
         <main className="content bg-background-off-white">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route
+              path="/"
+              element={HomePage(userAuthenticated, currentUser)}
+            />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
 
@@ -48,6 +77,17 @@ function App() {
       </div>
     </Router>
   )
+}
+
+function HomePage(userAuthenticated, currentUser) {
+  if (!userAuthenticated) {
+    return <Login />
+  }
+  if (!currentUser) {
+    return <CreateUser />
+  }
+
+  return <Home />
 }
 
 export default App
