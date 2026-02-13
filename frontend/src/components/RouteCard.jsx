@@ -8,19 +8,12 @@ import {
 
 export default function RouteCard({ route, individualView }) {
   const dateObj = new Date(route.depart_time)
-  const transportationMap = {
-    Bicycle: 'bike',
-    Car: 'car',
-    Walk: 'walk',
-    Transit: 'bus',
-  }
-
   return (
     <div
       className={`flex flex-row items-center w-full rounded-xl shadow-md shadow-medium-grey bg-white p-4 ${individualView ? 'py-2' : 'py-4'}`}
     >
       <span className="shrink-0 scale-115">
-        <CommuteIcon type={transportationMap[route.transportation_mode]} />
+        <CommuteIcon type={route.transportation_mode.toLowerCase()} />
       </span>
       <div className="flex flex-col ml-4">
         {individualView && (

@@ -7,7 +7,7 @@ import {
   CancelOutlined,
   AccountCircleOutlined,
 } from '@mui/icons-material'
-import GenericButton from '../components/GenericButton'
+import GenericButton from './GenericButton.jsx'
 
 export default function EventCard({ event, view }) {
   const dateObj = new Date(event.event_time)

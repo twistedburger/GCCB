@@ -55,7 +55,7 @@ html {
   color: var(--color-blue-primary);
 }
 
-.commute-icon[data-type='bike'] {
+.commute-icon[data-type='bicycle'] {
   background-color: var(--color-purple-secondary);
   color: var(--color-purple-primary);
 }
