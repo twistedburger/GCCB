@@ -5,7 +5,7 @@ export default function ArriveDepartToggle({ isArriving, setIsArriving }) {
 
   return (
     <div
-      className="m-2 w-70 rounded-2xl grid grid-cols-2 bg-white relative cursor-pointer"
+      className="w-56 rounded-2xl grid grid-cols-2 bg-white relative cursor-pointer text-sm shrink-0"
       onClick={toggle}
     >
       <div
@@ -17,8 +17,8 @@ export default function ArriveDepartToggle({ isArriving, setIsArriving }) {
         type="button"
         className={
           isArriving
-            ? 'bg-blue-primary rounded-2xl text-white font-medium py-1 relative transition-colors duration-300'
-            : 'text-text-secondary opacity-50 font-medium'
+            ? 'bg-blue-primary rounded-2xl text-white py-1 relative transition-colors duration-300'
+            : 'text-text-secondary opacity-50'
         }
       >
         Arriving Near
@@ -27,8 +27,8 @@ export default function ArriveDepartToggle({ isArriving, setIsArriving }) {
         type="button"
         className={
           !isArriving
-            ? 'bg-blue-primary rounded-2xl text-white font-medium py-1 relative transition-colors duration-300'
-            : 'text-text-secondary opacity-50 font-medium'
+            ? 'bg-blue-primary rounded-2xl text-white py-1 relative transition-colors duration-300'
+            : 'text-text-secondary opacity-50'
         }
       >
         Departing Near
