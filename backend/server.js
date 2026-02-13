@@ -108,6 +108,67 @@ async function insertUser(req) {
   return results.rowCount !== 0 ? results.rows[0] : null
 }
 
+/**
+ * Handles GET request to fetch trip counts by transportation mode within a specified
+ * number of days; default to 30 days, 0 means all time. Requires admin role to access.
+ *
+ * @return JSON response with the number of days and trip counts per mode.
+ */
+app.get('/api/admin/analytics/trips-by-mode', async (req, res) => {
+  try {
+    if (!req.oidc.isAuthenticated()) {
+      return res.status(401).json({ error: 'Not authenticated' })
+    }
+    const currentUser = await selectUser(req)
+    if (!currentUser) {
+      return res.status(403).json({ error: 'User not found in DB' })
+    }
+
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Permission denied!' })
+    }
+    const daysQuery = req.query.days ?? '30'
+    const days = parseInt(daysQuery, 10)
+    // arbitrary 10 year span to handle dummy data in db
+    if (Number.isNaN(days) || days < 0 || days > 3650) {
+      return res.status(400).json({
+        error: 'Invalid days parameter. Use an integer between 0 and 3650.',
+      })
+    }
+
+    let queryText = `
+      SELECT
+        transportation_mode AS mode,
+        COUNT(*)::int AS trips
+      FROM route
+      WHERE transportation_mode IS NOT NULL
+    `
+    const params = []
+
+    if (days !== 0) {
+      queryText += `
+        AND depart_time >= NOW() - ($1 * INTERVAL '1 day')
+      `
+      params.push(days)
+    }
+
+    queryText += `
+      GROUP BY transportation_mode
+      ORDER BY trips DESC, mode ASC;
+    `
+
+    const results = await db.query(queryText, params)
+
+    return res.status(200).json({
+      days,
+      items: results.rows,
+    })
+  } catch (err) {
+    console.error('Trips-by-mode error:', err)
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
+
 app.get('/sample_query', (req, res) => {
   db.query('SELECT *', (error, results) => {
     if (error) {
