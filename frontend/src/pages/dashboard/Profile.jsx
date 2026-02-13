@@ -1,4 +1,4 @@
-import SubmitButton from '../../components/submitButton'
+import GenericButton from '../../components/GenericButton'
 
 function Profile() {
   return (
@@ -6,15 +6,14 @@ function Profile() {
       <h1>This is a profile page.</h1>
       <p>Stuff goes here.</p>
       <p>This button logs you out even though it says submit</p>
-      <SubmitButton
-        disabled={false}
+      <GenericButton
         onClick={() => {
-          {
-            /* change to generic button later */
-          }
           window.location.href = 'http://localhost:3000/logoutRoute'
         }}
-      />
+        className="m-0"
+      >
+        Logout
+      </GenericButton>
     </>
   )
 }
