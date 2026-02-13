@@ -17,15 +17,22 @@ app.get('/sample_query', (req, res) => {
 })
 
 app.get('/api/events', (req, res) => {
-  db.query('SELECT * FROM event', (error, results) => {
-    if (error) {
-      console.error('Error fetching events:', error)
-      res.status(500).json({ error: 'Failed to fetch events' })
-      return
+  db.query(
+    `SELECT 
+              e.*,
+              u.name as creator_name 
+            FROM event e
+            LEFT JOIN "user" u ON u.id = e.creator_id`,
+    (error, results) => {
+      if (error) {
+        console.error('Error fetching events:', error)
+        res.status(500).json({ error: 'Failed to fetch events' })
+        return
+      }
+      console.log('Events fetched:', results.rows)
+      res.status(200).json(results.rows)
     }
-    console.log('Events fetched:', results.rows)
-    res.status(200).json(results.rows)
-  })
+  )
 })
 
 app.get('/api/routes', (req, res) => {
