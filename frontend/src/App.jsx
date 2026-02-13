@@ -5,6 +5,7 @@ import MyTrip from './pages/MyTrips'
 import Dashboard from './pages/dashboard/Dashboard'
 import Analytics from './pages/dashboard/Analytics'
 import Profile from './pages/dashboard/Profile'
+import UpcomingTrips from './pages/dashboard/UpcomingTrips'
 import Settings from './pages/dashboard/Settings'
 import Co2Savings from './pages/dashboard/analytics/Co2Savings'
 import Commutes from './pages/dashboard/analytics/Commutes'
@@ -50,6 +51,7 @@ function App() {
             />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/upcoming" element={<UpcomingTrips />} />
 
             <Route path="/dashboard/analytics" element={<Analytics />} />
             <Route

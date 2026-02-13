@@ -9,6 +9,9 @@ function Dashboard() {
           <Link to="/dashboard/analytics">Go to Analytics</Link>
         </li>
         <li>
+          <Link to="/dashboard/upcoming">Go to Upcoming Trips</Link>
+        </li>
+        <li>
           <Link to="/dashboard/profile">Go to My Account</Link>
         </li>
         <li>
