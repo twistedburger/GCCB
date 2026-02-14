@@ -6,7 +6,11 @@ const config = {
   user: 'postgres',
 
   // Add more scripts to this list as created
-  scripts: ['initialize_db.sql', 'add_dummy_data.sql'],
+  scripts: [
+    'initialize_db.sql',
+    'add_dummy_data.sql',
+    'add_vehicle_to_user.sql',
+  ],
 }
 
 function makeDatabase() {
