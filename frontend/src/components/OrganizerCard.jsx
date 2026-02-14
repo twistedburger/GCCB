@@ -4,15 +4,13 @@ import { AccountCircleOutlined } from '@mui/icons-material'
 
 function OrganizerCard({
   user,
-  event,
   primaryActionLabel,
   onPrimaryAction,
   secondaryActionLabel,
   onSecondaryAction,
   className,
 }) {
-  const { name, nickname, role, profile_pic: profilePic } = user
-  const { description: eventDescription } = event
+  const { name, nickname, role, description, profile_pic } = user
 
   return (
     <div
@@ -20,9 +18,9 @@ function OrganizerCard({
     >
       <div className="flex p-4 gap-4">
         <div className="shrink-0 flex items-start justify-center">
-          {profilePic ? (
+          {profile_pic ? (
             <img
-              src={profilePic}
+              src={profile_pic}
               alt={`${name} profile`}
               className="h-14 w-14 rounded-full object-cover"
             />
@@ -56,7 +54,7 @@ function OrganizerCard({
           </div>
 
           <span className="text-xs text-text-secondary mt-1">
-            {eventDescription || 'Event description missing.'}
+            {description || 'No bio provided.'}
           </span>
 
           {(primaryActionLabel || secondaryActionLabel) && (
@@ -92,19 +90,7 @@ OrganizerCard.propTypes = {
     nickname: PropTypes.string.isRequired,
     description: PropTypes.string,
     active: PropTypes.bool.isRequired,
-    profile_pic: PropTypes.string,
-  }).isRequired,
-
-  event: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    title: PropTypes.string.isRequired,
-    creator_id: PropTypes.number,
-    event_time: PropTypes.string,
-    location: PropTypes.string,
-    verified: PropTypes.bool,
-    need_approval: PropTypes.bool,
-    description: PropTypes.string,
-    rejection_reason: PropTypes.string,
+    profile_pic: PropTypes.string.is,
   }).isRequired,
 
   primaryActionLabel: PropTypes.string,
