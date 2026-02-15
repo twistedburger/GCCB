@@ -1,3 +1,4 @@
+require('dotenv').config({ path: __dirname + '/.env' })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
@@ -108,15 +109,6 @@ async function insertUser(req) {
   return results.rowCount !== 0 ? results.rows[0] : null
 }
 
-app.get('/sample_query', (req, res) => {
-  db.query('SELECT *', (error, results) => {
-    if (error) {
-      throw error
-    }
-    res.status(200).json(results.rows)
-  })
-})
-
 app.get('/api/events', (req, res) => {
   db.query(
     `SELECT 
@@ -156,6 +148,10 @@ app.get('/api/routes', (req, res) => {
   )
 })
 
-app.listen(port, () => {
-  console.log(`GCCB Backend listening on port ${port}`)
-})
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`GCCB Backend listening on port ${port}`)
+  })
+}
+
+module.exports = app

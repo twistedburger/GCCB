@@ -32,8 +32,16 @@ export default [
     },
   }),
 
+    ...compat.config({
+    plugins: ["jest"],
+    env: {
+      "jest/globals" : true
+    },
+  }),
+  
   {
     files: ["**/*.{js,jsx}"],
+
     languageOptions: {
       globals: {
         ...globals.browser,
