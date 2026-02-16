@@ -56,7 +56,7 @@ const VehicleBlock = ({ userId }) => {
         {vehicles.map((vehicle, index) => (
           <div
             key={index}
-            className="p-3 rounded-lg border border-blue-primary flex items-center min-w-0 overflow-hidden"
+            className="bg-white shadow-sm p-3 rounded-lg flex items-center min-w-0 overflow-hidden"
           >
             <div className="min-w-0 flex-1 text-center">
               <p
