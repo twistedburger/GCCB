@@ -28,12 +28,12 @@ app.use(
 app.use(auth(config))
 
 app.get('/loginRoute', (req, res) => {
-  // const connection = req.query.connection // This would allow us to connect to a specific SSO provider
+  const connection = req.query.connection
   const returnTo = req.query.returnTo || 'http://localhost:5173/'
   res.oidc.login({
     returnTo: returnTo,
     authorizationParams: {
-      connection: 'Username-Password-Authentication',
+      connection: connection,
     },
   })
 })

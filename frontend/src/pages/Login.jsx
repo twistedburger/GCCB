@@ -31,9 +31,9 @@ function Login() {
       <AsyncSelect
         className="m-2 font-medium text-black"
         loadOptions={getSSOProviders}
+        defaultOptions
         onChange={option => {
           setSelectedLogin(option.value)
-          console.log(option)
         }}
         placeholder="Search for a school..."
       />
