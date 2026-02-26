@@ -76,6 +76,20 @@ async function selectUser(req) {
   return null
 }
 
+app.get('/sso_list', async (req, res) => {
+  const search = req.query.search
+  try {
+    const results = await db.query(
+      'SELECT * FROM "sso" WHERE school_name LIKE %$1% OR school_nickname LIKE %$1%',
+      [search]
+    )
+    return res.json(results.rows)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send('Oops, something went wrong placeholder')
+  }
+})
+
 app.get('/createNewUser', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send('Access Denied placeholder')
