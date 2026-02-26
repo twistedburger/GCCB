@@ -96,6 +96,24 @@ app.get('/createNewUser', async (req, res) => {
   res.json({ user: user })
 })
 
+app.get('/authorize', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send('Access Denied placeholder')
+  }
+  let user = null
+
+  try {
+    user = await selectUser(req)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send('Oops, something went wrong placeholder')
+  }
+
+  const authorization = user ? user.role : 'user'
+
+  return res.json({ authorization: authorization })
+})
+
 /**
  * Insert the current user into the DB. User must be authenticated and not exist in the DB
  * @returns the user fetched from the DB, or null
