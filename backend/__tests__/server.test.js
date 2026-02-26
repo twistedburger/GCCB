@@ -52,13 +52,11 @@ describe('GET /api/events', () => {
 
 describe('GET /authenticateUser', () => {
   test('should return false when user not authenticated', async () => {
-    const selectUserSpy = jest
-      .spyOn(app, 'selectUser')
-      .mockResponse({
-        sub: '123456',
-        name: 'Test User',
-        email: 'test@example.com',
-      })
+    const selectUserSpy = jest.spyOn(app, 'selectUser').mockResponse({
+      sub: '123456',
+      name: 'Test User',
+      email: 'test@example.com',
+    })
     const mockResponse = { isAuthenticated: false, user: null }
     jest.mock('express-openid-connect', () => ({
       auth: jest.fn(() => (req, res, next) => {
