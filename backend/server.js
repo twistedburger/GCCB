@@ -77,11 +77,11 @@ async function selectUser(req) {
 }
 
 app.get('/sso_list', async (req, res) => {
-  const search = req.query.search
+  const search = req.query.search ? req.query.search : ''
   try {
     const results = await db.query(
-      'SELECT * FROM "sso" WHERE school_name LIKE %$1% OR school_nickname LIKE %$1%',
-      [search]
+      'SELECT * FROM "sso" WHERE school_name ILIKE $1 OR school_nickname ILIKE $1',
+      [`%${search}%`]
     )
     return res.json(results.rows)
   } catch (error) {
