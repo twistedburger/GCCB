@@ -1,7 +1,7 @@
 import SearchBar from '../components/SearchBar'
 import staticMap from '../assets/static-map.jpg'
 import SliderCard from '../components/SliderCard'
-import ArriveDepartToggle from '../components/ArriveDepartToggle'
+import GenericToggle from '../components/GenericToggle'
 import { PlaceOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
@@ -57,9 +57,10 @@ function Home() {
         {location && (
           <>
             <div className="flex items-center gap-2">
-              <ArriveDepartToggle
-                isArriving={isArriving}
-                setIsArriving={setIsArriving}
+              <GenericToggle
+                value={isArriving}
+                onChange={setIsArriving}
+                labels={['Arriving Near', 'Departing Near']}
                 className="shrink-0"
               />
               <span className="text-text-secondary truncate text-sm">

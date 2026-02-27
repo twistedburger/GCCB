@@ -73,7 +73,7 @@ function App() {
             <Route path="/dashboard/settings" element={<Settings />} />
           </Routes>
         </main>
-        <NavigationBar />
+        {userAuthenticated && <NavigationBar />}
       </div>
     </Router>
   )

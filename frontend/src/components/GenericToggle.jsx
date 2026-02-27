@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 
-export default function ArriveDepartToggle({ isArriving, setIsArriving }) {
-  const toggle = () => setIsArriving(!isArriving)
+export default function GenericToggle({ value, onChange, labels }) {
+  const toggle = () => onChange(!value)
 
   return (
     <div
@@ -10,34 +10,35 @@ export default function ArriveDepartToggle({ isArriving, setIsArriving }) {
     >
       <div
         className={`absolute inset-0 w-1/2 bg-blue-primary rounded-2xl transition-transform duration-300 ease-in-out ${
-          isArriving ? 'translate-x-0' : 'translate-x-full'
+          value ? 'translate-x-0' : 'translate-x-full'
         }`}
       />
       <button
         type="button"
         className={
-          isArriving
+          value
             ? 'bg-blue-primary rounded-2xl text-white py-1 relative transition-colors duration-300'
             : 'text-text-secondary opacity-50'
         }
       >
-        Arriving Near
+        {labels[0]}
       </button>
       <button
         type="button"
         className={
-          !isArriving
+          !value
             ? 'bg-blue-primary rounded-2xl text-white py-1 relative transition-colors duration-300'
             : 'text-text-secondary opacity-50'
         }
       >
-        Departing Near
+        {labels[1]}
       </button>
     </div>
   )
 }
 
-ArriveDepartToggle.propTypes = {
-  isArriving: PropTypes.bool,
-  setIsArriving: PropTypes.func,
+GenericToggle.propTypes = {
+  value: PropTypes.bool,
+  onChange: PropTypes.func,
+  labels: PropTypes.arrayOf(PropTypes.string),
 }
