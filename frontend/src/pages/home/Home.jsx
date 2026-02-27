@@ -1,11 +1,12 @@
-import SearchBar from '../components/SearchBar'
-import staticMap from '../assets/static-map.jpg'
-import SliderCard from '../components/SliderCard'
-import GenericToggle from '../components/GenericToggle'
-import { PlaceOutlined } from '@mui/icons-material'
+import SearchBar from '../../components/SearchBar'
+import staticMap from '../../assets/static-map.jpg'
+import SliderCard from '../../components/SliderCard'
+import GenericToggle from '../../components/GenericToggle'
+import { PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
-import EventCard from '../components/EventCard'
-import RouteCard from '../components/RouteCard'
+import EventCard from '../../components/EventCard'
+import RouteCard from '../../components/RouteCard'
+import { useNavigate } from 'react-router-dom'
 
 function Home() {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -13,6 +14,7 @@ function Home() {
   const [location, setLocation] = useState('')
   const [events, setEvents] = useState([])
   const [routes, setRoutes] = useState([])
+  const navigate = useNavigate()
 
   const handleSearch = newLocation => {
     setLocation(newLocation)
@@ -57,6 +59,12 @@ function Home() {
         {location && (
           <>
             <div className="flex items-center gap-2">
+              <TuneOutlined
+                className="text-text-primary"
+                onClick={() => {
+                  navigate('/filter')
+                }}
+              />
               <GenericToggle
                 value={isArriving}
                 onChange={setIsArriving}

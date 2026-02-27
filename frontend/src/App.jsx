@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import NavigationBar from './components/NavigationBar'
-import Home from './pages/Home'
+import Home from './pages/home/Home'
+import Filter from './pages/home/Filter'
 import MyTrip from './pages/MyTrips'
 import Dashboard from './pages/dashboard/Dashboard'
 import Analytics from './pages/dashboard/Analytics'
@@ -48,6 +49,7 @@ function App() {
               path="/"
               element={HomePage(userAuthenticated, currentUser)}
             />
+            <Route path="/filter" element={<Filter />} />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
 

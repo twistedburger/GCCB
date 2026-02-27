@@ -5,7 +5,7 @@ export default function GenericToggle({ value, onChange, labels }) {
 
   return (
     <div
-      className="w-56 rounded-2xl grid grid-cols-2 bg-white relative cursor-pointer text-sm shrink-0"
+      className="min-w-56 rounded-2xl grid grid-cols-2 bg-white relative cursor-pointer text-sm shrink-0"
       onClick={toggle}
     >
       <div
