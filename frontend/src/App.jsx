@@ -7,6 +7,7 @@ import {
 import NavigationBar from './components/NavigationBar'
 import Home from './pages/home/Home'
 import Filter from './pages/home/Filter'
+import EventDetail from './pages/home/EventDetail'
 import MyTrip from './pages/MyTrips'
 import Dashboard from './pages/dashboard/Dashboard'
 import Analytics from './pages/dashboard/Analytics'
@@ -79,6 +80,7 @@ function App() {
             <Route path="/dashboard/settings" element={<Settings />} />
           </Routes>
           <FilterCard />
+          <EventDetailCard />
         </main>
         {userAuthenticated && <NavigationBar />}
       </div>
@@ -101,6 +103,12 @@ function FilterCard() {
   const location = useLocation()
   if (location.pathname !== '/filter') return null
   return <Filter />
+}
+
+function EventDetailCard() {
+  const location = useLocation()
+  if (!location.pathname.startsWith('/event/')) return null
+  return <EventDetail />
 }
 
 export default App
