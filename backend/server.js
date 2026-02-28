@@ -201,6 +201,41 @@ app.get('/api/routes', (req, res) => {
   )
 })
 
+app.get('/api/eventdetail/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const eventResult = await db.query(
+      `SELECT e.*, 
+        u.id as creator_id,
+        u.name as creator_name, 
+        u.nickname, 
+        u.profile_pic
+       FROM event e
+       LEFT JOIN "user" u ON u.id = e.creator_id
+       WHERE e.id = $1`,
+      [id]
+    )
+
+    const routesResult = await db.query(
+      `SELECT r.*,
+        (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
+       FROM route r
+       LEFT JOIN event_route er ON er.route_id = r.id
+       WHERE er.event_id = $1`,
+      [id]
+    )
+
+    const event = eventResult.rows[0]
+    event.routes = routesResult.rows
+
+    res.status(200).json(event)
+    console.log(event)
+  } catch (error) {
+    console.error('Error fetching event detail:', error)
+    res.status(500).json({ error: 'Failed to fetch event detail' })
+  }
+})
+
 app.listen(port, () => {
   console.log(`GCCB Backend listening on port ${port}`)
 })
