@@ -118,39 +118,84 @@ app.get('/sample_query', (req, res) => {
 })
 
 app.get('/api/events', (req, res) => {
+  const { time, verified, transportation_modes } = req.query
+
+  const conditions = []
+  const values = []
+
+  if (time) {
+    values.push(time)
+    conditions.push(
+      `e.event_time BETWEEN ($${values.length}::timestamp - interval '2 hours') AND ($${values.length}::timestamp + interval '2 hours')`
+    )
+  }
+  if (verified === 'true') {
+    conditions.push(`e.verified = true`)
+  }
+  if (transportation_modes) {
+    const modes = transportation_modes.split(',')
+    values.push(modes)
+    conditions.push(`r.transportation_mode = ANY($${values.length})`)
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+
   db.query(
-    `SELECT 
-              e.*,
-              u.name as creator_name 
-            FROM event e
-            LEFT JOIN "user" u ON u.id = e.creator_id`,
+    `SELECT DISTINCT e.*, u.name as creator_name 
+     FROM event e
+     LEFT JOIN "user" u ON u.id = e.creator_id
+     LEFT JOIN event_route er ON er.event_id = e.id
+     LEFT JOIN route r ON r.id = er.route_id
+     ${where}`,
+    values,
     (error, results) => {
       if (error) {
         console.error('Error fetching events:', error)
         res.status(500).json({ error: 'Failed to fetch events' })
         return
       }
-      console.log('Events fetched:', results.rows)
       res.status(200).json(results.rows)
     }
   )
 })
 
 app.get('/api/routes', (req, res) => {
+  const { time, transportation_modes, verified } = req.query
+
+  const conditions = []
+  const values = []
+
+  if (time) {
+    values.push(time)
+    conditions.push(
+      `r.depart_time BETWEEN ($${values.length}::timestamp - interval '2 hours') AND ($${values.length}::timestamp + interval '2 hours')`
+    )
+  }
+  if (transportation_modes) {
+    const modes = transportation_modes.split(',')
+    values.push(modes)
+    conditions.push(`r.transportation_mode = ANY($${values.length})`)
+  }
+  if (verified === 'true') {
+    conditions.push(`e.verified = true`)
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+
   db.query(
-    `SELECT 
-      r.*, 
-      COUNT(ur.user_id) as people_going 
-    FROM route r
-    LEFT JOIN user_route ur ON r.id = ur.route_id
-    GROUP BY r.id`,
+    `SELECT DISTINCT r.*,
+      (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
+     FROM route r
+     LEFT JOIN event_route er ON er.route_id = r.id
+     LEFT JOIN event e ON e.id = er.event_id
+     ${where}`,
+    values,
     (error, results) => {
       if (error) {
         console.error('Error fetching routes:', error)
         res.status(500).json({ error: 'Failed to fetch routes' })
         return
       }
-      console.log('Routes fetched:', results.rows)
       res.status(200).json(results.rows)
     }
   )

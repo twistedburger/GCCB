@@ -12,9 +12,8 @@ function Home() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isArriving, setIsArriving] = useState(true)
   const [address, setAddress] = useState('')
-  const [events, setEvents] = useState([])
-  const [routes, setRoutes] = useState([])
-  const [filters] = useState({
+  const [cardsToDisplay, setCardsToDisplay] = useState([])
+  const [filters, setFilters] = useState({
     time: null,
     transportationModes: [],
     radius: 100,
@@ -27,36 +26,50 @@ function Home() {
   const handleSearch = newLocation => {
     setAddress(newLocation)
     setIsExpanded(true)
+    setFilters({
+      time: null,
+      transportationModes: [],
+      radius: 100,
+      verifiedEventsOnly: false,
+      mainEventsOnly: true,
+    })
   }
+
   useEffect(() => {
-    // for display purposes, not everything will be displaying on home feed like this
-    const fetchEvents = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/events')
+    const fetchCards = async () => {
+      const params = new URLSearchParams()
+
+      if (filters.time) params.append('time', filters.time)
+      if (filters.transportationModes.length > 0)
+        params.append(
+          'transportation_modes',
+          filters.transportationModes.join(',')
+        )
+      if (filters.verifiedEventsOnly) params.append('verified', true)
+      if (filters.radius) params.append('radius', filters.radius)
+
+      if (filters.mainEventsOnly) {
+        const response = await fetch(
+          `http://localhost:3000/api/events?${params}`
+        )
         const data = await response.json()
-        setEvents(data)
-      } catch (error) {
-        console.error('Error fetching events:', error)
-        setEvents([])
+        setCardsToDisplay(data)
+      } else {
+        const response = await fetch(
+          `http://localhost:3000/api/routes?${params}`
+        )
+        const data = await response.json()
+        setCardsToDisplay(data)
       }
     }
+    fetchCards()
+  }, [location, filters])
 
-    const fetchRoutes = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/routes')
-        const data = await response.json()
-        setRoutes(data)
-      } catch (error) {
-        console.error('Error fetching routes:', error)
-        setRoutes([])
-      }
+  useEffect(() => {
+    if (location.state?.filters) {
+      setFilters(location.state.filters)
     }
-
-    if (location) {
-      fetchEvents()
-      fetchRoutes()
-    }
-  }, [location])
+  }, [location.state])
 
   return (
     <div className="relative w-full h-full">
@@ -83,18 +96,19 @@ function Home() {
                 {address}
               </span>
             </div>
-            {events.map(item => (
-              <EventCard key={item.id} event={item} />
-            ))}
-            {events.map(item => (
-              <EventCard key={item.id} event={item} view={'moderate'} />
-            ))}
-            {routes.map(item => (
-              <RouteCard key={item.id} route={item} individualView={true} />
-            ))}
-            {routes.map(item => (
-              <RouteCard key={item.id} route={item} individualView={false} />
-            ))}
+            {cardsToDisplay.length === 0 ? (
+              <p className="text-text-secondary text-sm text-center py-4">
+                No results found. Try adjusting your filters.
+              </p>
+            ) : (
+              cardsToDisplay.map(item =>
+                filters.mainEventsOnly ? (
+                  <EventCard key={item.id} event={item} />
+                ) : (
+                  <RouteCard key={item.id} route={item} individualView={true} />
+                )
+              )
+            )}
           </>
         )}
       </SliderCard>

@@ -2,7 +2,7 @@ import CommuteIcon from '../../components/CommuteIcon'
 import GenericButton from '../../components/GenericButton'
 import GenericToggle from '../../components/GenericToggle'
 import { Cancel } from '@mui/icons-material'
-import { TimePicker } from '@mui/x-date-pickers/TimePicker'
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { Slider } from '@mui/material'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -32,16 +32,13 @@ export default function Filter() {
   const closeWithAnimation = (updatedFilters = null) => {
     setIsClosing(true)
     setTimeout(() => {
-      navigate(
-        -1,
-        updatedFilters ? { state: { filters: updatedFilters } } : undefined
-      )
+      navigate('/', { state: { filters: updatedFilters } })
     }, 300)
   }
 
   const handleApply = () => {
     closeWithAnimation({
-      time: time ? time.toISOString() : null,
+      time: time ? time.format('YYYY-MM-DD HH:mm:ss') : null,
       radius,
       verifiedEventsOnly,
       mainEventsOnly,
@@ -51,6 +48,12 @@ export default function Filter() {
 
   const handleCancel = () => {
     closeWithAnimation()
+  }
+
+  const handleModeToggle = mode => {
+    setTransportationModes(prev =>
+      prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]
+    )
   }
 
   return (
@@ -73,16 +76,37 @@ export default function Filter() {
             </div>
             <p className="pb-2 font-semibold">Transportation Modes</p>
             <div className="flex flex-row gap-4">
-              <CommuteIcon type="bus" />
-              <CommuteIcon type="bicycle" />
-              <CommuteIcon type="walk" />
-              <CommuteIcon type="car" />
+              <CommuteIcon
+                type="bus"
+                onClick={() => handleModeToggle('bus')}
+                isSelected={transportationModes.includes('bus')}
+                clickable
+              />
+              <CommuteIcon
+                type="bicycle"
+                onClick={() => handleModeToggle('bicycle')}
+                isSelected={transportationModes.includes('bicycle')}
+                clickable
+              />
+              <CommuteIcon
+                type="walk"
+                onClick={() => handleModeToggle('walk')}
+                isSelected={transportationModes.includes('walk')}
+                clickable
+              />
+              <CommuteIcon
+                type="car"
+                onClick={() => handleModeToggle('car')}
+                isSelected={transportationModes.includes('car')}
+                clickable
+              />
             </div>
-            <p className="py-2 font-semibold">Departure Time</p>
+            <p className="py-2 font-semibold">Time</p>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <TimePicker
+              <DateTimePicker
                 value={time}
                 onChange={setTime}
+                views={['year', 'month', 'day', 'hours', 'minutes']}
                 slotProps={{
                   textField: {
                     sx: {
