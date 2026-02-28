@@ -6,21 +6,28 @@ import { PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../../components/EventCard'
 import RouteCard from '../../components/RouteCard'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 function Home() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isArriving, setIsArriving] = useState(true)
-  const [location, setLocation] = useState('')
+  const [address, setAddress] = useState('')
   const [events, setEvents] = useState([])
   const [routes, setRoutes] = useState([])
+  const [filters] = useState({
+    time: null,
+    transportationModes: [],
+    radius: 100,
+    verifiedEventsOnly: false,
+    mainEventsOnly: true,
+  })
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleSearch = newLocation => {
-    setLocation(newLocation)
+    setAddress(newLocation)
     setIsExpanded(true)
   }
-
   useEffect(() => {
     // for display purposes, not everything will be displaying on home feed like this
     const fetchEvents = async () => {
@@ -55,14 +62,14 @@ function Home() {
     <div className="relative w-full h-full">
       <img src={staticMap} className="absolute w-full h-full object-cover" />
       <SearchBar onSearch={handleSearch} />
-      <SliderCard key={location} isExpanded={isExpanded}>
-        {location && (
+      <SliderCard key={address} isExpanded={isExpanded}>
+        {address && (
           <>
             <div className="flex items-center gap-2">
               <TuneOutlined
                 className="text-text-primary"
                 onClick={() => {
-                  navigate('/filter')
+                  navigate('/filter', { state: { filters } })
                 }}
               />
               <GenericToggle
@@ -73,7 +80,7 @@ function Home() {
               />
               <span className="text-text-secondary truncate text-sm">
                 <PlaceOutlined className="mr-1" />
-                {location}
+                {address}
               </span>
             </div>
             {events.map(item => (

@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from 'react-router-dom'
 import NavigationBar from './components/NavigationBar'
 import Home from './pages/home/Home'
 import Filter from './pages/home/Filter'
@@ -46,10 +51,9 @@ function App() {
         <main className="content bg-background-off-white">
           <Routes>
             <Route
-              path="/"
+              path="/*"
               element={HomePage(userAuthenticated, currentUser)}
             />
-            <Route path="/filter" element={<Filter />} />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
 
@@ -74,6 +78,7 @@ function App() {
             <Route path="/dashboard/profile" element={<Profile />} />
             <Route path="/dashboard/settings" element={<Settings />} />
           </Routes>
+          <FilterCard />
         </main>
         {userAuthenticated && <NavigationBar />}
       </div>
@@ -90,6 +95,12 @@ function HomePage(userAuthenticated, currentUser) {
   }
 
   return <Home />
+}
+
+function FilterCard() {
+  const location = useLocation()
+  if (location.pathname !== '/filter') return null
+  return <Filter />
 }
 
 export default App

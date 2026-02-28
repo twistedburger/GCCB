@@ -5,7 +5,7 @@ export default function GenericToggle({ value, onChange, labels }) {
 
   return (
     <div
-      className="min-w-56 rounded-2xl grid grid-cols-2 bg-white relative cursor-pointer text-sm shrink-0"
+      className="w-fit min-w-56 rounded-2xl grid grid-cols-2 bg-white relative cursor-pointer text-sm shrink-0"
       onClick={toggle}
     >
       <div
@@ -17,8 +17,8 @@ export default function GenericToggle({ value, onChange, labels }) {
         type="button"
         className={
           value
-            ? 'bg-blue-primary rounded-2xl text-white py-1 relative transition-colors duration-300'
-            : 'text-text-secondary opacity-50'
+            ? 'bg-blue-primary rounded-2xl text-white py-1 relative transition-colors duration-300 px-4'
+            : 'text-text-secondary opacity-50 px-4'
         }
       >
         {labels[0]}
@@ -27,8 +27,8 @@ export default function GenericToggle({ value, onChange, labels }) {
         type="button"
         className={
           !value
-            ? 'bg-blue-primary rounded-2xl text-white py-1 relative transition-colors duration-300'
-            : 'text-text-secondary opacity-50'
+            ? 'bg-blue-primary rounded-2xl text-white py-1 relative transition-colors duration-300 px-4'
+            : 'text-text-secondary opacity-50 px-4'
         }
       >
         {labels[1]}

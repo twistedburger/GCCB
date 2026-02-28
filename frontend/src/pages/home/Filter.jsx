@@ -6,84 +6,143 @@ import { TimePicker } from '@mui/x-date-pickers/TimePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { Slider } from '@mui/material'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-
+import dayjs from 'dayjs'
 import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Filter() {
-  const [time, setTime] = useState(null)
-  const [radius, setRadius] = useState(500)
-  const [verifiedEventsOnly, setVerifiedEventsOnly] = useState(true)
-  const [mainEventsOnly, setMainEventsOnly] = useState(true)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const [isClosing, setIsClosing] = useState(false)
+  const [transportationModes, setTransportationModes] = useState(
+    location.state?.filters?.transportationModes ?? []
+  )
+  const [time, setTime] = useState(
+    location.state?.filters?.time ? dayjs(location.state.filters.time) : null
+  )
+  const [radius, setRadius] = useState(location.state?.filters?.radius ?? 100)
+  const [verifiedEventsOnly, setVerifiedEventsOnly] = useState(
+    location.state?.filters?.verifiedEventsOnly ?? false
+  )
+  const [mainEventsOnly, setMainEventsOnly] = useState(
+    location.state?.filters?.mainEventsOnly ?? true
+  )
+
+  const closeWithAnimation = (updatedFilters = null) => {
+    setIsClosing(true)
+    setTimeout(() => {
+      navigate(
+        -1,
+        updatedFilters ? { state: { filters: updatedFilters } } : undefined
+      )
+    }, 300)
+  }
+
+  const handleApply = () => {
+    closeWithAnimation({
+      time: time ? time.toISOString() : null,
+      radius,
+      verifiedEventsOnly,
+      mainEventsOnly,
+      transportationModes,
+    })
+  }
+
+  const handleCancel = () => {
+    closeWithAnimation()
+  }
 
   return (
-    <div className="bg-background-off-white px-6 py-4">
-      <div className="flex justify-between">
-        <p className="text-2xl font-medium pb-2">Filters</p>
-        <GenericButton
-          unstyled={true}
-          customStyling={'text-text-primary scale-110 pb-4'}
-        >
-          <Cancel />
-        </GenericButton>
+    <>
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
+        style={{ maxHeight: '100dvh', overflowY: 'auto' }}
+      >
+        <div className="px-6 py-4 flex flex-col justify-between items-center h-screen">
+          <div className="flex-1 w-full">
+            <div className="flex justify-between">
+              <p className="text-2xl font-medium pb-2">Filters</p>
+              <GenericButton
+                onClick={handleCancel}
+                unstyled={true}
+                customStyling="text-text-primary scale-110 pb-4"
+              >
+                <Cancel />
+              </GenericButton>
+            </div>
+            <p className="pb-2 font-semibold">Transportation Modes</p>
+            <div className="flex flex-row gap-4">
+              <CommuteIcon type="bus" />
+              <CommuteIcon type="bicycle" />
+              <CommuteIcon type="walk" />
+              <CommuteIcon type="car" />
+            </div>
+            <p className="py-2 font-semibold">Departure Time</p>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <TimePicker
+                value={time}
+                onChange={setTime}
+                slotProps={{
+                  textField: {
+                    sx: {
+                      width: '100%',
+                      '& fieldset': { borderRadius: '14px' },
+                    },
+                  },
+                }}
+              />
+            </LocalizationProvider>
+            <div className="flex flex-row items-center gap-1 pt-2">
+              <p className="font-semibold">Radius •</p>
+              <p className="text-sm text-text-secondary">{radius} m</p>
+            </div>
+            <div className="pr-2">
+              <Slider
+                value={radius}
+                onChange={(e, newValue) => setRadius(newValue)}
+                min={100}
+                max={2000}
+                shiftStep={100}
+                step={100}
+                marks
+              />
+            </div>
+            <p className="pb-2 font-semibold">More Filters</p>
+            <div>
+              <GenericButton
+                onClick={() => setVerifiedEventsOnly(!verifiedEventsOnly)}
+                unstyled={true}
+                customStyling="mb-4 bg-white py-1.5 px-4 text-sm font-medium rounded-xl shadow-light-grey shadow-sm"
+              >
+                {verifiedEventsOnly
+                  ? '✓ Show Verified Events Only'
+                  : 'Show Verified Events Only'}
+              </GenericButton>
+              <GenericToggle
+                value={mainEventsOnly}
+                onChange={setMainEventsOnly}
+                labels={['Display Main Events', 'Display Individual Routes']}
+              />
+            </div>
+          </div>
+          <div className="pb-2 pt-4 w-full">
+            <GenericButton
+              onClick={() => {
+                setTime(null)
+                setRadius(100)
+                setVerifiedEventsOnly(false)
+                setMainEventsOnly(true)
+                setTransportationModes([])
+              }}
+              customStyling="bg-white !text-blue-primary shadow-light-grey shadow-sm"
+            >
+              Clear Filters
+            </GenericButton>
+            <GenericButton onClick={handleApply}>Apply Filters</GenericButton>
+          </div>
+        </div>
       </div>
-      <p className="pb-2 font-semibold">Transportation Modes</p>
-      <div className="flex flex-row gap-4">
-        <CommuteIcon type={'bus'} />
-        <CommuteIcon type={'bicycle'} />
-        <CommuteIcon type={'walk'} />
-        <CommuteIcon type={'car'} />
-      </div>
-      <p className="py-2 font-semibold">Departure Time</p>
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <TimePicker
-          value={time}
-          onChange={setTime}
-          slotProps={{
-            textField: {
-              sx: {
-                width: '100%',
-                '& fieldset': {
-                  borderRadius: '14px',
-                },
-              },
-            },
-          }}
-        />
-      </LocalizationProvider>
-      <div className="flex flex-row items-center gap-1 pt-2">
-        <p className="font-semibold">Radius •</p>
-        <p className="text-sm text-text-secondary">{radius} m</p>
-      </div>
-      <div className="pr-2">
-        <Slider
-          value={radius}
-          onChange={(e, newValue) => setRadius(newValue)}
-          min={100}
-          max={2000}
-          shiftStep={100}
-          step={100}
-          marks
-        />
-      </div>
-      <p className="pb-2 font-semibold">More Filters</p>
-      <div>
-        <GenericButton
-          onClick={() => setVerifiedEventsOnly(!verifiedEventsOnly)}
-          unstyled={true}
-          customStyling={
-            'mb-4 bg-white py-1.5 px-4 text-sm font-medium rounded-xl shadow-light-grey shadow-sm'
-          }
-        >
-          {verifiedEventsOnly
-            ? '✓ Show Verified Events Only'
-            : 'Show Verified Events Only'}
-        </GenericButton>
-        <GenericToggle
-          value={mainEventsOnly}
-          onChange={setMainEventsOnly}
-          labels={['Display Main Events', 'Display Individual Routes']}
-        />
-      </div>
-    </div>
+    </>
   )
 }
