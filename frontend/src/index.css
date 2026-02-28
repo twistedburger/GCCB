@@ -65,6 +65,22 @@ html {
   color: var(--color-green-primary);
 }
 
+.commute-icon.selected[data-type='bus'] {
+  border: 2px solid var(--color-orange-primary);
+}
+
+.commute-icon.selected[data-type='walk'] {
+  border: 2px solid var(--color-blue-primary);
+}
+
+.commute-icon.selected[data-type='bicycle'] {
+  border: 2px solid var(--color-purple-primary);
+}
+
+.commute-icon.selected[data-type='car'] {
+  border: 2px solid var(--color-green-primary);
+}
+
 @keyframes slideUp {
   from {
     transform: translateY(100%);
