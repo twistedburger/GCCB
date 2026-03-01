@@ -331,6 +331,28 @@ app.get('/api/routes', (req, res) => {
   )
 })
 
+app.post('/api/requestRoute', async (req, res) => {
+  try {
+    const response = await axios.post(
+      'https://routes.googleapis.com/directions/v2:computeRoutes',
+      req.body,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': process.env.MAPS_KEY,
+          'X-Goog-FieldMask':
+            'routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.transitDetails,routes.legs.steps.distanceMeters,routes.legs.steps.travelMode',
+        },
+      }
+    )
+    res.json(response.data)
+  } catch (err) {
+    const status = err.response?.status ?? 500
+    const message = err.response?.data?.error?.message ?? err.message
+    res.status(status).json({ error: message })
+  }
+})
+
 /**
  * Returns event details given a specific event id.
  * @returns an event
