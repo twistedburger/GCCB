@@ -117,6 +117,10 @@ app.get('/sample_query', (req, res) => {
   })
 })
 
+/**
+ * Returns the events for the landing page with applied filters if given.
+ * @returns events fetched from the db, or an empty array
+ */
 app.get('/api/events', (req, res) => {
   const { time, verified, transportation_modes } = req.query
 
@@ -159,6 +163,10 @@ app.get('/api/events', (req, res) => {
   )
 })
 
+/**
+ * Returns the routes for the landing page with applied filters if given.
+ * @returns routes fetched from the db, or an empty array
+ */
 app.get('/api/routes', (req, res) => {
   const { time, transportation_modes, verified } = req.query
 
@@ -201,6 +209,10 @@ app.get('/api/routes', (req, res) => {
   )
 })
 
+/**
+ * Returns event details given a specific event id.
+ * @returns an event
+ */
 app.get('/api/eventdetail/:id', async (req, res) => {
   const { id } = req.params
   try {
@@ -233,6 +245,66 @@ app.get('/api/eventdetail/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching event detail:', error)
     res.status(500).json({ error: 'Failed to fetch event detail' })
+  }
+})
+
+/**
+ * Checks if the currently authenticated user has joined a specific route.
+ * @returns a boolean
+ */
+app.get('/api/routes/:id/isJoined', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.json({ isJoined: false })
+  }
+  try {
+    const user = await selectUser(req)
+    const result = db.query(
+      'SELECT * FROM user_route WHERE route_id = $1 AND user_id = $2',
+      [req.params.id, user.id]
+    )
+    res.json({ isJoined: result.rowCount > 0 })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to check join status' })
+  }
+})
+
+/**
+ * Adds a user to a route by adding a record to the user_route table.
+ */
+app.post('/api/routes/:id/join', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).json({ error: 'Not authenticated' })
+  }
+  try {
+    const user = await selectUser(req)
+    await db.query(
+      'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
+      [user.id, req.params.id]
+    )
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to join route' })
+  }
+})
+
+/**
+ * Removes a user to a route by removing a record to the user_route table. --> is this okay, or should we have a deleted column?
+ */
+app.delete('/api/routes/:id/leave', async (req, res) => {
+  if (!req.oidc.isAuthenticated())
+    return res.status(403).json({ error: 'Not authenticated' })
+  try {
+    const user = await selectUser(req)
+    await db.query(
+      'DELETE FROM user_route WHERE user_id = $1 AND route_id = $2',
+      [user.id, req.params.id]
+    )
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to leave route' })
   }
 })
 

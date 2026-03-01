@@ -1,13 +1,46 @@
 import PropTypes from 'prop-types'
 import CommuteIcon from './CommuteIcon.jsx'
+import GenericButton from './GenericButton.jsx'
 import {
   PlaceOutlined,
   OutlinedFlagRounded,
   GroupsOutlined,
+  Logout,
 } from '@mui/icons-material'
+import { useState, useEffect } from 'react'
 
 export default function RouteCard({ route, individualView }) {
   const dateObj = new Date(route.depart_time)
+  const [isJoined, setIsJoined] = useState(false)
+
+  useEffect(() => {
+    const checkJoined = async () => {
+      const result = await fetch(
+        `http://localhost:3000/api/routes/${route.id}/isJoined`,
+        { credentials: 'include' }
+      )
+      const data = await result.json()
+      setIsJoined(data.isJoined)
+    }
+    checkJoined()
+  }, [route.id])
+
+  const handleJoin = async () => {
+    await fetch(`http://localhost:3000/api/routes/${route.id}/join`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+    setIsJoined(true)
+  }
+
+  const handleLeave = async () => {
+    await fetch(`http://localhost:3000/api/routes/${route.id}/leave`, {
+      method: 'DELETE',
+      credentials: 'include',
+    })
+    setIsJoined(false)
+  }
+
   return (
     <div
       className={`flex flex-row items-center w-full rounded-xl shadow-md shadow-medium-grey bg-white p-4 ${individualView ? 'py-2' : 'py-4'}`}
@@ -44,6 +77,30 @@ export default function RouteCard({ route, individualView }) {
           </p>
         </div>
       </div>
+      {isJoined ? (
+        <GenericButton
+          unstyled
+          customStyling={
+            'py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs'
+          }
+          onClick={handleLeave}
+        >
+          <div className="flex flex-row items-center gap-1">
+            <Logout fontSize="12px" />
+            <span>Leave</span>
+          </div>
+        </GenericButton>
+      ) : (
+        <GenericButton
+          unstyled
+          customStyling={
+            'py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs'
+          }
+          onClick={handleJoin}
+        >
+          Join
+        </GenericButton>
+      )}
     </div>
   )
 }
