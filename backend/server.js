@@ -2,6 +2,7 @@ require('dotenv').config({ path: __dirname + '/.env' })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
+const axios = require('axios')
 const { serverStrings } = require('./locales/en/serverLocales')
 
 const app = express()
@@ -19,9 +20,6 @@ const config = {
   baseURL: 'http://localhost:3000',
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_DOMAIN,
-  // authorizationParams: {
-  //     connection: 'google-oauth2',
-  //   },
 }
 
 app.use(
@@ -257,6 +255,28 @@ app.get('/api/events', (req, res) => {
       res.status(200).json(results.rows)
     }
   )
+})
+
+app.post('/api/requestRoute', async (req, res) => {
+  try {
+    const response = await axios.post(
+      'https://routes.googleapis.com/directions/v2:computeRoutes',
+      req.body,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': process.env.MAPS_KEY,
+          'X-Goog-FieldMask':
+            'routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.transitDetails,routes.legs.steps.distanceMeters,routes.legs.steps.travelMode',
+        },
+      }
+    )
+    res.json(response.data)
+  } catch (err) {
+    const status = err.response?.status ?? 500
+    const message = err.response?.data?.error?.message ?? err.message
+    res.status(status).json({ error: message })
+  }
 })
 
 /**
