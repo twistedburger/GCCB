@@ -1,11 +1,12 @@
 import SearchBar from '../components/SearchBar'
-import { APIProvider, Map } from '@vis.gl/react-google-maps' // delete static map image in assets if not used anywhere else
+import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps' // delete static map image in assets if not used anywhere else
 import SliderCard from '../components/SliderCard'
 import ArriveDepartToggle from '../components/ArriveDepartToggle'
 import { PlaceOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
+import PropTypes from 'prop-types'
 
 function Home() {
   const [userLocation, setUserLocation] = useState({
@@ -21,7 +22,15 @@ function Home() {
 
   const handleSearch = newLocation => {
     setLocation(newLocation)
-    setIsExpanded(true)
+    setIsExpanded(true) // comment out this line to prevent slider from pulling up on search
+
+    const geocoder = new window.google.maps.Geocoder()
+    geocoder.geocode({ address: newLocation }, (results, status) => {
+      if (status === 'OK') {
+        const { lat, lng } = results[0].geometry.location
+        setUserLocation({ lat: lat(), lng: lng() })
+      }
+    })
   }
 
   useEffect(() => {
@@ -74,10 +83,12 @@ function Home() {
         <Map
           className="absolute w-full h-full"
           defaultCenter={userLocation}
-          defaultZoom={15}
+          defaultZoom={17}
           gestureHandling="greedy"
           disableDefaultUI={true}
-        ></Map>
+        >
+          <MapController center={userLocation} />
+        </Map>
       </APIProvider>
       <SearchBar onSearch={handleSearch} />
       <SliderCard key={location} isExpanded={isExpanded}>
@@ -111,6 +122,23 @@ function Home() {
       </SliderCard>
     </div>
   )
+}
+
+function MapController({ center }) {
+  const map = useMap()
+  useEffect(() => {
+    if (map && center) {
+      map.panTo(center)
+    }
+  }, [map, center])
+  return null
+}
+
+MapController.propTypes = {
+  center: PropTypes.shape({
+    lat: PropTypes.number.isRequired,
+    lng: PropTypes.number.isRequired,
+  }).isRequired,
 }
 
 export default Home
