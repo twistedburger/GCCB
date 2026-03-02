@@ -1,5 +1,5 @@
 import SearchBar from '../components/SearchBar'
-import staticMap from '../assets/static-map.jpg'
+import { APIProvider, Map } from '@vis.gl/react-google-maps' // delete static map image in assets if not used anywhere else
 import SliderCard from '../components/SliderCard'
 import ArriveDepartToggle from '../components/ArriveDepartToggle'
 import { PlaceOutlined } from '@mui/icons-material'
@@ -8,6 +8,11 @@ import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 
 function Home() {
+  const [userLocation, setUserLocation] = useState({
+    // defaults as Vancouver
+    lat: 49.28,
+    lng: -123.12,
+  })
   const [isExpanded, setIsExpanded] = useState(false)
   const [isArriving, setIsArriving] = useState(true)
   const [location, setLocation] = useState('')
@@ -18,6 +23,20 @@ function Home() {
     setLocation(newLocation)
     setIsExpanded(true)
   }
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        })
+      },
+      () => {
+        console.log('Location access denied, using default')
+      }
+    )
+  }, [])
 
   useEffect(() => {
     // for display purposes, not everything will be displaying on home feed like this
@@ -51,7 +70,15 @@ function Home() {
 
   return (
     <div className="relative w-full h-full">
-      <img src={staticMap} className="absolute w-full h-full object-cover" />
+      <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+        <Map
+          className="absolute w-full h-full"
+          defaultCenter={userLocation}
+          defaultZoom={15}
+          gestureHandling="greedy"
+          disableDefaultUI={true}
+        ></Map>
+      </APIProvider>
       <SearchBar onSearch={handleSearch} />
       <SliderCard key={location} isExpanded={isExpanded}>
         {location && (
