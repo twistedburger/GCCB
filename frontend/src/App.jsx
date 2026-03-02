@@ -14,6 +14,15 @@ import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import { useState, useEffect } from 'react'
 
+// To be used later
+
+// const authLevel = {
+//   USER: "user",
+//   MODERATOR: "moderator",
+//   ADMIN: "admin",
+//   SUPERADMIN: "superadmin"
+// }
+
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
