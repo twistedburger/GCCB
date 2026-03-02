@@ -1,3 +1,4 @@
+require('dotenv').config({ path: __dirname + '/.env' })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
@@ -27,12 +28,12 @@ app.use(
 app.use(auth(config))
 
 app.get('/loginRoute', (req, res) => {
-  // const connection = req.query.connection // This would allow us to connect to a specific SSO provider
+  const connection = req.query.connection
   const returnTo = req.query.returnTo || 'http://localhost:5173/'
   res.oidc.login({
     returnTo: returnTo,
     authorizationParams: {
-      connection: 'Username-Password-Authentication',
+      connection: connection,
     },
   })
 })
@@ -75,6 +76,20 @@ async function selectUser(req) {
   return null
 }
 
+app.get('/sso_list', async (req, res) => {
+  const search = req.query.search ? req.query.search : ''
+  try {
+    const results = await db.query(
+      'SELECT * FROM "sso" WHERE school_name ILIKE $1 OR school_nickname ILIKE $1',
+      [`%${search}%`]
+    )
+    return res.json(results.rows)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send('Oops, something went wrong placeholder')
+  }
+})
+
 app.get('/createNewUser', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send('Access Denied placeholder')
@@ -95,6 +110,24 @@ app.get('/createNewUser', async (req, res) => {
   res.json({ user: user })
 })
 
+app.get('/authorize', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send('Access Denied placeholder')
+  }
+  let user = null
+
+  try {
+    user = await selectUser(req)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send('Oops, something went wrong placeholder')
+  }
+
+  const authorization = user ? user.role : 'user'
+
+  return res.json({ authorization: authorization })
+})
+
 /**
  * Insert the current user into the DB. User must be authenticated and not exist in the DB
  * @returns the user fetched from the DB, or null
@@ -107,15 +140,6 @@ async function insertUser(req) {
 
   return results.rowCount !== 0 ? results.rows[0] : null
 }
-
-app.get('/sample_query', (req, res) => {
-  db.query('SELECT *', (error, results) => {
-    if (error) {
-      throw error
-    }
-    res.status(200).json(results.rows)
-  })
-})
 
 /**
  * Returns the events for the landing page with applied filters if given.
@@ -308,6 +332,109 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
   }
 })
 
-app.listen(port, () => {
-  console.log(`GCCB Backend listening on port ${port}`)
+/**
+ * Returns event details given a specific event id.
+ * @returns an event
+ */
+app.get('/api/eventdetail/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const eventResult = await db.query(
+      `SELECT e.*, 
+        u.id as creator_id,
+        u.name as creator_name, 
+        u.nickname, 
+        u.profile_pic
+       FROM event e
+       LEFT JOIN "user" u ON u.id = e.creator_id
+       WHERE e.id = $1`,
+      [id]
+    )
+
+    const routesResult = await db.query(
+      `SELECT r.*,
+        (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
+       FROM route r
+       LEFT JOIN event_route er ON er.route_id = r.id
+       WHERE er.event_id = $1`,
+      [id]
+    )
+
+    const event = eventResult.rows[0]
+    event.routes = routesResult.rows
+
+    res.status(200).json(event)
+    console.log(event)
+  } catch (error) {
+    console.error('Error fetching event detail:', error)
+    res.status(500).json({ error: 'Failed to fetch event detail' })
+  }
 })
+
+/**
+ * Checks if the currently authenticated user has joined a specific route.
+ * @returns a boolean
+ */
+app.get('/api/routes/:id/isJoined', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.json({ isJoined: false })
+  }
+  try {
+    const user = await selectUser(req)
+    const result = db.query(
+      'SELECT * FROM user_route WHERE route_id = $1 AND user_id = $2',
+      [req.params.id, user.id]
+    )
+    res.json({ isJoined: result.rowCount > 0 })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to check join status' })
+  }
+})
+
+/**
+ * Adds a user to a route by adding a record to the user_route table.
+ */
+app.post('/api/routes/:id/join', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).json({ error: 'Not authenticated' })
+  }
+  try {
+    const user = await selectUser(req)
+    await db.query(
+      'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
+      [user.id, req.params.id]
+    )
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to join route' })
+  }
+})
+
+/**
+ * Removes a user to a route by removing a record to the user_route table. --> is this okay, or should we have a deleted column?
+ */
+app.delete('/api/routes/:id/leave', async (req, res) => {
+  if (!req.oidc.isAuthenticated())
+    return res.status(403).json({ error: 'Not authenticated' })
+  try {
+    const user = await selectUser(req)
+    await db.query(
+      'DELETE FROM user_route WHERE user_id = $1 AND route_id = $2',
+      [user.id, req.params.id]
+    )
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to leave route' })
+  }
+})
+
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`GCCB Backend listening on port ${port}`)
+  })
+}
+
+module.exports = app
