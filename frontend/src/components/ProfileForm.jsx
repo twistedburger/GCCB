@@ -2,7 +2,6 @@ import { PropTypes } from 'prop-types'
 import { useState } from 'react'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
-import BadgesBlock from './BadgesBlock'
 import { Person, ArrowBackIosNew } from '@mui/icons-material'
 
 const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
@@ -102,9 +101,6 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
             value={formData.description}
             onChange={handleChange}
           />
-          <div className="flex justify-center">
-            {!isNew && <BadgesBlock user={user} />}
-          </div>
         </div>
 
         {/* Save */}

@@ -93,23 +93,31 @@ app.get('/sso_list', async (req, res) => {
 
 app.post('/createNewUser', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send('Access Denied placeholder')
+    return res.status(403).send('Not authenticated with SSO')
   }
-
-  let user = null
 
   try {
-    user = await selectUser(req)
-    if (!user) {
-      user = await insertUser(req)
+    const existingUser = await selectUser(req)
+    if (existingUser) {
+      return res.status(400).send('User already exists')
     }
-  } catch (error) {
-    console.log(error)
-    return res.status(500).send('Oops, something went wrong placeholder')
-  }
 
-  res.json({ user: user })
+    const newUser = await insertUserFromForm(req.oidc.user.email, req.body)
+    res.json({ user: newUser })
+  } catch (error) {
+    console.error(error)
+    res.status(500).send('Server Error')
+  }
 })
+
+async function insertUserFromForm(email, formData) {
+  const { name, nickname, description } = formData
+  const results = await db.query(
+    'INSERT INTO "user" (email, role, name, nickname, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [email, 'user', name, nickname, description]
+  )
+  return results.rows[0]
+}
 
 app.get('/authorize', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -128,25 +136,6 @@ app.get('/authorize', async (req, res) => {
 
   return res.json({ authorization: authorization })
 })
-
-/**
- * Insert the current user into the DB. User must be authenticated and not exist in the DB
- * @returns the user fetched from the DB, or null
- */
-async function insertUser(req) {
-  const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-    [
-      req.oidc.user.email,
-      'user',
-      req.oidc.user.name,
-      req.oidc.user.nickname,
-      req.oidc.user.description,
-    ]
-  )
-
-  return results.rowCount !== 0 ? results.rows[0] : null
-}
 
 app.get('/api/events', (req, res) => {
   db.query(

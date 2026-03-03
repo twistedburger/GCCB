@@ -55,7 +55,15 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={HomePage(userAuthenticated, currentUser)}
+              element={
+                !userAuthenticated ? (
+                  <Login />
+                ) : !currentUser ? (
+                  <CreateUser onUserCreated={setCurrentUser} />
+                ) : (
+                  <Home />
+                )
+              }
             />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -86,17 +94,6 @@ function App() {
       </div>
     </Router>
   )
-}
-
-function HomePage(userAuthenticated, currentUser) {
-  if (!userAuthenticated) {
-    return <Login />
-  }
-  if (!currentUser) {
-    return <CreateUser />
-  }
-
-  return <Home />
 }
 
 export default App
