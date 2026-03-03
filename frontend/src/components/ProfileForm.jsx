@@ -15,6 +15,12 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
   const [nicknameError, setNicknameError] = useState('')
 
   const handleBack = () => {
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+      nickname: user?.nickname || '',
+      description: user?.description || '',
+    })
     onCancel()
   }
 
