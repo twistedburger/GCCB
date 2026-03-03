@@ -1,5 +1,11 @@
 import SearchBar from '../components/SearchBar'
-import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps' // delete static map image in assets if not used anywhere else
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+  useMap,
+  Pin,
+} from '@vis.gl/react-google-maps'
 import SliderCard from '../components/SliderCard'
 import ArriveDepartToggle from '../components/ArriveDepartToggle'
 import { PlaceOutlined } from '@mui/icons-material'
@@ -9,28 +15,29 @@ import RouteCard from '../components/RouteCard'
 import PropTypes from 'prop-types'
 
 function Home() {
-  const [userLocation, setUserLocation] = useState({
-    // defaults as Vancouver
-    lat: 49.28,
-    lng: -123.12,
-  })
+  const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
   const [isExpanded, setIsExpanded] = useState(false)
   const [isArriving, setIsArriving] = useState(true)
   const [location, setLocation] = useState('')
   const [events, setEvents] = useState([])
   const [routes, setRoutes] = useState([])
 
-  const handleSearch = newLocation => {
+  const handleSearch = async newLocation => {
     setLocation(newLocation)
-    setIsExpanded(true) // comment out this line to prevent slider from pulling up on search
+    setIsExpanded(true)
 
-    const geocoder = new window.google.maps.Geocoder()
-    geocoder.geocode({ address: newLocation }, (results, status) => {
-      if (status === 'OK') {
-        const { lat, lng } = results[0].geometry.location
-        setUserLocation({ lat: lat(), lng: lng() })
+    try {
+      const response = await fetch(
+        `http://localhost:3000/maps/geocode?address=${encodeURIComponent(newLocation)}`
+      )
+      const data = await response.json()
+      if (data.status === 'OK') {
+        const { lat, lng } = data.results[0].geometry.location
+        setUserLocation({ lat, lng })
       }
-    })
+    } catch (err) {
+      console.error('geocode fetch failed:', err)
+    }
   }
 
   useEffect(() => {
@@ -79,14 +86,18 @@ function Home() {
 
   return (
     <div className="relative w-full h-full">
-      <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+      <APIProvider apiKey="">
         <Map
+          mapId="6621f78cbdb1902f92a3d543"
           className="absolute w-full h-full"
           defaultCenter={userLocation}
-          defaultZoom={17}
+          zoom={17}
           gestureHandling="greedy"
           disableDefaultUI={true}
         >
+          <AdvancedMarker position={userLocation}>
+            <Pin scale={0.75} />
+          </AdvancedMarker>
           <MapController center={userLocation} />
         </Map>
       </APIProvider>
