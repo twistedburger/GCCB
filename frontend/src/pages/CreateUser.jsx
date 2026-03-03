@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import ProfileForm from '../components/ProfileForm'
 
 function CreateUser() {
   const [currentUser, setCurrentUser] = useState(null)
 
-  useEffect(() => {
-    insertUser()
-  }, [])
-
-  const insertUser = async () => {
+  const insertUser = async formData => {
     const response = await fetch('http://localhost:3000/createNewUser', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
       credentials: 'include',
     })
     if (!response.ok) {
@@ -21,21 +23,10 @@ function CreateUser() {
       setCurrentUser(responseJSON.user)
     }
   }
+
   return (
     <div>
-      <h2>
-        Currently this page sends a request to insert a generic form of the user
-        into the DB, and displays the details. Reload the page to go to home
-        page
-      </h2>
-      {currentUser && (
-        <div>
-          <p>Email: {currentUser.email}</p>
-          <p>Name: {currentUser.name}</p>
-          <p>Nickname: {currentUser.nickname}</p>
-          <p>Role: {currentUser.role}</p>
-        </div>
-      )}
+      <ProfileForm user={currentUser} isNew={true} onSubmit={insertUser} />
     </div>
   )
 }

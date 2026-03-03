@@ -26,6 +26,7 @@ app.use(
   })
 )
 app.use(auth(config))
+app.use(express.json())
 
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
@@ -90,7 +91,7 @@ app.get('/sso_list', async (req, res) => {
   }
 })
 
-app.get('/createNewUser', async (req, res) => {
+app.post('/createNewUser', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send('Access Denied placeholder')
   }
@@ -134,8 +135,14 @@ app.get('/authorize', async (req, res) => {
  */
 async function insertUser(req) {
   const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname) VALUES ($1, $2, $3, $4) RETURNING *',
-    [req.oidc.user.email, 'user', req.oidc.user.name, req.oidc.user.nickname]
+    'INSERT INTO "user" (email, role, name, nickname, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [
+      req.oidc.user.email,
+      'user',
+      req.oidc.user.name,
+      req.oidc.user.nickname,
+      req.oidc.user.description,
+    ]
   )
 
   return results.rowCount !== 0 ? results.rows[0] : null
