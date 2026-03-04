@@ -1,14 +1,22 @@
 import SearchBar from '../components/SearchBar'
-import staticMap from '../assets/static-map.jpg'
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+  useMap,
+  Pin,
+} from '@vis.gl/react-google-maps'
 import SliderCard from '../components/SliderCard'
 import GenericToggle from '../components/GenericToggle'
 import { PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
+import PropTypes from 'prop-types'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 function Home() {
+  const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
   const [isExpanded, setIsExpanded] = useState(false)
   const [isArriving, setIsArriving] = useState(true)
   const [address, setAddress] = useState('')
@@ -23,7 +31,7 @@ function Home() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const handleSearch = newLocation => {
+  const handleSearch = async newLocation => {
     setAddress(newLocation)
     setIsExpanded(true)
     setFilters({
@@ -33,7 +41,34 @@ function Home() {
       verifiedEventsOnly: false,
       mainEventsOnly: true,
     })
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/maps/geocode?address=${encodeURIComponent(newLocation)}`
+      )
+      const data = await response.json()
+      if (data.status === 'OK') {
+        const { lat, lng } = data.results[0].geometry.location
+        setUserLocation({ lat, lng })
+      }
+    } catch (err) {
+      console.error('geocode fetch failed:', err)
+    }
   }
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        })
+      },
+      () => {
+        console.log('Location access denied, using default')
+      }
+    )
+  }, [])
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -73,7 +108,21 @@ function Home() {
 
   return (
     <div className="relative w-full h-full">
-      <img src={staticMap} className="absolute w-full h-full object-cover" />
+      <APIProvider apiKey="">
+        <Map
+          mapId="6621f78cbdb1902f92a3d543"
+          className="absolute w-full h-full"
+          defaultCenter={userLocation}
+          zoom={17}
+          gestureHandling="greedy"
+          disableDefaultUI={true}
+        >
+          <AdvancedMarker position={userLocation}>
+            <Pin scale={0.75} />
+          </AdvancedMarker>
+          <MapController center={userLocation} />
+        </Map>
+      </APIProvider>
       <SearchBar onSearch={handleSearch} />
       <SliderCard key={address} isExpanded={isExpanded}>
         {address && (
@@ -114,6 +163,23 @@ function Home() {
       </SliderCard>
     </div>
   )
+}
+
+function MapController({ center }) {
+  const map = useMap()
+  useEffect(() => {
+    if (map && center) {
+      map.panTo(center)
+    }
+  }, [map, center])
+  return null
+}
+
+MapController.propTypes = {
+  center: PropTypes.shape({
+    lat: PropTypes.number.isRequired,
+    lng: PropTypes.number.isRequired,
+  }).isRequired,
 }
 
 export default Home
