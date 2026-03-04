@@ -28,6 +28,30 @@ app.use(
 app.use(auth(config))
 app.use(express.json())
 
+app.get('/maps/api/js', async (req, res) => {
+  const params = new URLSearchParams(req.query)
+  params.set('key', process.env.GOOGLE_MAPS_API_KEY)
+
+  const response = await fetch(
+    `https://maps.googleapis.com/maps/api/js?${params.toString()}`
+  )
+  const script = await response.text()
+  res.setHeader('Content-Type', 'application/javascript')
+  res.send(script)
+})
+
+app.get('/maps/geocode', async (req, res) => {
+  const params = new URLSearchParams({
+    address: req.query.address,
+    key: process.env.GOOGLE_MAPS_API_KEY,
+  })
+  const response = await fetch(
+    `https://maps.googleapis.com/maps/api/geocode/json?${params}`
+  )
+  const data = await response.json()
+  res.json(data)
+})
+
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
   const returnTo = req.query.returnTo || 'http://localhost:5173/'
