@@ -1,3 +1,4 @@
+require('dotenv').config({ path: __dirname + '/.env' })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
@@ -36,13 +37,37 @@ const analytics = createAnalyticsHelpers({
   emissions: { EMISSIONS_G_PER_KM },
 })
 
+app.get('/maps/api/js', async (req, res) => {
+  const params = new URLSearchParams(req.query)
+  params.set('key', process.env.GOOGLE_MAPS_API_KEY)
+
+  const response = await fetch(
+    `https://maps.googleapis.com/maps/api/js?${params.toString()}`
+  )
+  const script = await response.text()
+  res.setHeader('Content-Type', 'application/javascript')
+  res.send(script)
+})
+
+app.get('/maps/geocode', async (req, res) => {
+  const params = new URLSearchParams({
+    address: req.query.address,
+    key: process.env.GOOGLE_MAPS_API_KEY,
+  })
+  const response = await fetch(
+    `https://maps.googleapis.com/maps/api/geocode/json?${params}`
+  )
+  const data = await response.json()
+  res.json(data)
+
+
 app.get('/loginRoute', (req, res) => {
-  // const connection = req.query.connection // This would allow us to connect to a specific SSO provider
+  const connection = req.query.connection
   const returnTo = req.query.returnTo || 'http://localhost:5173/'
   res.oidc.login({
     returnTo: returnTo,
     authorizationParams: {
-      connection: 'Username-Password-Authentication',
+      connection: connection,
     },
   })
 })
@@ -85,6 +110,20 @@ async function selectUser(req) {
   return null
 }
 
+app.get('/sso_list', async (req, res) => {
+  const search = req.query.search ? req.query.search : ''
+  try {
+    const results = await db.query(
+      'SELECT * FROM "sso" WHERE school_name ILIKE $1 OR school_nickname ILIKE $1',
+      [`%${search}%`]
+    )
+    return res.json(results.rows)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send('Oops, something went wrong placeholder')
+  }
+})
+
 app.get('/createNewUser', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send('Access Denied placeholder')
@@ -105,6 +144,24 @@ app.get('/createNewUser', async (req, res) => {
   res.json({ user: user })
 })
 
+app.get('/authorize', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send('Access Denied placeholder')
+  }
+  let user = null
+
+  try {
+    user = await selectUser(req)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send('Oops, something went wrong placeholder')
+  }
+
+  const authorization = user ? user.role : 'user'
+
+  return res.json({ authorization: authorization })
+})
+
 /**
  * Insert the current user into the DB. User must be authenticated and not exist in the DB
  * @returns the user fetched from the DB, or null
@@ -117,15 +174,6 @@ async function insertUser(req) {
 
   return results.rowCount !== 0 ? results.rows[0] : null
 }
-
-app.get('/sample_query', (req, res) => {
-  db.query('SELECT *', (error, results) => {
-    if (error) {
-      throw error
-    }
-    res.status(200).json(results.rows)
-  })
-})
 
 app.get('/api/events', (req, res) => {
   db.query(
@@ -377,6 +425,10 @@ app.get('/api/analytics/by-mode', async (req, res) => {
   }
 })
 
-app.listen(port, () => {
-  console.log(`GCCB Backend listening on port ${port}`)
-})
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`GCCB Backend listening on port ${port}`)
+  })
+}
+
+module.exports = app
