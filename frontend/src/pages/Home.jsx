@@ -98,7 +98,7 @@ function Home() {
       }
     }
     fetchCards()
-  }, [location, filters])
+  }, [filters, userLocation])
 
   useEffect(() => {
     if (location.state?.filters) {

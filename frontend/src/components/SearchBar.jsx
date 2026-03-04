@@ -12,6 +12,7 @@ export default function SearchBar({ onSearch }) {
           type="text"
           placeholder="Search location..."
           onChange={e => setLocation(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && onSearch(location)}
           className="flex-1 pl-2 focus:outline-none"
         />
         <button onClick={() => onSearch(location)}>

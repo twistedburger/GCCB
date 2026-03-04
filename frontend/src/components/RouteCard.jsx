@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react'
 
 export default function RouteCard({ route, individualView }) {
   const dateObj = new Date(route.depart_time)
+  const [peopleGoing, setPeopleGoing] = useState(Number(route.people_going))
   const [isJoined, setIsJoined] = useState(false)
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function RouteCard({ route, individualView }) {
       credentials: 'include',
     })
     setIsJoined(true)
+    setPeopleGoing(prev => prev + 1)
   }
 
   const handleLeave = async () => {
@@ -39,6 +41,7 @@ export default function RouteCard({ route, individualView }) {
       credentials: 'include',
     })
     setIsJoined(false)
+    setPeopleGoing(prev => prev - 1)
   }
 
   return (
@@ -71,9 +74,9 @@ export default function RouteCard({ route, individualView }) {
         <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
           <GroupsOutlined className="mr-1 -ml-1" fontSize="small" />
           <p>
-            {route.people_going} people going{' '}
+            {peopleGoing} people going{' '}
             {route.transportation_mode == 'Car' &&
-              `(${route.max_ppl - route.people_going} seats left)`}
+              `(${route.max_ppl - peopleGoing} seats left)`}
           </p>
         </div>
       </div>
@@ -81,7 +84,7 @@ export default function RouteCard({ route, individualView }) {
         <GenericButton
           unstyled
           customStyling={
-            'py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs'
+            'py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2'
           }
           onClick={handleLeave}
         >
@@ -93,8 +96,9 @@ export default function RouteCard({ route, individualView }) {
       ) : (
         <GenericButton
           unstyled
+          disabled={peopleGoing >= route.max_ppl}
           customStyling={
-            'py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs'
+            'py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2'
           }
           onClick={handleJoin}
         >
