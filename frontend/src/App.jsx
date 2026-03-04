@@ -5,7 +5,7 @@ import {
   useLocation,
 } from 'react-router-dom'
 import NavigationBar from './components/NavigationBar'
-import Home from './pages/home/Home'
+import Home from './pages/Home'
 import Filter from './pages/home/Filter'
 import Report from './pages/home/Report'
 import EventDetail from './pages/home/EventDetail'

@@ -1,11 +1,11 @@
-import SearchBar from '../../components/SearchBar'
-import staticMap from '../../assets/static-map.jpg'
-import SliderCard from '../../components/SliderCard'
-import GenericToggle from '../../components/GenericToggle'
+import SearchBar from '../components/SearchBar'
+import staticMap from '../assets/static-map.jpg'
+import SliderCard from '../components/SliderCard'
+import GenericToggle from '../components/GenericToggle'
 import { PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
-import EventCard from '../../components/EventCard'
-import RouteCard from '../../components/RouteCard'
+import EventCard from '../components/EventCard'
+import RouteCard from '../components/RouteCard'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 function Home() {
