@@ -59,7 +59,7 @@ app.get('/maps/geocode', async (req, res) => {
   )
   const data = await response.json()
   res.json(data)
-
+})
 
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
