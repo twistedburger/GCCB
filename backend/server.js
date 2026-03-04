@@ -47,19 +47,24 @@ app.get('/logoutRoute', (req, res) => {
 })
 
 app.get('/authenticateUser', async (req, res) => {
-  let isAuthenticated = req.oidc.isAuthenticated()
-  let user = null
+  const isAuthenticated = req.oidc.isAuthenticated()
+  const ssoProfile = req.oidc.user || null
+
   if (!isAuthenticated) {
-    return res.json({ isAuthenticated: isAuthenticated, user: user })
-  }
-  try {
-    user = await selectUser(req)
-  } catch (error) {
-    console.log(error)
-    return res.status(500).send('Oops, something went wrong placeholder')
+    return res.json({ isAuthenticated: false, user: null })
   }
 
-  res.json({ isAuthenticated: isAuthenticated, user: user })
+  try {
+    const dbUser = await selectUser(req)
+    res.json({
+      isAuthenticated: true,
+      user: dbUser,
+      ssoProfile: dbUser ? null : ssoProfile,
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500).send('Oops, something went wrong!')
+  }
 })
 
 /**
@@ -101,8 +106,11 @@ app.post('/createNewUser', async (req, res) => {
     if (existingUser) {
       return res.status(400).send('User already exists')
     }
-
-    const newUser = await insertUserFromForm(req.oidc.user.email, req.body)
+    const newUser = await insertUserFromForm(
+      req.oidc.user.name,
+      req.oidc.user.email,
+      req.body
+    )
     res.json({ user: newUser })
   } catch (error) {
     console.error(error)
@@ -110,8 +118,8 @@ app.post('/createNewUser', async (req, res) => {
   }
 })
 
-async function insertUserFromForm(email, formData) {
-  const { name, nickname, description } = formData
+async function insertUserFromForm(name, email, formData) {
+  const { nickname, description } = formData
   const results = await db.query(
     'INSERT INTO "user" (email, role, name, nickname, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
     [email, 'user', name, nickname, description]

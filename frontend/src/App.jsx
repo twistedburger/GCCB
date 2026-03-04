@@ -26,7 +26,7 @@ import { useState, useEffect } from 'react'
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
-
+  const [ssoProfile, setSsoProfile] = useState(null)
   useEffect(() => {
     authenticateUser()
   }, [])
@@ -44,6 +44,7 @@ function App() {
     if (responseJSON) {
       setUserAuthenticated(responseJSON.isAuthenticated)
       setCurrentUser(responseJSON.user)
+      setSsoProfile(responseJSON.ssoProfile)
     }
   }
 
@@ -59,7 +60,10 @@ function App() {
                 !userAuthenticated ? (
                   <Login />
                 ) : !currentUser ? (
-                  <CreateUser onUserCreated={setCurrentUser} />
+                  <CreateUser
+                    ssoUser={ssoProfile}
+                    onUserCreated={setCurrentUser}
+                  />
                 ) : (
                   <Home />
                 )
