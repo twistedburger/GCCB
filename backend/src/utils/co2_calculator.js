@@ -12,8 +12,9 @@ const DEFAULT_PASSENGERS = 2
  * Output:                   kg CO2e
  *
  * Baseline reference:
- * 1 person driving solo in a standard petrol car.
+ * One person driving solo in a standard petrol car.
  *
+ * Default carpool set to two passengers.
  * All savings are estimates and calculated relative to this baseline.
  */
 class Co2Calculator {
@@ -61,6 +62,7 @@ class Co2Calculator {
       .toLowerCase()
   }
 
+  // default to 2
   _getPassengerCount(passengers) {
     return Number.isInteger(passengers) && passengers > 0
       ? passengers
