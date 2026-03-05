@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import PropTypes from 'prop-types'
+import { TravelMode, calculateRoute } from '../utils/routes'
 import { useAuth } from '../utils/Authorization'
 
 function Home() {
@@ -22,6 +23,7 @@ function Home() {
   const [location, setLocation] = useState('')
   const [events, setEvents] = useState([])
   const [routes, setRoutes] = useState([])
+  const [routeLine, setRouteLine] = useState('')
   const { authorizeUser } = useAuth()
   authorizeUser()
 
@@ -81,6 +83,18 @@ function Home() {
       }
     }
 
+    const getrouteLine = async () => {
+      const route = await calculateRoute(
+        { address: 'Waterfront Station, Vancouver' },
+        { address: 'Science World, Vancouver' },
+        TravelMode.Transit
+      )
+      setRouteLine(route.polyline.encodedPolyline)
+      console.log(JSON.stringify(route))
+    }
+
+    getrouteLine()
+
     if (location) {
       fetchEvents()
       fetchRoutes()
@@ -89,7 +103,11 @@ function Home() {
 
   return (
     <div className="relative w-full h-full">
-      <APIProvider apiKey="">
+      <APIProvider
+        apiKey=""
+        scriptUrl="http://localhost:3000/maps/api/js"
+        libraries={['geometry']}
+      >
         <Map
           mapId="6621f78cbdb1902f92a3d543"
           className="absolute w-full h-full"
@@ -101,7 +119,7 @@ function Home() {
           <AdvancedMarker position={userLocation}>
             <Pin scale={0.75} />
           </AdvancedMarker>
-          <MapController center={userLocation} />
+          <MapController center={userLocation} routeLine={routeLine} />
         </Map>
       </APIProvider>
       <SearchBar onSearch={handleSearch} />
@@ -138,13 +156,34 @@ function Home() {
   )
 }
 
-function MapController({ center }) {
+function MapController({ center, routeLine }) {
   const map = useMap()
   useEffect(() => {
     if (map && center) {
       map.panTo(center)
     }
   }, [map, center])
+
+  useEffect(() => {
+    if (!map || !routeLine) return
+
+    const decodedPath = google.maps.geometry.encoding.decodePath(routeLine)
+    const polyline = new google.maps.Polyline({
+      path: decodedPath,
+      geodesic: true,
+      strokeColor: '#4285F4',
+      strokeOpacity: 1.0,
+      strokeWeight: 10,
+      map,
+    })
+
+    const bounds = new google.maps.LatLngBounds()
+    decodedPath.forEach(point => bounds.extend(point))
+    map.fitBounds(bounds)
+
+    return () => polyline.setMap(null)
+  }, [map, routeLine])
+
   return null
 }
 
@@ -153,6 +192,7 @@ MapController.propTypes = {
     lat: PropTypes.number.isRequired,
     lng: PropTypes.number.isRequired,
   }).isRequired,
+  routeLine: PropTypes.string,
 }
 
 export default Home
