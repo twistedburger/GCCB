@@ -8,11 +8,13 @@ import {
 } from '@vis.gl/react-google-maps'
 import SliderCard from '../components/SliderCard'
 import ArriveDepartToggle from '../components/ArriveDepartToggle'
-import { PlaceOutlined } from '@mui/icons-material'
+import { Add, Close, PlaceOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import PropTypes from 'prop-types'
+import CreateEvent from '../components/CreateEvent'
+import GenericButton from '../components/GenericButton'
 
 function Home() {
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
@@ -21,6 +23,8 @@ function Home() {
   const [location, setLocation] = useState('')
   const [events, setEvents] = useState([])
   const [routes, setRoutes] = useState([])
+  const [showCreateEvent, setShowCreateEvent] = useState(false)
+  const [animateIn, setAnimateIn] = useState(false)
 
   const handleSearch = async newLocation => {
     setLocation(newLocation)
@@ -84,6 +88,15 @@ function Home() {
     }
   }, [location])
 
+  //trigger animation when showCreateEvent changes
+  useEffect(() => {
+    if (showCreateEvent) {
+      setTimeout(() => setAnimateIn(true), 10)
+    } else {
+      setAnimateIn(false)
+    }
+  }, [showCreateEvent])
+
   return (
     <div className="relative w-full h-full">
       <APIProvider apiKey="">
@@ -131,6 +144,50 @@ function Home() {
           </>
         )}
       </SliderCard>
+
+      {/* Create Event modal */}
+      {showCreateEvent && (
+        <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
+          {/* soft transition, blur backdrop */}
+          <div
+            onClick={() => setShowCreateEvent(false)}
+            className={`absolute inset-0 bg-slate-900/40 transition-all duration-500 ease-out
+            ${animateIn ? 'opacity-100 backdrop-blur-sm' : 'opacity-0 backdrop-blur-none'}`}
+          />
+
+          {/* modal content */}
+          <div
+            className={`relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 ease-out
+          ${
+            animateIn
+              ? 'opacity-100 scale-100 translate-y-0'
+              : 'opacity-0 scale-95 translate-y-8'
+          }`}
+          >
+            <button
+              onClick={() => setShowCreateEvent(false)}
+              className="absolute top-4 right-4 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+              aria-label="Close modal"
+            >
+              <Close fontSize="large" />
+            </button>
+            <div className="p-8">
+              <CreateEvent onSuccess={() => setShowCreateEvent(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <GenericButton
+        unstyled={true}
+        customStyling="absolute bottom-24 right-6 z-50 bg-blue-600 text-white rounded-full p-3 shadow-lg 
+                transition-transform duration-200 active:scale-90 hover:scale-110"
+        onClick={() => {
+          setShowCreateEvent(true)
+        }}
+      >
+        <Add fontSize="large" />
+      </GenericButton>
     </div>
   )
 }
