@@ -30,6 +30,7 @@ app.use(
   })
 )
 app.use(auth(config))
+app.use(express.json())
 
 const analytics = createAnalyticsHelpers({
   db,
@@ -80,19 +81,24 @@ app.get('/logoutRoute', (req, res) => {
 })
 
 app.get('/authenticateUser', async (req, res) => {
-  let isAuthenticated = req.oidc.isAuthenticated()
-  let user = null
+  const isAuthenticated = req.oidc.isAuthenticated()
+  const ssoProfile = req.oidc.user || null
+
   if (!isAuthenticated) {
-    return res.json({ isAuthenticated: isAuthenticated, user: user })
-  }
-  try {
-    user = await selectUser(req)
-  } catch (error) {
-    console.log(error)
-    return res.status(500).send('Oops, something went wrong placeholder')
+    return res.json({ isAuthenticated: false, user: null })
   }
 
-  res.json({ isAuthenticated: isAuthenticated, user: user })
+  try {
+    const dbUser = await selectUser(req)
+    res.json({
+      isAuthenticated: true,
+      user: dbUser,
+      ssoProfile: dbUser ? null : ssoProfile,
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500).send('Oops, something went wrong!')
+  }
 })
 
 /**
@@ -124,25 +130,36 @@ app.get('/sso_list', async (req, res) => {
   }
 })
 
-app.get('/createNewUser', async (req, res) => {
+app.post('/createNewUser', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send('Access Denied placeholder')
+    return res.status(403).send('Not authenticated with SSO')
   }
-
-  let user = null
 
   try {
-    user = await selectUser(req)
-    if (!user) {
-      user = await insertUser(req)
+    const existingUser = await selectUser(req)
+    if (existingUser) {
+      return res.status(400).send('User already exists')
     }
+    const newUser = await insertUserFromForm(
+      req.oidc.user.name,
+      req.oidc.user.email,
+      req.body
+    )
+    res.json({ user: newUser })
   } catch (error) {
-    console.log(error)
-    return res.status(500).send('Oops, something went wrong placeholder')
+    console.error(error)
+    res.status(500).send('Server Error')
   }
-
-  res.json({ user: user })
 })
+
+async function insertUserFromForm(name, email, formData) {
+  const { nickname, description } = formData
+  const results = await db.query(
+    'INSERT INTO "user" (email, role, name, nickname, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [email, 'user', name, nickname, description]
+  )
+  return results.rows[0]
+}
 
 app.get('/authorize', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -161,19 +178,6 @@ app.get('/authorize', async (req, res) => {
 
   return res.json({ authorization: authorization })
 })
-
-/**
- * Insert the current user into the DB. User must be authenticated and not exist in the DB
- * @returns the user fetched from the DB, or null
- */
-async function insertUser(req) {
-  const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname) VALUES ($1, $2, $3, $4) RETURNING *',
-    [req.oidc.user.email, 'user', req.oidc.user.name, req.oidc.user.nickname]
-  )
-
-  return results.rowCount !== 0 ? results.rows[0] : null
-}
 
 app.get('/api/events', (req, res) => {
   db.query(

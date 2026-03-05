@@ -26,7 +26,7 @@ import { useState, useEffect } from 'react'
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
-
+  const [ssoProfile, setSsoProfile] = useState(null)
   useEffect(() => {
     authenticateUser()
   }, [])
@@ -44,6 +44,7 @@ function App() {
     if (responseJSON) {
       setUserAuthenticated(responseJSON.isAuthenticated)
       setCurrentUser(responseJSON.user)
+      setSsoProfile(responseJSON.ssoProfile)
     }
   }
 
@@ -55,7 +56,18 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={HomePage(userAuthenticated, currentUser)}
+              element={
+                !userAuthenticated ? (
+                  <Login />
+                ) : !currentUser ? (
+                  <CreateUser
+                    ssoUser={ssoProfile}
+                    onUserCreated={setCurrentUser}
+                  />
+                ) : (
+                  <Home />
+                )
+              }
             />
             <Route path="/mytrip" element={<MyTrip />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -86,17 +98,6 @@ function App() {
       </div>
     </Router>
   )
-}
-
-function HomePage(userAuthenticated, currentUser) {
-  if (!userAuthenticated) {
-    return <Login />
-  }
-  if (!currentUser) {
-    return <CreateUser />
-  }
-
-  return <Home />
 }
 
 export default App
