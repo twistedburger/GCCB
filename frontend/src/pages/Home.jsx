@@ -14,6 +14,7 @@ import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
 import PropTypes from 'prop-types'
+import { TravelMode, calculateRoute } from '../utils/routes'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
@@ -36,6 +37,7 @@ function Home() {
     mainEventsOnly: true,
   })
   const navigate = useNavigate()
+  const [routeLine, setRouteLine] = useState('')
   const { authorizeUser } = useAuth()
   authorizeUser()
 
@@ -107,6 +109,19 @@ function Home() {
       }
     }
     fetchCards()
+
+        const getrouteLine = async () => {
+      const route = await calculateRoute(
+        { address: 'Waterfront Station, Vancouver' },
+        { address: 'Science World, Vancouver' },
+        TravelMode.Transit
+      )
+      setRouteLine(route.polyline.encodedPolyline)
+      console.log(JSON.stringify(route))
+    }
+
+    getrouteLine()
+
   }, [filters, userLocation])
 
   const handleRouteClick = route => {
@@ -116,191 +131,180 @@ function Home() {
   }
 
   return (
-    <div data-vaul-drawer-wrapper className="relative w-full h-full">
-      <div>
-        <APIProvider apiKey="">
-          <Map
-            mapId="6621f78cbdb1902f92a3d543"
-            className="absolute w-full h-full"
-            defaultCenter={userLocation}
-            defaultZoom={17}
-            gestureHandling="greedy"
-            disableDefaultUI={true}
+    <div className="relative w-full h-full">
+           <APIProvider
+        apiKey=""
+        scriptUrl="http://localhost:3000/maps/api/js"
+        libraries={['geometry']}
+      >
+        <Map
+          mapId="6621f78cbdb1902f92a3d543"
+          className="absolute w-full h-full"
+          defaultCenter={userLocation}
+          defaultZoom={17}
+          gestureHandling="greedy"
+          disableDefaultUI={true}
+        >
+          <AdvancedMarker position={userLocation}>
+            <Pin scale={0.75} />
+          </AdvancedMarker>
+          <MapController center={userLocation} routeLine={routeLine} />
+        </Map>
+      </APIProvider>
+      <SearchBar onSearch={handleSearch} />
+      <Drawer.Root
+        open={true}
+        modal={false}
+        snapPoints={[0.095, 0.5, 1]}
+        activeSnapPoint={snapPoint}
+        setActiveSnapPoint={setSnapPoint}
+        noBodyStyles={true}
+        setBackgroundColorOnScale={false}
+      >
+        <Drawer.Portal>
+          <Drawer.Content
+            style={{
+              zIndex: 20,
+              marginLeft: '55px',
+              width: 'calc(100% - 55px)',
+              borderRadius: '24px 24px 0 0',
+              height: '96%',
+              position: 'fixed',
+              bottom: 0,
+              background: '#F9F9F9',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
           >
-            <AdvancedMarker position={userLocation}>
-              <Pin scale={0.75} />
-            </AdvancedMarker>
-            <MapController center={userLocation} />
-          </Map>
-        </APIProvider>
-        {!selectedRoute && !isEventDetail && (
-          <SearchBar onSearch={handleSearch} />
-        )}
-        <Drawer.Root
-          open={true}
-          modal={false}
-          snapPoints={[0.095, 0.5, 1]}
-          activeSnapPoint={snapPoint}
-          setActiveSnapPoint={setSnapPoint}
-          noBodyStyles={true}
-          setBackgroundColorOnScale={false}
-          preventScrollRestoration={false}
-        >
-          <Drawer.Portal>
-            <Drawer.Content
-              {...(routeSnapPoint === 0.095 ? { inert: true } : {})}
-              onOpenAutoFocus={e => e.preventDefault()}
-              onFocus={e => {
-                if (e.target === e.currentTarget) {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }
-              }}
-              style={{
-                zIndex: 20,
-                marginLeft: '55px',
-                width: 'calc(100% - 55px)',
-                borderRadius: '24px 24px 0 0',
-                height: '96%',
-                position: 'fixed',
-                bottom: 0,
-                background: '#F9F9F9',
-                display: 'flex',
-                flexDirection: 'column',
-                pointerEvents: 'auto',
-              }}
+            <Drawer.Title className="sr-only">Search Results</Drawer.Title>
+            <Drawer.Description className="sr-only">
+              Search results near your location
+            </Drawer.Description>
+            <div
+              className="flex justify-center p-6"
+              style={{ pointerEvents: 'auto' }}
             >
-              <Drawer.Title className="sr-only">Search Results</Drawer.Title>
-              <Drawer.Description className="sr-only">
-                Search results near your location
-              </Drawer.Description>
-              <div
-                className="flex justify-center p-6"
-                style={{ pointerEvents: 'auto' }}
-              >
-                <div className="bg-text-primary rounded-full h-1.5 w-20" />
-              </div>
-              <div className="overflow-y-auto px-6 pb-36 flex flex-col gap-4">
-                {address && (
-                  <>
-                    <div className="flex items-center gap-2 overflow-x-auto">
-                      <TuneOutlined
-                        className="text-text-primary shrink-0"
-                        onClick={() => navigate('/filter')}
-                      />
-                      <GenericToggle
-                        value={isArriving}
-                        onChange={setIsArriving}
-                        labels={['Arriving Near', 'Departing Near']}
-                        className="shrink-0"
-                      />
-                      <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
-                        <PlaceOutlined className="mr-1" />
-                        {address}
-                      </span>
-                      <div
-                        className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
-                        style={{ scrollbarWidth: 'none' }}
-                      >
-                        <DisplayFilters
-                          filters={filters}
-                          setFilters={setFilters}
+              <div className="bg-text-primary rounded-full h-1.5 w-20" />
+            </div>
+            <div className="overflow-y-auto px-6 pb-36 flex flex-col gap-4">
+              {address && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <TuneOutlined
+                      className="text-text-primary"
+                      onClick={() => navigate('/filter')}
+                    />
+                    <GenericToggle
+                      value={isArriving}
+                      onChange={setIsArriving}
+                      labels={['Arriving Near', 'Departing Near']}
+                      className="shrink-0"
+                    />
+                    <span className="text-text-secondary truncate text-sm">
+                      <PlaceOutlined className="mr-1" />
+                      {address}
+                    </span>
+                  </div>
+                  {cardsToDisplay.length === 0 ? (
+                    <p className="text-text-secondary text-sm text-center py-4">
+                      No results found. Try adjusting your filters.
+                    </p>
+                  ) : (
+                    cardsToDisplay.map(item =>
+                      filters.mainEventsOnly ? (
+                        <EventCard key={item.id} event={item} />
+                      ) : (
+                        <RouteCard
+                          key={item.id}
+                          route={item}
+                          individualView={true}
+                          onSelect={handleRouteClick}
                         />
-                      </div>
-                    </div>
-                    {cardsToDisplay.length === 0 ? (
-                      <p className="text-text-secondary text-sm text-center py-4">
-                        No results found. Try adjusting your filters.
-                      </p>
-                    ) : (
-                      cardsToDisplay.map(item =>
-                        filters.mainEventsOnly ? (
-                          <EventCard key={item.id} event={item} />
-                        ) : (
-                          <RouteCard
-                            key={item.id}
-                            route={item}
-                            individualView={true}
-                            onSelect={route => {
-                              handleRouteClick(route)
-                              document.activeElement?.blur()
-                            }}
-                          />
-                        )
                       )
-                    )}
-                  </>
-                )}
-              </div>
-            </Drawer.Content>
-          </Drawer.Portal>
-        </Drawer.Root>
-        <Drawer.Root
-          open={!!selectedRoute}
-          onOpenChange={open => !open && setSelectedRoute(null)}
-          modal={false}
-          snapPoints={[0.095, 0.25, 0.4]}
-          activeSnapPoint={routeSnapPoint}
-          setActiveSnapPoint={setRouteSnapPoint}
-          noBodyStyles={true}
-          setBackgroundColorOnScale={false}
-          dismissible={false}
-          preventScrollRestoration={false}
-        >
-          <Drawer.Portal>
-            <Drawer.Content
-              onOpenAutoFocus={e => e.preventDefault()}
-              onFocus={e => {
-                if (e.target === e.currentTarget) {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }
-              }}
-              style={{
-                zIndex: 30,
-                marginLeft: '55px',
-                width: 'calc(100% - 55px)',
-                borderRadius: '24px 24px 0 0',
-                height: '96%',
-                position: 'fixed',
-                bottom: 0,
-                background: '#F9F9F9',
-                display: 'flex',
-                flexDirection: 'column',
-                pointerEvents: 'auto',
-              }}
-            >
-              <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
-              <Drawer.Description className="sr-only">
-                Route and event details
-              </Drawer.Description>
-              {selectedRoute && (
-                <RouteDetail
-                  selectedRoute={selectedRoute}
-                  onClose={() => {
-                    setSelectedRoute(null)
-                    setSnapPoint(0.5)
-                  }}
-                />
+                    )
+                  )}
+                </>
               )}
-            </Drawer.Content>
-          </Drawer.Portal>
-        </Drawer.Root>
-        <Outlet
-          context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
-        />
-      </div>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
+      <Drawer.Root
+        open={!!selectedRoute}
+        onOpenChange={open => !open && setSelectedRoute(null)}
+        modal={false}
+        snapPoints={[0.095, 0.25, 0.4]}
+        activeSnapPoint={routeSnapPoint}
+        setActiveSnapPoint={setRouteSnapPoint}
+        noBodyStyles={true}
+        setBackgroundColorOnScale={false}
+        dismissible={false}
+      >
+        <Drawer.Portal>
+          <Drawer.Content
+            style={{
+              zIndex: 30,
+              marginLeft: '55px',
+              width: 'calc(100% - 55px)',
+              borderRadius: '24px 24px 0 0',
+              height: '96%',
+              position: 'fixed',
+              bottom: 0,
+              background: '#F9F9F9',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
+            <Drawer.Description className="sr-only">
+              Route and event details
+            </Drawer.Description>
+            {selectedRoute && (
+              <RouteDetail
+                selectedRoute={selectedRoute}
+                onClose={() => {
+                  setSelectedRoute(null)
+                  setSnapPoint(0.5)
+                }}
+              />
+            )}
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
+
+      <Outlet context={{ filters, setFilters, setSelectedRoute }} />
     </div>
   )
 }
 
-function MapController({ center }) {
+function MapController({ center, routeLine }) {
   const map = useMap()
   useEffect(() => {
     if (map && center) {
       map.panTo(center)
     }
   }, [map, center])
+
+  useEffect(() => {
+    if (!map || !routeLine) return
+
+    const decodedPath = google.maps.geometry.encoding.decodePath(routeLine)
+    const polyline = new google.maps.Polyline({
+      path: decodedPath,
+      geodesic: true,
+      strokeColor: '#4285F4',
+      strokeOpacity: 1.0,
+      strokeWeight: 10,
+      map,
+    })
+
+    const bounds = new google.maps.LatLngBounds()
+    decodedPath.forEach(point => bounds.extend(point))
+    map.fitBounds(bounds)
+
+    return () => polyline.setMap(null)
+  }, [map, routeLine])
+
   return null
 }
 
@@ -375,6 +379,18 @@ MapController.propTypes = {
     lat: PropTypes.number.isRequired,
     lng: PropTypes.number.isRequired,
   }).isRequired,
+  routeLine: PropTypes.string,
+}
+
+DisplayFilters.propTypes = {
+  filters: PropTypes.shape({
+    time: PropTypes.object,
+    transportationModes: PropTypes.arrayOf(PropTypes.string).isRequired,
+    verifiedEventsOnly: PropTypes.bool,
+    mainEventsOnly: PropTypes.bool,
+    radius: PropTypes.number,
+  }).isRequired,
+  setFilters: PropTypes.func.isRequired,
 }
 
 DisplayFilters.propTypes = {

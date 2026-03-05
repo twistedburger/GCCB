@@ -265,7 +265,7 @@ app.post('/api/requestRoute', async (req, res) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': process.env.MAPS_KEY,
+          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
           'X-Goog-FieldMask':
             'routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.transitDetails,routes.legs.steps.distanceMeters,routes.legs.steps.travelMode',
         },
