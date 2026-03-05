@@ -8,8 +8,10 @@ import {
   Logout,
 } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export default function RouteCard({ route, individualView }) {
+  const navigate = useNavigate()
   const dateObj = new Date(route.depart_time)
   const [peopleGoing, setPeopleGoing] = useState(Number(route.people_going))
   const [isJoined, setIsJoined] = useState(false)
@@ -80,31 +82,50 @@ export default function RouteCard({ route, individualView }) {
           </p>
         </div>
       </div>
-      {isJoined ? (
-        <GenericButton
-          unstyled
-          customStyling={
-            'py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2'
-          }
-          onClick={handleLeave}
-        >
-          <div className="flex flex-row items-center gap-1">
-            <Logout fontSize="12px" />
-            <span>Leave</span>
-          </div>
-        </GenericButton>
-      ) : (
-        <GenericButton
-          unstyled
-          disabled={peopleGoing >= route.max_ppl}
-          customStyling={
-            'py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2'
-          }
-          onClick={handleJoin}
-        >
-          Join
-        </GenericButton>
-      )}
+      <div className="flex flex-col gap-1">
+        {!individualView && (
+          <GenericButton
+            unstyled
+            customStyling={
+              'py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2'
+            }
+            onClick={() =>
+              navigate(`/report`, {
+                state: { type: 'route', targetId: route.id },
+              })
+            }
+          >
+            <div>
+              <span>Report</span>
+            </div>
+          </GenericButton>
+        )}
+        {isJoined ? (
+          <GenericButton
+            unstyled
+            customStyling={
+              'py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2'
+            }
+            onClick={handleLeave}
+          >
+            <div className="flex flex-row items-center gap-1">
+              <Logout fontSize="12px" />
+              <span>Leave</span>
+            </div>
+          </GenericButton>
+        ) : (
+          <GenericButton
+            unstyled
+            disabled={peopleGoing >= route.max_ppl}
+            customStyling={
+              'py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2'
+            }
+            onClick={handleJoin}
+          >
+            Join
+          </GenericButton>
+        )}
+      </div>
     </div>
   )
 }

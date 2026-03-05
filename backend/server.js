@@ -26,6 +26,7 @@ app.use(
   })
 )
 app.use(auth(config))
+app.use(express.json())
 
 app.get('/maps/api/js', async (req, res) => {
   const params = new URLSearchParams(req.query)
@@ -353,6 +354,44 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Failed to leave route' })
+  }
+})
+
+/**
+ * Adds a report and corresponding resport junction to report_user, report_event, or report_route.
+ */
+app.post('/api/report', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).json({ error: 'Not authenticated' })
+  }
+  try {
+    const user = await selectUser(req)
+    const { type, targetId, reason, explanation } = req.body
+    const result = await db.query(
+      'INSERT INTO report (reporter_id, reason, explanation) VALUES ($1, $2, $3) RETURNING id',
+      [user.id, reason, explanation]
+    )
+    const reportId = result.rows[0].id
+    if (type == 'user') {
+      await db.query(
+        'INSERT INTO report_user (report_id, user_id) VALUES ($1, $2)',
+        [reportId, targetId]
+      )
+    } else if (type == 'event') {
+      await db.query(
+        'INSERT INTO report_event (report_id, event_id) VALUES ($1, $2)',
+        [reportId, targetId]
+      )
+    } else if (type == 'route') {
+      await db.query(
+        'INSERT INTO report_route (report_id, route_id) VALUES ($1, $2)',
+        [reportId, targetId]
+      )
+    }
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to join route' })
   }
 })
 

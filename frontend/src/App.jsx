@@ -118,13 +118,17 @@ function FilterPage() {
 
 function EventDetailPage() {
   const location = useLocation()
-  if (!location.pathname.startsWith('/event/')) return null
+  if (
+    !location.pathname.startsWith('/event/') &&
+    !location.pathname.startsWith('/report/')
+  )
+    return null
   return <EventDetail />
 }
 
 function ReportPage() {
   const location = useLocation()
-  if (!location.pathname.startsWith('/report/')) return null
+  if (!location.pathname.startsWith('/report')) return null
   return <Report />
 }
 

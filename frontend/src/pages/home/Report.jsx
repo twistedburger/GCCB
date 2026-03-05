@@ -6,12 +6,18 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Report() {
   const location = useLocation()
-  const id = location.pathname.split('/').pop()
-  console.log(id)
+  const { type, targetId } = location.state
   const navigate = useNavigate()
 
+  const reasonMenu = [
+    'Spam or Misleading Information',
+    'Inappropriate Content',
+    'Dangerous Activity',
+    'Discrimination',
+    'Other',
+  ]
   const [isClosing, setIsClosing] = useState(false)
-  const [reason, setReason] = useState('')
+  const [reason, setReason] = useState(reasonMenu[0])
   const [explanation, setExplanation] = useState('')
   const [explanationError, setExplanationError] = useState('')
 
@@ -27,6 +33,14 @@ export default function Report() {
       setExplanationError('Please provide an explanation.')
       return
     }
+
+    await fetch('http://localhost:3000/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ type, targetId, reason, explanation }),
+    })
+    closeWithAnimation()
   }
 
   const handleCancel = () => {
@@ -53,19 +67,13 @@ export default function Report() {
           <div className="flex flex-col gap-2">
             <div className="-mx-2 *:min-w-86">
               <DropDownList
-                items={[
-                  'Spam or Misleading Information',
-                  'Inappropriate Content',
-                  'Dangerous Activity',
-                  'Discrimination',
-                  'Other',
-                ]}
-                onChange={setReason}
+                items={reasonMenu}
+                onChange={e => setReason(e.target.value)}
               />
             </div>
             <textarea
               required
-              value={reason}
+              value={explanation}
               onChange={e => setExplanation(e.target.value)}
               placeholder="Please describe the issue..."
               className="w-full rounded-xl border-2 border-medium-grey p-3 text-sm text-text-primary resize-none h-32 focus:outline-none focus:border-blue-primary"

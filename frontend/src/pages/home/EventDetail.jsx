@@ -6,6 +6,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import bcitCover from '../../assets/bcit.jpg'
 import { OutlinedFlagRounded, VerifiedOutlined } from '@mui/icons-material'
+import IconButton from '@mui/material/IconButton'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 
 export default function EventDetail() {
   const location = useLocation()
@@ -14,6 +18,8 @@ export default function EventDetail() {
   const [isClosing, setIsClosing] = useState(false)
   const [event, setEvent] = useState(null)
   const dateObj = event ? new Date(event.event_time) : null
+  const [anchorEl, setAnchorEl] = useState(null)
+  const menuOpen = Boolean(anchorEl)
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -78,7 +84,42 @@ export default function EventDetail() {
                         fontSize="small"
                         className="shrink-0"
                       />
-                      <p className="truncate">{event.location}</p>
+                      <p className="truncate flex-1">{event.location}</p>
+                      <IconButton
+                        size="small"
+                        onClick={e => setAnchorEl(e.currentTarget)}
+                      >
+                        <MoreVertIcon fontSize="small" />
+                      </IconButton>
+                      <Menu
+                        anchorEl={anchorEl}
+                        open={menuOpen}
+                        onClose={() => setAnchorEl(null)}
+                      >
+                        <MenuItem
+                          onClick={() => {
+                            setAnchorEl(null)
+                            navigate(`/report`, {
+                              state: { type: 'event', targetId: event.id },
+                            })
+                          }}
+                        >
+                          Report Event
+                        </MenuItem>
+                        <MenuItem
+                          onClick={() => {
+                            setAnchorEl(null)
+                            navigate(`/report`, {
+                              state: {
+                                type: 'user',
+                                targetId: event.creator_id,
+                              },
+                            })
+                          }}
+                        >
+                          Report Organizer
+                        </MenuItem>
+                      </Menu>
                     </div>
                     <div className="flex flex-row items-center">
                       <h3 className="font-semibold text-lg text-text-primary mr-1">
