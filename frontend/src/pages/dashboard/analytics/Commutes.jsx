@@ -1,129 +1,291 @@
 import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../../components/analytics/KpiGrid'
-import ChartCard from '../../../components/analytics/ChartCard'
-import ChartPlaceholder from '../../../components/analytics/ChartPlaceholder'
+import DropDownList from '../../../components/DropDownList'
+import { formatKg, formatKm } from '../../../utils/analyticsHelpers'
 
 function Commutes() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const role = location.state?.role ?? 'student'
-  const isAdmin = role === 'admin'
+  const [history, setHistory] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  const S = adminAnalyticsEn.commutes
+  const [dateRange, setDateRange] = useState('all')
+  const [mode, setMode] = useState('all')
 
-  // Placeholder values
+  useEffect(() => {
+    async function fetchHistory() {
+      try {
+        setLoading(true)
+        setError('')
+
+        const response = await fetch(
+          'http://localhost:3000/api/commute-history',
+          {
+            credentials: 'include',
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch commute history: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setHistory(data)
+      } catch (err) {
+        console.error('Failed to load commute history', err)
+        setError('Failed to load commute history.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchHistory()
+  }, [])
+
+  const isAdmin = history?.scope === 'system'
+  const routes = history?.routes ?? []
+
+  function normalizeMode(rawMode) {
+    if (!rawMode) return 'other'
+
+    const value = String(rawMode).trim().toLowerCase()
+
+    if (['walk', 'walking'].includes(value)) return 'walk'
+    if (['bicycle', 'bike', 'cycling', 'cycle'].includes(value))
+      return 'bicycle'
+    if (['bus', 'transit', 'train', 'skytrain'].includes(value)) return 'bus'
+    if (['car', 'carpool', 'drive', 'driving'].includes(value)) return 'car'
+
+    return 'other'
+  }
+
+  function isWithinDateRange(departTime, selectedRange) {
+    if (selectedRange === 'all') return true
+    if (!departTime) return false
+
+    const routeDate = new Date(departTime)
+    const now = new Date()
+
+    if (Number.isNaN(routeDate.getTime())) {
+      return false
+    }
+
+    if (selectedRange === '7d') {
+      const cutoff = new Date(now)
+      cutoff.setDate(now.getDate() - 7)
+      return routeDate >= cutoff
+    }
+
+    if (selectedRange === '30d') {
+      const cutoff = new Date(now)
+      cutoff.setDate(now.getDate() - 30)
+      return routeDate >= cutoff
+    }
+
+    return true
+  }
+
+  const filteredRoutes = useMemo(() => {
+    return routes.filter(route => {
+      const matchesMode =
+        mode === 'all' || normalizeMode(route.transportation_mode) === mode
+
+      const matchesDate = isWithinDateRange(route.depart_time, dateRange)
+
+      return matchesMode && matchesDate
+    })
+  }, [routes, mode, dateRange])
+
+  const tripCount = filteredRoutes.length
+
+  const totalDistanceKm = filteredRoutes.reduce(
+    (sum, route) => sum + Number(route.distance ?? 0),
+    0
+  )
+
+  const avgDistancePerRouteKm = tripCount > 0 ? totalDistanceKm / tripCount : 0
+
+  const totalCo2SavedKg = filteredRoutes.reduce((sum, route) => {
+    const value = isAdmin ? route.savedKgSystem : route.savedKgUser
+    return sum + Number(value ?? 0)
+  }, 0)
+
   const kpis = isAdmin
     ? [
-        { label: S.metrics.admin.routesScheduled30d, value: '4,567' },
-        { label: S.metrics.admin.totalDistance30d, value: '12,340 km' },
-        { label: S.metrics.admin.avgDistancePerRoute, value: '2.7 km' },
-        { label: S.metrics.admin.completionRate30d, value: '74%' },
+        { label: 'Community Trips', value: loading ? '...' : `${tripCount}` },
+        {
+          label: 'Community Distance',
+          value: loading ? '...' : formatKm(totalDistanceKm),
+        },
+        {
+          label: 'Avg Distance / Trip',
+          value: loading ? '...' : formatKm(avgDistancePerRouteKm),
+        },
+        {
+          label: 'Community CO₂ Saved',
+          value: loading ? '...' : formatKg(totalCo2SavedKg),
+        },
       ]
     : [
-        { label: S.metrics.student.myRoutes30d, value: '12' },
-        { label: S.metrics.student.myDistance30d, value: '32.1 km' },
-        { label: S.metrics.student.avgDistancePerRoute, value: '2.7 km' },
-        { label: S.metrics.student.myCompletionRate30d, value: '80%' },
+        { label: 'Trips', value: loading ? '...' : `${tripCount}` },
+        {
+          label: 'Total Distance',
+          value: loading ? '...' : formatKm(totalDistanceKm),
+        },
+        {
+          label: 'Avg Distance / Trip',
+          value: loading ? '...' : formatKm(avgDistancePerRouteKm),
+        },
+        {
+          label: 'Personal CO₂e Saved',
+          value: loading ? '...' : formatKg(totalCo2SavedKg),
+        },
       ]
 
-  const modeBreakdown = [
-    { mode: S.modeBreakdown.modes.walk, share: '22%' },
-    { mode: S.modeBreakdown.modes.cycle, share: '31%' },
-    { mode: S.modeBreakdown.modes.carpool, share: '20%' },
-    { mode: S.modeBreakdown.modes.transit, share: '27%' },
-  ]
+  function formatDepartTime(value) {
+    if (!value) return 'No departure time'
+
+    const date = new Date(value)
+
+    if (Number.isNaN(date.getTime())) {
+      return 'Invalid date'
+    }
+
+    return date.toLocaleString()
+  }
+
+  function formatRouteMode(value) {
+    if (!value) return 'Unknown mode'
+    return String(value)
+  }
 
   return (
-    <>
-      <button type="button" onClick={() => navigate(-1)}>
+    <div className="mx-auto w-full max-w-5xl p-4">
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
+      >
         {adminAnalyticsEn.common.back}
       </button>
 
-      <h1>{isAdmin ? S.pageTitle.admin : S.pageTitle.student}</h1>
-      <p>
-        Viewing as: <strong>{role}</strong>
-      </p>
+      <div>
+        <h1 className="text-2xl font-semibold">
+          {isAdmin ? 'Community Commutes' : 'My Commutes'}
+        </h1>
+        <p className="mt-1 text-sm text-zinc-600">
+          {isAdmin
+            ? 'Review completed community trips included in platform metrics.'
+            : 'Review the completed trips included in your commute metrics.'}
+        </p>
+      </div>
 
-      <hr />
-
-      <AnalyticsBlock
-        title={S.filters.blockTitle}
-        description={S.filters.blockDescription}
-      >
-        <ul>
-          <li>
-            <strong>{S.filters.dateRangeLabel}</strong>{' '}
-            {S.filters.dateRangeValue}
-          </li>
-          <li>
-            <strong>{S.filters.modeLabel}</strong> {S.filters.modeValue}
-          </li>
-          <li>
-            <strong>{S.filters.statusLabel}</strong> {S.filters.statusValue}
-          </li>
-        </ul>
-      </AnalyticsBlock>
-
-      <AnalyticsBlock
-        title={S.metrics.blockTitle}
-        description={S.metrics.blockDescription}
-      >
-        <KpiGrid items={kpis} />
-      </AnalyticsBlock>
-
-      <AnalyticsBlock
-        title={S.charts.blockTitle}
-        description={S.charts.blockDescription}
-      >
-        <div style={{ display: 'grid', gap: 12 }}>
-          <ChartCard
-            title={S.charts.routesOverTime.title}
-            subtitle={S.charts.routesOverTime.subtitle}
-          >
-            <ChartPlaceholder
-              label={S.charts.routesOverTime.placeholderLabel}
-            />
-          </ChartCard>
-
-          <ChartCard
-            title={S.charts.distanceOverTime.title}
-            subtitle={S.charts.distanceOverTime.subtitle}
-          >
-            <ChartPlaceholder
-              label={S.charts.distanceOverTime.placeholderLabel}
-            />
-          </ChartCard>
-
-          <ChartCard
-            title={S.charts.modeSplit.title}
-            subtitle={S.charts.modeSplit.subtitle}
-          >
-            <ChartPlaceholder label={S.charts.modeSplit.placeholderLabel} />
-          </ChartCard>
+      {error ? (
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
         </div>
-      </AnalyticsBlock>
+      ) : null}
 
-      <AnalyticsBlock
-        title={S.modeBreakdown.blockTitle}
-        description={S.modeBreakdown.blockDescription}
-      >
-        <ul>
-          {modeBreakdown.map(row => (
-            <li key={row.mode}>
-              <strong>
-                {row.mode}
-                {S.modeBreakdown.rowLabelSuffix}
-              </strong>{' '}
-              {row.share}
-            </li>
-          ))}
-        </ul>
-      </AnalyticsBlock>
+      <div className="flex flex-col">
+        <AnalyticsBlock title="Filters">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col">
+              <label className="mb-1 text-sm font-semibold text-zinc-700">
+                Date range
+              </label>
+              <DropDownList
+                items={['all', '7d', '30d']}
+                onChange={e => setDateRange(e.target.value)}
+              />
+            </div>
 
-      <hr />
-    </>
+            <div className="flex flex-col">
+              <label className="mb-1 text-sm font-semibold text-zinc-700">
+                Transportation mode
+              </label>
+              <DropDownList
+                items={['all', 'walk', 'bicycle', 'bus', 'car']}
+                onChange={e => setMode(e.target.value)}
+              />
+            </div>
+          </div>
+        </AnalyticsBlock>
+
+        <AnalyticsBlock title="Key metrics">
+          <KpiGrid items={kpis} />
+        </AnalyticsBlock>
+
+        <AnalyticsBlock title="Commute history">
+          {loading ? (
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+              Loading commute history...
+            </div>
+          ) : filteredRoutes.length === 0 ? (
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+              No completed trips match the selected filters.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {filteredRoutes.map(route => {
+                const co2Saved = isAdmin
+                  ? route.savedKgSystem
+                  : route.savedKgUser
+
+                return (
+                  <div
+                    key={route.id}
+                    className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-semibold text-zinc-900">
+                          {route.title || 'Untitled commute'}
+                        </h3>
+
+                        <p className="mt-1 text-sm text-zinc-600">
+                          {route.origin || 'Unknown origin'} →{' '}
+                          {route.destination || 'Unknown destination'}
+                        </p>
+
+                        {route.description ? (
+                          <p className="mt-2 text-sm text-zinc-500">
+                            {route.description}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="text-sm text-zinc-500">
+                        {formatDepartTime(route.depart_time)}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-zinc-700 sm:grid-cols-3">
+                      <div>
+                        <span className="font-medium">Mode:</span>{' '}
+                        {formatRouteMode(route.transportation_mode)}
+                      </div>
+
+                      <div>
+                        <span className="font-medium">Distance:</span>{' '}
+                        {formatKm(Number(route.distance ?? 0))}
+                      </div>
+
+                      <div>
+                        <span className="font-medium">CO₂e Saved:</span>{' '}
+                        {formatKg(Number(co2Saved ?? 0))}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </AnalyticsBlock>
+      </div>
+    </div>
   )
 }
 
