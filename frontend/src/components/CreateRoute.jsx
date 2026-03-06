@@ -50,6 +50,11 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         onChange={e => setRouteName(e.target.value)}
         error={errors.routeName}
       />
+
+      {/* Transportation Mode Selection*/}
+      <div>- Select transportation mode component</div>
+      <div>- Once mode selected, # of people</div>
+
       <div>
         <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
           Starting Location

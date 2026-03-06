@@ -1,12 +1,26 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
+import { Close } from '@mui/icons-material'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import CreateRoute from './CreateRoute'
 import LocationSearch from './LocationSearch'
-// import RouteCard from './RouteCard'
+import RouteCard from './RouteCard'
 
-const CreateEvent = ({ initLoc, onSubmit }) => {
+const CreateEvent = ({
+  initLoc,
+  // onSubmit
+}) => {
+  const mockRoute = {
+    title: 'Route 1',
+    transportation_mode: 'Car',
+    description: 'A scenic route through the city',
+    start: 'Location A',
+    end: 'Location B',
+    depart_time: '2024-07-01T10:00',
+    max_ppl: 3,
+  }
+
   const [addedRoutes, setAddedRoutes] = useState([])
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [addRoute, setAddRoute] = useState(false)
@@ -16,7 +30,12 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [errors, setErrors] = useState({})
 
   const handleRouteSubmit = route => {
-    setAddedRoutes([...addedRoutes, route])
+    const routeWithId = { ...route, id: crypto.randomUUID() }
+    setAddedRoutes([...addedRoutes, routeWithId])
+  }
+
+  const removeRoute = id => {
+    setAddedRoutes(addedRoutes.filter(route => route.id !== id))
   }
 
   const validate = () => {
@@ -44,7 +63,8 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
       routes: addedRoutes,
     }
     console.log('Event created: ' + JSON.stringify(eventData))
-    onSubmit()
+    // api call to submit eventData
+    // onSubmit() to close modal after successful submission
   }
 
   return (
@@ -110,22 +130,41 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
           />
         </div>
 
-        {/* {addedRoutes.length > 0 && (
+        {addedRoutes.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Added Routes</h2>
             {addedRoutes.map(route => (
-              <RouteCard key={route.id} route={route} individualView={true} />
+              <div key={route.id} className="relative">
+                <GenericButton
+                  unstyled={true}
+                  customStyling="absolute top-2 right-2 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                >
+                  <Close
+                    fontSize="small"
+                    onClick={() => removeRoute(route.id)}
+                  />
+                </GenericButton>
+                <RouteCard key={route.id} route={route} individualView={true} />
+              </div>
             ))}
           </div>
-        )} */}
+        )}
 
         <div className="flex justify-center items-center space-x-2">
           {addRoute ? (
-            <div className="w-full border border-gray-300 p-4 rounded-xl">
+            <div className="relative w-full border border-gray-300 p-4 rounded-xl">
+              <GenericButton
+                unstyled={true}
+                onClick={() => setAddRoute(false)}
+                customStyling="absolute top-2 right-2 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+              >
+                <Close fontSize="medium" />
+              </GenericButton>
               <CreateRoute
                 initLoc={selectedPlace ? selectedPlace : initLoc}
                 onSubmit={route => {
-                  handleRouteSubmit(route)
+                  handleRouteSubmit(mockRoute)
+                  console.log(route)
                   setAddRoute(false)
                 }}
               />
@@ -149,5 +188,5 @@ export default CreateEvent
 
 CreateEvent.propTypes = {
   initLoc: PropTypes.string,
-  onSubmit: PropTypes.func.isRequired,
+  // onSubmit: PropTypes.func.isRequired,
 }
