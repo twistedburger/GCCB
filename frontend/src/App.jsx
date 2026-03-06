@@ -14,7 +14,7 @@ import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import { useState, useEffect } from 'react'
 import { authLevel, AuthProvider } from './utils/Authorization'
-import ProtectedRoute from './components/RouteProtection'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
