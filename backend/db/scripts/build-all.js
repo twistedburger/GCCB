@@ -6,7 +6,12 @@ const config = {
   user: 'postgres',
 
   // Add more scripts to this list as created
-  scripts: ['initialize_db.sql', 'add_dummy_data.sql', 'update_db_sso.sql'],
+  scripts: [
+    'initialize_db.sql',
+    'add_dummy_data.sql',
+    'update_db_sso.sql',
+    'create_report_table.sql',
+  ],
 }
 
 function makeDatabase() {
