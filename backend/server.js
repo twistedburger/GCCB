@@ -220,8 +220,8 @@ app.get('/api/routes', (req, res) => {
 
 /**
  * Retrieves the commute history for the authenticated user.
- * - Admin get all completed routes.
- * - Users get only their participated completed routes.
+ * - Regular users get only their participated completed routes.
+ * - Admins do not have access to detailed commute history.
  *
  * @returns {Object} JSON response containing commute history
  */
@@ -235,7 +235,14 @@ app.get('/api/commute-history', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User is missing uh oh!' })
 
     const isAdmin = user.role === 'admin'
-    const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin, {
+
+    if (isAdmin) {
+      return res.status(403).json({
+        error: 'Admins do not have access to user commute history.',
+      })
+    }
+
+    const routes = await analytics.fetchCompletedRoutes(user.id, false, {
       orderByDepartTime: true,
     })
 
@@ -264,7 +271,7 @@ app.get('/api/commute-history', async (req, res) => {
     }
 
     return res.status(200).json({
-      scope: isAdmin ? 'system' : 'user',
+      scope: 'user',
       userId: user.id,
       count: commuteHistory.length,
       routes: commuteHistory,
