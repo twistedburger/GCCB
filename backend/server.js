@@ -139,7 +139,7 @@ app.post('/createNewUser', async (req, res) => {
   try {
     const existingUser = await selectUser(req)
     if (existingUser) {
-      return res.status(400).send('User already exists')
+      return res.status(400).send(serverStrings.errors.userExists)
     }
     const newUser = await insertUserFromForm(
       req.oidc.user.name,
@@ -228,12 +228,12 @@ app.get('/api/routes', (req, res) => {
  */
 app.get('/api/commute-history', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).json({ error: 'Access denied' })
+    return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
   try {
     const user = await selectUser(req)
-    if (!user) return res.status(404).json({ error: 'User is missing uh oh!' })
+    if (!user) return res.status(404).send(serverStrings.errors.noUser)
 
     const isAdmin = user.role === 'admin'
     const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin, {
@@ -272,7 +272,7 @@ app.get('/api/commute-history', async (req, res) => {
     })
   } catch (error) {
     console.error('Error in /api/commute-history:', error)
-    return res.status(500).json({ error: 'Failed to fetch commute history' })
+    return res.status(500).send(serverStrings.errors.generic)
   }
 })
 
@@ -284,12 +284,12 @@ app.get('/api/commute-history', async (req, res) => {
  */
 app.get('/api/analytics/summary', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).json({ error: 'Access denied' })
+    return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
   try {
     const user = await selectUser(req)
-    if (!user) return res.status(404).json({ error: 'Woops~ User not found' })
+    if (!user) return res.status(404).send(serverStrings.errors.noUser)
 
     const isAdmin = user.role === 'admin'
     const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin)
@@ -341,7 +341,7 @@ app.get('/api/analytics/summary', async (req, res) => {
     return res.status(200).json(summary)
   } catch (error) {
     console.error('Error in /api/analytics/summary:', error)
-    return res.status(500).json({ error: 'Failed to fetch analytics summary' })
+    return res.status(500).send(serverStrings.errors.generic)
   }
 })
 
@@ -354,12 +354,12 @@ app.get('/api/analytics/summary', async (req, res) => {
  */
 app.get('/api/analytics/by-mode', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).json({ error: 'Access denied' })
+    return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
   try {
     const user = await selectUser(req)
-    if (!user) return res.status(404).json({ error: 'Found not user' })
+    if (!user) return res.status(404).send(serverStrings.errors.noUser)
 
     const isAdmin = user.role === 'admin'
     const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin)
@@ -426,7 +426,7 @@ app.get('/api/analytics/by-mode', async (req, res) => {
     })
   } catch (error) {
     console.error('Error in /api/analytics/by-mode:', error)
-    return res.status(500).json({ error: 'Failed to fetch analytics by mode' })
+    return res.status(500).send(serverStrings.errors.generic)
   }
 })
 
