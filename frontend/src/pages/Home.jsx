@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import PropTypes from 'prop-types'
+import { useAuth } from '../utils/Authorization'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 function Home() {
@@ -30,6 +31,8 @@ function Home() {
   })
   const navigate = useNavigate()
   const location = useLocation()
+  const { authorizeUser } = useAuth()
+  authorizeUser()
 
   const handleSearch = async newLocation => {
     setAddress(newLocation)

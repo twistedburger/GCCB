@@ -15,6 +15,8 @@ export default function RouteCard({ route, individualView }) {
   const dateObj = new Date(route.depart_time)
   const [peopleGoing, setPeopleGoing] = useState(Number(route.people_going))
   const [isJoined, setIsJoined] = useState(false)
+  const isFull =
+    route.transportation_mode === 'car' && peopleGoing >= route.max_ppl
 
   useEffect(() => {
     const checkJoined = async () => {
@@ -77,7 +79,7 @@ export default function RouteCard({ route, individualView }) {
           <GroupsOutlined className="mr-1 -ml-1" fontSize="small" />
           <p>
             {peopleGoing} people going{' '}
-            {route.transportation_mode == 'Car' &&
+            {route.transportation_mode == 'car' &&
               `(${route.max_ppl - peopleGoing} seats left)`}
           </p>
         </div>
@@ -116,10 +118,8 @@ export default function RouteCard({ route, individualView }) {
         ) : (
           <GenericButton
             unstyled
-            disabled={peopleGoing >= route.max_ppl}
-            customStyling={
-              'py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2'
-            }
+            disabled={isFull}
+            customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
             onClick={handleJoin}
           >
             Join

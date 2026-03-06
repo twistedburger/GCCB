@@ -21,15 +21,8 @@ import Activity from './pages/dashboard/analytics/Activity'
 import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import { useState, useEffect } from 'react'
-
-// To be used later
-
-// const authLevel = {
-//   USER: "user",
-//   MODERATOR: "moderator",
-//   ADMIN: "admin",
-//   SUPERADMIN: "superadmin"
-// }
+import { authLevel, AuthProvider } from './utils/Authorization'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
@@ -58,55 +51,63 @@ function App() {
 
   return (
     <Router>
-      <div className="app-container h-screen">
-        {/* pages */}
-        <main className="content bg-background-off-white">
-          <Routes>
-            <Route
-              path="/*"
-              element={
-                !userAuthenticated ? (
-                  <Login />
-                ) : !currentUser ? (
-                  <CreateUser
-                    ssoUser={ssoProfile}
-                    onUserCreated={setCurrentUser}
-                  />
-                ) : (
-                  <Home />
-                )
-              }
-            />
-            <Route path="/mytrip" element={<MyTrip />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+      <AuthProvider>
+        <div className="app-container h-screen">
+          {/* pages */}
+          <main className="content bg-background-off-white">
+            <Routes>
+              <Route
+                path="/*"
+                element={
+                  !userAuthenticated ? (
+                    <Login />
+                  ) : !currentUser ? (
+                    <CreateUser
+                      ssoUser={ssoProfile}
+                      onUserCreated={setCurrentUser}
+                    />
+                  ) : (
+                    <Home />
+                  )
+                }
+              />
+              <Route
+                element={
+                  <ProtectedRoute requiredAuthorization={authLevel.USER} />
+                }
+              >
+                <Route path="/mytrip" element={<MyTrip />} />
+                <Route path="/dashboard" element={<Dashboard />} />
 
-            <Route path="/dashboard/analytics" element={<Analytics />} />
-            <Route
-              path="/dashboard/analytics/co2-savings"
-              element={<Co2Savings />}
-            />
-            <Route
-              path="/dashboard/analytics/commutes"
-              element={<Commutes />}
-            />
-            <Route
-              path="/dashboard/analytics/trip-frequency"
-              element={<TripFrequency />}
-            />
-            <Route
-              path="/dashboard/analytics/activity"
-              element={<Activity />}
-            />
+                <Route path="/dashboard/analytics" element={<Analytics />} />
+                <Route
+                  path="/dashboard/analytics/co2-savings"
+                  element={<Co2Savings />}
+                />
+                <Route
+                  path="/dashboard/analytics/commutes"
+                  element={<Commutes />}
+                />
+                <Route
+                  path="/dashboard/analytics/trip-frequency"
+                  element={<TripFrequency />}
+                />
+                <Route
+                  path="/dashboard/analytics/activity"
+                  element={<Activity />}
+                />
 
-            <Route path="/dashboard/profile" element={<Profile />} />
-            <Route path="/dashboard/settings" element={<Settings />} />
-          </Routes>
-          <FilterPage />
-          <EventDetailPage />
-          <ReportPage />
-        </main>
-        {userAuthenticated && <NavigationBar />}
-      </div>
+                <Route path="/dashboard/profile" element={<Profile />} />
+                <Route path="/dashboard/settings" element={<Settings />} />
+              </Route>
+            </Routes>
+            <FilterPage />
+            <EventDetailPage />
+            <ReportPage />
+          </main>
+          {userAuthenticated && <NavigationBar />}
+        </div>
+      </AuthProvider>
     </Router>
   )
 }
