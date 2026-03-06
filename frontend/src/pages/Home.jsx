@@ -1,4 +1,4 @@
-import SearchBar from '../components/SearchBar'
+import LocationSearch from '../components/LocationSearch'
 import {
   APIProvider,
   Map,
@@ -114,7 +114,11 @@ function Home() {
           <MapController center={userLocation} />
         </Map>
       </APIProvider>
-      <SearchBar onSearch={handleSearch} />
+
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 w-9/10 overflow-visible">
+        <LocationSearch onSearch={handleSearch} />
+      </div>
+
       <SliderCard key={location} isExpanded={isExpanded}>
         {location && (
           <>
@@ -157,7 +161,8 @@ function Home() {
 
           {/* modal content */}
           <div
-            className={`relative bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 ease-out
+            className={`relative bg-white w-full max-w-lg rounded-3xl shadow-2xl 
+              max-h-[90vh] overflow-auto transform transition-all duration-300 ease-out
           ${
             animateIn
               ? 'opacity-100 scale-100 translate-y-0'
@@ -171,8 +176,8 @@ function Home() {
             >
               <Close fontSize="large" />
             </button>
-            <div className="p-8">
-              <CreateEvent onSuccess={() => setShowCreateEvent(false)} />
+            <div className="p-8 overflow-auto">
+              <CreateEvent onSubmit={() => setShowCreateEvent(false)} />
             </div>
           </div>
         </div>
