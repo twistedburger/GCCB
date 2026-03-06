@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import PropTypes from 'prop-types'
+import { useAuth } from '../utils/Authorization'
 
 function Home() {
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
@@ -21,6 +22,8 @@ function Home() {
   const [location, setLocation] = useState('')
   const [events, setEvents] = useState([])
   const [routes, setRoutes] = useState([])
+  const { authorizeUser } = useAuth()
+  authorizeUser()
 
   const handleSearch = async newLocation => {
     setLocation(newLocation)
