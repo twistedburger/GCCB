@@ -14,7 +14,7 @@ export default function NavigationBar() {
       id: 'dashboard',
       Icon: PersonOutlineOutlined,
       label: 'Dashboard',
-      path: '/dashboard',
+      path: '/dashboard/profile',
     },
   ]
 

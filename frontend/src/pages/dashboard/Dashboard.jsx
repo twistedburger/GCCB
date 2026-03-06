@@ -1,3 +1,5 @@
+// This page is now defunct
+
 import { Link } from 'react-router-dom'
 
 function Dashboard() {
