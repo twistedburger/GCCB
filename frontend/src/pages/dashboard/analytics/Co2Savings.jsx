@@ -1,181 +1,302 @@
-import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
-
-import { useLocation, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
-import PropTypes from 'prop-types'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../../components/analytics/KpiGrid'
-import ChartCard from '../../../components/analytics/ChartCard'
-import ChartPlaceholder from '../../../components/analytics/ChartPlaceholder'
-
-function Co2InfoModal({ open, onClose }) {
-  if (!open) return null
-
-  const S = adminAnalyticsEn.co2
-
-  return (
-    <div
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label={S.modal.title}
-    >
-      <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-lg border border-gray-100">
-        <h2 className="text-xl font-extrabold text-text-primary">
-          {S.modal.title}
-        </h2>
-
-        <p className="mt-3 text-sm font-medium text-text-secondary">
-          {S.modal.intro}
-        </p>
-
-        <div className="mt-6 space-y-6">
-          <div>
-            <h3 className="text-sm font-extrabold text-text-primary">
-              {S.modal.baselineTitle}
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-              {S.modal.baselineBody}
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-extrabold text-text-primary">
-              {S.modal.carpoolTitle}
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-              {S.modal.carpoolBody}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-Co2InfoModal.propTypes = {
-  open: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-}
+import DropDownList from '../../../components/DropDownList'
+import { formatKg, formatKm } from '../../../utils/analyticsHelpers'
+import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
 
 function Co2Savings() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const role = location.state?.role ?? 'student'
-  const isAdmin = role === 'admin'
+  const [summary, setSummary] = useState(null)
+  const [byMode, setByMode] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [selectedMode, setSelectedMode] = useState('all')
 
-  const S = adminAnalyticsEn.co2
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        setError('')
 
-  const headline = isAdmin ? '1,234 kg' : '123 kg'
+        const [summaryRes, byModeRes] = await Promise.all([
+          fetch('http://localhost:3000/api/analytics/summary', {
+            credentials: 'include',
+          }),
+          fetch('http://localhost:3000/api/analytics/by-mode', {
+            credentials: 'include',
+          }),
+        ])
+
+        if (!summaryRes.ok || !byModeRes.ok) {
+          throw new Error('Failed to fetch CO₂e analytics')
+        }
+
+        const [summaryData, byModeData] = await Promise.all([
+          summaryRes.json(),
+          byModeRes.json(),
+        ])
+
+        setSummary(summaryData)
+        setByMode(byModeData)
+      } catch (err) {
+        console.error('Failed to load CO₂e analytics', err)
+        setError('Failed to load CO₂e analytics.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  const isAdmin = summary?.scope === 'system'
+  const modeData = byMode?.data ?? []
+
+  const activeMetrics = useMemo(() => {
+    if (!summary) {
+      return {
+        tripCount: 0,
+        totalDistanceKm: 0,
+        totalCo2SavedKg: 0,
+        avgCo2PerTripKg: 0,
+      }
+    }
+
+    if (selectedMode === 'all') {
+      const tripCount = summary.tripCount ?? 0
+      const totalDistanceKm = summary.totalDistanceKm ?? 0
+      const totalCo2SavedKg = summary.totalCo2SavedKg ?? 0
+      const avgCo2PerTripKg = tripCount > 0 ? totalCo2SavedKg / tripCount : 0
+
+      return {
+        tripCount,
+        totalDistanceKm,
+        totalCo2SavedKg,
+        avgCo2PerTripKg,
+      }
+    }
+
+    const selectedModeData = modeData.find(item => item.mode === selectedMode)
+
+    if (!selectedModeData) {
+      return {
+        tripCount: 0,
+        totalDistanceKm: 0,
+        totalCo2SavedKg: 0,
+        avgCo2PerTripKg: 0,
+      }
+    }
+
+    const tripCount = selectedModeData.tripCount ?? 0
+    const totalDistanceKm = selectedModeData.totalDistanceKm ?? 0
+    const totalCo2SavedKg = selectedModeData.totalCo2SavedKg ?? 0
+    const avgCo2PerTripKg = tripCount > 0 ? totalCo2SavedKg / tripCount : 0
+
+    return {
+      tripCount,
+      totalDistanceKm,
+      totalCo2SavedKg,
+      avgCo2PerTripKg,
+    }
+  }, [summary, modeData, selectedMode])
 
   const kpis = isAdmin
     ? [
-        { label: S.metrics.admin.totalSaved30d, value: '1,234 kg' },
-        { label: S.metrics.admin.avgSavedPerRoute, value: '0.27 kg' },
-        { label: S.metrics.admin.routesContributing30d, value: '4,567' },
         {
-          label: S.metrics.admin.topSavingMode,
-          value: S.metrics.values.cycling,
+          label: 'Community CO₂e Saved',
+          value: loading ? '...' : formatKg(activeMetrics.totalCo2SavedKg),
+        },
+        {
+          label: 'Avg CO₂e Saved / Trip',
+          value: loading ? '...' : formatKg(activeMetrics.avgCo2PerTripKg),
+        },
+        {
+          label: 'Trips Included',
+          value: loading ? '...' : `${activeMetrics.tripCount}`,
+        },
+        {
+          label: 'Distance Included',
+          value: loading ? '...' : formatKm(activeMetrics.totalDistanceKm),
         },
       ]
     : [
-        { label: S.metrics.student.mySaved30d, value: '123 kg' },
-        { label: S.metrics.student.avgSavedPerTrip, value: '0.30 kg' },
-        { label: S.metrics.student.tripsContributing30d, value: '12' },
         {
-          label: S.metrics.student.myTopSavingMode,
-          value: S.metrics.values.cycling,
+          label: 'Personal CO₂e Saved',
+          value: loading ? '...' : formatKg(activeMetrics.totalCo2SavedKg),
+        },
+        {
+          label: 'Avg CO₂e Saved / Trip',
+          value: loading ? '...' : formatKg(activeMetrics.avgCo2PerTripKg),
+        },
+        {
+          label: 'Trips Included',
+          value: loading ? '...' : `${activeMetrics.tripCount}`,
+        },
+        {
+          label: 'Distance Included',
+          value: loading ? '...' : formatKm(activeMetrics.totalDistanceKm),
         },
       ]
 
+  function formatModeLabel(mode) {
+    switch (mode) {
+      case 'walk':
+        return 'Walk'
+      case 'bicycle':
+        return 'Bicycle'
+      case 'bus':
+        return 'Bus / Transit'
+      case 'car':
+        return 'Car / Carpool'
+      default:
+        return mode
+    }
+  }
+
+  const visibleModeRows =
+    selectedMode === 'all'
+      ? modeData.filter(row => row.tripCount > 0)
+      : modeData.filter(row => row.mode === selectedMode)
+
   return (
-    <>
-      <button type="button" onClick={() => navigate(-1)}>
+    <div className="mx-auto w-full max-w-5xl p-4">
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
+      >
         {adminAnalyticsEn.common.back}
       </button>
 
-      <h1>{S.pageTitle}</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">
+          {isAdmin ? 'Community CO₂e Savings' : 'My CO₂e Savings'}
+        </h1>
+        <p className="mt-1 text-sm text-zinc-600">
+          {isAdmin
+            ? 'Review estimated emissions savings across all completed community trips.'
+            : 'Review your estimated emissions savings across completed trips.'}
+        </p>
 
-      <p>
-        Viewing as: <strong>{role}</strong>
-      </p>
+        <p className="text-xs font-semibold">
+          Note: These values are estimates intended for analytics and awareness,
+          not exact real-world measurements.
+        </p>
+      </div>
 
-      <p>
-        <strong>
-          {isAdmin ? S.headline.adminLabel : S.headline.studentLabel}:
-        </strong>{' '}
-        {headline}
-      </p>
-
-      <button type="button" onClick={() => setIsModalOpen(true)}>
-        {S.actions.howCalculated}
-      </button>
-
-      <hr />
-
-      <AnalyticsBlock
-        title={S.filters.blockTitle}
-        description={S.filters.blockDescription}
-      >
-        <ul>
-          <li>
-            <strong>{S.filters.dateRangeLabel}</strong>{' '}
-            {S.filters.dateRangeValue}
-          </li>
-          <li>
-            <strong>{S.filters.modeLabel}</strong> {S.filters.modeValue}
-          </li>
-        </ul>
-      </AnalyticsBlock>
-
-      <AnalyticsBlock
-        title={S.metrics.blockTitle}
-        description={S.metrics.blockDescription}
-      >
-        <KpiGrid items={kpis} />
-      </AnalyticsBlock>
-
-      <AnalyticsBlock
-        title={S.charts.blockTitle}
-        description={S.charts.blockDescription}
-      >
-        <div style={{ display: 'grid', gap: 12 }}>
-          <ChartCard
-            title={S.charts.overTime.title}
-            subtitle={S.charts.overTime.subtitle}
-          >
-            <ChartPlaceholder label={S.charts.overTime.placeholderLabel} />
-          </ChartCard>
-
-          <ChartCard
-            title={S.charts.byMode.title}
-            subtitle={S.charts.byMode.subtitle}
-          >
-            <ChartPlaceholder label={S.charts.byMode.placeholderLabel} />
-          </ChartCard>
-
-          <ChartCard
-            title={
-              isAdmin
-                ? S.charts.contributors.adminTitle
-                : S.charts.contributors.studentTitle
-            }
-            subtitle={S.charts.contributors.subtitle}
-          >
-            <ChartPlaceholder label={S.charts.contributors.placeholderLabel} />
-          </ChartCard>
+      {error ? (
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
         </div>
-      </AnalyticsBlock>
+      ) : null}
 
-      <hr />
+      <div className="flex flex-col">
+        <AnalyticsBlock title="Filter by Transportation Mode">
+          <div className="flex flex-wrap items-center gap-3">
+            <DropDownList
+              items={['all', 'walk', 'bicycle', 'bus', 'car']}
+              value={selectedMode}
+              onChange={e => setSelectedMode(e.target.value)}
+            />
+          </div>
+        </AnalyticsBlock>
 
-      <Co2InfoModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
-    </>
+        <AnalyticsBlock
+          title="Key metrics"
+          description="These values update based on the selected mode."
+        >
+          <KpiGrid items={kpis} />
+        </AnalyticsBlock>
+
+        <AnalyticsBlock
+          title="How this is calculated"
+          description="Estimated CO₂e savings are calculated relative to a baseline solo petrol car."
+        >
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-700 shadow-sm">
+            <div className="space-y-3">
+              <p>
+                Walking and cycling are compared against the emissions from one
+                person driving the same distance in a solo petrol car.
+              </p>
+
+              <p>
+                Bus and transit trips use a passenger-based emissions factor,
+                then compare that estimate against the same solo-car baseline.
+              </p>
+
+              <p>
+                Carpool trips compare one shared vehicle trip against the
+                emissions that would have been produced if each participant
+                drove separately.
+              </p>
+            </div>
+          </div>
+        </AnalyticsBlock>
+
+        <AnalyticsBlock title="Savings by Mode">
+          {loading ? (
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+              Loading CO₂e breakdown...
+            </div>
+          ) : visibleModeRows.length === 0 ? (
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+              No CO₂e data is available for the selected mode.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {visibleModeRows.map(row => {
+                const avgSavedPerTrip =
+                  row.tripCount > 0 ? row.totalCo2SavedKg / row.tripCount : 0
+
+                return (
+                  <div
+                    key={row.mode}
+                    className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-semibold text-zinc-900">
+                          {formatModeLabel(row.mode)}
+                        </h3>
+
+                        <p className="mt-1 text-sm text-zinc-600">
+                          {row.tripCount} trips included in this category
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-zinc-700 sm:grid-cols-4">
+                      <div>
+                        <span className="font-medium">Trips:</span>{' '}
+                        {row.tripCount}
+                      </div>
+
+                      <div>
+                        <span className="font-medium">Distance:</span>{' '}
+                        {formatKm(row.totalDistanceKm)}
+                      </div>
+
+                      <div>
+                        <span className="font-medium">CO₂e Saved:</span>{' '}
+                        {formatKg(row.totalCo2SavedKg)}
+                      </div>
+
+                      <div>
+                        <span className="font-medium">Avg / Trip:</span>{' '}
+                        {formatKg(avgSavedPerTrip)}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </AnalyticsBlock>
+      </div>
+    </div>
   )
 }
 
