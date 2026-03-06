@@ -1,11 +1,15 @@
 import GenericButton from '../../components/GenericButton'
 import PropTypes from 'prop-types'
+import ProfileForm from '../../components/ProfileForm'
+import { useState } from 'react'
+import { useAuth } from '../../utils/Authorization'
 
 const placeholderUser = {
   name: 'John Doe',
+  email: 'john.doe@example.com',
   nickname: 'J-Dough',
-  role: 'Student',
-  bio: 'Placeholder: Short bio/description goes here.',
+  role: 'user',
+  description: 'Placeholder: Short bio/description goes here.',
   profileImageUrl: 'placeholder.jpg',
 }
 
@@ -88,126 +92,150 @@ ListItem.propTypes = {
 }
 
 function Profile() {
+  const [isEditing, setIsEditing] = useState(false)
+  const { deauthorizeUser } = useAuth()
+
+  const handleSubmit = formData => {
+    console.log('Form submitted with data:', formData)
+    //send PUT request to backend to update user info
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl p-4">
-      {/* Top bar */}
-      <div className="mb-4 flex items-center justify-between">
+      {isEditing ? (
         <div>
-          <h1 className="text-xl font-semibold">My Account</h1>
-          <p className="mt-1 text-sm text-zinc-600">Welcome to your profile!</p>
+          <ProfileForm
+            user={placeholderUser}
+            isNew={false}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsEditing(false)}
+          />
         </div>
+      ) : (
+        <>
+          {/* Top bar */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-semibold">My Account</h1>
+              <p className="mt-1 text-sm text-zinc-600">
+                Welcome to your profile!
+              </p>
+            </div>
 
-        {/* Logout */}
-        <GenericButton
-          onClick={() => {
-            window.location.href = 'http://localhost:3000/logoutRoute'
-          }}
-          className="m-0"
-        >
-          Logout
-        </GenericButton>
-      </div>
+            {/* Logout */}
+            <GenericButton
+              onClick={async () => {
+                await deauthorizeUser()
+                window.location.href = 'http://localhost:3000/logoutRoute'
+              }}
+              className="m-0"
+            >
+              Logout
+            </GenericButton>
+          </div>
 
-      <div className="flex flex-col gap-4">
-        {/* Profile header + stats */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-          <div className="flex items-start gap-4">
-            <img
-              src={placeholderUser.profileImageUrl}
-              alt="Profile Image Goes Here"
-              className="h-24 w-24 rounded-full border border-zinc-200 object-cover"
-            />
+          <div className="flex flex-col gap-4">
+            {/* Profile header + stats */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <div className="flex items-start gap-4">
+                <img
+                  src={placeholderUser.profileImageUrl}
+                  alt="Profile Image Goes Here"
+                  className="h-24 w-24 rounded-full border border-zinc-200 object-cover"
+                />
 
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-2">
-                <div className="text-xl font-semibold">
-                  {placeholderUser.name}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <div className="text-xl font-semibold">
+                      {placeholderUser.name}
+                    </div>
+                    <div className="text-sm text-zinc-600">
+                      ({placeholderUser.nickname})
+                    </div>
+                  </div>
+
+                  <div className="mt-1 text-l text-zinc-600">
+                    {placeholderUser.role}
+                  </div>
+
+                  <div className="mt-3 text-sm text-zinc-700">
+                    {placeholderUser.bio}
+                  </div>
                 </div>
-                <div className="text-sm text-zinc-600">
-                  ({placeholderUser.nickname})
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                >
+                  Edit Profile
+                </button>
               </div>
 
-              <div className="mt-1 text-l text-zinc-600">
-                {placeholderUser.role}
-              </div>
-
-              <div className="mt-3 text-sm text-zinc-700">
-                {placeholderUser.bio}
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {placeholderStats.map(s => (
+                  <StatCard key={s.label} label={s.label} value={s.value} />
+                ))}
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => console.log('Edit Profile clicked')}
-              className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
-            >
-              Edit Profile
-            </button>
-          </div>
+            {/* Active Trips */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <SectionHeader title="Active Trips" />
+              <div className="flex flex-col gap-3">
+                {placeholderActiveTrips.map(t => (
+                  <ListItem key={t.id} title={t.title} details={t.details} />
+                ))}
+              </div>
+            </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {placeholderStats.map(s => (
-              <StatCard key={s.label} label={s.label} value={s.value} />
-            ))}
-          </div>
-        </div>
+            {/* Commute History */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <SectionHeader
+                title="Commute History"
+                actionLabel="View"
+                onAction={() => console.log('View history')}
+              />
+              <div className="rounded-2xl border border-dashed border-zinc-300 p-4 text-sm text-zinc-600">
+                Placeholder.
+              </div>
+            </div>
 
-        {/* Active Trips */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-          <SectionHeader title="Active Trips" />
-          <div className="flex flex-col gap-3">
-            {placeholderActiveTrips.map(t => (
-              <ListItem key={t.id} title={t.title} details={t.details} />
-            ))}
-          </div>
-        </div>
+            {/* Upcoming Trips - Possibly move to dashboard & replace with event card */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <SectionHeader
+                title="Upcoming Trips"
+                actionLabel="View all"
+                onAction={() => console.log('View all upcoming')}
+              />
+              <div className="flex flex-col gap-3">
+                {placeholderUpcomingTrips.map(t => (
+                  <ListItem key={t.id} title={t.title} details={t.details} />
+                ))}
+              </div>
+            </div>
 
-        {/* Commute History */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-          <SectionHeader
-            title="Commute History"
-            actionLabel="View"
-            onAction={() => console.log('View history')}
-          />
-          <div className="rounded-2xl border border-dashed border-zinc-300 p-4 text-sm text-zinc-600">
-            Placeholder.
+            {/* Badges */}
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <SectionHeader
+                title="Badges"
+                actionLabel="Manage"
+                onAction={() => console.log('Manage badges')}
+              />
+              <div className="flex flex-wrap gap-2">
+                {placeholderBadges.map(b => (
+                  <span
+                    key={b.id}
+                    className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-700"
+                  >
+                    {b.title}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Upcoming Trips - Possibly move to dashboard & replace with event card */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-          <SectionHeader
-            title="Upcoming Trips"
-            actionLabel="View all"
-            onAction={() => console.log('View all upcoming')}
-          />
-          <div className="flex flex-col gap-3">
-            {placeholderUpcomingTrips.map(t => (
-              <ListItem key={t.id} title={t.title} details={t.details} />
-            ))}
-          </div>
-        </div>
-
-        {/* Badges */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-          <SectionHeader
-            title="Badges"
-            actionLabel="Manage"
-            onAction={() => console.log('Manage badges')}
-          />
-          <div className="flex flex-wrap gap-2">
-            {placeholderBadges.map(b => (
-              <span
-                key={b.id}
-                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-700"
-              >
-                {b.title}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   )
 }

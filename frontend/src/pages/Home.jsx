@@ -15,6 +15,7 @@ import RouteCard from '../components/RouteCard'
 import PropTypes from 'prop-types'
 import CreateEvent from '../components/CreateEvent'
 import GenericButton from '../components/GenericButton'
+import { useAuth } from '../utils/Authorization'
 
 function Home() {
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
@@ -25,6 +26,8 @@ function Home() {
   const [routes, setRoutes] = useState([])
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
+  const { authorizeUser } = useAuth()
+  authorizeUser()
 
   const handleSearch = async newLocation => {
     setLocation(newLocation)

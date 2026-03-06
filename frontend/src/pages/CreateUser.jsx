@@ -1,43 +1,27 @@
-import { useState, useEffect } from 'react'
+import { PropTypes } from 'prop-types'
+import ProfileForm from '../components/ProfileForm'
 
-function CreateUser() {
-  const [currentUser, setCurrentUser] = useState(null)
-
-  useEffect(() => {
-    insertUser()
-  }, [])
-
-  const insertUser = async () => {
+function CreateUser({ ssoUser, onUserCreated }) {
+  const insertUser = async formData => {
     const response = await fetch('http://localhost:3000/createNewUser', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
       credentials: 'include',
     })
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.log(response.status + ' ' + errorText)
-      return
-    }
-    const responseJSON = await response.json()
-    if (responseJSON) {
-      setCurrentUser(responseJSON.user)
+
+    if (response.ok) {
+      const responseJSON = await response.json()
+      onUserCreated(responseJSON.user)
     }
   }
-  return (
-    <div>
-      <h2>
-        Currently this page sends a request to insert a generic form of the user
-        into the DB, and displays the details. Reload the page to go to home
-        page
-      </h2>
-      {currentUser && (
-        <div>
-          <p>Email: {currentUser.email}</p>
-          <p>Name: {currentUser.name}</p>
-          <p>Nickname: {currentUser.nickname}</p>
-          <p>Role: {currentUser.role}</p>
-        </div>
-      )}
-    </div>
-  )
+
+  return <ProfileForm user={ssoUser} isNew={true} onSubmit={insertUser} />
 }
 
 export default CreateUser
+
+CreateUser.propTypes = {
+  ssoUser: PropTypes.object,
+  onUserCreated: PropTypes.func.isRequired,
+}
