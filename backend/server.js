@@ -2,6 +2,7 @@ require('dotenv').config({ path: __dirname + '/.env' })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
+const { serverStrings } = require('./locales/en/serverLocales')
 
 const app = express()
 const db = require('./db')
@@ -97,7 +98,7 @@ app.get('/authenticateUser', async (req, res) => {
     })
   } catch (error) {
     console.log(error)
-    res.status(500).send('Oops, something went wrong!')
+    res.status(500).send(serverStrings.errors.generic)
   }
 })
 
@@ -126,19 +127,19 @@ app.get('/sso_list', async (req, res) => {
     return res.json(results.rows)
   } catch (error) {
     console.log(error)
-    return res.status(500).send('Oops, something went wrong placeholder')
+    return res.status(500).send(serverStrings.errors.generic)
   }
 })
 
 app.post('/createNewUser', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send('Not authenticated with SSO')
+    return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
   try {
     const existingUser = await selectUser(req)
     if (existingUser) {
-      return res.status(400).send('User already exists')
+      return res.status(400).send(serverStrings.errors.userExists)
     }
     const newUser = await insertUserFromForm(
       req.oidc.user.name,
@@ -148,7 +149,7 @@ app.post('/createNewUser', async (req, res) => {
     res.json({ user: newUser })
   } catch (error) {
     console.error(error)
-    res.status(500).send('Server Error')
+    res.status(500).send(serverStrings.errors.generic)
   }
 })
 
@@ -163,7 +164,7 @@ async function insertUserFromForm(name, email, formData) {
 
 app.get('/authorize', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send('Access Denied placeholder')
+    return res.status(403).send(serverStrings.errors.accessDenied)
   }
   let user = null
 
@@ -171,7 +172,7 @@ app.get('/authorize', async (req, res) => {
     user = await selectUser(req)
   } catch (error) {
     console.log(error)
-    return res.status(500).send('Oops, something went wrong placeholder')
+    return res.status(500).send(serverStrings.errors.generic)
   }
 
   const authorization = user ? user.role : 'user'
@@ -189,7 +190,7 @@ app.get('/api/events', (req, res) => {
     (error, results) => {
       if (error) {
         console.error('Error fetching events:', error)
-        res.status(500).json({ error: 'Failed to fetch events' })
+        res.status(500).send(serverStrings.errors.generic)
         return
       }
       console.log('Events fetched:', results.rows)
@@ -209,7 +210,7 @@ app.get('/api/routes', (req, res) => {
     (error, results) => {
       if (error) {
         console.error('Error fetching routes:', error)
-        res.status(500).json({ error: 'Failed to fetch routes' })
+        res.status(500).send(serverStrings.errors.generic)
         return
       }
       console.log('Routes fetched:', results.rows)
@@ -227,12 +228,12 @@ app.get('/api/routes', (req, res) => {
  */
 app.get('/api/commute-history', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).json({ error: 'Access denied' })
+    return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
   try {
     const user = await selectUser(req)
-    if (!user) return res.status(404).json({ error: 'User is missing uh oh!' })
+    if (!user) return res.status(404).send(serverStrings.errors.noUser)
 
     const isAdmin = user.role === 'admin'
     const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin, {
@@ -271,7 +272,7 @@ app.get('/api/commute-history', async (req, res) => {
     })
   } catch (error) {
     console.error('Error in /api/commute-history:', error)
-    return res.status(500).json({ error: 'Failed to fetch commute history' })
+    return res.status(500).send(serverStrings.errors.generic)
   }
 })
 
@@ -283,12 +284,12 @@ app.get('/api/commute-history', async (req, res) => {
  */
 app.get('/api/analytics/summary', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).json({ error: 'Access denied' })
+    return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
   try {
     const user = await selectUser(req)
-    if (!user) return res.status(404).json({ error: 'Woops~ User not found' })
+    if (!user) return res.status(404).send(serverStrings.errors.noUser)
 
     const isAdmin = user.role === 'admin'
     const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin)
@@ -340,7 +341,7 @@ app.get('/api/analytics/summary', async (req, res) => {
     return res.status(200).json(summary)
   } catch (error) {
     console.error('Error in /api/analytics/summary:', error)
-    return res.status(500).json({ error: 'Failed to fetch analytics summary' })
+    return res.status(500).send(serverStrings.errors.generic)
   }
 })
 
@@ -353,12 +354,12 @@ app.get('/api/analytics/summary', async (req, res) => {
  */
 app.get('/api/analytics/by-mode', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).json({ error: 'Access denied' })
+    return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
   try {
     const user = await selectUser(req)
-    if (!user) return res.status(404).json({ error: 'Found not user' })
+    if (!user) return res.status(404).send(serverStrings.errors.noUser)
 
     const isAdmin = user.role === 'admin'
     const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin)
@@ -425,7 +426,7 @@ app.get('/api/analytics/by-mode', async (req, res) => {
     })
   } catch (error) {
     console.error('Error in /api/analytics/by-mode:', error)
-    return res.status(500).json({ error: 'Failed to fetch analytics by mode' })
+    return res.status(500).send(serverStrings.errors.generic)
   }
 })
 
