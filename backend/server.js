@@ -93,8 +93,13 @@ app.get('/authenticateUser', async (req, res) => {
     const dbUser = await selectUser(req)
 
     if (dbUser) {
-      await db.query('UPDATE "user" SET last_login = $1 WHERE id = $2', [
-        new Date(),
+      const isActive = await checkAndUpdateActiveStatus(dbUser)
+
+      if (!isActive) {
+        return res.status(403).send(serverStrings.errors.inactiveUser)
+      }
+
+      await db.query('UPDATE "user" SET last_login = NOW() WHERE id = $1', [
         dbUser.id,
       ])
     }
@@ -109,6 +114,26 @@ app.get('/authenticateUser', async (req, res) => {
     res.status(500).send(serverStrings.errors.generic)
   }
 })
+
+/**
+ * Checks if the authenticated user is active based on their last login time.
+ * User is inactive if they haven't logged in for more than 60 days.
+ * @returns user's active status
+ */
+async function checkAndUpdateActiveStatus(user) {
+  if (!user.last_login) return true
+
+  const now = new Date()
+  const lastLogin = new Date(user.last_login)
+  const daysSinceLogin = (now - lastLogin) / (1000 * 60 * 60 * 24)
+  const isStillActive = daysSinceLogin <= 60
+
+  if (!isStillActive) {
+    await db.query('UPDATE "user" SET active = false WHERE id = $1', [user.id])
+  }
+
+  return isStillActive
+}
 
 /**
  * Select the current user from the DB. user must be authenticated
