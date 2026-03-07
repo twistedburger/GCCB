@@ -61,6 +61,7 @@ ProfileHeader.propTypes = {
 
 function Profile() {
   const [isEditing, setIsEditing] = useState(false)
+  const { deauthorizeUser } = useAuth()
 
   const [user, setUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
@@ -235,7 +236,8 @@ function Profile() {
             </div>
 
             <GenericButton
-              onClick={() => {
+              onClick={async () => {
+                await deauthorizeUser()
                 window.location.href = 'http://localhost:3000/logoutRoute'
               }}
               className="m-0"
