@@ -1,14 +1,6 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import NavigationBar from './components/NavigationBar'
 import Home from './pages/Home'
-import Filter from './pages/home/Filter'
-import Report from './pages/home/Report'
-import EventDetail from './pages/home/EventDetail'
 import MyTrip from './pages/MyTrips'
 import Dashboard from './pages/dashboard/Dashboard'
 import Analytics from './pages/dashboard/Analytics'
@@ -101,37 +93,12 @@ function App() {
                 <Route path="/dashboard/settings" element={<Settings />} />
               </Route>
             </Routes>
-            <FilterPage />
-            <EventDetailPage />
-            <ReportPage />
           </main>
           {userAuthenticated && <NavigationBar />}
         </div>
       </AuthProvider>
     </Router>
   )
-}
-
-function FilterPage() {
-  const location = useLocation()
-  if (location.pathname !== '/filter') return null
-  return <Filter />
-}
-
-function EventDetailPage() {
-  const location = useLocation()
-  if (
-    !location.pathname.startsWith('/event/') &&
-    !location.pathname.startsWith('/report/')
-  )
-    return null
-  return <EventDetail />
-}
-
-function ReportPage() {
-  const location = useLocation()
-  if (!location.pathname.startsWith('/report')) return null
-  return <Report />
 }
 
 export default App

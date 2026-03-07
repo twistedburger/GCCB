@@ -15,6 +15,9 @@ import RouteCard from '../components/RouteCard'
 import PropTypes from 'prop-types'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, useLocation } from 'react-router-dom'
+import Filter from '../pages/home/Filter'
+import Report from '../pages/home/Report'
+import EventDetail from '../pages/home/EventDetail'
 
 function Home() {
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
@@ -164,6 +167,9 @@ function Home() {
           </>
         )}
       </SliderCard>
+      {location.pathname === '/filter' && <Filter />}
+      {location.pathname.startsWith('/event/') && <EventDetail />}
+      {location.pathname.startsWith('/report') && <Report />}
     </div>
   )
 }

@@ -43,10 +43,6 @@ export default function Report() {
     closeWithAnimation()
   }
 
-  const handleCancel = () => {
-    closeWithAnimation()
-  }
-
   return (
     <>
       <div
@@ -57,7 +53,7 @@ export default function Report() {
           <div className="flex flex-row justify-between text-text-primary">
             <span className="text-2xl font-medium">Report</span>
             <GenericButton
-              onClick={handleCancel}
+              onClick={closeWithAnimation}
               unstyled={true}
               customStyling="text-text-primary scale-110 pb-4"
             >
