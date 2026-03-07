@@ -116,7 +116,7 @@ function Home() {
           mapId="6621f78cbdb1902f92a3d543"
           className="absolute w-full h-full"
           defaultCenter={userLocation}
-          zoom={17}
+          defaultZoom={17}
           gestureHandling="greedy"
           disableDefaultUI={true}
         >
