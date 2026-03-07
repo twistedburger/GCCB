@@ -1,21 +1,41 @@
 const { execSync } = require('child_process')
 const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '../../.env') })
 
 const config = {
   db: 'gccb_db',
   user: 'postgres',
 
   // Add more scripts to this list as created
-  scripts: ['initialize_db.sql', 'add_dummy_data.sql', 'update_db_sso.sql'],
+  scripts: [
+    'initialize_db.sql',
+    'add_dummy_data.sql',
+    'update_db_sso.sql',
+    'add_user_last_login.sql',
+  ],
 }
 
+const execOptions = {
+  stdio: 'inherit',
+  env: {
+    ...process.env,
+    PGPASSWORD: process.env.DB_PASSWORD,
+  },
+}
 function makeDatabase() {
   try {
-    execSync(`psql -U ${config.user} -c "CREATE DATABASE ${config.db};"`, {
-      stdio: 'pipe',
-    })
+    execSync(
+      `psql -U ${config.user} -d postgres -c "CREATE DATABASE ${config.db};"`,
+      {
+        ...execOptions,
+        stdio: 'pipe',
+      }
+    )
   } catch (err) {
-    console.log(err.message + ' ^^^^^ Not a real error :) ^^^^^')
+    console.log(
+      err.message +
+        'Database may already exist, continuing with script execution.'
+    )
   }
 }
 
@@ -26,7 +46,7 @@ function runScripts() {
       console.log(`\nRunning: ${file}`)
       execSync(
         `psql -d ${config.db} -U ${config.user} -f ${path.join(__dirname, file)}`,
-        { stdio: 'inherit' }
+        execOptions
       )
     } catch (err) {
       console.error(`Error in ${file}. Resolve before continuing.`, err.message)
