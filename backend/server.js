@@ -91,6 +91,14 @@ app.get('/authenticateUser', async (req, res) => {
 
   try {
     const dbUser = await selectUser(req)
+
+    if (dbUser) {
+      await db.query('UPDATE "user" SET last_login = $1 WHERE id = $2', [
+        new Date(),
+        dbUser.id,
+      ])
+    }
+
     res.json({
       isAuthenticated: true,
       user: dbUser,
@@ -156,8 +164,8 @@ app.post('/createNewUser', async (req, res) => {
 async function insertUserFromForm(name, email, formData) {
   const { nickname, description } = formData
   const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-    [email, 'user', name, nickname, description]
+    'INSERT INTO "user" (email, role, name, nickname, description, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+    [email, 'user', name, nickname, description, new Date()]
   )
   return results.rows[0]
 }
