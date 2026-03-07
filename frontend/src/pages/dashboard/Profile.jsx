@@ -2,6 +2,7 @@
 import GenericButton from '../../components/GenericButton'
 import PropTypes from 'prop-types'
 import ProfileForm from '../../components/ProfileForm'
+import { useAuth } from '../../utils/Authorization'
 import DashboardMetricCard from '../../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
