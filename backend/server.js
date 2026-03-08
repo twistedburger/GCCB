@@ -222,7 +222,7 @@ app.get('/api/routes', (req, res) => {
 /**
  * Retrieves the commute history for the authenticated user.
  * - Regular users get only their participated completed routes.
- * - Admins do not have access to detailed commute history.
+ * - Admins, superadmins, moderators do not have access to detailed user commute history.
  *
  * @returns {Object} JSON response containing commute history
  */
@@ -235,11 +235,9 @@ app.get('/api/commute-history', async (req, res) => {
     const user = await selectUser(req)
     if (!user) return res.status(404).send(serverStrings.errors.noUser)
 
-    const isAdmin = user.role === 'admin'
-
-    if (isAdmin) {
+    if (user.role !== 'user') {
       return res.status(403).json({
-        error: 'Admins do not have access to user commute history.',
+        error: 'Only regular users can access commute history.',
       })
     }
 
