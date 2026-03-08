@@ -64,3 +64,14 @@ html {
   background-color: var(--color-green-secondary);
   color: var(--color-green-primary);
 }
+
+.sidebar-paper-transition {
+  transition: width 0.2s ease-in-out !important;
+  overflow-x: hidden;
+}
+
+.sidebar-text-transition {
+  transition:
+    opacity 0.2s ease-in-out,
+    visibility 0.2s ease-in-out;
+}
