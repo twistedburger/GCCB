@@ -1,9 +1,10 @@
-import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
+import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
 import { useLocation, useNavigate } from 'react-router-dom'
-import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
-import KpiGrid from '../../../components/analytics/KpiGrid'
-import ChartCard from '../../../components/analytics/ChartCard'
-import ChartPlaceholder from '../../../components/analytics/ChartPlaceholder'
+import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
+import KpiGrid from '../../components/analytics/KpiGrid'
+import ChartCard from '../../components/analytics/ChartCard'
+import ChartPlaceholder from '../../components/analytics/ChartPlaceholder'
+import GenericButton from '../../components/GenericButton'
 
 function Activity() {
   const navigate = useNavigate()
@@ -17,9 +18,14 @@ function Activity() {
   if (!isAdmin) {
     return (
       <>
-        <button type="button" onClick={() => navigate(-1)}>
+        <GenericButton
+          type="button"
+          onClick={() => navigate(-1)}
+          unstyled
+          customStyling="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
+        >
           {adminAnalyticsEn.common.back}
-        </button>
+        </GenericButton>
 
         <h1>{S.guard.pageTitle}</h1>
         <p>{S.guard.message}</p>

@@ -12,6 +12,7 @@ const config = {
     'add_dummy_data.sql',
     'update_db_sso.sql',
     'add_user_last_login.sql',
+    'create_report_table.sql',
   ],
 }
 
