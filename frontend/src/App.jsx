@@ -2,8 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import NavigationBar from './components/NavigationBar'
 import Home from './pages/Home'
 import MyTrip from './pages/MyTrips'
-import Dashboard from './pages/dashboard/Dashboard'
-import Analytics from './pages/dashboard/Analytics'
 import Profile from './pages/dashboard/Profile'
 import Settings from './pages/dashboard/Settings'
 import Co2Savings from './pages/dashboard/analytics/Co2Savings'
@@ -69,9 +67,7 @@ function App() {
                 }
               >
                 <Route path="/mytrip" element={<MyTrip />} />
-                <Route path="/dashboard" element={<Dashboard />} />
 
-                <Route path="/dashboard/analytics" element={<Analytics />} />
                 <Route
                   path="/dashboard/analytics/co2-savings"
                   element={<Co2Savings />}
