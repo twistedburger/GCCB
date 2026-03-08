@@ -3,10 +3,10 @@ import Sidebar from './components/Sidebar'
 import Home from './pages/Home'
 import MyTrip from './pages/MyTrips'
 import Dashboard from './pages/Dashboard'
-import Co2Savings from './pages/analytics/Co2Savings'
-import Commutes from './pages/analytics/Commutes'
-import TripFrequency from './pages/analytics/TripFrequency'
-import Activity from './pages/analytics/Activity'
+import Co2Savings from './pages/dashboard/Co2Savings'
+import Commutes from './pages/dashboard/Commutes'
+import TripFrequency from './pages/dashboard/TripFrequency'
+import Activity from './pages/dashboard/Activity'
 import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import UserGuide from './pages/UserGuide'
@@ -71,15 +71,15 @@ function App() {
                   <Route path="/mytrip" element={<MyTrip />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route
-                    path="/analytics/co2-savings"
+                    path="/dashboard/co2-savings"
                     element={<Co2Savings />}
                   />
-                  <Route path="/analytics/commutes" element={<Commutes />} />
+                  <Route path="/dashboard/commutes" element={<Commutes />} />
                   <Route
-                    path="/analytics/trip-frequency"
+                    path="/dashboard/trip-frequency"
                     element={<TripFrequency />}
                   />
-                  <Route path="/analytics/activity" element={<Activity />} />
+                  <Route path="/dashboard/activity" element={<Activity />} />
                   <Route path="/user-guide" element={<UserGuide />} />
                 </Route>
               </Routes>

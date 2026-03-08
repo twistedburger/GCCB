@@ -170,13 +170,13 @@ function Dashboard() {
           title: 'Total User Trips',
           value: totalTripsValue,
           subtitle: totalTripsSubtitle,
-          onClick: () => navigate('/analytics/trip-frequency'),
+          onClick: () => navigate('/dashboard/analytics/trip-frequency'),
         },
         {
           title: 'Total CO₂e Saved',
           value: co2Value,
           subtitle: 'Estimated from completed trips',
-          onClick: () => navigate('/analytics/co2-savings'),
+          onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
           title: 'Average Group Size',
@@ -191,19 +191,19 @@ function Dashboard() {
           title: 'Total Trips',
           value: totalTripsValue,
           subtitle: totalTripsSubtitle,
-          onClick: () => navigate('/analytics/commutes'),
+          onClick: () => navigate('/dashboard/commutes'),
         },
         {
           title: 'Personal CO₂ Saved',
           value: co2Value,
           subtitle: 'From completed trips',
-          onClick: () => navigate('/analytics/co2-savings'),
+          onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
           title: 'Most Used Mode',
           value: mostUsedModeValue,
           subtitle: mostUsedModeSubtitle,
-          onClick: () => navigate('/analytics/trip-frequency'),
+          onClick: () => navigate('/dashboard/trip-frequency'),
         },
         {
           title: 'Badges',

@@ -36,7 +36,7 @@ const mainNavigation = [
     id: 'Dashboard',
     icon: <PersonOutlineOutlined />,
     label: 'Dashboard',
-    path: '/Dashboard',
+    path: '/dashboard',
   },
 ]
 
