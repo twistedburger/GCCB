@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
-import KpiGrid from '../../../components/analytics/KpiGrid'
-import DropDownList from '../../../components/DropDownList'
-import GenericButton from '../../../components/GenericButton'
-import { formatKg, formatKm } from '../../../utils/analyticsHelpers'
-import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
+import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
+import KpiGrid from '../../components/analytics/KpiGrid'
+import DropDownList from '../../components/DropDownList'
+import GenericButton from '../../components/GenericButton'
+import { formatKg, formatKm } from '../../utils/analyticsHelpers'
+import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
 
 function Co2Savings() {
   const navigate = useNavigate()

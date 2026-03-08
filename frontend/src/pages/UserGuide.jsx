@@ -78,7 +78,7 @@ function UserGuide() {
       </header>
 
       {/* Show floating navigation on md-sm view for smooth scrolling */}
-      <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 lg:hidden">
+      <nav className="fixed bottom-8 left-[calc(50%+27.5px)] -translate-x-1/2 z-50 lg:hidden">
         <div className="flex gap-2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg border border-gray-200">
           <NavButton target="commuting" label={userGuide.miniNav.commute} />
           <NavButton target="events" label={userGuide.miniNav.events} />

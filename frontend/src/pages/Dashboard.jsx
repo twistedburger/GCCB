@@ -1,16 +1,12 @@
 // TODO: Things to include -- Settings, maybe user guide
-import GenericButton from '../../components/GenericButton'
+import GenericButton from '../components/GenericButton'
 import PropTypes from 'prop-types'
-import ProfileForm from '../../components/ProfileForm'
-import { useAuth } from '../../utils/Authorization'
-import DashboardMetricCard from '../../components/DashboardMetricCard'
+import ProfileForm from '../components/ProfileForm'
+import { useAuth } from '../utils/Authorization'
+import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  formatKg,
-  formatKm,
-  getMostUsedMode,
-} from '../../utils/analyticsHelpers'
+import { formatKg, formatKm, getMostUsedMode } from '../utils/analyticsHelpers'
 
 function ProfileHeader({ user, onEdit }) {
   const displayName = user?.name ?? 'Unknown User'
@@ -60,7 +56,7 @@ ProfileHeader.propTypes = {
   onEdit: PropTypes.func.isRequired,
 }
 
-function Profile() {
+function Dashboard() {
   const [isEditing, setIsEditing] = useState(false)
   const { deauthorizeUser } = useAuth()
 
@@ -180,7 +176,7 @@ function Profile() {
           title: 'Total CO₂e Saved',
           value: co2Value,
           subtitle: 'Estimated from completed trips',
-          onClick: () => navigate('/dashboard/analytics/co2-savings'),
+          onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
           title: 'Average Group Size',
@@ -195,19 +191,19 @@ function Profile() {
           title: 'Total Trips',
           value: totalTripsValue,
           subtitle: totalTripsSubtitle,
-          onClick: () => navigate('/dashboard/analytics/commutes'),
+          onClick: () => navigate('/dashboard/commutes'),
         },
         {
           title: 'Personal CO₂ Saved',
           value: co2Value,
           subtitle: 'From completed trips',
-          onClick: () => navigate('/dashboard/analytics/co2-savings'),
+          onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
           title: 'Most Used Mode',
           value: mostUsedModeValue,
           subtitle: mostUsedModeSubtitle,
-          onClick: () => navigate('/dashboard/analytics/trip-frequency'),
+          onClick: () => navigate('/dashboard/trip-frequency'),
         },
         {
           title: 'Badges',
@@ -288,4 +284,4 @@ function Profile() {
   )
 }
 
-export default Profile
+export default Dashboard

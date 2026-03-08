@@ -1,10 +1,10 @@
-import { adminAnalyticsEn } from '../../../locales/adminAnalytics.en'
+import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
 import { useLocation, useNavigate } from 'react-router-dom'
-import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
-import KpiGrid from '../../../components/analytics/KpiGrid'
-import ChartCard from '../../../components/analytics/ChartCard'
-import ChartPlaceholder from '../../../components/analytics/ChartPlaceholder'
-import GenericButton from '../../../components/GenericButton'
+import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
+import KpiGrid from '../../components/analytics/KpiGrid'
+import ChartCard from '../../components/analytics/ChartCard'
+import ChartPlaceholder from '../../components/analytics/ChartPlaceholder'
+import GenericButton from '../../components/GenericButton'
 
 function Activity() {
   const navigate = useNavigate()
