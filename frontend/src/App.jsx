@@ -2,14 +2,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Home from './pages/Home'
 import MyTrip from './pages/MyTrips'
-import Dashboard from './pages/dashboard/Dashboard'
-import Analytics from './pages/dashboard/Analytics'
-import Profile from './pages/dashboard/Profile'
-import Settings from './pages/dashboard/Settings'
-import Co2Savings from './pages/dashboard/analytics/Co2Savings'
-import Commutes from './pages/dashboard/analytics/Commutes'
-import TripFrequency from './pages/dashboard/analytics/TripFrequency'
-import Activity from './pages/dashboard/analytics/Activity'
+import Dashboard from './pages/Dashboard'
+import Co2Savings from './pages/analytics/Co2Savings'
+import Commutes from './pages/analytics/Commutes'
+import TripFrequency from './pages/analytics/TripFrequency'
+import Activity from './pages/analytics/Activity'
 import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import UserGuide from './pages/UserGuide'
@@ -73,26 +70,16 @@ function App() {
                 >
                   <Route path="/mytrip" element={<MyTrip />} />
                   <Route path="/dashboard" element={<Dashboard />} />
-
-                  <Route path="/dashboard/analytics" element={<Analytics />} />
                   <Route
-                    path="/dashboard/analytics/co2-savings"
+                    path="/analytics/co2-savings"
                     element={<Co2Savings />}
                   />
+                  <Route path="/analytics/commutes" element={<Commutes />} />
                   <Route
-                    path="/dashboard/analytics/commutes"
-                    element={<Commutes />}
-                  />
-                  <Route
-                    path="/dashboard/analytics/trip-frequency"
+                    path="/analytics/trip-frequency"
                     element={<TripFrequency />}
                   />
-                  <Route
-                    path="/dashboard/analytics/activity"
-                    element={<Activity />}
-                  />
-                  <Route path="/dashboard/profile" element={<Profile />} />
-                  <Route path="/dashboard/settings" element={<Settings />} />
+                  <Route path="/analytics/activity" element={<Activity />} />
                   <Route path="/user-guide" element={<UserGuide />} />
                 </Route>
               </Routes>

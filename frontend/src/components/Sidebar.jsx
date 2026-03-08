@@ -21,22 +21,22 @@ import {
 
 const mainNavigation = [
   {
-    id: 'home',
+    id: 'Home',
     icon: <HomeOutlined />,
     label: 'Home',
     path: '/',
   },
   {
-    id: 'mytrip',
+    id: 'My Trips',
     icon: <CommuteOutlined />,
     label: 'My Trips',
     path: '/mytrip',
   },
   {
-    id: 'dashboard',
+    id: 'Dashboard',
     icon: <PersonOutlineOutlined />,
     label: 'Dashboard',
-    path: '/dashboard',
+    path: '/Dashboard',
   },
 ]
 
