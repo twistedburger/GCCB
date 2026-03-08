@@ -54,9 +54,8 @@ function Co2Savings() {
   }, [])
 
   const isAdmin = summary?.scope === 'system'
-  const modeData = byMode?.data ?? []
-
   const activeMetrics = useMemo(() => {
+    const modeData = byMode?.data ?? []
     if (!summary) {
       return {
         tripCount: 0,
@@ -102,7 +101,7 @@ function Co2Savings() {
       totalCo2SavedKg,
       avgCo2PerTripKg,
     }
-  }, [summary, modeData, selectedMode])
+  }, [summary, byMode?.data, selectedMode])
 
   const kpis = isAdmin
     ? [
@@ -157,10 +156,13 @@ function Co2Savings() {
     }
   }
 
-  const visibleModeRows =
-    selectedMode === 'all'
+  const visibleModeRows = useMemo(() => {
+    const modeData = byMode?.data ?? []
+
+    return selectedMode === 'all'
       ? modeData.filter(row => row.tripCount > 0)
       : modeData.filter(row => row.mode === selectedMode)
+  }, [byMode?.data, selectedMode])
 
   return (
     <div className="mx-auto w-full max-w-5xl p-4">
