@@ -49,7 +49,7 @@ function App() {
           <main className="content bg-background-off-white">
             <Routes>
               <Route
-                path="/"
+                path="/*"
                 element={
                   !userAuthenticated ? (
                     <Login />
@@ -94,7 +94,7 @@ function App() {
               </Route>
             </Routes>
           </main>
-          <NavigationBar />
+          {userAuthenticated && <NavigationBar />}
         </div>
       </AuthProvider>
     </Router>
