@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../../components/analytics/KpiGrid'
 import DropDownList from '../../../components/DropDownList'
+import GenericButton from '../../../components/GenericButton'
 import { formatKg, formatKm } from '../../../utils/analyticsHelpers'
 
 function Commutes() {
@@ -164,13 +165,14 @@ function Commutes() {
 
   return (
     <div className="mx-auto w-full max-w-5xl p-4">
-      <button
+      <GenericButton
         type="button"
         onClick={() => navigate(-1)}
-        className="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
+        unstyled
+        customStyling="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
       >
         {adminAnalyticsEn.common.back}
-      </button>
+      </GenericButton>
 
       <div>
         <h1 className="text-2xl font-semibold">
