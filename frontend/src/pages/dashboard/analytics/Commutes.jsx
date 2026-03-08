@@ -46,9 +46,6 @@ function Commutes() {
     fetchHistory()
   }, [])
 
-  const isAdmin = history?.scope === 'system'
-  const routes = history?.routes ?? []
-
   function normalizeMode(rawMode) {
     if (!rawMode) return 'other'
 
@@ -90,6 +87,8 @@ function Commutes() {
   }
 
   const filteredRoutes = useMemo(() => {
+    const routes = history?.routes ?? []
+
     return routes.filter(route => {
       const matchesMode =
         mode === 'all' || normalizeMode(route.transportation_mode) === mode
@@ -98,7 +97,7 @@ function Commutes() {
 
       return matchesMode && matchesDate
     })
-  }, [routes, mode, dateRange])
+  }, [history?.routes, mode, dateRange])
 
   const tripCount = filteredRoutes.length
 
@@ -110,41 +109,24 @@ function Commutes() {
   const avgDistancePerRouteKm = tripCount > 0 ? totalDistanceKm / tripCount : 0
 
   const totalCo2SavedKg = filteredRoutes.reduce((sum, route) => {
-    const value = isAdmin ? route.savedKgSystem : route.savedKgUser
-    return sum + Number(value ?? 0)
+    return sum + Number(route.savedKgUser ?? 0)
   }, 0)
 
-  const kpis = isAdmin
-    ? [
-        { label: 'Community Trips', value: loading ? '...' : `${tripCount}` },
-        {
-          label: 'Community Distance',
-          value: loading ? '...' : formatKm(totalDistanceKm),
-        },
-        {
-          label: 'Avg Distance / Trip',
-          value: loading ? '...' : formatKm(avgDistancePerRouteKm),
-        },
-        {
-          label: 'Community CO₂ Saved',
-          value: loading ? '...' : formatKg(totalCo2SavedKg),
-        },
-      ]
-    : [
-        { label: 'Trips', value: loading ? '...' : `${tripCount}` },
-        {
-          label: 'Total Distance',
-          value: loading ? '...' : formatKm(totalDistanceKm),
-        },
-        {
-          label: 'Avg Distance / Trip',
-          value: loading ? '...' : formatKm(avgDistancePerRouteKm),
-        },
-        {
-          label: 'Personal CO₂e Saved',
-          value: loading ? '...' : formatKg(totalCo2SavedKg),
-        },
-      ]
+  const kpis = [
+    { label: 'Trips', value: loading ? '...' : `${tripCount}` },
+    {
+      label: 'Total Distance',
+      value: loading ? '...' : formatKm(totalDistanceKm),
+    },
+    {
+      label: 'Avg Distance / Trip',
+      value: loading ? '...' : formatKm(avgDistancePerRouteKm),
+    },
+    {
+      label: 'Personal CO₂e Saved',
+      value: loading ? '...' : formatKg(totalCo2SavedKg),
+    },
+  ]
 
   function formatDepartTime(value) {
     if (!value) return 'No departure time'
@@ -175,13 +157,9 @@ function Commutes() {
       </GenericButton>
 
       <div>
-        <h1 className="text-2xl font-semibold">
-          {isAdmin ? 'Community Commutes' : 'My Commutes'}
-        </h1>
+        <h1 className="text-2xl font-semibold">My Commutes</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          {isAdmin
-            ? 'Review completed community trips included in platform metrics.'
-            : 'Review the completed trips included in your commute metrics.'}
+          Review the completed trips included in your commute metrics.
         </p>
       </div>
 
@@ -231,58 +209,52 @@ function Commutes() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {filteredRoutes.map(route => {
-                const co2Saved = isAdmin
-                  ? route.savedKgSystem
-                  : route.savedKgUser
+              {filteredRoutes.map(route => (
+                <div
+                  key={route.id}
+                  className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base font-semibold text-zinc-900">
+                        {route.title || 'Untitled commute'}
+                      </h3>
 
-                return (
-                  <div
-                    key={route.id}
-                    className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-base font-semibold text-zinc-900">
-                          {route.title || 'Untitled commute'}
-                        </h3>
+                      <p className="mt-1 text-sm text-zinc-600">
+                        {route.origin || 'Unknown origin'} →{' '}
+                        {route.destination || 'Unknown destination'}
+                      </p>
 
-                        <p className="mt-1 text-sm text-zinc-600">
-                          {route.origin || 'Unknown origin'} →{' '}
-                          {route.destination || 'Unknown destination'}
+                      {route.description ? (
+                        <p className="mt-2 text-sm text-zinc-500">
+                          {route.description}
                         </p>
-
-                        {route.description ? (
-                          <p className="mt-2 text-sm text-zinc-500">
-                            {route.description}
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="text-sm text-zinc-500">
-                        {formatDepartTime(route.depart_time)}
-                      </div>
+                      ) : null}
                     </div>
 
-                    <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-zinc-700 sm:grid-cols-3">
-                      <div>
-                        <span className="font-medium">Mode:</span>{' '}
-                        {formatRouteMode(route.transportation_mode)}
-                      </div>
-
-                      <div>
-                        <span className="font-medium">Distance:</span>{' '}
-                        {formatKm(Number(route.distance ?? 0))}
-                      </div>
-
-                      <div>
-                        <span className="font-medium">CO₂e Saved:</span>{' '}
-                        {formatKg(Number(co2Saved ?? 0))}
-                      </div>
+                    <div className="text-sm text-zinc-500">
+                      {formatDepartTime(route.depart_time)}
                     </div>
                   </div>
-                )
-              })}
+
+                  <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-zinc-700 sm:grid-cols-3">
+                    <div>
+                      <span className="font-medium">Mode:</span>{' '}
+                      {formatRouteMode(route.transportation_mode)}
+                    </div>
+
+                    <div>
+                      <span className="font-medium">Distance:</span>{' '}
+                      {formatKm(Number(route.distance ?? 0))}
+                    </div>
+
+                    <div>
+                      <span className="font-medium">CO₂e Saved:</span>{' '}
+                      {formatKg(Number(route.savedKgUser ?? 0))}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </AnalyticsBlock>
