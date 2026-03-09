@@ -2,7 +2,6 @@ import GenericButton from '../../components/GenericButton'
 import PropTypes from 'prop-types'
 import ProfileForm from '../../components/ProfileForm'
 import { useState } from 'react'
-import { useAuth } from '../../utils/Authorization'
 
 const placeholderUser = {
   name: 'John Doe',
@@ -93,7 +92,6 @@ ListItem.propTypes = {
 
 function Profile() {
   const [isEditing, setIsEditing] = useState(false)
-  const { deauthorizeUser } = useAuth()
 
   const handleSubmit = formData => {
     console.log('Form submitted with data:', formData)
@@ -124,8 +122,7 @@ function Profile() {
 
             {/* Logout */}
             <GenericButton
-              onClick={async () => {
-                await deauthorizeUser()
+              onClick={() => {
                 window.location.href = 'http://localhost:3000/logoutRoute'
               }}
               className="m-0"
