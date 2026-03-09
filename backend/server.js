@@ -91,6 +91,19 @@ app.get('/authenticateUser', async (req, res) => {
 
   try {
     const dbUser = await selectUser(req)
+
+    if (dbUser) {
+      const isActive = await checkAndUpdateActiveStatus(dbUser)
+
+      if (!isActive) {
+        return res.status(403).send(serverStrings.errors.inactiveUser)
+      }
+
+      await db.query('UPDATE "user" SET last_login = NOW() WHERE id = $1', [
+        dbUser.id,
+      ])
+    }
+
     res.json({
       isAuthenticated: true,
       user: dbUser,
@@ -101,6 +114,26 @@ app.get('/authenticateUser', async (req, res) => {
     res.status(500).send(serverStrings.errors.generic)
   }
 })
+
+/**
+ * Checks if the authenticated user is active based on their last login time.
+ * User is inactive if they haven't logged in for more than 60 days.
+ * @returns user's active status
+ */
+async function checkAndUpdateActiveStatus(user) {
+  if (!user.last_login) return true
+
+  const now = new Date()
+  const lastLogin = new Date(user.last_login)
+  const daysSinceLogin = (now - lastLogin) / (1000 * 60 * 60 * 24)
+  const isStillActive = daysSinceLogin <= 60
+
+  if (!isStillActive) {
+    await db.query('UPDATE "user" SET active = false WHERE id = $1', [user.id])
+  }
+
+  return isStillActive
+}
 
 /**
  * Select the current user from the DB. user must be authenticated
@@ -156,8 +189,8 @@ app.post('/createNewUser', async (req, res) => {
 async function insertUserFromForm(name, email, formData) {
   const { nickname, description } = formData
   const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-    [email, 'user', name, nickname, description]
+    'INSERT INTO "user" (email, role, name, nickname, description, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+    [email, 'user', name, nickname, description, new Date()]
   )
   return results.rows[0]
 }
