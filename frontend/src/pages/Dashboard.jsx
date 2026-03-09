@@ -2,7 +2,6 @@
 import GenericButton from '../components/GenericButton'
 import PropTypes from 'prop-types'
 import ProfileForm from '../components/ProfileForm'
-import { useAuth } from '../utils/Authorization'
 import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -58,7 +57,6 @@ ProfileHeader.propTypes = {
 
 function Dashboard() {
   const [isEditing, setIsEditing] = useState(false)
-  const { deauthorizeUser } = useAuth()
 
   const [user, setUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
@@ -233,8 +231,7 @@ function Dashboard() {
             </div>
 
             <GenericButton
-              onClick={async () => {
-                await deauthorizeUser()
+              onClick={() => {
                 window.location.href = 'http://localhost:3000/logoutRoute'
               }}
               className="m-0"
