@@ -170,7 +170,7 @@ function Dashboard() {
           title: 'Total User Trips',
           value: totalTripsValue,
           subtitle: totalTripsSubtitle,
-          onClick: () => navigate('/dashboard/analytics/trip-frequency'),
+          onClick: () => navigate('/dashboard/trip-frequency'),
         },
         {
           title: 'Total CO₂e Saved',
