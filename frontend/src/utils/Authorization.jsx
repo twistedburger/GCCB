@@ -18,17 +18,14 @@ export const AuthProvider = ({ children }) => {
       credentials: 'include',
     })
     if (response.status != 200) {
+      setAuthorization('')
       return
     }
     const user = await response.json()
     setAuthorization(user.authorization)
   }
 
-  const deauthorizeUser = async () => {
-    setAuthorization('')
-  }
-
-  const value = { authorization, authorizeUser, deauthorizeUser }
+  const value = { authorization, authorizeUser }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
