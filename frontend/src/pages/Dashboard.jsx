@@ -194,7 +194,7 @@ function Dashboard() {
           onClick: () => navigate('/dashboard/commutes'),
         },
         {
-          title: 'Personal CO₂ Saved',
+          title: 'Personal CO₂e Saved',
           value: co2Value,
           subtitle: 'From completed trips',
           onClick: () => navigate('/dashboard/co2-savings'),
