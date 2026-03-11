@@ -68,6 +68,9 @@ function App() {
                     <ProtectedRoute requiredAuthorization={authLevel.USER} />
                   }
                 >
+                  <Route path="filter" element={<Home />} />
+                  <Route path="report" element={<Home />} />
+                  <Route path="event/:id" element={<Home />} />
                   <Route path="/mytrip" element={<MyTrip />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route

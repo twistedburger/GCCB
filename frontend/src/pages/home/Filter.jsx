@@ -1,4 +1,3 @@
-import CommuteIcon from '../../components/CommuteIcon'
 import GenericButton from '../../components/GenericButton'
 import GenericToggle from '../../components/GenericToggle'
 import { Cancel } from '@mui/icons-material'
@@ -9,6 +8,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import TransportationModeSelect from '../../components/TransportationModeSelect'
 
 export default function Filter() {
   const location = useLocation()
@@ -74,33 +74,11 @@ export default function Filter() {
                 <Cancel />
               </GenericButton>
             </div>
-            <p className="pb-2 font-semibold">Transportation Modes</p>
-            <div className="flex flex-row gap-4">
-              <CommuteIcon
-                type="bus"
-                onClick={() => handleModeToggle('bus')}
-                isSelected={transportationModes.includes('bus')}
-                clickable
-              />
-              <CommuteIcon
-                type="bicycle"
-                onClick={() => handleModeToggle('bicycle')}
-                isSelected={transportationModes.includes('bicycle')}
-                clickable
-              />
-              <CommuteIcon
-                type="walk"
-                onClick={() => handleModeToggle('walk')}
-                isSelected={transportationModes.includes('walk')}
-                clickable
-              />
-              <CommuteIcon
-                type="car"
-                onClick={() => handleModeToggle('car')}
-                isSelected={transportationModes.includes('car')}
-                clickable
-              />
-            </div>
+            <TransportationModeSelect
+              selectedModes={transportationModes}
+              onChange={handleModeToggle}
+              multiple={true}
+            />
             <p className="py-2 font-semibold">Time</p>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DateTimePicker
