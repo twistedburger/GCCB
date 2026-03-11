@@ -3,10 +3,12 @@ import { useState } from 'react'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import LocationSearch from './LocationSearch'
+import TransportationModeSelect from './TransportationModeSelect'
 
 const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
   const [routeDesc, setRouteDesc] = useState('')
+  const [transportationMode, setTransportationMode] = useState('')
   const [departTime, setDepartTime] = useState('')
   const [startLoc, setStartLoc] = useState(null)
   const [endLoc, setEndLoc] = useState(initLoc)
@@ -32,6 +34,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     setErrors({})
     const routeData = {
       name: routeName,
+      transportation_mode: transportationMode,
       depart_time: departTime,
       start: startLoc,
       end: endLoc || initLoc,
@@ -52,7 +55,14 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       />
 
       {/* Transportation Mode Selection*/}
-      <div>- Select transportation mode component</div>
+      <TransportationModeSelect
+        selectedModes={[]}
+        onChange={modes => {
+          setTransportationMode(modes[0] || '')
+        }}
+        multiple={false}
+      />
+
       <div>- Once mode selected, # of people</div>
 
       <div>

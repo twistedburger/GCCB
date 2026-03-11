@@ -26,9 +26,7 @@ export default function TransportationModeSelect({
     }
 
     setTransportationModes(nextState)
-
     onChange(multiple ? nextState : nextState[0] || null)
-    console.log(nextState)
   }
 
   return (
