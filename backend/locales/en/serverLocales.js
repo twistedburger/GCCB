@@ -4,6 +4,8 @@ const serverStrings = {
     accessDenied: 'Access Denied',
     userExists: 'User already exists',
     noUser: 'No logged in user',
+    inactiveUser:
+      'Your account has been inactive for a while. Please contact support to reactivate your account.',
   },
 }
 

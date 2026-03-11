@@ -7,8 +7,8 @@ import {
   Pin,
 } from '@vis.gl/react-google-maps'
 import SliderCard from '../components/SliderCard'
-import ArriveDepartToggle from '../components/ArriveDepartToggle'
-import { Add, Close, PlaceOutlined } from '@mui/icons-material'
+import GenericToggle from '../components/GenericToggle'
+import { Add, Close, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
@@ -16,22 +16,41 @@ import PropTypes from 'prop-types'
 import CreateEvent from '../components/CreateEvent'
 import GenericButton from '../components/GenericButton'
 import { useAuth } from '../utils/Authorization'
+import { useNavigate, useLocation } from 'react-router-dom'
+import Filter from '../pages/home/Filter'
+import Report from '../pages/home/Report'
+import EventDetail from '../pages/home/EventDetail'
 
 function Home() {
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
   const [isExpanded, setIsExpanded] = useState(false)
   const [isArriving, setIsArriving] = useState(true)
-  const [location, setLocation] = useState('')
-  const [events, setEvents] = useState([])
-  const [routes, setRoutes] = useState([])
+  const [address, setAddress] = useState('')
+  const [cardsToDisplay, setCardsToDisplay] = useState([])
+  const [filters, setFilters] = useState({
+    time: null,
+    transportationModes: [],
+    radius: 100,
+    verifiedEventsOnly: false,
+    mainEventsOnly: true,
+  })
+  const navigate = useNavigate()
+  const location = useLocation()
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
   const { authorizeUser } = useAuth()
   authorizeUser()
 
   const handleSearch = async newLocation => {
-    setLocation(newLocation)
+    setAddress(newLocation)
     setIsExpanded(true)
+    setFilters({
+      time: null,
+      transportationModes: [],
+      radius: 100,
+      verifiedEventsOnly: false,
+      mainEventsOnly: true,
+    })
 
     try {
       const response = await fetch(
@@ -62,34 +81,40 @@ function Home() {
   }, [])
 
   useEffect(() => {
-    // for display purposes, not everything will be displaying on home feed like this
-    const fetchEvents = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/events')
+    const fetchCards = async () => {
+      const params = new URLSearchParams()
+
+      if (filters.time) params.append('time', filters.time)
+      if (filters.transportationModes.length > 0)
+        params.append(
+          'transportation_modes',
+          filters.transportationModes.join(',')
+        )
+      if (filters.verifiedEventsOnly) params.append('verified', true)
+      if (filters.radius) params.append('radius', filters.radius)
+
+      if (filters.mainEventsOnly) {
+        const response = await fetch(
+          `http://localhost:3000/api/events?${params}`
+        )
         const data = await response.json()
-        setEvents(data)
-      } catch (error) {
-        console.error('Error fetching events:', error)
-        setEvents([])
+        setCardsToDisplay(data)
+      } else {
+        const response = await fetch(
+          `http://localhost:3000/api/routes?${params}`
+        )
+        const data = await response.json()
+        setCardsToDisplay(data)
       }
     }
+    fetchCards()
+  }, [filters, userLocation])
 
-    const fetchRoutes = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/routes')
-        const data = await response.json()
-        setRoutes(data)
-      } catch (error) {
-        console.error('Error fetching routes:', error)
-        setRoutes([])
-      }
+  useEffect(() => {
+    if (location.state?.filters) {
+      setFilters(location.state.filters)
     }
-
-    if (location) {
-      fetchEvents()
-      fetchRoutes()
-    }
-  }, [location])
+  }, [location.state])
 
   //trigger animation when showCreateEvent changes
   useEffect(() => {
@@ -107,7 +132,7 @@ function Home() {
           mapId="6621f78cbdb1902f92a3d543"
           className="absolute w-full h-full"
           defaultCenter={userLocation}
-          zoom={17}
+          defaultZoom={17}
           gestureHandling="greedy"
           disableDefaultUI={true}
         >
@@ -122,35 +147,46 @@ function Home() {
         <LocationSearch onSearch={handleSearch} />
       </div>
 
-      <SliderCard key={location} isExpanded={isExpanded}>
-        {location && (
+      <SliderCard key={address} isExpanded={isExpanded}>
+        {address && (
           <>
             <div className="flex items-center gap-2">
-              <ArriveDepartToggle
-                isArriving={isArriving}
-                setIsArriving={setIsArriving}
+              <TuneOutlined
+                className="text-text-primary"
+                onClick={() => {
+                  navigate('/filter', { state: { filters } })
+                }}
+              />
+              <GenericToggle
+                value={isArriving}
+                onChange={setIsArriving}
+                labels={['Arriving Near', 'Departing Near']}
                 className="shrink-0"
               />
               <span className="text-text-secondary truncate text-sm">
                 <PlaceOutlined className="mr-1" />
-                {location}
+                {address}
               </span>
             </div>
-            {events.map(item => (
-              <EventCard key={item.id} event={item} />
-            ))}
-            {events.map(item => (
-              <EventCard key={item.id} event={item} view={'moderate'} />
-            ))}
-            {routes.map(item => (
-              <RouteCard key={item.id} route={item} individualView={true} />
-            ))}
-            {routes.map(item => (
-              <RouteCard key={item.id} route={item} individualView={false} />
-            ))}
+            {cardsToDisplay.length === 0 ? (
+              <p className="text-text-secondary text-sm text-center py-4">
+                No results found. Try adjusting your filters.
+              </p>
+            ) : (
+              cardsToDisplay.map(item =>
+                filters.mainEventsOnly ? (
+                  <EventCard key={item.id} event={item} />
+                ) : (
+                  <RouteCard key={item.id} route={item} individualView={true} />
+                )
+              )
+            )}
           </>
         )}
       </SliderCard>
+      {location.pathname === '/filter' && <Filter />}
+      {location.pathname.startsWith('/event/') && <EventDetail />}
+      {location.pathname.startsWith('/report') && <Report />}
 
       {/* Create Event modal */}
       {showCreateEvent && (

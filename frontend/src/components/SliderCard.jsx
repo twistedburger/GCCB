@@ -6,7 +6,7 @@ export default function SliderCard({ children, isExpanded }) {
   const controls = useAnimation()
   const dragControls = useDragControls()
 
-  const handleHeight = 124
+  const handleHeight = 55
 
   const MAX_TOP = useMemo(() => '5%', [])
   const MAX_BOTTOM = useMemo(() => `calc(100% - ${handleHeight}px)`, [])
@@ -37,7 +37,7 @@ export default function SliderCard({ children, isExpanded }) {
       onDragEnd={handleDragEnd}
       dragMomentum={false}
       transition={{ type: 'spring', damping: 50, stiffness: 400 }}
-      className="bg-background-off-white h-screen w-full rounded-t-4xl fixed top-0 flex flex-col overflow-hidden z-20"
+      className="bg-background-off-white h-screen fixed top-0 left-0 z-20 flex flex-col overflow-hidden rounded-t-4xl ml-[55px] w-[calc(100%-55px)]"
     >
       <div
         onPointerDown={e => {

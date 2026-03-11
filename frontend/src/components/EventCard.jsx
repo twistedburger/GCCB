@@ -6,14 +6,39 @@ import {
   CheckCircleOutlineRounded,
   CancelOutlined,
   AccountCircleOutlined,
+  ReportGmailerrorred,
 } from '@mui/icons-material'
 import GenericButton from './GenericButton.jsx'
+import { useNavigate } from 'react-router-dom'
 
 export default function EventCard({ event, view }) {
   const dateObj = new Date(event.event_time)
+  const navigate = useNavigate()
   return (
-    <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white">
-      <img src={bcitCover} className="h-24 w-full object-cover rounded-t-xl" />
+    <div
+      id={`event-${event.id}`}
+      onClick={() => {
+        navigate(`/event/${event.id}`)
+      }}
+      className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white"
+    >
+      <div className="relative">
+        <img
+          src={bcitCover}
+          className="h-24 w-full object-cover rounded-t-xl"
+        />
+        {view != 'moderate' && (
+          <ReportGmailerrorred
+            className="absolute top-2 right-2"
+            onClick={e => {
+              e.stopPropagation()
+              navigate(`/report`, {
+                state: { type: 'event', targetId: event.id },
+              })
+            }}
+          />
+        )}
+      </div>
       <div className="flex p-4 gap-4">
         <div className="flex flex-col justify-center text-center px-2 shrink-0">
           <span className="text-dark-grey font-medium">
