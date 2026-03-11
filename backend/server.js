@@ -288,6 +288,7 @@ app.get('/api/routes', (req, res) => {
 
   db.query(
     `SELECT DISTINCT r.*,
+      er.event_id,
       (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
      FROM route r
      LEFT JOIN event_route er ON er.route_id = r.id
@@ -405,7 +406,7 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
 })
 
 /**
- * Adds a report and corresponding resport junction to report_user, report_event, or report_route.
+ * Adds a report and corresponding report junction to report_user, report_event, or report_route.
  */
 app.post('/api/report', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {

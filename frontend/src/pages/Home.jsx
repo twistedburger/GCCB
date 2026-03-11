@@ -11,6 +11,7 @@ import { PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
+import EventDetail from '../pages/home/EventDetail'
 import PropTypes from 'prop-types'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
@@ -18,10 +19,12 @@ import { Drawer } from 'vaul'
 
 function Home() {
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
-  const [snapPoint, setSnapPoint] = useState(0.09)
+  const [snapPoint, setSnapPoint] = useState(0.095)
+  const [routeSnapPoint, setRouteSnapPoint] = useState(0.6)
   const [isArriving, setIsArriving] = useState(true)
   const [address, setAddress] = useState('')
   const [cardsToDisplay, setCardsToDisplay] = useState([])
+  const [selectedRoute, setSelectedRoute] = useState(null)
   const [filters, setFilters] = useState({
     time: null,
     transportationModes: [],
@@ -109,6 +112,12 @@ function Home() {
     }
   }, [location.state])
 
+  const handleRouteClick = route => {
+    setSnapPoint(0.095)
+    setRouteSnapPoint(0.6)
+    setSelectedRoute(route)
+  }
+
   return (
     <div className="relative w-full h-full">
       <APIProvider apiKey="">
@@ -130,7 +139,7 @@ function Home() {
       <Drawer.Root
         open={true}
         modal={false}
-        snapPoints={[0.09, 0.5, 1]}
+        snapPoints={[0.095, 0.5, 1]}
         activeSnapPoint={snapPoint}
         setActiveSnapPoint={setSnapPoint}
         noBodyStyles={true}
@@ -193,6 +202,7 @@ function Home() {
                           key={item.id}
                           route={item}
                           individualView={true}
+                          onSelect={handleRouteClick}
                         />
                       )
                     )
@@ -203,7 +213,51 @@ function Home() {
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
-      <Outlet />
+      <Drawer.Root
+        open={!!selectedRoute}
+        onOpenChange={open => !open && setSelectedRoute(null)}
+        modal={false}
+        snapPoints={[0.095, 0.6, 1]}
+        activeSnapPoint={routeSnapPoint}
+        setActiveSnapPoint={setRouteSnapPoint}
+        noBodyStyles={true}
+        setBackgroundColorOnScale={false}
+        dismissible={false}
+      >
+        <Drawer.Portal>
+          <Drawer.Content
+            style={{
+              zIndex: 30,
+              marginLeft: '55px',
+              width: 'calc(100% - 55px)',
+              borderRadius: '24px 24px 0 0',
+              height: '96%',
+              position: 'fixed',
+              bottom: 0,
+              background: '#F9F9F9',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
+            <Drawer.Description className="sr-only">
+              Route and event details
+            </Drawer.Description>
+            {selectedRoute && (
+              <EventDetail
+                selectedRouteId={selectedRoute.id}
+                onClose={() => {
+                  setSelectedRoute(null)
+                  setSnapPoint(0.5)
+                }}
+                eventId={selectedRoute.event_id}
+              />
+            )}
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
+
+      <Outlet context={{ filters, setFilters, setSelectedRoute }} />
     </div>
   )
 }

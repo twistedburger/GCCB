@@ -10,10 +10,15 @@ import IconButton from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import PropTypes from 'prop-types'
 
-export default function EventDetail() {
+export default function EventDetail({
+  selectedRouteId,
+  onClose,
+  eventId: eventIdProp,
+}) {
   const location = useLocation()
-  const id = location.pathname.split('/').pop()
+  const id = eventIdProp ?? location.pathname.split('/').pop()
   const navigate = useNavigate()
   const [isClosing, setIsClosing] = useState(false)
   const [event, setEvent] = useState(null)
@@ -32,21 +37,34 @@ export default function EventDetail() {
     fetchEvent()
   }, [id])
 
+  const routesToDisplay = event
+    ? selectedRouteId
+      ? event.routes?.filter(r => r.id === selectedRouteId)
+      : event.routes
+    : []
+
   const handleClose = () => {
-    setIsClosing(true)
-    setTimeout(() => navigate(-1), 300)
+    if (onClose) {
+      onClose()
+    } else {
+      setIsClosing(true)
+      setTimeout(() => navigate(-1), 300)
+    }
   }
 
   return (
     <>
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ${isClosing ? 'sheet-exit' : 'sheet-enter'} ${eventIdProp ? '' : ' ml-13.75'}`}
         style={{ maxHeight: '100dvh', overflowY: 'auto' }}
       >
         <div className="flex flex-col justify-between h-screen">
           <div className="flex-1 w-full">
             <div className="relative">
-              <img src={bcitCover} className="h-32 w-full object-cover" />
+              <img
+                src={bcitCover}
+                className="h-32 w-full object-cover pointer-events-none"
+              />
               <div className="absolute top-2 right-2">
                 <GenericButton
                   onClick={handleClose}
@@ -149,8 +167,8 @@ export default function EventDetail() {
                       Travel Options
                     </p>
                     <div className="flex flex-col gap-2">
-                      {event.routes && event.routes.length > 0 ? (
-                        event.routes.map(route => (
+                      {routesToDisplay && routesToDisplay.length > 0 ? (
+                        routesToDisplay.map(route => (
                           <RouteCard
                             key={route.id}
                             route={route}
@@ -172,4 +190,10 @@ export default function EventDetail() {
       </div>
     </>
   )
+}
+
+EventDetail.propTypes = {
+  selectedRouteId: PropTypes.number,
+  onClose: PropTypes.func,
+  eventId: PropTypes.number,
 }
