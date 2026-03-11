@@ -46,7 +46,7 @@ export default function Report() {
   return (
     <>
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ml-13.75 ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
         style={{ maxHeight: '100dvh', overflowY: 'auto' }}
       >
         <div className="px-6 py-4 flex flex-col h-screen">
