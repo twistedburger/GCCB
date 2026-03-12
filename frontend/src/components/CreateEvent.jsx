@@ -11,16 +11,6 @@ const CreateEvent = ({
   initLoc,
   // onSubmit
 }) => {
-  const mockRoute = {
-    title: 'Route 1',
-    transportation_mode: 'Car',
-    description: 'A scenic route through the city',
-    start: 'Location A',
-    end: 'Location B',
-    depart_time: '2024-07-01T10:00',
-    max_ppl: 3,
-  }
-
   const [addedRoutes, setAddedRoutes] = useState([])
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [addRoute, setAddRoute] = useState(false)
@@ -56,10 +46,10 @@ const CreateEvent = ({
 
     setErrors({})
     const eventData = {
-      name: eventName,
-      description: eventDesc,
-      datetime,
+      title: eventName,
+      event_time: datetime,
       location: selectedPlace,
+      description: eventDesc,
       routes: addedRoutes,
     }
     console.log('Event created: ' + JSON.stringify(eventData))
@@ -90,6 +80,7 @@ const CreateEvent = ({
             ${errors.location ? 'border border-red-500' : 'focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100'}`}
             onSearch={location => setSelectedPlace(location)}
             placeHolder="Enter event location"
+            disabled={addRoute || addedRoutes.length > 0}
           />
           {errors.location && (
             <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
@@ -144,7 +135,12 @@ const CreateEvent = ({
                     onClick={() => removeRoute(route.id)}
                   />
                 </GenericButton>
-                <RouteCard key={route.id} route={route} individualView={true} />
+                <RouteCard
+                  key={route.id}
+                  route={route}
+                  individualView={true}
+                  createMode={true}
+                />
               </div>
             ))}
           </div>
@@ -163,8 +159,7 @@ const CreateEvent = ({
               <CreateRoute
                 initLoc={selectedPlace ? selectedPlace : initLoc}
                 onSubmit={route => {
-                  handleRouteSubmit(mockRoute)
-                  console.log(route)
+                  handleRouteSubmit(route)
                   setAddRoute(false)
                 }}
               />
