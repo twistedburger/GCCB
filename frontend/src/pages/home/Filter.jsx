@@ -8,25 +8,23 @@ import { Slider } from '@mui/material'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 
 export default function Filter() {
-  const location = useLocation()
   const navigate = useNavigate()
+  const { filters, setFilters } = useOutletContext()
 
   const [isClosing, setIsClosing] = useState(false)
   const [transportationModes, setTransportationModes] = useState(
-    location.state?.filters?.transportationModes ?? []
+    filters?.transportationModes ?? []
   )
-  const [time, setTime] = useState(
-    location.state?.filters?.time ? dayjs(location.state.filters.time) : null
-  )
-  const [radius, setRadius] = useState(location.state?.filters?.radius ?? 100)
+  const [time, setTime] = useState(filters?.time ? dayjs(filters.time) : null)
+  const [radius, setRadius] = useState(filters?.radius ?? 100)
   const [verifiedEventsOnly, setVerifiedEventsOnly] = useState(
-    location.state?.filters?.verifiedEventsOnly ?? false
+    filters?.verifiedEventsOnly ?? false
   )
   const [mainEventsOnly, setMainEventsOnly] = useState(
-    location.state?.filters?.mainEventsOnly ?? true
+    filters?.mainEventsOnly ?? true
   )
 
   const closeWithAnimation = (updatedFilters = null) => {
@@ -37,13 +35,15 @@ export default function Filter() {
   }
 
   const handleApply = () => {
-    closeWithAnimation({
+    const updatedFilters = {
       time: time ? time.format('YYYY-MM-DD HH:mm:ss') : null,
       radius,
       verifiedEventsOnly,
       mainEventsOnly,
       transportationModes,
-    })
+    }
+    setFilters(updatedFilters)
+    closeWithAnimation(updatedFilters)
   }
 
   const handleCancel = () => {

@@ -14,7 +14,7 @@ import RouteCard from '../components/RouteCard'
 import EventDetail from '../pages/home/EventDetail'
 import PropTypes from 'prop-types'
 import { useAuth } from '../utils/Authorization'
-import { useNavigate, useLocation, Outlet } from 'react-router-dom'
+import { useNavigate, Outlet } from 'react-router-dom'
 import { Drawer } from 'vaul'
 
 function Home() {
@@ -33,7 +33,6 @@ function Home() {
     mainEventsOnly: true,
   })
   const navigate = useNavigate()
-  const location = useLocation()
   const { authorizeUser } = useAuth()
   authorizeUser()
 
@@ -105,12 +104,6 @@ function Home() {
     }
     fetchCards()
   }, [filters, userLocation])
-
-  useEffect(() => {
-    if (location.state?.filters) {
-      setFilters(location.state.filters)
-    }
-  }, [location.state])
 
   const handleRouteClick = route => {
     setSnapPoint(0.095)
