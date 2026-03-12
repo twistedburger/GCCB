@@ -39,6 +39,14 @@ const analytics = createAnalyticsHelpers({
   emissions: { EMISSIONS_G_PER_KM },
 })
 
+app.get('/api/me', async (req, res) => {
+  if (!req.oidc.isAuthenticated())
+    return res.status(401).json({ error: 'Unauthorized' })
+  const user = await selectUser(req)
+  if (!user) return res.status(404).json({ error: 'User not found' })
+  res.json(user)
+})
+
 app.get('/maps/api/js', async (req, res) => {
   const params = new URLSearchParams(req.query)
   params.set('key', process.env.GOOGLE_MAPS_API_KEY)
