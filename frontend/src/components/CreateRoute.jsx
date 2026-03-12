@@ -9,7 +9,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
   const [routeDesc, setRouteDesc] = useState('')
   const [transportationMode, setTransportationMode] = useState('')
-  const [numPeople, setNumPeople] = useState(1)
+  const [maxPeople, setMaxPeople] = useState(1)
   const [departTime, setDepartTime] = useState('')
   const [startLoc, setStartLoc] = useState(null)
   const [endLoc, setEndLoc] = useState(initLoc)
@@ -20,6 +20,12 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     if (!routeName.trim()) newErrors.routeName = 'Route name is required'
     if (!transportationMode)
       newErrors.transportationMode = 'Select a transportation mode'
+    if (
+      transportationMode &&
+      (maxPeople < 1 || maxPeople > 10 || !Number.isInteger(maxPeople))
+    ) {
+      newErrors.maxPeople = 'Must be a whole number between 1 and 10'
+    }
     if (!startLoc) newErrors.startLoc = 'Starting location is required'
     if (!endLoc) newErrors.endLoc = 'Destination is required'
     if (!departTime) newErrors.departTime = 'Departure time is required'
@@ -36,16 +42,14 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
 
     setErrors({})
     const routeData = {
-      name: routeName,
+      title: routeName,
       transportation_mode: transportationMode,
-      num_people: numPeople,
+      max_ppl: maxPeople,
+      origin: startLoc,
+      destination: endLoc || initLoc,
       depart_time: departTime,
-      start: startLoc,
-      end: endLoc || initLoc,
       description: routeDesc,
     }
-
-    console.log('Submitting route:', routeData)
     onSubmit(routeData)
   }
 
@@ -61,24 +65,37 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       <TransportationModeSelect
         selectedModes={[]}
         onChange={modes => {
-          setTransportationMode(modes[0] || '')
+          setTransportationMode(modes || '')
         }}
         multiple={false}
       />
-
+      {errors.transportationMode && (
+        <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
+          {errors.transportationMode}
+        </p>
+      )}
       {transportationMode && (
         <div>
           <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
-            Number of People
+            Max Number of People
           </label>
           <input
             type="number"
             min="1"
-            value={numPeople}
-            onChange={e => setNumPeople(parseInt(e.target.value) || 1)}
+            max="10"
+            value={maxPeople}
+            onChange={e => {
+              const val = parseInt(e.target.value)
+              setMaxPeople(val)
+            }}
             className="w-full px-4 py-3 rounded-xl transition-all duration-200 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
               bg-gray-50 text-text-primary outline-none border border-transparent focus:border-2 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
           />
+          {errors.maxPeople && (
+            <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
+              {errors.maxPeople}
+            </p>
+          )}
         </div>
       )}
 
@@ -110,6 +127,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             outline-none transition-all text-text-primary placeholder:text-secondary
             ${errors.endLoc ? 'border border-red-500' : 'focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100'}`}
           onSearch={location => setEndLoc(location)}
+          disabled={!!initLoc}
         />
         {errors.endLoc && (
           <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
@@ -122,6 +140,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         Display the selected route in mini map?
       </div>
 
+      {/*TODO: ensure departure time doesn't exceed event time */}
       <div>
         <label
           className="text-sm font-semibold text-text-primary ml-1 mb-1.5 block"
