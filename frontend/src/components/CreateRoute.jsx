@@ -9,6 +9,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
   const [routeDesc, setRouteDesc] = useState('')
   const [transportationMode, setTransportationMode] = useState('')
+  const [numPeople, setNumPeople] = useState(1)
   const [departTime, setDepartTime] = useState('')
   const [startLoc, setStartLoc] = useState(null)
   const [endLoc, setEndLoc] = useState(initLoc)
@@ -17,6 +18,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const validate = () => {
     const newErrors = {}
     if (!routeName.trim()) newErrors.routeName = 'Route name is required'
+    if (!transportationMode)
+      newErrors.transportationMode = 'Select a transportation mode'
     if (!startLoc) newErrors.startLoc = 'Starting location is required'
     if (!endLoc) newErrors.endLoc = 'Destination is required'
     if (!departTime) newErrors.departTime = 'Departure time is required'
@@ -35,6 +38,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     const routeData = {
       name: routeName,
       transportation_mode: transportationMode,
+      num_people: numPeople,
       depart_time: departTime,
       start: startLoc,
       end: endLoc || initLoc,
@@ -54,7 +58,6 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         error={errors.routeName}
       />
 
-      {/* Transportation Mode Selection*/}
       <TransportationModeSelect
         selectedModes={[]}
         onChange={modes => {
@@ -63,7 +66,21 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         multiple={false}
       />
 
-      <div>- Once mode selected, # of people</div>
+      {transportationMode && (
+        <div>
+          <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
+            Number of People
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={numPeople}
+            onChange={e => setNumPeople(parseInt(e.target.value) || 1)}
+            className="w-full px-4 py-3 rounded-xl transition-all duration-200 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
+              bg-gray-50 text-text-primary outline-none border border-transparent focus:border-2 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+          />
+        </div>
+      )}
 
       <div>
         <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
@@ -100,6 +117,11 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           </p>
         )}
       </div>
+
+      <div className="border border-2 border-red-500">
+        Display the selected route in mini map?
+      </div>
+
       <div>
         <label
           className="text-sm font-semibold text-text-primary ml-1 mb-1.5 block"
