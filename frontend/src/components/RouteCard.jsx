@@ -129,7 +129,11 @@ export default function RouteCard({
             }
             onClick={() =>
               navigate(`/report`, {
-                state: { type: 'route', targetId: route.id },
+                state: {
+                  type: 'route',
+                  targetId: route.id,
+                  targetName: route.title,
+                },
               })
             }
           >

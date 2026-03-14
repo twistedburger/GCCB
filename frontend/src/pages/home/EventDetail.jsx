@@ -100,7 +100,11 @@ export default function EventDetail() {
                           onClick={() => {
                             setAnchorEl(null)
                             navigate(`/report`, {
-                              state: { type: 'event', targetId: event.id },
+                              state: {
+                                type: 'event',
+                                targetId: event.id,
+                                targetName: event.title,
+                              },
                             })
                           }}
                         >
@@ -113,6 +117,7 @@ export default function EventDetail() {
                               state: {
                                 type: 'user',
                                 targetId: event.creator_id,
+                                targetName: event.creator_name,
                               },
                             })
                           }}

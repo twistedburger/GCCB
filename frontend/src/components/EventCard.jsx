@@ -33,7 +33,11 @@ export default function EventCard({ event, view }) {
             onClick={e => {
               e.stopPropagation()
               navigate(`/report`, {
-                state: { type: 'event', targetId: event.id },
+                state: {
+                  type: 'event',
+                  targetId: event.id,
+                  targetName: event.title,
+                },
               })
             }}
           />
