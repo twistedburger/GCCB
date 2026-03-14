@@ -62,7 +62,7 @@ export default function RouteCard({
     <div
       className={`flex flex-row items-center w-full rounded-xl shadow-md shadow-medium-grey bg-white p-4 justify-between ${individualView ? 'py-2' : 'py-4'}`}
       onClick={() => {
-        if (individualView && onSelect) {
+        if (onSelect) {
           onSelect(route)
         }
       }}

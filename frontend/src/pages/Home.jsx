@@ -14,11 +14,13 @@ import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
 import PropTypes from 'prop-types'
 import { useAuth } from '../utils/Authorization'
-import { useNavigate, Outlet } from 'react-router-dom'
+import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { Drawer } from 'vaul'
 
 function Home() {
+  const location = useLocation()
+  const isEventDetail = location.pathname.includes('/event/')
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
   const [snapPoint, setSnapPoint] = useState(0.095)
   const [routeSnapPoint, setRouteSnapPoint] = useState(0.25)
@@ -131,7 +133,12 @@ function Home() {
             <MapController center={userLocation} />
           </Map>
         </APIProvider>
-        {createPortal(<SearchBar onSearch={handleSearch} />, document.body)}
+        {createPortal(
+          <div style={{ display: isEventDetail ? 'none' : 'block' }}>
+            <SearchBar onSearch={handleSearch} />
+          </div>,
+          document.body
+        )}
         <Drawer.Root
           open={true}
           modal={false}
@@ -155,6 +162,7 @@ function Home() {
                 background: '#F9F9F9',
                 display: 'flex',
                 flexDirection: 'column',
+                pointerEvents: 'auto',
               }}
             >
               <Drawer.Title className="sr-only">Search Results</Drawer.Title>
@@ -235,6 +243,7 @@ function Home() {
                 background: '#F9F9F9',
                 display: 'flex',
                 flexDirection: 'column',
+                pointerEvents: 'auto',
               }}
             >
               <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
@@ -253,7 +262,9 @@ function Home() {
             </Drawer.Content>
           </Drawer.Portal>
         </Drawer.Root>
-        <Outlet context={{ filters, setFilters, setSelectedRoute }} />
+        <Outlet
+          context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
+        />
       </div>
     </div>
   )
