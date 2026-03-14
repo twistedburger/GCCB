@@ -13,6 +13,9 @@ import UserGuide from './pages/UserGuide'
 import { useState, useEffect } from 'react'
 import { authLevel, AuthProvider } from './utils/Authorization'
 import ProtectedRoute from './components/ProtectedRoute'
+import Filter from './pages/home/Filter'
+import Report from './pages/home/Report'
+import EventDetail from './pages/home/EventDetail'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
@@ -62,7 +65,11 @@ function App() {
                       <Home />
                     )
                   }
-                />
+                >
+                  <Route path="filter" element={<Filter />} />
+                  <Route path="event/:id" element={<EventDetail />} />
+                  <Route path="report" element={<Report />} />
+                </Route>
                 <Route
                   element={
                     <ProtectedRoute requiredAuthorization={authLevel.USER} />

@@ -6,11 +6,17 @@ import {
   OutlinedFlagRounded,
   GroupsOutlined,
   Logout,
+  DateRangeRounded,
 } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export default function RouteCard({ route, individualView }) {
+export default function RouteCard({
+  route,
+  individualView,
+  onSelect,
+  routeDetailView = false,
+}) {
   const navigate = useNavigate()
   const dateObj = new Date(route.depart_time)
   const [peopleGoing, setPeopleGoing] = useState(0)
@@ -55,6 +61,11 @@ export default function RouteCard({ route, individualView }) {
   return (
     <div
       className={`flex flex-row items-center w-full rounded-xl shadow-md shadow-medium-grey bg-white p-4 justify-between ${individualView ? 'py-2' : 'py-4'}`}
+      onClick={() => {
+        if (individualView && onSelect) {
+          onSelect(route)
+        }
+      }}
     >
       <div className="flex flex-row">
         <span className="shrink-0 scale-115 flex items-center">
@@ -68,12 +79,31 @@ export default function RouteCard({ route, individualView }) {
           )}
           <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
             <PlaceOutlined className="mr-1 -ml-1" fontSize="small" />
-            <p>{`${route.origin} @ ${dateObj.toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true,
-            })}`}</p>
+            <p>
+              {route.origin}{' '}
+              {!routeDetailView &&
+                `@ ${dateObj.toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })}`}
+            </p>
           </div>
+          {routeDetailView && (
+            <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
+              <DateRangeRounded
+                className="mr-1 -ml-1"
+                fontSize="small"
+              ></DateRangeRounded>
+              <p>{`${dateObj.toLocaleDateString('en-US', {
+                month: 'long',
+              })} ${dateObj.getDate()} @ ${dateObj.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+              })}`}</p>
+            </div>
+          )}
           {individualView && (
             <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
               <OutlinedFlagRounded className="mr-1 -ml-1" fontSize="small" />
@@ -139,4 +169,6 @@ export default function RouteCard({ route, individualView }) {
 RouteCard.propTypes = {
   route: PropTypes.object.isRequired,
   individualView: PropTypes.bool,
+  onSelect: PropTypes.func,
+  routeDetailView: PropTypes.bool,
 }

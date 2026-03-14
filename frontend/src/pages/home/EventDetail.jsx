@@ -40,7 +40,7 @@ export default function EventDetail() {
   return (
     <>
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ml-13.75 ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
         style={{ maxHeight: '100dvh', overflowY: 'auto' }}
       >
         <div className="flex flex-col justify-between h-screen">

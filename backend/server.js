@@ -288,11 +288,17 @@ app.get('/api/routes', (req, res) => {
 
   db.query(
     `SELECT DISTINCT r.*,
+      u.id as creator_id,
+      u.name as creator_name,
+      u.nickname,
+      u.profile_pic,
+      er.event_id,      
       (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
-     FROM route r
-     LEFT JOIN event_route er ON er.route_id = r.id
-     LEFT JOIN event e ON e.id = er.event_id
-     ${where}`,
+    FROM route r
+    LEFT JOIN "user" u ON u.id = r.creator_id
+    LEFT JOIN event_route er ON er.route_id = r.id
+    LEFT JOIN event e ON e.id = er.event_id
+    ${where}`,
     values,
     (error, results) => {
       if (error) {
@@ -405,7 +411,7 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
 })
 
 /**
- * Adds a report and corresponding resport junction to report_user, report_event, or report_route.
+ * Adds a report and corresponding report junction to report_user, report_event, or report_route.
  */
 app.post('/api/report', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {

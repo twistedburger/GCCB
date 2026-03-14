@@ -8,25 +8,23 @@ import { Slider } from '@mui/material'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 
 export default function Filter() {
-  const location = useLocation()
   const navigate = useNavigate()
+  const { filters, setFilters } = useOutletContext()
 
   const [isClosing, setIsClosing] = useState(false)
   const [transportationModes, setTransportationModes] = useState(
-    location.state?.filters?.transportationModes ?? []
+    filters?.transportationModes ?? []
   )
-  const [time, setTime] = useState(
-    location.state?.filters?.time ? dayjs(location.state.filters.time) : null
-  )
-  const [radius, setRadius] = useState(location.state?.filters?.radius ?? 100)
+  const [time, setTime] = useState(filters?.time ? dayjs(filters.time) : null)
+  const [radius, setRadius] = useState(filters?.radius ?? 100)
   const [verifiedEventsOnly, setVerifiedEventsOnly] = useState(
-    location.state?.filters?.verifiedEventsOnly ?? false
+    filters?.verifiedEventsOnly ?? false
   )
   const [mainEventsOnly, setMainEventsOnly] = useState(
-    location.state?.filters?.mainEventsOnly ?? true
+    filters?.mainEventsOnly ?? true
   )
 
   const closeWithAnimation = (updatedFilters = null) => {
@@ -37,13 +35,15 @@ export default function Filter() {
   }
 
   const handleApply = () => {
-    closeWithAnimation({
+    const updatedFilters = {
       time: time ? time.format('YYYY-MM-DD HH:mm:ss') : null,
       radius,
       verifiedEventsOnly,
       mainEventsOnly,
       transportationModes,
-    })
+    }
+    setFilters(updatedFilters)
+    closeWithAnimation(updatedFilters)
   }
 
   const handleCancel = () => {
@@ -59,7 +59,7 @@ export default function Filter() {
   return (
     <>
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ml-13.75 ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
         style={{ maxHeight: '100dvh', overflowY: 'auto' }}
       >
         <div className="px-6 py-4 flex flex-col justify-between items-center h-screen">
