@@ -15,7 +15,6 @@ import RouteDetail from '../pages/home/RouteDetail'
 import PropTypes from 'prop-types'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
-import { createPortal } from 'react-dom'
 import { Drawer } from 'vaul'
 
 function Home() {
@@ -117,7 +116,7 @@ function Home() {
 
   return (
     <div data-vaul-drawer-wrapper className="relative w-full h-full">
-      <div className="relative w-full h-full">
+      <div>
         <APIProvider apiKey="">
           <Map
             mapId="6621f78cbdb1902f92a3d543"
@@ -133,11 +132,8 @@ function Home() {
             <MapController center={userLocation} />
           </Map>
         </APIProvider>
-        {createPortal(
-          <div style={{ display: isEventDetail ? 'none' : 'block' }}>
-            <SearchBar onSearch={handleSearch} />
-          </div>,
-          document.body
+        {!selectedRoute && !isEventDetail && (
+          <SearchBar onSearch={handleSearch} />
         )}
         <Drawer.Root
           open={true}
@@ -151,6 +147,14 @@ function Home() {
         >
           <Drawer.Portal>
             <Drawer.Content
+              {...(routeSnapPoint === 0.095 ? { inert: true } : {})}
+              onOpenAutoFocus={e => e.preventDefault()}
+              onFocus={e => {
+                if (e.target === e.currentTarget) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }
+              }}
               style={{
                 zIndex: 20,
                 marginLeft: '55px',
@@ -207,7 +211,10 @@ function Home() {
                             key={item.id}
                             route={item}
                             individualView={true}
-                            onSelect={handleRouteClick}
+                            onSelect={route => {
+                              handleRouteClick(route)
+                              document.activeElement?.blur()
+                            }}
                           />
                         )
                       )
@@ -232,6 +239,13 @@ function Home() {
         >
           <Drawer.Portal>
             <Drawer.Content
+              onOpenAutoFocus={e => e.preventDefault()}
+              onFocus={e => {
+                if (e.target === e.currentTarget) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }
+              }}
               style={{
                 zIndex: 30,
                 marginLeft: '55px',

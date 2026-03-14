@@ -205,6 +205,7 @@ export default function EventDetail() {
                                 setSelectedRoute(route)
                                 setEventSnapPoint(0.095)
                                 setSnapPoint(0.095)
+                                document.activeElement?.blur()
                               }}
                             />
                           ))
