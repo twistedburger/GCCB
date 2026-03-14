@@ -288,12 +288,17 @@ app.get('/api/routes', (req, res) => {
 
   db.query(
     `SELECT DISTINCT r.*,
-      er.event_id,
+      u.id as creator_id,
+      u.name as creator_name,
+      u.nickname,
+      u.profile_pic,
+      er.event_id,      
       (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
-     FROM route r
-     LEFT JOIN event_route er ON er.route_id = r.id
-     LEFT JOIN event e ON e.id = er.event_id
-     ${where}`,
+    FROM route r
+    LEFT JOIN "user" u ON u.id = r.creator_id
+    LEFT JOIN event_route er ON er.route_id = r.id
+    LEFT JOIN event e ON e.id = er.event_id
+    ${where}`,
     values,
     (error, results) => {
       if (error) {

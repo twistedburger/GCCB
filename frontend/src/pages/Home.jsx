@@ -11,7 +11,7 @@ import { PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
-import EventDetail from '../pages/home/EventDetail'
+import RouteDetail from '../pages/home/RouteDetail'
 import PropTypes from 'prop-types'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet } from 'react-router-dom'
@@ -20,7 +20,7 @@ import { Drawer } from 'vaul'
 function Home() {
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
   const [snapPoint, setSnapPoint] = useState(0.095)
-  const [routeSnapPoint, setRouteSnapPoint] = useState(0.6)
+  const [routeSnapPoint, setRouteSnapPoint] = useState(0.25)
   const [isArriving, setIsArriving] = useState(true)
   const [address, setAddress] = useState('')
   const [cardsToDisplay, setCardsToDisplay] = useState([])
@@ -107,7 +107,7 @@ function Home() {
 
   const handleRouteClick = route => {
     setSnapPoint(0.095)
-    setRouteSnapPoint(0.6)
+    setRouteSnapPoint(0.25)
     setSelectedRoute(route)
   }
 
@@ -210,7 +210,7 @@ function Home() {
         open={!!selectedRoute}
         onOpenChange={open => !open && setSelectedRoute(null)}
         modal={false}
-        snapPoints={[0.095, 0.6, 1]}
+        snapPoints={[0.095, 0.25, 0.4]}
         activeSnapPoint={routeSnapPoint}
         setActiveSnapPoint={setRouteSnapPoint}
         noBodyStyles={true}
@@ -237,13 +237,12 @@ function Home() {
               Route and event details
             </Drawer.Description>
             {selectedRoute && (
-              <EventDetail
-                selectedRouteId={selectedRoute.id}
+              <RouteDetail
+                selectedRoute={selectedRoute}
                 onClose={() => {
                   setSelectedRoute(null)
                   setSnapPoint(0.5)
                 }}
-                eventId={selectedRoute.event_id}
               />
             )}
           </Drawer.Content>
