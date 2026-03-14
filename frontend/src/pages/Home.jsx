@@ -15,6 +15,7 @@ import RouteDetail from '../pages/home/RouteDetail'
 import PropTypes from 'prop-types'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { Drawer } from 'vaul'
 
 function Home() {
@@ -39,6 +40,7 @@ function Home() {
   const handleSearch = async newLocation => {
     setAddress(newLocation)
     setSnapPoint(1)
+    setSelectedRoute(null)
     setFilters({
       time: null,
       transportationModes: [],
@@ -129,7 +131,7 @@ function Home() {
             <MapController center={userLocation} />
           </Map>
         </APIProvider>
-        <SearchBar onSearch={handleSearch} />
+        {createPortal(<SearchBar onSearch={handleSearch} />, document.body)}
         <Drawer.Root
           open={true}
           modal={false}

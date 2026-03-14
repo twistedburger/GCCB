@@ -6,7 +6,7 @@ export default function SearchBar({ onSearch }) {
   const [location, setLocation] = useState('')
 
   return (
-    <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 w-9/10">
+    <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 w-8/10 ml-7">
       <div className="w-full flex flex-row justify-start bg-white rounded-xl px-2 py-3 shadow-md shadow-light-grey">
         <input
           type="text"
