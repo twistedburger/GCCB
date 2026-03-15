@@ -122,7 +122,6 @@ function Home() {
     setSnapPoint(0.095)
     setRouteSnapPoint(0.25)
     setSelectedRoute(route)
-    console.log(route)
   }
 
   return (
