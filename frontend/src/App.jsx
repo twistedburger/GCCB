@@ -48,7 +48,9 @@ function App() {
         <div className="app-container min-h-screen">
           {/* pages */}
           <div className="relative w-full min-h-screen flex bg-background-off-white">
-            {userAuthenticated && currentUser && <Sidebar />}{' '}
+            {userAuthenticated && currentUser && (
+              <Sidebar userRole={currentUser.role} />
+            )}{' '}
             <main className="flex-1 overflow-y-auto">
               <Routes>
                 <Route
