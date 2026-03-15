@@ -43,7 +43,7 @@ export async function calculateRoute(
   } else if (_departureTime) {
     routeBody.departureTime = _departureTime
   }
-
+  console.log(routeBody)
   try {
     const response = await axios.post(
       'http://localhost:3000/api/requestRoute',
