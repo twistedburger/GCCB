@@ -7,6 +7,7 @@ import {
   Pin,
 } from '@vis.gl/react-google-maps'
 import GenericToggle from '../components/GenericToggle'
+import GenericButton from '../components/GenericButton'
 import { PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
@@ -182,9 +183,9 @@ function Home() {
               <div className="overflow-y-auto px-6 pb-36 flex flex-col gap-4">
                 {address && (
                   <>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 overflow-x-auto">
                       <TuneOutlined
-                        className="text-text-primary"
+                        className="text-text-primary shrink-0"
                         onClick={() => navigate('/filter')}
                       />
                       <GenericToggle
@@ -193,10 +194,19 @@ function Home() {
                         labels={['Arriving Near', 'Departing Near']}
                         className="shrink-0"
                       />
-                      <span className="text-text-secondary truncate text-sm">
+                      <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
                         <PlaceOutlined className="mr-1" />
                         {address}
                       </span>
+                      <div
+                        className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
+                        style={{ scrollbarWidth: 'none' }}
+                      >
+                        <DisplayFilters
+                          filters={filters}
+                          setFilters={setFilters}
+                        />
+                      </div>
                     </div>
                     {cardsToDisplay.length === 0 ? (
                       <p className="text-text-secondary text-sm text-center py-4">
@@ -294,11 +304,88 @@ function MapController({ center }) {
   return null
 }
 
+function DisplayFilters({ filters, setFilters }) {
+  const activeFilters = []
+
+  if (filters.time)
+    activeFilters.push({
+      label: `${filters.time}`,
+      key: 'time',
+      default: null,
+    })
+  if (filters.transportationModes.length > 0)
+    activeFilters.push({
+      label: filters.transportationModes.join(', '),
+      key: 'transportationModes',
+      default: [],
+    })
+  if (filters.verifiedEventsOnly)
+    activeFilters.push({
+      label: 'Verified only',
+      key: 'verifiedEventsOnly',
+      default: false,
+    })
+  if (!filters.mainEventsOnly) {
+    activeFilters.push({
+      label: 'Display Individual Routes',
+      key: 'mainEventsOnly',
+      default: true,
+    })
+  }
+  if (filters.radius !== 100)
+    activeFilters.push({
+      label: `${filters.radius}m`,
+      key: 'radius',
+      default: 100,
+    })
+
+  if (activeFilters.length === 0) return null
+
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-0.5 shrink-0">
+      {activeFilters.map(f => (
+        <GenericButton
+          key={f.key}
+          unstyled
+          customStyling="flex items-center gap-1 whitespace-nowrap px-3 py-1 rounded-full border border-light-grey bg-white text-[14px] text-text-secondary shrink-0 capitalize"
+          onClick={() => {
+            setFilters(prev => {
+              const updatedFilters = {
+                time: prev.time,
+                transportationModes: prev.transportationModes,
+                radius: prev.radius,
+                verifiedEventsOnly: prev.verifiedEventsOnly,
+                mainEventsOnly: prev.mainEventsOnly,
+              }
+              updatedFilters[f.key] = f.default
+              return updatedFilters
+            })
+          }}
+        >
+          {f.label}
+          <span className="text-medium-grey text-xs">✕</span>
+        </GenericButton>
+      ))}
+    </div>
+  )
+}
+
 MapController.propTypes = {
   center: PropTypes.shape({
     lat: PropTypes.number.isRequired,
     lng: PropTypes.number.isRequired,
   }).isRequired,
+}
+
+DisplayFilters.propTypes = {
+  filters: PropTypes.shape({
+    time: PropTypes.object,
+    transportationModes: PropTypes.arrayOf(PropTypes.string).isRequired,
+    verifiedEventsOnly: PropTypes.bool,
+    mainEventsOnly: PropTypes.bool,
+    radius: PropTypes.number,
+  }).isRequired,
+  setFilters: PropTypes.func.isRequired,
 }
 
 export default Home
