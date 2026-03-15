@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Report() {
   const location = useLocation()
-  const { type, targetId } = location.state
+  const { type, targetId, targetName } = location.state
   const navigate = useNavigate()
 
   const reasonMenu = [
@@ -48,10 +48,12 @@ export default function Report() {
       <div
         className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ml-13.75 ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
         style={{ maxHeight: '100dvh', overflowY: 'auto' }}
+        onPointerDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
       >
         <div className="px-6 py-4 flex flex-col h-screen">
           <div className="flex flex-row justify-between text-text-primary">
-            <span className="text-2xl font-medium">Report</span>
+            <span className="text-2xl font-medium">Report {targetName}</span>
             <GenericButton
               onClick={closeWithAnimation}
               unstyled={true}
@@ -61,7 +63,7 @@ export default function Report() {
             </GenericButton>
           </div>
           <div className="flex flex-col gap-2">
-            <div className="-mx-2 *:min-w-86">
+            <div className=" *:mx-0 *:w-full">
               <DropDownList
                 items={reasonMenu}
                 onChange={e => setReason(e.target.value)}

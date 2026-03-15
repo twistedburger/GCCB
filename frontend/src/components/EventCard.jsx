@@ -33,7 +33,11 @@ export default function EventCard({ event, view }) {
             onClick={e => {
               e.stopPropagation()
               navigate(`/report`, {
-                state: { type: 'event', targetId: event.id },
+                state: {
+                  type: 'event',
+                  targetId: event.id,
+                  targetName: event.title,
+                },
               })
             }}
           />
@@ -42,12 +46,16 @@ export default function EventCard({ event, view }) {
       <div className="flex p-4 gap-4">
         <div className="flex flex-col justify-center text-center px-2 shrink-0">
           <span className="text-dark-grey font-medium">
-            {dateObj
-              .toLocaleDateString('en-US', { month: 'short' })
-              .toUpperCase()}
+            {dateObj && !isNaN(dateObj)
+              ? dateObj.toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })
+              : '—'}
           </span>
           <span className="text-2xl text-text-primary font-bold -mt-1">
-            {dateObj.getDate()}
+            {dateObj && !isNaN(dateObj) ? dateObj.getDate() : '—'}
           </span>
           <span className="text-xs text-text-secondary mt-1 whitespace-nowrap">
             {dateObj.toLocaleTimeString('en-US', {
