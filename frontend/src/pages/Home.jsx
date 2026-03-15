@@ -36,6 +36,7 @@ function Home() {
     mainEventsOnly: true,
   })
   const navigate = useNavigate()
+  const [routeLine, setRouteLine] = useState('')
   const { authorizeUser } = useAuth()
   authorizeUser()
 
@@ -109,6 +110,14 @@ function Home() {
     fetchCards()
   }, [filters, userLocation])
 
+  useEffect(() => {
+    if (selectedRoute === null) {
+      setRouteLine('')
+    } else {
+      setRouteLine(selectedRoute.path.polyline.encodedPolyline)
+    }
+  }, [selectedRoute])
+
   const handleRouteClick = route => {
     setSnapPoint(0.095)
     setRouteSnapPoint(0.25)
@@ -118,7 +127,11 @@ function Home() {
   return (
     <div data-vaul-drawer-wrapper className="relative w-full h-full">
       <div>
-        <APIProvider apiKey="">
+        <APIProvider
+          apiKey=""
+          scriptUrl="http://localhost:3000/maps/api/js"
+          libraries={['geometry']}
+        >
           <Map
             mapId="6621f78cbdb1902f92a3d543"
             className="absolute w-full h-full"
@@ -130,7 +143,7 @@ function Home() {
             <AdvancedMarker position={userLocation}>
               <Pin scale={0.75} />
             </AdvancedMarker>
-            <MapController center={userLocation} />
+            <MapController center={userLocation} routeLine={routeLine} />
           </Map>
         </APIProvider>
         {!selectedRoute && !isEventDetail && (
@@ -183,7 +196,7 @@ function Home() {
               <div className="overflow-y-auto px-6 pb-36 flex flex-col gap-4">
                 {address && (
                   <>
-                    <div className="flex items-center gap-2 overflow-x-auto">
+                    <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
                       <TuneOutlined
                         className="text-text-primary shrink-0"
                         onClick={() => navigate('/filter')}
@@ -294,13 +307,34 @@ function Home() {
   )
 }
 
-function MapController({ center }) {
+function MapController({ center, routeLine }) {
   const map = useMap()
   useEffect(() => {
     if (map && center) {
       map.panTo(center)
     }
   }, [map, center])
+
+  useEffect(() => {
+    if (!map || !routeLine) return
+
+    const decodedPath = google.maps.geometry.encoding.decodePath(routeLine)
+    const polyline = new google.maps.Polyline({
+      path: decodedPath,
+      geodesic: true,
+      strokeColor: '#4285F4',
+      strokeOpacity: 1.0,
+      strokeWeight: 10,
+      map,
+    })
+
+    const bounds = new google.maps.LatLngBounds()
+    decodedPath.forEach(point => bounds.extend(point))
+    map.fitBounds(bounds)
+
+    return () => polyline.setMap(null)
+  }, [map, routeLine])
+
   return null
 }
 
@@ -375,6 +409,7 @@ MapController.propTypes = {
     lat: PropTypes.number.isRequired,
     lng: PropTypes.number.isRequired,
   }).isRequired,
+  routeLine: PropTypes.string,
 }
 
 DisplayFilters.propTypes = {

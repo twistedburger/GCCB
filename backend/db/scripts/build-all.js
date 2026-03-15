@@ -13,6 +13,7 @@ const config = {
     'update_db_sso.sql',
     'add_user_last_login.sql',
     'create_report_table.sql',
+    'update_path_data_type.sql',
   ],
 }
 
