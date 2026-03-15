@@ -14,7 +14,6 @@ import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
 import PropTypes from 'prop-types'
-import { TravelMode, calculateRoute } from '../utils/routes'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
@@ -109,25 +108,21 @@ function Home() {
       }
     }
     fetchCards()
-
-        const getrouteLine = async () => {
-      const route = await calculateRoute(
-        { address: 'Waterfront Station, Vancouver' },
-        { address: 'Science World, Vancouver' },
-        TravelMode.Transit
-      )
-      setRouteLine(route.polyline.encodedPolyline)
-      console.log(JSON.stringify(route))
-    }
-
-    getrouteLine()
-
   }, [filters, userLocation])
+
+  useEffect(() => {
+    if (selectedRoute === null) {
+      setRouteLine('')
+    } else {
+      setRouteLine(selectedRoute.path.polyline.encodedPolyline)
+    }
+  })
 
   const handleRouteClick = route => {
     setSnapPoint(0.095)
     setRouteSnapPoint(0.25)
     setSelectedRoute(route)
+    console.log(route)
   }
 
   return (
