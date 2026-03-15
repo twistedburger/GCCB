@@ -126,7 +126,7 @@ function Home() {
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div data-vaul-drawer-wrapper className="relative w-full h-full">
       <div>
         <APIProvider
           apiKey=""
