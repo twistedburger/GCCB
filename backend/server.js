@@ -233,7 +233,7 @@ app.get('/api/events', (req, res) => {
   if (transportation_modes) {
     const modes = transportation_modes.split(',')
     values.push(modes)
-    conditions.push(`r.transportation_mode = ANY($${values.length})`)
+    conditions.push(`lower(r.transportation_mode) = ANY($${values.length})`)
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
@@ -298,7 +298,7 @@ app.get('/api/routes', (req, res) => {
   if (transportation_modes) {
     const modes = transportation_modes.split(',')
     values.push(modes)
-    conditions.push(`r.transportation_mode = ANY($${values.length})`)
+    conditions.push(`lower(r.transportation_mode) = ANY($${values.length})`)
   }
   if (verified === 'true') {
     conditions.push(`e.verified = true`)
