@@ -19,6 +19,16 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
 
+const originalWarn = console.warn
+console.warn = (...args) => {
+  if (
+    typeof args[0] === 'string' &&
+    args[0].includes('Google Maps JavaScript API warning: NoApiKeys')
+  )
+    return // Suppress no API warning, since key exists
+  originalWarn(...args)
+}
+
 function Home() {
   const location = useLocation()
   const isEventDetail = location.pathname.includes('/event/')
