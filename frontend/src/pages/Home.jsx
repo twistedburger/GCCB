@@ -244,7 +244,7 @@ function Home() {
           open={!!selectedRoute}
           onOpenChange={open => !open && setSelectedRoute(null)}
           modal={false}
-          snapPoints={[0.095, 0.25, 0.4]}
+          snapPoints={[0.095, 0.25, 0.4, 0.8]} // 80% max, so padding in Route Detail is 25% from bottom
           activeSnapPoint={routeSnapPoint}
           setActiveSnapPoint={setRouteSnapPoint}
           noBodyStyles={true}
@@ -272,6 +272,7 @@ function Home() {
                 background: '#F9F9F9',
                 display: 'flex',
                 flexDirection: 'column',
+                overflowY: 'hidden',
                 pointerEvents: 'auto',
               }}
             >
