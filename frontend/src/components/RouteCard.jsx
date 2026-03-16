@@ -10,7 +10,6 @@ import {
 } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ModerationActions from '../pages/moderate/ModerationActions'
 
 export default function RouteCard({
   route,
@@ -18,7 +17,6 @@ export default function RouteCard({
   individualView,
   onSelect,
   routeDetailView = false,
-  reportInformation,
 }) {
   const navigate = useNavigate()
   const dateObj = new Date(route.depart_time)
@@ -153,14 +151,6 @@ export default function RouteCard({
           </div>
         )}
       </div>
-
-      <div
-        className={`overflow-hidden transition-all duration-500 ${
-          view === 'moderate' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <ModerationActions reportInformation={reportInformation} />
-      </div>
     </div>
   )
 }
@@ -171,15 +161,4 @@ RouteCard.propTypes = {
   individualView: PropTypes.bool,
   onSelect: PropTypes.func,
   routeDetailView: PropTypes.bool,
-  reportInformation: PropTypes.shape({
-    id: PropTypes.number,
-    reason: PropTypes.string,
-    explanation: PropTypes.string,
-    report_target: PropTypes.string,
-    target_id: PropTypes.number,
-    reporter_id: PropTypes.number,
-    status: PropTypes.string,
-    created_at: PropTypes.string,
-    targetDetails: PropTypes.object,
-  }),
 }

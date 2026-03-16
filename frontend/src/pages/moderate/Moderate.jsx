@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import EventCard from '../../components/EventCard'
 import RouteCard from '../../components/RouteCard'
 import GenericToggle from '../../components/GenericToggle'
+import ModeratorCardWrapper from './ModeratorCardWrapper'
 
 function Moderate() {
   const [reportQueue, setReportQueue] = useState([])
@@ -44,22 +45,26 @@ function Moderate() {
             <div key={report.id}>
               {/* Event Report */}
               {report.report_target == 'event' && (
-                <EventCard
-                  event={report.target_details}
-                  view={'moderate'}
-                  reportInformation={report}
-                />
+                <ModeratorCardWrapper reportInformation={report}>
+                  <div className="*:shadow-white">
+                    <EventCard
+                      event={report.target_details}
+                      view={'moderate'}
+                    />
+                  </div>
+                </ModeratorCardWrapper>
               )}
               {/* Route Report */}
               {report.report_target == 'route' && (
-                <RouteCard
-                  route={report.target_details}
-                  view={'moderate'}
-                  individualView={true}
-                  onSelect={''}
-                  routeDetailView={false}
-                  reportInformation={report}
-                />
+                <ModeratorCardWrapper reportInformation={report}>
+                  <div className="*:shadow-white">
+                    <RouteCard
+                      route={report.target_details}
+                      individualView={true}
+                      view={'moderate'}
+                    />
+                  </div>
+                </ModeratorCardWrapper>
               )}
             </div>
           ))}

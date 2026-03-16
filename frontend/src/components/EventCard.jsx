@@ -6,9 +6,8 @@ import {
   ReportGmailerrorred,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import ModerationActions from '../pages/moderate/ModerationActions'
 
-export default function EventCard({ event, view, reportInformation }) {
+export default function EventCard({ event, view }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()
 
@@ -78,11 +77,6 @@ export default function EventCard({ event, view, reportInformation }) {
           </span>
         </div>
       </div>
-
-      {/* Additional information for moderation view */}
-      {view == 'moderate' && (
-        <ModerationActions reportInformation={reportInformation} />
-      )}
     </div>
   )
 }
@@ -90,15 +84,4 @@ export default function EventCard({ event, view, reportInformation }) {
 EventCard.propTypes = {
   event: PropTypes.object.isRequired,
   view: PropTypes.string,
-  reportInformation: PropTypes.shape({
-    id: PropTypes.number,
-    reason: PropTypes.string,
-    explanation: PropTypes.string,
-    report_target: PropTypes.string,
-    target_id: PropTypes.number,
-    reporter_id: PropTypes.number,
-    status: PropTypes.string,
-    created_at: PropTypes.string,
-    targetDetails: PropTypes.object,
-  }),
 }
