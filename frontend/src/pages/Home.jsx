@@ -29,6 +29,12 @@ console.warn = (...args) => {
   originalWarn(...args)
 }
 
+const originalError = console.error
+console.error = (...args) => {
+  if (typeof args[0] === 'string' && args[0].includes('aria-hidden')) return // Suppress aria-hidden focus conflicts from Vaul drawers
+  originalError(...args)
+}
+
 function Home() {
   const location = useLocation()
   const isEventDetail = location.pathname.includes('/event/')
