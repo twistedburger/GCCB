@@ -13,7 +13,6 @@ export default function EventCard({ event, view }) {
 
   return (
     <div
-      id={`event-${event.id}`}
       onClick={() => {
         navigate(`/event/${event.id}`)
       }}

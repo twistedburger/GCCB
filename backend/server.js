@@ -716,6 +716,7 @@ app.get('/api/reports', async (req, res) => {
       ORDER BY r.created_at ASC
     `)
 
+    // get report details for user, event, and route respectively
     const reports = await Promise.all(
       result.rows.map(async report => {
         let target_details = null
@@ -731,9 +732,10 @@ app.get('/api/reports', async (req, res) => {
           ])
           target_details = res.rows[0]
         } else if (report.report_target === 'route') {
-          const res = await db.query('SELECT * FROM route WHERE id = $1', [
-            report.target_id,
-          ])
+          const res = await db.query(
+            'SELECT r.*, er.event_id FROM route r LEFT JOIN event_route er ON r.id = er.route_id WHERE id = $1',
+            [report.target_id]
+          )
           target_details = res.rows[0]
         }
 

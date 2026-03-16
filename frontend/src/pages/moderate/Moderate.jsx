@@ -4,8 +4,10 @@ import RouteCard from '../../components/RouteCard'
 import OrganizerCard from '../../components/OrganizerCard'
 import GenericToggle from '../../components/GenericToggle'
 import ModeratorCardWrapper from './ModeratorCardWrapper'
+import { useNavigate } from 'react-router-dom'
 
 function Moderate() {
+  const navigate = useNavigate()
   const [reportQueue, setReportQueue] = useState([])
   const [eventQueue, setEventQueue] = useState([])
   const [viewingReports, setViewingReports] = useState(true)
@@ -44,7 +46,7 @@ function Moderate() {
         <div className="flex flex-col gap-4">
           {reportQueue.map(report => (
             <div key={report.id}>
-              {/* Event Report */}
+              {/* Event Report, click leads to event details */}
               {report.report_target == 'event' && (
                 <ModeratorCardWrapper reportInformation={report}>
                   <div className="*:shadow-white">
@@ -55,7 +57,8 @@ function Moderate() {
                   </div>
                 </ModeratorCardWrapper>
               )}
-              {/* Route Report */}
+
+              {/* Route Report, click leads to event details */}
               {report.report_target == 'route' && (
                 <ModeratorCardWrapper reportInformation={report}>
                   <div className="*:shadow-white">
@@ -63,11 +66,15 @@ function Moderate() {
                       route={report.target_details}
                       individualView={true}
                       view={'moderate'}
+                      onSelect={() => {
+                        navigate(`/event/${report.target_details.event_id}`)
+                      }}
                     />
                   </div>
                 </ModeratorCardWrapper>
               )}
-              {/* User Report */}
+
+              {/* User Report, no click/no profile view yet? */}
               {report.report_target == 'user' && (
                 <ModeratorCardWrapper reportInformation={report}>
                   <div className="*:shadow-white">
