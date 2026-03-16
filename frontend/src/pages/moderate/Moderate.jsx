@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import EventCard from '../../components/EventCard'
+import RouteCard from '../../components/RouteCard'
 import GenericToggle from '../../components/GenericToggle'
 
 function Moderate() {
@@ -37,18 +38,33 @@ function Moderate() {
       </div>
 
       {/* Pending reports */}
-      {viewingReports &&
-        reportQueue.map(report => (
-          <div key={report.id}>
-            {report.report_target == 'event' && (
-              <EventCard
-                event={report.target_details}
-                view={'moderate'}
-                reportInformation={report}
-              ></EventCard>
-            )}
-          </div>
-        ))}
+      {viewingReports && (
+        <div className="flex flex-col gap-4">
+          {reportQueue.map(report => (
+            <div key={report.id}>
+              {/* Event Report */}
+              {report.report_target == 'event' && (
+                <EventCard
+                  event={report.target_details}
+                  view={'moderate'}
+                  reportInformation={report}
+                />
+              )}
+              {/* Route Report */}
+              {report.report_target == 'route' && (
+                <RouteCard
+                  route={report.target_details}
+                  view={'moderate'}
+                  individualView={true}
+                  onSelect={''}
+                  routeDetailView={false}
+                  reportInformation={report}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Events to be verified */}
       {!viewingReports &&

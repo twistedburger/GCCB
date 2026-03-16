@@ -9,7 +9,7 @@ export default function ModerationActions({ reportInformation }) {
   async function handleConfirm() {}
   return (
     <>
-      <div className="flex justify-between gap-1 -mt-4 mb-2 mx-6">
+      <div className="flex justify-between gap-1 mb-2 mx-6">
         <div className="flex flex-col pt-2 pb-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-text-primary">

@@ -81,10 +81,7 @@ export default function EventCard({ event, view, reportInformation }) {
 
       {/* Additional information for moderation view */}
       {view == 'moderate' && (
-        <ModerationActions
-          event={event}
-          reportInformation={reportInformation}
-        />
+        <ModerationActions reportInformation={reportInformation} />
       )}
     </div>
   )
