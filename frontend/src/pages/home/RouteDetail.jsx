@@ -4,9 +4,11 @@ import OrganizerCard from '../../components/OrganizerCard'
 import RouteCard from '../../components/RouteCard'
 import { Cancel } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../utils/Authorization'
 
 export default function RouteDetail({ selectedRoute, onClose }) {
   const navigate = useNavigate()
+  const { authorization } = useAuth()
 
   const handleClose = () => {
     if (onClose) onClose()
@@ -36,7 +38,11 @@ export default function RouteDetail({ selectedRoute, onClose }) {
           <span className="text-xs text-text-secondary">
             {selectedRoute.description}
           </span>
-          <RouteCard route={selectedRoute} routeDetailView={true} />
+          <RouteCard
+            route={selectedRoute}
+            view={authorization}
+            routeDetailView={true}
+          />
         </div>
         <p className="font-semibold pt-4 pb-2 text-text-primary">Organizer</p>
         <OrganizerCard

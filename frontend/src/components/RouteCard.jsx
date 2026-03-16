@@ -108,7 +108,7 @@ export default function RouteCard({
           </div>
         </div>
 
-        {view !== 'moderate' && (
+        {view !== 'moderator' && (
           <div className="flex flex-col gap-1">
             {!individualView && (
               <GenericButton

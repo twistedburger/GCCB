@@ -5,12 +5,14 @@ import OrganizerCard from '../../components/OrganizerCard'
 import GenericToggle from '../../components/GenericToggle'
 import ModeratorCardWrapper from './ModeratorCardWrapper'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../utils/Authorization'
 
 function Moderate() {
   const navigate = useNavigate()
   const [reportQueue, setReportQueue] = useState([])
   const [eventQueue, setEventQueue] = useState([])
   const [viewingReports, setViewingReports] = useState(true)
+  const { authorization } = useAuth()
 
   useEffect(() => {
     const fetchReportQueue = async () => {
@@ -52,7 +54,7 @@ function Moderate() {
                   <div className="*:shadow-white">
                     <EventCard
                       event={report.target_details}
-                      view={'moderate'}
+                      view={authorization}
                     />
                   </div>
                 </ModeratorCardWrapper>
@@ -64,8 +66,8 @@ function Moderate() {
                   <div className="*:shadow-white">
                     <RouteCard
                       route={report.target_details}
+                      view={authorization}
                       individualView={true}
-                      view={'moderate'}
                       onSelect={() => {
                         navigate(`/event/${report.target_details.event_id}`)
                       }}

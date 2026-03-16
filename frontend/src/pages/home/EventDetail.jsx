@@ -12,6 +12,7 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Drawer } from 'vaul'
+import { useAuth } from '../../utils/Authorization'
 
 export default function EventDetail() {
   const location = useLocation()
@@ -26,6 +27,7 @@ export default function EventDetail() {
   const { setSnapPoint } = useOutletContext()
   const [eventSnapPoint, setEventSnapPoint] = useState(1)
   const [routeSnapPoint, setRouteSnapPoint] = useState(0.25)
+  const { authorization } = useAuth()
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -126,49 +128,53 @@ export default function EventDetail() {
                           className="shrink-0"
                         />
                         <p className="truncate flex-1">{event.location}</p>
-                        <IconButton
-                          size="small"
-                          onClick={e => setAnchorEl(e.currentTarget)}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                        <Menu
-                          anchorEl={anchorEl}
-                          open={menuOpen}
-                          onClose={() => setAnchorEl(null)}
-                          disableAutoFocus
-                          disableEnforceFocus
-                          disableRestoreFocus
-                        >
-                          <MenuItem
-                            onClick={() => {
-                              setAnchorEl(null)
-                              navigate(`/report`, {
-                                state: {
-                                  type: 'event',
-                                  targetId: event.id,
-                                  targetName: event.title,
-                                },
-                              })
-                            }}
-                          >
-                            Report Event
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              setAnchorEl(null)
-                              navigate(`/report`, {
-                                state: {
-                                  type: 'user',
-                                  targetId: event.creator_id,
-                                  targetName: event.creator_name,
-                                },
-                              })
-                            }}
-                          >
-                            Report Organizer
-                          </MenuItem>
-                        </Menu>
+                        {authorization !== 'moderator' && (
+                          <>
+                            <IconButton
+                              size="small"
+                              onClick={e => setAnchorEl(e.currentTarget)}
+                            >
+                              <MoreVertIcon fontSize="small" />
+                            </IconButton>
+                            <Menu
+                              anchorEl={anchorEl}
+                              open={menuOpen}
+                              onClose={() => setAnchorEl(null)}
+                              disableAutoFocus
+                              disableEnforceFocus
+                              disableRestoreFocus
+                            >
+                              <MenuItem
+                                onClick={() => {
+                                  setAnchorEl(null)
+                                  navigate(`/report`, {
+                                    state: {
+                                      type: 'event',
+                                      targetId: event.id,
+                                      targetName: event.title,
+                                    },
+                                  })
+                                }}
+                              >
+                                Report Event
+                              </MenuItem>
+                              <MenuItem
+                                onClick={() => {
+                                  setAnchorEl(null)
+                                  navigate(`/report`, {
+                                    state: {
+                                      type: 'user',
+                                      targetId: event.creator_id,
+                                      targetName: event.creator_name,
+                                    },
+                                  })
+                                }}
+                              >
+                                Report Organizer
+                              </MenuItem>
+                            </Menu>
+                          </>
+                        )}
                       </div>
                       <div className="flex flex-row items-center">
                         <h3 className="font-semibold text-lg text-text-primary mr-1">
@@ -205,6 +211,7 @@ export default function EventDetail() {
                             <RouteCard
                               key={route.id}
                               route={route}
+                              view={authorization}
                               individualView={false}
                               onSelect={route => {
                                 setSelectedRoute(route)

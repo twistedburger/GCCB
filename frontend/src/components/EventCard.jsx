@@ -23,7 +23,7 @@ export default function EventCard({ event, view }) {
           src={bcitCover}
           className="h-24 w-full object-cover rounded-t-xl"
         />
-        {view != 'moderate' && (
+        {view != 'moderator' && (
           <ReportGmailerrorred
             className="absolute top-2 right-2"
             onClick={e => {
