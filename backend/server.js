@@ -38,27 +38,49 @@ const analytics = createAnalyticsHelpers({
 })
 
 app.get('/maps/api/js', async (req, res) => {
-  const params = new URLSearchParams(req.query)
-  params.set('key', process.env.GOOGLE_MAPS_API_KEY)
+  try {
+    const params = new URLSearchParams(req.query)
+    params.set('key', process.env.GOOGLE_MAPS_API_KEY)
 
-  const response = await fetch(
-    `https://maps.googleapis.com/maps/api/js?${params.toString()}`
-  )
-  const script = await response.text()
-  res.setHeader('Content-Type', 'application/javascript')
-  res.send(script)
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/js?${params.toString()}`
+    )
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: serverStrings.google })
+    }
+
+    const script = await response.text()
+    res.setHeader('Content-Type', 'application/javascript')
+    res.send(script)
+  } catch (err) {
+    const status = err.response?.status ?? 500
+    const message = err.response?.data?.error?.message ?? err.message
+    res.status(status).json({ error: message })
+  }
 })
 
 app.get('/maps/geocode', async (req, res) => {
-  const params = new URLSearchParams({
-    address: req.query.address,
-    key: process.env.GOOGLE_MAPS_API_KEY,
-  })
-  const response = await fetch(
-    `https://maps.googleapis.com/maps/api/geocode/json?${params}`
-  )
-  const data = await response.json()
-  res.json(data)
+  try {
+    const params = new URLSearchParams({
+      address: req.query.address,
+      key: process.env.GOOGLE_MAPS_API_KEY,
+    })
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?${params}`
+    )
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: serverStrings.google })
+    }
+
+    const data = await response.json()
+    res.json(data)
+  } catch (err) {
+    const status = err.response?.status ?? 500
+    const message = err.response?.data?.error?.message ?? err.message
+    res.status(status).json({ error: message })
+  }
 })
 
 app.get('/loginRoute', (req, res) => {
@@ -271,6 +293,9 @@ app.post('/api/requestRoute', async (req, res) => {
         },
       }
     )
+    if (!response.ok) {
+      return res.status(response.status).json({ error: serverStrings.google })
+    }
     res.json(response.data)
   } catch (err) {
     const status = err.response?.status ?? 500
