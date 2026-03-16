@@ -29,7 +29,6 @@ function Home() {
   const [address, setAddress] = useState('')
   const [cardsToDisplay, setCardsToDisplay] = useState([])
   const [selectedRoute, setSelectedRoute] = useState(null)
-  const [transitLegs, setTransitLegs] = useState([])
   const [filters, setFilters] = useState({
     time: null,
     transportationModes: [],
@@ -111,50 +110,10 @@ function Home() {
     fetchCards()
   }, [filters, userLocation])
 
-  const calculateTransitLegs = route => {
-    if (route.transportation_mode.toUpperCase() != TravelMode.Transit) {
-      // assume only transit has different steps
-      setTransitLegs([])
-      return
-    }
-    const legs = []
-    route.path.legs[0].steps.forEach(step => {
-      const last_leg = legs.at(-1)
-      let leg
-      const name =
-        step.travelMode === TravelMode.Walk
-          ? TravelMode.Walk
-          : step.transitDetails.transitLine.nameShort
-      if (last_leg) {
-        const same_leg = last_leg.name === name
-        leg = {
-          name: name,
-          distance: same_leg
-            ? last_leg.distance + step.distanceMeters
-            : step.distanceMeters,
-        }
-
-        if (same_leg) {
-          legs.pop()
-        }
-      } else {
-        leg = {
-          name: name,
-          distance: step.distanceMeters,
-        }
-      }
-
-      legs.push(leg)
-    })
-    setTransitLegs(legs)
-  }
-
   const handleRouteClick = route => {
     setSnapPoint(0.095)
     setRouteSnapPoint(0.25)
     setSelectedRoute(route)
-    calculateTransitLegs(route)
-    console.log(transitLegs)
   }
 
   return (
