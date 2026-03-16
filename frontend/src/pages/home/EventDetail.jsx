@@ -58,6 +58,8 @@ export default function EventDetail() {
         <Drawer.Portal>
           <Drawer.Overlay style={{ pointerEvents: 'none' }} />
           <Drawer.Content
+            onOpenAutoFocus={e => e.preventDefault()}
+            onCloseAutoFocus={e => e.preventDefault()}
             style={{
               zIndex: 40,
               marginLeft: '55px',
@@ -134,6 +136,9 @@ export default function EventDetail() {
                           anchorEl={anchorEl}
                           open={menuOpen}
                           onClose={() => setAnchorEl(null)}
+                          disableAutoFocus
+                          disableEnforceFocus
+                          disableRestoreFocus
                         >
                           <MenuItem
                             onClick={() => {
@@ -238,6 +243,8 @@ export default function EventDetail() {
         <Drawer.Portal>
           <Drawer.Overlay style={{ pointerEvents: 'none' }} />
           <Drawer.Content
+            onOpenAutoFocus={e => e.preventDefault()}
+            onCloseAutoFocus={e => e.preventDefault()}
             style={{
               zIndex: 50,
               marginLeft: '55px',
