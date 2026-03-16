@@ -91,7 +91,15 @@ function Moderate() {
 
       {/* Events to be verified */}
       {!viewingReports &&
-        eventQueue.map(event => <div key={event.id}>{event.title}</div>)}
+        eventQueue.map(event => (
+          <div key={event.id}>
+            <ModeratorCardWrapper>
+              <div className="*:shadow-white">
+                <EventCard event={event} view={authorization} />
+              </div>
+            </ModeratorCardWrapper>
+          </div>
+        ))}
     </div>
   )
 }

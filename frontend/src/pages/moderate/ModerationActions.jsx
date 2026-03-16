@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { CheckOutlined, CloseOutlined } from '@mui/icons-material'
 import GenericButton from '../../components/GenericButton.jsx'
+import { moderationStrings } from '../../locales/en/moderation'
 
 export default function ModerationActions({ reportInformation }) {
   const [confirmReport, setConfirmReport] = useState(null)
@@ -9,25 +10,29 @@ export default function ModerationActions({ reportInformation }) {
   async function handleConfirm() {}
   return (
     <>
-      <div className="flex justify-between gap-1 mb-2 mx-6">
-        <div className="flex flex-col pt-2 pb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-text-primary">
-              Report Reason:
-            </span>
-            <span className="text-xs text-text-secondary">
-              {reportInformation.reason}
-            </span>
+      <div
+        className={`flex gap-1 mb-2 ml-4 mr-2 ${reportInformation ? 'justify-between' : 'justify-end'}`}
+      >
+        {reportInformation && (
+          <div className="flex flex-col pt-2 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-text-primary">
+                {moderationStrings.reportReason}
+              </span>
+              <span className="text-xs text-text-secondary">
+                {reportInformation.reason}
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-xs font-semibold text-text-primary shrink-0">
+                {moderationStrings.details}
+              </span>
+              <span className="text-xs text-text-secondary">
+                {reportInformation.explanation}
+              </span>
+            </div>
           </div>
-          <div className="flex items-start gap-2">
-            <span className="text-xs font-semibold text-text-primary shrink-0">
-              Details:
-            </span>
-            <span className="text-xs text-text-secondary">
-              {reportInformation.explanation}
-            </span>
-          </div>
-        </div>
+        )}
 
         <div className="flex flex-row justify-end">
           <GenericButton
@@ -60,8 +65,12 @@ export default function ModerationActions({ reportInformation }) {
       >
         <p className="text-text-secondary text-xs px-6">
           {confirmReport === 'approve'
-            ? `This action cannot be undone. Are you sure you want to approve this report?`
-            : `This action cannot be undone. Are you sure you want to reject this report?`}
+            ? moderationStrings.confirmApprove(
+                reportInformation ? 'report' : 'event'
+              )
+            : moderationStrings.confirmDecline(
+                reportInformation ? 'report' : 'event'
+              )}
         </p>
         <div className="flex justify-end gap-1 px-6 py-2">
           <GenericButton
@@ -72,7 +81,7 @@ export default function ModerationActions({ reportInformation }) {
             unstyled={true}
             customStyling="text-xs bg-blue-primary text-white font-medium px-4 py-1 rounded-lg"
           >
-            OK
+            {moderationStrings.ok}
           </GenericButton>
           <GenericButton
             onClick={e => {
@@ -82,7 +91,7 @@ export default function ModerationActions({ reportInformation }) {
             unstyled={true}
             customStyling="text-xs bg-white text-medium-grey border-1 font-medium px-4 py-1 rounded-lg"
           >
-            Cancel
+            {moderationStrings.cancel}
           </GenericButton>
         </div>
       </div>
