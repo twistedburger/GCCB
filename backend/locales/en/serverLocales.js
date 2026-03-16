@@ -6,6 +6,7 @@ const serverStrings = {
     noUser: 'No logged in user',
     inactiveUser:
       'Your account has been inactive for a while. Please contact support to reactivate your account.',
+    google: 'Could not fetch from google maps api',
   },
 }
 

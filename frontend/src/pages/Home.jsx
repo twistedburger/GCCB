@@ -17,6 +17,17 @@ import PropTypes from 'prop-types'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
+import { TravelMode } from '../utils/routes'
+
+const originalWarn = console.warn
+console.warn = (...args) => {
+  if (
+    typeof args[0] === 'string' &&
+    args[0].includes('Google Maps JavaScript API warning: NoApiKeys')
+  )
+    return // Suppress no API warning, since key exists
+  originalWarn(...args)
+}
 
 function Home() {
   const location = useLocation()
@@ -36,7 +47,6 @@ function Home() {
     mainEventsOnly: true,
   })
   const navigate = useNavigate()
-  const [routeLine, setRouteLine] = useState('')
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
 
@@ -110,14 +120,6 @@ function Home() {
     fetchCards()
   }, [filters, userLocation])
 
-  useEffect(() => {
-    if (selectedRoute === null) {
-      setRouteLine('')
-    } else {
-      setRouteLine(selectedRoute.path.polyline.encodedPolyline)
-    }
-  }, [selectedRoute])
-
   const handleRouteClick = route => {
     setSnapPoint(0.095)
     setRouteSnapPoint(0.25)
@@ -143,7 +145,7 @@ function Home() {
             <AdvancedMarker position={userLocation}>
               <Pin scale={0.75} />
             </AdvancedMarker>
-            <MapController center={userLocation} routeLine={routeLine} />
+            <MapController center={userLocation} route={selectedRoute} />
           </Map>
         </APIProvider>
         {!selectedRoute && !isEventDetail && (
@@ -257,7 +259,7 @@ function Home() {
           open={!!selectedRoute}
           onOpenChange={open => !open && setSelectedRoute(null)}
           modal={false}
-          snapPoints={[0.095, 0.25, 0.4]}
+          snapPoints={[0.095, 0.25, 0.4, 0.8]} // 80% max, so padding in Route Detail is 25% from bottom
           activeSnapPoint={routeSnapPoint}
           setActiveSnapPoint={setRouteSnapPoint}
           noBodyStyles={true}
@@ -285,6 +287,7 @@ function Home() {
                 background: '#F9F9F9',
                 display: 'flex',
                 flexDirection: 'column',
+                overflowY: 'hidden',
                 pointerEvents: 'auto',
               }}
             >
@@ -312,7 +315,7 @@ function Home() {
   )
 }
 
-function MapController({ center, routeLine }) {
+function MapController({ center, route }) {
   const map = useMap()
   useEffect(() => {
     if (map && center) {
@@ -321,24 +324,65 @@ function MapController({ center, routeLine }) {
   }, [map, center])
 
   useEffect(() => {
-    if (!map || !routeLine) return
+    if (!map || !route) {
+      return
+    }
 
+    const routeLine = route.path.polyline.encodedPolyline
     const decodedPath = google.maps.geometry.encoding.decodePath(routeLine)
-    const polyline = new google.maps.Polyline({
-      path: decodedPath,
-      geodesic: true,
-      strokeColor: '#4285F4',
-      strokeOpacity: 1.0,
-      strokeWeight: 10,
-      map,
-    })
 
     const bounds = new google.maps.LatLngBounds()
     decodedPath.forEach(point => bounds.extend(point))
     map.fitBounds(bounds)
 
-    return () => polyline.setMap(null)
-  }, [map, routeLine])
+    if (route.transportation_mode.toUpperCase() === TravelMode.Transit) {
+      // overwrite the line if transit
+      const routeLines = []
+      const legColors = {
+        walk: '#34A853',
+        transit: ['#4285F4', '#EA4335'],
+      }
+
+      route.path.legs[0].steps.forEach((step, index) => {
+        let color =
+          step.travelMode === TravelMode.Walk
+            ? legColors.walk
+            : legColors.transit[index % 2] // alternate color for transfers
+
+        const decodedPath = google.maps.geometry.encoding.decodePath(
+          step.polyline.encodedPolyline
+        )
+
+        const polyline = new google.maps.Polyline({
+          path: decodedPath,
+          geodesic: true,
+          strokeColor: color,
+          strokeOpacity: 1.0,
+          strokeWeight: 10,
+          map,
+        })
+
+        routeLines.push(polyline)
+      })
+
+      return () => {
+        routeLines.forEach(line => line.setMap(null))
+        routeLines.length = 0
+      }
+    } else {
+      // else draw the single line
+      const polyline = new google.maps.Polyline({
+        path: decodedPath,
+        geodesic: true,
+        strokeColor: '#4285F4',
+        strokeOpacity: 1.0,
+        strokeWeight: 10,
+        map,
+      })
+
+      return () => polyline.setMap(null)
+    }
+  }, [map, route])
 
   return null
 }
@@ -414,7 +458,7 @@ MapController.propTypes = {
     lat: PropTypes.number.isRequired,
     lng: PropTypes.number.isRequired,
   }).isRequired,
-  routeLine: PropTypes.string,
+  route: PropTypes.object.isRequired,
 }
 
 DisplayFilters.propTypes = {
