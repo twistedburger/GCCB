@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import EventCard from '../../components/EventCard'
 import RouteCard from '../../components/RouteCard'
+import OrganizerCard from '../../components/OrganizerCard'
 import GenericToggle from '../../components/GenericToggle'
 import ModeratorCardWrapper from './ModeratorCardWrapper'
 
@@ -63,6 +64,14 @@ function Moderate() {
                       individualView={true}
                       view={'moderate'}
                     />
+                  </div>
+                </ModeratorCardWrapper>
+              )}
+              {/* User Report */}
+              {report.report_target == 'user' && (
+                <ModeratorCardWrapper reportInformation={report}>
+                  <div className="*:shadow-white">
+                    <OrganizerCard user={report.target_details} />
                   </div>
                 </ModeratorCardWrapper>
               )}
