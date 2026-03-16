@@ -3,17 +3,15 @@ import bcitCover from '../assets/bcit.jpg'
 import {
   OutlinedFlagRounded,
   VerifiedOutlined,
-  CheckCircleOutlineRounded,
-  CancelOutlined,
-  AccountCircleOutlined,
   ReportGmailerrorred,
 } from '@mui/icons-material'
-import GenericButton from './GenericButton.jsx'
 import { useNavigate } from 'react-router-dom'
+import ModerationActions from '../pages/moderate/ModerationActions'
 
-export default function EventCard({ event, view }) {
+export default function EventCard({ event, view, reportInformation }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()
+
   return (
     <div
       id={`event-${event.id}`}
@@ -47,11 +45,9 @@ export default function EventCard({ event, view }) {
         <div className="flex flex-col justify-center text-center px-2 shrink-0">
           <span className="text-dark-grey font-medium">
             {dateObj && !isNaN(dateObj)
-              ? dateObj.toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true,
-                })
+              ? dateObj
+                  .toLocaleDateString('en-US', { month: 'short' })
+                  .toUpperCase()
               : '—'}
           </span>
           <span className="text-2xl text-text-primary font-bold -mt-1">
@@ -85,20 +81,10 @@ export default function EventCard({ event, view }) {
 
       {/* Additional information for moderation view */}
       {view == 'moderate' && (
-        <div className="flex justify-between mx-4 mb-3 gap-1">
-          <div className="flex items-center gap-1">
-            <AccountCircleOutlined fontSize="large" />
-            {event.creator_name}
-          </div>
-          <div className="flex justify-end">
-            <GenericButton onClick={() => {}} unstyled={true}>
-              <CheckCircleOutlineRounded fontSize="large" />
-            </GenericButton>
-            <GenericButton onClick={() => {}} unstyled={true}>
-              <CancelOutlined fontSize="large" />
-            </GenericButton>
-          </div>
-        </div>
+        <ModerationActions
+          event={event}
+          reportInformation={reportInformation}
+        />
       )}
     </div>
   )
@@ -107,4 +93,15 @@ export default function EventCard({ event, view }) {
 EventCard.propTypes = {
   event: PropTypes.object.isRequired,
   view: PropTypes.string,
+  reportInformation: PropTypes.shape({
+    id: PropTypes.number,
+    reason: PropTypes.string,
+    explanation: PropTypes.string,
+    report_target: PropTypes.string,
+    target_id: PropTypes.number,
+    reporter_id: PropTypes.number,
+    status: PropTypes.string,
+    created_at: PropTypes.string,
+    targetDetails: PropTypes.object,
+  }),
 }

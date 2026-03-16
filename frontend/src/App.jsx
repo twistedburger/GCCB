@@ -16,6 +16,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Filter from './pages/home/Filter'
 import Report from './pages/home/Report'
 import EventDetail from './pages/home/EventDetail'
+import Moderate from './pages/moderate/Moderate'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
@@ -90,6 +91,15 @@ function App() {
                   />
                   <Route path="/dashboard/activity" element={<Activity />} />
                   <Route path="/user-guide" element={<UserGuide />} />
+                </Route>
+                <Route
+                  element={
+                    <ProtectedRoute
+                      requiredAuthorization={authLevel.MODERATOR}
+                    />
+                  }
+                >
+                  <Route path="/moderate" element={<Moderate />} />
                 </Route>
               </Routes>
             </main>
