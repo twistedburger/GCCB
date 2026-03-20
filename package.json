@@ -27,7 +27,9 @@
     "format": "prettier --write '**/*.{js,jsx,css,scss}'",
     "format:check": "prettier --check '**/*.{js,jsx,css,scss}'",
     "db:init": "node backend/db/scripts/build-all.js",
-    "test": "jest"
+    "test": "jest --testPathPattern=backend && npm run test --workspace=frontend",
+    "test:backend": "jest --testPathPattern=backend",
+    "test:frontend": "npm run test --workspace=frontend"
   },
   "name": "gccb",
   "description": "GC²B is a community-focused application designed to help students safely and efficiently coordinate shared travel to campus events and activities. Users are able to create, explore, and join group communites using various transportation methods (carpooling, cycling, public transit, etc.).",
