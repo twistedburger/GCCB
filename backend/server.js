@@ -238,7 +238,7 @@ app.get('/authorize', async (req, res) => {
  * @returns events fetched from the db, or an empty array
  */
 app.get('/api/events', (req, res) => {
-  const { time, verified, transportation_modes } = req.query
+  const { time, verified, transportation_modes, need_approval } = req.query
 
   const conditions = []
   const values = []
@@ -256,6 +256,9 @@ app.get('/api/events', (req, res) => {
     const modes = transportation_modes.split(',')
     values.push(modes)
     conditions.push(`r.transportation_mode = ANY($${values.length})`)
+  }
+  if (need_approval === 'true') {
+    conditions.push(`e.need_approval = true AND e.verified = false`)
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
@@ -714,5 +717,62 @@ if (require.main === module) {
     console.log(`GCCB Backend listening on port ${port}`)
   })
 }
+
+/**
+ * Returns reports to be reviewed by the moderator.
+ * @returns pending reports, or an empty array
+ */
+app.get('/api/reports', async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        r.*,
+        CASE
+          WHEN ru.user_id IS NOT NULL THEN 'user'
+          WHEN re.event_id IS NOT NULL THEN 'event'
+          WHEN rr.route_id IS NOT NULL THEN 'route'
+        END AS report_target,
+        COALESCE(ru.user_id, re.event_id, rr.route_id) AS target_id
+      FROM report r
+      LEFT JOIN report_user ru ON r.id = ru.report_id
+      LEFT JOIN report_event re ON r.id = re.report_id
+      LEFT JOIN report_route rr ON r.id = rr.report_id
+      WHERE r.status = 'pending'
+      ORDER BY r.created_at ASC
+    `)
+
+    // get report details for user, event, and route respectively
+    const reports = await Promise.all(
+      result.rows.map(async report => {
+        let target_details = null
+
+        if (report.report_target === 'user') {
+          const res = await db.query('SELECT * FROM "user" WHERE id = $1', [
+            report.target_id,
+          ])
+          target_details = res.rows[0]
+        } else if (report.report_target === 'event') {
+          const res = await db.query('SELECT * FROM event WHERE id = $1', [
+            report.target_id,
+          ])
+          target_details = res.rows[0]
+        } else if (report.report_target === 'route') {
+          const res = await db.query(
+            'SELECT r.*, er.event_id FROM route r LEFT JOIN event_route er ON r.id = er.route_id WHERE id = $1',
+            [report.target_id]
+          )
+          target_details = res.rows[0]
+        }
+
+        return { ...report, target_details }
+      })
+    )
+
+    res.status(200).json(reports)
+  } catch (error) {
+    console.error('Error fetching reports:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
 
 module.exports = app

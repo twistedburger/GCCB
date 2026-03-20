@@ -17,7 +17,10 @@ import {
   HomeOutlined,
   CommuteOutlined,
   PersonOutlineOutlined,
+  AdminPanelSettingsOutlined,
 } from '@mui/icons-material'
+import { authLevel } from '../utils/Authorization'
+import PropTypes from 'prop-types'
 
 const mainNavigation = [
   {
@@ -38,11 +41,21 @@ const mainNavigation = [
     label: 'Dashboard',
     path: '/dashboard',
   },
+  {
+    id: 'Moderate',
+    icon: <AdminPanelSettingsOutlined />,
+    label: 'Moderate',
+    path: '/moderate',
+  },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ userRole }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+
+  const navItems = mainNavigation.filter(
+    item => item.id !== 'Moderate' || userRole == authLevel.MODERATOR.label
+  )
 
   const handleClose = () => {
     if (open) setOpen(false)
@@ -80,7 +93,7 @@ export default function Sidebar() {
           <Divider />
 
           <List>
-            {mainNavigation.map(({ id, icon, label, path }) => (
+            {navItems.map(({ id, icon, label, path }) => (
               <ListItem key={id} disablePadding>
                 <ListItemButton
                   onClick={() => {
@@ -137,3 +150,5 @@ export default function Sidebar() {
     </Drawer>
   )
 }
+
+Sidebar.propTypes = { userRole: PropTypes.string }

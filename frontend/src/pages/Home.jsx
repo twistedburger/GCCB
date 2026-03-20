@@ -47,7 +47,7 @@ function Home() {
     mainEventsOnly: true,
   })
   const navigate = useNavigate()
-  const { authorizeUser } = useAuth()
+  const { authorizeUser, authorization } = useAuth()
   authorizeUser()
 
   const handleSearch = async newLocation => {
@@ -230,11 +230,16 @@ function Home() {
                     ) : (
                       cardsToDisplay.map(item =>
                         filters.mainEventsOnly ? (
-                          <EventCard key={item.id} event={item} />
+                          <EventCard
+                            key={item.id}
+                            event={item}
+                            view={authorization}
+                          />
                         ) : (
                           <RouteCard
                             key={item.id}
                             route={item}
+                            view={authorization}
                             individualView={true}
                             onSelect={route => {
                               handleRouteClick(route)
