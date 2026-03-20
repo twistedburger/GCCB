@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
-import DropDownList from '../../components/DropDownList'
+import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
 import {
   formatKg,
@@ -165,11 +165,14 @@ function TripFrequency() {
               <label className="mb-1 text-sm font-semibold text-zinc-700">
                 Transportation mode
               </label>
-              <DropDownList
-                items={['all', 'walk', 'bicycle', 'bus', 'car']}
-                value={selectedMode}
-                onChange={e => setSelectedMode(e.target.value)}
-                disabled={loading}
+              <Select
+                options={['all', 'walk', 'bicycle', 'bus', 'car'].map(r => ({
+                  value: r,
+                  label: r,
+                }))}
+                value={{ value: selectedMode, label: selectedMode }}
+                onChange={e => setSelectedMode(e.value)}
+                isDisabled={loading}
               />
             </div>
           </div>

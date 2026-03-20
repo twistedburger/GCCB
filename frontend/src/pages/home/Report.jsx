@@ -1,5 +1,5 @@
 import GenericButton from '../../components/GenericButton'
-import DropDownList from '../../components/DropDownList'
+import Select from 'react-select'
 import { Cancel } from '@mui/icons-material'
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -15,9 +15,10 @@ export default function Report() {
     'Dangerous Activity',
     'Discrimination',
     'Other',
-  ]
+  ].map(r => ({ value: r, label: r }))
+
   const [isClosing, setIsClosing] = useState(false)
-  const [reason, setReason] = useState(reasonMenu[0])
+  const [reason, setReason] = useState(reasonMenu[0].value)
   const [explanation, setExplanation] = useState('')
   const [explanationError, setExplanationError] = useState('')
 
@@ -64,9 +65,10 @@ export default function Report() {
           </div>
           <div className="flex flex-col gap-2">
             <div className=" *:mx-0 *:w-full">
-              <DropDownList
-                items={reasonMenu}
-                onChange={e => setReason(e.target.value)}
+              <Select
+                options={reasonMenu}
+                value={{ value: reason, label: reason }}
+                onChange={e => setReason(e.value)}
               />
             </div>
             <textarea

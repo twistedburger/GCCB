@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
-import DropDownList from '../../components/DropDownList'
+import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
 import { formatKg, formatKm } from '../../utils/analyticsHelpers'
 
@@ -176,9 +176,13 @@ function Commutes() {
               <label className="mb-1 text-sm font-semibold text-zinc-700">
                 Date range
               </label>
-              <DropDownList
-                items={['all', '7d', '30d']}
-                onChange={e => setDateRange(e.target.value)}
+              <Select
+                options={['all', '7d', '30d'].map(r => ({
+                  value: r,
+                  label: r,
+                }))}
+                value={{ value: dateRange, label: dateRange }}
+                onChange={e => setDateRange(e.value)}
               />
             </div>
 
@@ -186,9 +190,13 @@ function Commutes() {
               <label className="mb-1 text-sm font-semibold text-zinc-700">
                 Transportation mode
               </label>
-              <DropDownList
-                items={['all', 'walk', 'bicycle', 'bus', 'car']}
-                onChange={e => setMode(e.target.value)}
+              <Select
+                options={['all', 'walk', 'bicycle', 'bus', 'car'].map(r => ({
+                  value: r,
+                  label: r,
+                }))}
+                value={{ value: mode, label: mode }}
+                onChange={e => setMode(e.value)}
               />
             </div>
           </div>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
-import DropDownList from '../../components/DropDownList'
+import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
 import { formatKg, formatKm } from '../../utils/analyticsHelpers'
 import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
@@ -200,10 +200,13 @@ function Co2Savings() {
       <div className="flex flex-col">
         <AnalyticsBlock title="Filter by Transportation Mode">
           <div className="flex flex-wrap items-center gap-3">
-            <DropDownList
-              items={['all', 'walk', 'bicycle', 'bus', 'car']}
-              value={selectedMode}
-              onChange={e => setSelectedMode(e.target.value)}
+            <Select
+              options={['all', 'walk', 'bicycle', 'bus', 'car'].map(r => ({
+                value: r,
+                label: r,
+              }))}
+              value={{ value: selectedMode, label: selectedMode }}
+              onChange={e => setSelectedMode(e.value)}
             />
           </div>
         </AnalyticsBlock>
