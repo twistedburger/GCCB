@@ -2,29 +2,11 @@ import SubmitButton from '../components/submitButton'
 import AsyncSelect from 'react-select/async'
 import { useState } from 'react'
 import { loginStrings } from '../locales/en/loginLocales'
+import { getSSOProviders, redirect } from '../utils/LoginUtils'
 
 function Login() {
   const [selectedLogin, setSelectedLogin] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-
-  async function getSSOProviders(search) {
-    const response = await fetch(
-      `http://localhost:3000/sso_list?search=${search}`
-    )
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.log(response.status + ' ' + errorText)
-      return
-    }
-    const responseJSON = await response.json()
-    if (responseJSON) {
-      return responseJSON.map(school => ({
-        value: school.sso_connection,
-        label: school.school_name,
-      }))
-    }
-    return []
-  }
 
   return (
     <div className="flex flex-col content-center">
@@ -35,6 +17,9 @@ function Login() {
         defaultOptions
         onChange={option => {
           setSelectedLogin(option.value)
+          if (selectedLogin === 'None' || selectedLogin === '') {
+            setErrorMessage('')
+          }
         }}
         placeholder={loginStrings.searching}
       />
@@ -48,7 +33,9 @@ function Login() {
             setErrorMessage(loginStrings.error)
             return
           }
-          window.location.href = `http://localhost:3000/loginRoute?connection=${selectedLogin}`
+          redirect(
+            `http://localhost:3000/loginRoute?connection=${selectedLogin}`
+          )
         }}
       />
       <p className="my-16 text-center text-red-500">{errorMessage}</p>
