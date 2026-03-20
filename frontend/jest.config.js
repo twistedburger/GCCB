@@ -1,6 +1,7 @@
 module.exports = {
   testEnvironment: 'jsdom',
-  setupFilesAfterFramework: ['@testing-library/jest-dom'],
+  setupFilesAfterEnv: ['@testing-library/jest-dom'],
+  setupFiles: ['<rootDir>/jest.setup.cjs'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.cjs',

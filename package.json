@@ -27,8 +27,8 @@
     "format": "prettier --write '**/*.{js,jsx,css,scss}'",
     "format:check": "prettier --check '**/*.{js,jsx,css,scss}'",
     "db:init": "node backend/db/scripts/build-all.js",
-    "test": "jest --testPathPattern=backend && npm run test --workspace=frontend",
-    "test:backend": "jest --testPathPattern=backend",
+    "test": "jest --testPathPatterns=backend || npm run test --workspace=frontend",
+    "test:backend": "jest --testPathPatterns=backend",
     "test:frontend": "npm run test --workspace=frontend"
   },
   "name": "gccb",
