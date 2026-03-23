@@ -13,6 +13,7 @@ const config = {
     'update_db_sso.sql',
     'add_user_last_login.sql',
     'create_report_table.sql',
+    'add_created_at_column_event_and_route.sql',
   ],
 }
 
