@@ -7,10 +7,12 @@ import { useNavigate } from 'react-router-dom'
 import { TravelMode } from '../../utils/routes'
 import { useState, useEffect } from 'react'
 import TransitLegCard from '../../components/TransitLegCard'
+import { useAuth } from '../../utils/Authorization'
 
 export default function RouteDetail({ selectedRoute, onClose }) {
   const [transitLegs, setTransitLegs] = useState([])
   const navigate = useNavigate()
+  const { authorization } = useAuth()
 
   const handleClose = () => {
     if (onClose) onClose()
@@ -91,7 +93,24 @@ export default function RouteDetail({ selectedRoute, onClose }) {
           <span className="text-xs text-text-secondary">
             {selectedRoute.description}
           </span>
-          <RouteCard route={selectedRoute} routeDetailView={true} />
+          <RouteCard
+            route={selectedRoute}
+            view={authorization}
+            routeDetailView={true}
+          />
+        </div>
+        <p className="font-semibold pt-4 pb-2 text-text-primary">
+          {transitLegs.length > 0 ? 'Transit Details' : ''}
+        </p>
+        <div className="flex flex-col gap-2">
+          {transitLegs.map((leg, index) => (
+            <TransitLegCard
+              key={index}
+              name={leg.name}
+              type={leg.type}
+              distance={leg.distance}
+            />
+          ))}
         </div>
         <p className="font-semibold pt-4 pb-2 text-text-primary">
           {transitLegs.length > 0 ? 'Transit Details' : ''}

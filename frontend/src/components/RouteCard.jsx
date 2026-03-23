@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom'
 
 export default function RouteCard({
   route,
+  view,
   individualView,
   onSelect,
   routeDetailView = false,
@@ -59,111 +60,95 @@ export default function RouteCard({
   }
 
   return (
-    <div
-      className={`flex flex-row items-center w-full rounded-xl shadow-md shadow-medium-grey bg-white p-4 justify-between ${individualView ? 'py-2' : 'py-4'}`}
-      onClick={() => {
-        if (onSelect) {
-          onSelect(route)
-        }
-      }}
-    >
-      <div className="flex flex-row">
-        <span className="shrink-0 scale-115 flex items-center">
-          <CommuteIcon type={route.transportation_mode?.toLowerCase()} />
-        </span>
-        <div className="flex flex-col ml-4">
-          {individualView && (
-            <span className="text-text-primary font-medium mb-1">
-              {route.title}
-            </span>
-          )}
-          <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
-            <PlaceOutlined className="mr-1 -ml-1" fontSize="small" />
-            <p>
-              {route.origin}{' '}
-              {!routeDetailView &&
-                `@ ${dateObj.toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true,
-                })}`}
-            </p>
-          </div>
-          {routeDetailView && (
+    <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
+      <div
+        className={`flex flex-row items-center p-4 justify-between ${individualView ? 'py-2' : 'py-4'}`}
+        onClick={() => {
+          if (onSelect) onSelect(route)
+        }}
+      >
+        <div className="flex flex-row">
+          <span className="shrink-0 scale-115 flex items-center">
+            <CommuteIcon type={route.transportation_mode?.toLowerCase()} />
+          </span>
+          <div className="flex flex-col ml-4">
+            {individualView && (
+              <span className="text-text-primary font-medium mb-1">
+                {route.title}
+              </span>
+            )}
             <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
-              <DateRangeRounded
-                className="mr-1 -ml-1"
-                fontSize="small"
-              ></DateRangeRounded>
-              <p>{`${dateObj.toLocaleDateString('en-US', {
-                month: 'long',
-              })} ${dateObj.getDate()} @ ${dateObj.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-              })}`}</p>
+              <PlaceOutlined className="mr-1 -ml-1" fontSize="small" />
+              <p>
+                {route.origin}{' '}
+                {!routeDetailView &&
+                  `@ ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+              </p>
             </div>
-          )}
-          {individualView && (
+            {routeDetailView && (
+              <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
+                <DateRangeRounded className="mr-1 -ml-1" fontSize="small" />
+                <p>{`${dateObj.toLocaleDateString('en-US', { month: 'long' })} ${dateObj.getDate()} @ ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}</p>
+              </div>
+            )}
+            {individualView && (
+              <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
+                <OutlinedFlagRounded className="mr-1 -ml-1" fontSize="small" />
+                <p>{route.destination}</p>
+              </div>
+            )}
             <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
-              <OutlinedFlagRounded className="mr-1 -ml-1" fontSize="small" />
-              <p>{route.destination}</p>
+              <GroupsOutlined className="mr-1 -ml-1" fontSize="small" />
+              <p>
+                {peopleGoing} people going{' '}
+                {route.transportation_mode == 'car' &&
+                  `(${route.max_ppl - peopleGoing} seats left)`}
+              </p>
             </div>
-          )}
-          <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
-            <GroupsOutlined className="mr-1 -ml-1" fontSize="small" />
-            <p>
-              {peopleGoing} people going{' '}
-              {route.transportation_mode == 'car' &&
-                `(${route.max_ppl - peopleGoing} seats left)`}
-            </p>
           </div>
         </div>
-      </div>
-      <div className="flex flex-col gap-1">
-        {!individualView && (
-          <GenericButton
-            unstyled
-            customStyling={
-              'py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2'
-            }
-            onClick={() =>
-              navigate(`/report`, {
-                state: {
-                  type: 'route',
-                  targetId: route.id,
-                  targetName: route.title,
-                },
-              })
-            }
-          >
-            <div>
-              <span>Report</span>
-            </div>
-          </GenericButton>
-        )}
-        {isJoined ? (
-          <GenericButton
-            unstyled
-            customStyling={
-              'py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2'
-            }
-            onClick={handleLeave}
-          >
-            <div className="flex flex-row items-center gap-1">
-              <Logout fontSize="12px" />
-              <span>Leave</span>
-            </div>
-          </GenericButton>
-        ) : (
-          <GenericButton
-            unstyled
-            disabled={isFull}
-            customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
-            onClick={handleJoin}
-          >
-            Join
-          </GenericButton>
+
+        {view !== 'moderator' && (
+          <div className="flex flex-col gap-1">
+            {!individualView && (
+              <GenericButton
+                unstyled
+                customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
+                onClick={() =>
+                  navigate(`/report`, {
+                    state: {
+                      type: 'route',
+                      targetId: route.id,
+                      targetName: route.title,
+                    },
+                  })
+                }
+              >
+                <span>Report</span>
+              </GenericButton>
+            )}
+            {isJoined ? (
+              <GenericButton
+                unstyled
+                customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
+                onClick={handleLeave}
+              >
+                <div className="flex flex-row items-center gap-1">
+                  <Logout fontSize="12px" />
+                  <span>Leave</span>
+                </div>
+              </GenericButton>
+            ) : (
+              <GenericButton
+                unstyled
+                disabled={isFull}
+                customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
+                onClick={handleJoin}
+              >
+                Join
+              </GenericButton>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -172,6 +157,7 @@ export default function RouteCard({
 
 RouteCard.propTypes = {
   route: PropTypes.object.isRequired,
+  view: PropTypes.string,
   individualView: PropTypes.bool,
   onSelect: PropTypes.func,
   routeDetailView: PropTypes.bool,
