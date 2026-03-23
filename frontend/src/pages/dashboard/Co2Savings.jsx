@@ -148,9 +148,13 @@ function Co2Savings() {
       case 'bicycle':
         return 'Bicycle'
       case 'bus':
-        return 'Bus / Transit'
+        return 'Bus'
+      case 'rail':
+        return 'Rail'
       case 'car':
         return 'Car / Carpool'
+      case 'other':
+        return 'Other'
       default:
         return mode
     }
@@ -201,11 +205,22 @@ function Co2Savings() {
         <AnalyticsBlock title="Filter by Transportation Mode">
           <div className="flex flex-wrap items-center gap-3">
             <Select
-              options={['all', 'walk', 'bicycle', 'bus', 'car'].map(r => ({
+              options={[
+                'all',
+                'walk',
+                'bicycle',
+                'bus',
+                'rail',
+                'car',
+                'other',
+              ].map(r => ({
                 value: r,
-                label: r,
+                label: formatModeLabel(r),
               }))}
-              value={{ value: selectedMode, label: selectedMode }}
+              value={{
+                value: selectedMode,
+                label: formatModeLabel(selectedMode),
+              }}
               onChange={e => setSelectedMode(e.value)}
             />
           </div>

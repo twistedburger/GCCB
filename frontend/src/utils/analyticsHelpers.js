@@ -22,8 +22,9 @@ export function getMostUsedMode(modes = {}) {
     walk: 'Walk',
     bicycle: 'Bicycle',
     bus: 'Bus',
+    rail: 'Rail',
     car: 'Car',
-    other: 'Other', // Placeholder value for expansion
+    other: 'Other',
   }
 
   return labels[mode] ?? 'N/A'

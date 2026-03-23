@@ -67,7 +67,9 @@ function TripFrequency() {
       case 'bicycle':
         return 'Bicycle'
       case 'bus':
-        return 'Bus / Transit'
+        return 'Bus'
+      case 'rail':
+        return 'Rail'
       case 'car':
         return 'Car / Carpool'
       case 'other':
@@ -166,11 +168,22 @@ function TripFrequency() {
                 Transportation mode
               </label>
               <Select
-                options={['all', 'walk', 'bicycle', 'bus', 'car'].map(r => ({
+                options={[
+                  'all',
+                  'walk',
+                  'bicycle',
+                  'bus',
+                  'rail',
+                  'car',
+                  'other',
+                ].map(r => ({
                   value: r,
-                  label: r,
+                  label: formatModeLabel(r),
                 }))}
-                value={{ value: selectedMode, label: selectedMode }}
+                value={{
+                  value: selectedMode,
+                  label: formatModeLabel(selectedMode),
+                }}
                 onChange={e => setSelectedMode(e.value)}
                 isDisabled={loading}
               />
