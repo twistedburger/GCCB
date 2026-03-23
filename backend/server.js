@@ -6,6 +6,7 @@ const { serverStrings } = require('./locales/en/serverLocales')
 
 const app = express()
 const db = require('./db')
+const pool = db.pool
 const port = 3000
 
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
@@ -259,23 +260,66 @@ app.get('/api/events', (req, res) => {
   )
 })
 
-app.post('/createEvent', async (req, res) => {
+app.post('/api/createEvent', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
-  const newEvent = req.body
 
-  const event = await db.query(
-    'INSERT INTO event (title, creator_id, event_time, location, description) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-    [
-      newEvent.title,
-      newEvent.creator_id,
-      newEvent.event_time,
-      newEvent.location,
-      newEvent.description,
-    ]
-  )
-  res.json(event.rows[0])
+  try {
+    const { title, creator_id, event_time, location, description } = req.body
+
+    const result = await db.query(
+      'INSERT INTO event (title, creator_id, event_time, location, description, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [title, creator_id, event_time, location, description, new Date()]
+    )
+
+    res.status(201).json(result.rows[0])
+  } catch (error) {
+    console.error('Database Error:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
+app.post('/api/createRoute', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const { eventId, routeData } = req.body
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const routeQuery = `
+      INSERT INTO routes (route_name, start_point, end_point, distance, created_at)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id;
+    `
+    const routeResult = await client.query(routeQuery, [
+      routeData.name,
+      routeData.start,
+      routeData.end,
+      routeData.distance,
+      new Date(),
+    ])
+    const routeId = routeResult.rows[0].id
+
+    const junctionQuery = `
+      INSERT INTO event_routes (event_id, route_id)
+      VALUES ($1, $2);
+    `
+    await client.query(junctionQuery, [eventId, routeId])
+
+    await client.query('COMMIT')
+    res.status(201).json({ success: true, routeId })
+  } catch (error) {
+    console.error('Database Error Detail:', error)
+    await client.query('ROLLBACK')
+    res.status(500).json({ error: 'Failed to create and link route' })
+  } finally {
+    client.release()
+  }
 })
 
 /**

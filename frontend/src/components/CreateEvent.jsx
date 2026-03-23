@@ -6,11 +6,9 @@ import GenericButton from './GenericButton'
 import CreateRoute from './CreateRoute'
 import LocationSearch from './LocationSearch'
 import RouteCard from './RouteCard'
+import { useAuth } from '../../context/AuthContext'
 
-const CreateEvent = ({
-  initLoc,
-  // onSubmit
-}) => {
+const CreateEvent = ({ initLoc, onSubmit }) => {
   const [addedRoutes, setAddedRoutes] = useState([])
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [addRoute, setAddRoute] = useState(false)
@@ -18,6 +16,8 @@ const CreateEvent = ({
   const [datetime, setDatetime] = useState('')
   const [eventDesc, setEventDesc] = useState('')
   const [errors, setErrors] = useState({})
+
+  const { user } = useAuth()
 
   const handleRouteSubmit = route => {
     const routeWithId = { ...route, id: crypto.randomUUID() }
@@ -36,31 +36,90 @@ const CreateEvent = ({
     return newErrors
   }
 
-  const handleCreateEvent = e => {
+  const createEvent = async eventData => {
+    try {
+      const response = await fetch('http://localhost:3000/api/createEvent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(eventData),
+      })
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error creating event:', error)
+      throw error
+    }
+  }
+
+  const createRoute = async routeData => {
+    try {
+      const response = await fetch('http://localhost:3000/api/createRoute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(routeData),
+      })
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error creating route:', error)
+      throw error
+    }
+  }
+
+  const handleEventSubmit = async e => {
     e.preventDefault()
+
+    if (!user) {
+      onSubmit({
+        success: false,
+        message: 'You must be logged in to create an event.',
+      })
+      return
+    }
+
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
     }
 
-    setErrors({})
-    const eventData = {
-      title: eventName,
-      event_time: datetime,
-      location: selectedPlace,
-      description: eventDesc,
-      routes: addedRoutes,
+    try {
+      const eventData = {
+        title: eventName,
+        creator_id: user.id,
+        event_time: datetime,
+        location: selectedPlace,
+        description: eventDesc,
+      }
+
+      const { id: newEventId } = await createEvent(eventData)
+
+      if (addedRoutes.length > 0) {
+        const routePromises = addedRoutes.map(route =>
+          createRoute(newEventId, route)
+        )
+        await Promise.all(routePromises)
+      }
+      onSubmit({
+        success: true,
+        message: 'Event and routes created successfully!',
+        eventId: newEventId,
+      })
+    } catch (error) {
+      console.error('Error creating event. Please try again.')
+      onSubmit({
+        success: false,
+        message: error.message || 'Failed to create event. Please try again.',
+      })
     }
-    console.log('Event created: ' + JSON.stringify(eventData))
-    // api call to submit eventData
-    // onSubmit() to close modal after successful submission
   }
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Create a New Event</h1>
-      <form className="space-y-4" onSubmit={handleCreateEvent}>
+      <form className="space-y-4" onSubmit={handleEventSubmit}>
         <div>
           <TextBox
             label="Event Name"
@@ -135,12 +194,7 @@ const CreateEvent = ({
                     onClick={() => removeRoute(route.id)}
                   />
                 </GenericButton>
-                <RouteCard
-                  key={route.id}
-                  route={route}
-                  individualView={true}
-                  createMode={true}
-                />
+                <RouteCard key={route.id} route={route} individualView={true} />
               </div>
             ))}
           </div>
@@ -183,5 +237,5 @@ export default CreateEvent
 
 CreateEvent.propTypes = {
   initLoc: PropTypes.string,
-  // onSubmit: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
 }

@@ -38,6 +38,8 @@ function Home() {
   const location = useLocation()
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
+  const [alert, setAlert] = useState(null)
+
   const { authorizeUser } = useAuth()
   authorizeUser()
 
@@ -63,6 +65,14 @@ function Home() {
       }
     } catch (err) {
       console.error('geocode fetch failed:', err)
+    }
+  }
+
+  const handleFormResult = result => {
+    if (result.success) {
+      setAlert({ type: 'success', text: result.message })
+    } else {
+      setAlert({ type: 'error', text: result.message })
     }
   }
 
@@ -215,8 +225,17 @@ function Home() {
             >
               <Close fontSize="large" />
             </button>
+
+            {/* Success alert */}
+            {alert && (
+              <div
+                className={`absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-${alert.type === 'success' ? 'green' : 'red'}-500 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-lg animate-bounce whitespace-nowrap`}
+              >
+                {alert.text}
+              </div>
+            )}
             <div className="p-8 overflow-auto">
-              <CreateEvent onSubmit={() => setShowCreateEvent(false)} />
+              <CreateEvent onSubmit={handleFormResult} />
             </div>
           </div>
         </div>
