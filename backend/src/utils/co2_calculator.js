@@ -25,6 +25,9 @@ class Co2Calculator {
     // Bus emissions (g / passenger-km)
     busFactor = EMISSIONS_G_PER_KM.TRANSIT_PASSENGER.BUS,
 
+    // Rail emissions (g / passenger-km)
+    railFactor = EMISSIONS_G_PER_KM.TRANSIT_PASSENGER.RAIL,
+
     // Default total people in a carpool
     defaultPassengers = DEFAULT_PASSENGERS,
   } = {}) {
@@ -33,12 +36,21 @@ class Co2Calculator {
       'baselineCarFactor'
     )
     this.busFactor = this._validateNumber(busFactor, 'busFactor')
+    this.railFactor = this._validateNumber(railFactor, 'railFactor')
     this.defaultPassengers = this._validatePositiveInteger(
       defaultPassengers,
       'defaultPassengers'
     )
   }
 
+  /**
+   * Validates a non-negative numeric parameter.
+   *
+   * @param {number} value Value to validate.
+   * @param {string} paramName For error logging
+   *
+   * @returns {number} The validated number.
+   */
   _validateNumber(value, paramName) {
     if (typeof value !== 'number' || Number.isNaN(value)) {
       throw new TypeError(`${paramName} must be a number`)
@@ -49,6 +61,14 @@ class Co2Calculator {
     return value
   }
 
+  /**
+   * Validates a positive integer parameter.
+   *
+   * @param {number} value Value to validate.
+   * @param {string} paramName For error logging
+   *
+   * @returns {number} The validated integer.
+   */
   _validatePositiveInteger(value, paramName) {
     if (!Number.isInteger(value) || value <= 0) {
       throw new TypeError(`${paramName} must be a positive integer`)
@@ -56,21 +76,65 @@ class Co2Calculator {
     return value
   }
 
+  /**
+   * Normalizes a transportation mode string.
+   *
+   * @param {string} mode Raw transportation mode.
+   * @returns {string} Lowercased and trimmed mode string.
+   */
   _normalizeMode(mode) {
     return String(mode || '')
       .trim()
       .toLowerCase()
   }
 
-  // default to 2
+  /**
+   * Returns a passenger count to use for carpool calculations.
+   *
+   * @param {number} passengers Total number of people in the shared vehicle.
+   * @returns {number} Passenger count used for calculations.
+   */
   _getPassengerCount(passengers) {
     return Number.isInteger(passengers) && passengers > 0
       ? passengers
       : this.defaultPassengers
   }
 
+  /**
+   * Rounds a kilogram value to two decimal places.
+   *
+   * @param {number} value Value in kg.
+   * @returns {number} Rounded value.
+   */
   _roundKg(value) {
     return Math.round(value * 100) / 100
+  }
+
+  /**
+   * Validates and normalizes a route segment used in segment-based calculations.
+   *
+   * @param {Object} segment Segment object.
+   * @param {number} index Segment index
+   *
+   * @returns {{ transportation_mode: string, distanceKm: number }}
+   */
+  _validateSegment(segment, index) {
+    if (!segment || typeof segment !== 'object') {
+      throw new TypeError(`segment at index ${index} must be an object`)
+    }
+
+    const distanceKm = Number(segment.distanceKm)
+    this._validateNumber(distanceKm, `segments[${index}].distanceKm`)
+
+    const transportationMode = this._normalizeMode(segment.transportation_mode)
+    if (!transportationMode) {
+      throw new RangeError(`segments[${index}].transportation_mode is required`)
+    }
+
+    return {
+      transportation_mode: transportationMode,
+      distanceKm,
+    }
   }
 
   /**
@@ -118,10 +182,10 @@ class Co2Calculator {
       result.savedKgSystem = rounded
     }
 
-    // Handler for bus / transit (treat the same for now)
+    // Handler for bus transit
     const busHandler = () => {
       const savedKg = Math.max(
-        0, // clamp to 0 if for any unrealistic reason a bus is less efficient than a car to prevent negative savings
+        0,
         (distanceKm * (this.baselineCarFactor - this.busFactor)) / GRAMS_PER_KG
       )
 
@@ -130,6 +194,20 @@ class Co2Calculator {
       result.savedKgUser = rounded
       result.savedKgSystem = rounded
       result.context = { transitMode: 'bus' }
+    }
+
+    // Handler for rail transit
+    const railHandler = () => {
+      const savedKg = Math.max(
+        0,
+        (distanceKm * (this.baselineCarFactor - this.railFactor)) / GRAMS_PER_KG
+      )
+
+      const rounded = this._roundKg(savedKg)
+
+      result.savedKgUser = rounded
+      result.savedKgSystem = rounded
+      result.context = { transitMode: 'rail' }
     }
 
     // Handler for carpool
@@ -161,6 +239,7 @@ class Co2Calculator {
       bicycle: activeModeHandler,
       bus: busHandler,
       transit: busHandler,
+      rail: railHandler,
       car: carHandler,
     }
 
@@ -174,6 +253,54 @@ class Co2Calculator {
 
     handler()
     return result
+  }
+
+  /**
+   * Calculates total CO2e savings by summing savings across multiple route segments.
+   *
+   * @param {Array<Object>} segments Array of normalized route segments.
+   * @param {Function} [optionsResolver] Optional resolver that returns calculation options
+   *   for a given segment.
+   *
+   * @returns {{
+   *   savedKgUser: number,
+   *   savedKgSystem: number,
+   *   context: {
+   *     segmentCount: number
+   *   }
+   * }}
+   */
+  calculateSavedFromSegments(segments, optionsResolver = () => ({})) {
+    if (!Array.isArray(segments)) {
+      throw new TypeError('segments must be an array')
+    }
+
+    const total = {
+      savedKgUser: 0,
+      savedKgSystem: 0,
+      context: {
+        segmentCount: segments.length,
+      },
+    }
+
+    for (let i = 0; i < segments.length; i += 1) {
+      const segment = this._validateSegment(segments[i], i)
+      const options = optionsResolver(segment, i) || {}
+
+      const result = this.calculateSaved(
+        segment.distanceKm,
+        segment.transportation_mode,
+        options
+      )
+
+      total.savedKgUser += result.savedKgUser
+      total.savedKgSystem += result.savedKgSystem
+    }
+
+    total.savedKgUser = this._roundKg(total.savedKgUser)
+    total.savedKgSystem = this._roundKg(total.savedKgSystem)
+
+    return total
   }
 }
 

@@ -10,6 +10,7 @@ const EMISSIONS_G_PER_KM = {
   },
   TRANSIT_PASSENGER: {
     BUS: 97,
+    RAIL: 35,
   },
 }
 
