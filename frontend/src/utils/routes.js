@@ -37,6 +37,10 @@ export async function calculateRoute(
     units: 'METRIC',
   }
 
+  if (_travelMode === 'DRIVE' && (_departureTime || _arrivalTime)) {
+    routeBody.routingPreference = 'TRAFFIC_AWARE'
+  }
+
   //Note that arrival time will superceed departure time, if both are specified
   if (_arrivalTime) {
     routeBody.arrivalTime = _arrivalTime
