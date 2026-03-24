@@ -4,6 +4,9 @@ import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import LocationSearch from './LocationSearch'
 import TransportationModeSelect from './TransportationModeSelect'
+import { calculateRoute, TravelMode } from '../utils/routes'
+import { decode } from 'google-polyline'
+import { GoogleMap, useJsApiLoader, Polyline } from '@react-google-maps/api'
 
 const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
@@ -13,7 +16,17 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [departTime, setDepartTime] = useState('')
   const [startLoc, setStartLoc] = useState(null)
   const [endLoc, setEndLoc] = useState(initLoc)
+  const [distance, setDistance] = useState(null)
+  const [polyline, setPolyline] = useState(null)
   const [errors, setErrors] = useState({})
+  const [routePreview, setRoutePreview] = useState(null)
+  const [isFetchingRoute, setIsFetchingRoute] = useState(false)
+  const [routeError, setRouteError] = useState(null)
+  const [mapKey, setMapKey] = useState(0)
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+  })
 
   const validate = () => {
     const newErrors = {}
@@ -31,6 +44,50 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     if (!departTime) newErrors.departTime = 'Departure time is required'
     return newErrors
   }
+  const handleGetRoute = async () => {
+    setRoutePreview(null)
+    setIsFetchingRoute(true)
+    setRouteError(null)
+    setMapKey(prev => prev + 1)
+    try {
+      const modeMapping = {
+        bus: 'Transit',
+        walk: 'Walk',
+        bicycle: 'Bike',
+        car: 'Carpool',
+      }
+
+      const modeKey = modeMapping[transportationMode.toLowerCase()]
+      const selectedMode = TravelMode[modeKey]
+
+      const route = await calculateRoute(
+        { address: startLoc },
+        { address: endLoc },
+        selectedMode,
+        {
+          _departureTime: departTime
+            ? new Date(departTime).toISOString()
+            : null,
+        }
+      )
+      console.log('Route preview data:', route)
+      setRoutePreview(route)
+      setDistance(route.distanceMeters)
+      setPolyline(route.polyline.encodedPolyline)
+    } catch (err) {
+      setRouteError(err.message)
+      setRoutePreview(null)
+    } finally {
+      setIsFetchingRoute(false)
+    }
+  }
+
+  const pathCoordinates = routePreview?.polyline?.encodedPolyline
+    ? decode(routePreview.polyline.encodedPolyline).map(([lat, lng]) => ({
+        lat,
+        lng,
+      }))
+    : []
 
   const handleAddRoute = e => {
     e.preventDefault()
@@ -49,6 +106,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       destination: endLoc || initLoc,
       depart_time: departTime,
       description: routeDesc,
+      distance: distance,
+      path: polyline,
     }
     onSubmit(routeData)
   }
@@ -66,6 +125,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         selectedModes={[]}
         onChange={modes => {
           setTransportationMode(modes || '')
+          setRoutePreview(null)
+          setRouteError(null)
         }}
         multiple={false}
       />
@@ -98,6 +159,30 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           )}
         </div>
       )}
+
+      {/*TODO: ensure departure time doesn't exceed event time */}
+      <div>
+        <label
+          className="text-sm font-semibold text-text-primary ml-1 mb-1.5 block"
+          htmlFor="depart-time"
+        >
+          Departure Time
+        </label>
+        <input
+          id="depart-time"
+          type="datetime-local"
+          value={departTime}
+          onChange={e => setDepartTime(e.target.value)}
+          className={`w-full px-4 py-3 rounded-xl transition-all duration-200 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
+             bg-gray-50 text-text-primary outline-none border
+             ${errors.departTime ? 'border-red-500' : 'border-transparent focus:border-2 focus:border-blue-500 focus:ring-4 focus:ring-blue-100'}`}
+        />
+        {errors.departTime && (
+          <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
+            {errors.departTime}
+          </p>
+        )}
+      </div>
 
       <div>
         <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
@@ -136,33 +221,67 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         )}
       </div>
 
-      <div className="border border-2 border-red-500">
-        Display the selected route in mini map?
-      </div>
+      {/* Get Route button */}
+      {transportationMode && departTime && startLoc && endLoc && (
+        <div className="flex flex-col items-center py-2">
+          <GenericButton
+            type="button"
+            onClick={handleGetRoute}
+            disabled={isFetchingRoute}
+            className="w-full bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
+          >
+            {isFetchingRoute ? 'Calculating...' : 'Preview Route Path'}
+          </GenericButton>
+          {routeError && (
+            <p className="text-red-500 text-xs mt-1">{routeError}</p>
+          )}
+        </div>
+      )}
 
-      {/*TODO: ensure departure time doesn't exceed event time */}
-      <div>
-        <label
-          className="text-sm font-semibold text-text-primary ml-1 mb-1.5 block"
-          htmlFor="depart-time"
-        >
-          Departure Time
-        </label>
-        <input
-          id="depart-time"
-          type="datetime-local"
-          value={departTime}
-          onChange={e => setDepartTime(e.target.value)}
-          className={`w-full px-4 py-3 rounded-xl transition-all duration-200 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
-             bg-gray-50 text-text-primary outline-none border
-             ${errors.departTime ? 'border-red-500' : 'border-transparent focus:border-2 focus:border-blue-500 focus:ring-4 focus:ring-blue-100'}`}
-        />
-        {errors.departTime && (
-          <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
-            {errors.departTime}
-          </p>
+      {/* Mini Map */}
+      <div className="rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 h-64 relative shadow-inner">
+        {!isLoaded ? (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            Loading Map...
+          </div>
+        ) : (
+          <GoogleMap
+            key={mapKey}
+            mapContainerStyle={{ width: '100%', height: '100%' }}
+            zoom={12}
+            center={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
+            onLoad={map => {
+              if (pathCoordinates.length > 0) {
+                const bounds = new window.google.maps.LatLngBounds()
+                pathCoordinates.forEach(p => bounds.extend(p))
+                map.fitBounds(bounds)
+              }
+            }}
+            options={{ disableDefaultUI: true, zoomControl: true }}
+          >
+            {pathCoordinates.length > 0 && (
+              <Polyline
+                key={routePreview.polyline.encodedPolyline}
+                path={pathCoordinates}
+                options={{
+                  strokeColor: '#3b82f6',
+                  strokeOpacity: 0.8,
+                  strokeWeight: 6,
+                }}
+              />
+            )}
+
+            {!routePreview && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
+                {startLoc && endLoc
+                  ? "Locations set! Click 'Preview' to see the path."
+                  : 'Select transportation mode, departure time, origin, and destination to preview the route map.'}
+              </div>
+            )}
+          </GoogleMap>
         )}
       </div>
+
       <TextBox
         label="Route Description"
         value={routeDesc}
