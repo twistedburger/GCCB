@@ -8,7 +8,7 @@ import {
 } from '@vis.gl/react-google-maps'
 import GenericToggle from '../components/GenericToggle'
 import GenericButton from '../components/GenericButton'
-import { Add, Close, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
+import { Add, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
@@ -19,6 +19,7 @@ import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
+import { Modal } from '../components/Modal'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -49,7 +50,6 @@ function Home() {
   })
   const navigate = useNavigate()
   const [showCreateEvent, setShowCreateEvent] = useState(false)
-  const [animateIn, setAnimateIn] = useState(false)
   const [alert, setAlert] = useState(null)
 
   const { authorizeUser, authorization } = useAuth()
@@ -146,15 +146,6 @@ function Home() {
     setRouteSnapPoint(0.25)
     setSelectedRoute(route)
   }
-
-  //trigger animation when showCreateEvent changes
-  useEffect(() => {
-    if (showCreateEvent) {
-      setTimeout(() => setAnimateIn(true), 10)
-    } else {
-      setAnimateIn(false)
-    }
-  }, [showCreateEvent])
 
   return (
     <div data-vaul-drawer-wrapper className="relative w-full h-full">
@@ -356,40 +347,11 @@ function Home() {
           context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
         />
       </div>
+
       {/* Create Event modal */}
-      {showCreateEvent && (
-        <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
-          {/* soft transition, blur backdrop */}
-          <div
-            onClick={() => setShowCreateEvent(false)}
-            className={`absolute inset-0 bg-slate-900/40 transition-all duration-500 ease-out
-            ${animateIn ? 'opacity-100 backdrop-blur-sm' : 'opacity-0 backdrop-blur-none'}`}
-          />
-
-          {/* modal content */}
-          <div
-            className={`relative bg-white w-full max-w-lg rounded-3xl shadow-2xl 
-              max-h-[90vh] overflow-auto transform transition-all duration-300 ease-out
-          ${
-            animateIn
-              ? 'opacity-100 scale-100 translate-y-0'
-              : 'opacity-0 scale-95 translate-y-8'
-          }`}
-          >
-            <button
-              onClick={() => setShowCreateEvent(false)}
-              className="absolute top-4 right-4 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
-              aria-label="Close modal"
-            >
-              <Close fontSize="large" />
-            </button>
-
-            <div className="p-8 overflow-auto">
-              <CreateEvent onSubmit={handleFormResult} />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal isOpen={showCreateEvent} onClose={() => setShowCreateEvent(false)}>
+        <CreateEvent onSubmit={handleFormResult} />
+      </Modal>
 
       <GenericButton
         unstyled={true}
