@@ -261,8 +261,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             mapContainerStyle={{ width: '100%', height: '100%' }}
             zoom={12}
             center={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
-            onLoad={setMap} // Save the map instance to state
-            onUnmount={() => setMap(null)} // Clean up when the component destroys
+            onLoad={setMap}
+            onUnmount={() => setMap(null)}
             options={{ disableDefaultUI: true, zoomControl: true }}
           >
             {pathCoordinates.length > 0 && (
