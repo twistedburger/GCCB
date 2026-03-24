@@ -83,10 +83,18 @@ function Home() {
 
   const handleFormResult = result => {
     if (result.success) {
-      setAlert({ type: 'success', text: result.message })
-    } else {
-      setAlert({ type: 'error', text: result.message })
+      setShowCreateEvent(false)
     }
+
+    setAlert({
+      type: result.success ? 'success' : 'error',
+      text: result.message,
+      visible: true,
+    })
+
+    setTimeout(() => {
+      setAlert(prev => (prev ? { ...prev, visible: false } : null))
+    }, 2000)
   }
 
   useEffect(() => {
@@ -150,6 +158,16 @@ function Home() {
 
   return (
     <div data-vaul-drawer-wrapper className="relative w-full h-full">
+      <div
+        className={`fixed left-1/2 -translate-x-1/2 z-[100] top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
+        whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
+        ${alert?.visible ? 'translate-y-12 opacity-100' : '-translate-y-full opacity-0'}
+        ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
+      `}
+      >
+        {alert?.text}
+      </div>
+
       <div>
         <APIProvider
           apiKey=""
@@ -364,14 +382,6 @@ function Home() {
               <Close fontSize="large" />
             </button>
 
-            {/* Success alert */}
-            {alert && (
-              <div
-                className={`absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-${alert.type === 'success' ? 'green' : 'red'}-500 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-lg animate-bounce whitespace-nowrap`}
-              >
-                {alert.text}
-              </div>
-            )}
             <div className="p-8 overflow-auto">
               <CreateEvent onSubmit={handleFormResult} />
             </div>
