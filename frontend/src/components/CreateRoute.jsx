@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import LocationSearch from './LocationSearch'
@@ -23,6 +23,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [isFetchingRoute, setIsFetchingRoute] = useState(false)
   const [routeError, setRouteError] = useState(null)
   const [mapKey, setMapKey] = useState(0)
+  const [map, setMap] = useState(null)
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -44,6 +45,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     if (!departTime) newErrors.departTime = 'Departure time is required'
     return newErrors
   }
+
   const handleGetRoute = async () => {
     setRoutePreview(null)
     setIsFetchingRoute(true)
@@ -111,6 +113,14 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     }
     onSubmit(routeData)
   }
+
+  useEffect(() => {
+    if (map && pathCoordinates.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds()
+      pathCoordinates.forEach(point => bounds.extend(point))
+      map.fitBounds(bounds)
+    }
+  }, [map, pathCoordinates])
 
   return (
     <div className="space-y-4">
@@ -250,13 +260,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             mapContainerStyle={{ width: '100%', height: '100%' }}
             zoom={12}
             center={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
-            onLoad={map => {
-              if (pathCoordinates.length > 0) {
-                const bounds = new window.google.maps.LatLngBounds()
-                pathCoordinates.forEach(p => bounds.extend(p))
-                map.fitBounds(bounds)
-              }
-            }}
+            onLoad={setMap} // Save the map instance to state
+            onUnmount={() => setMap(null)} // Clean up when the component destroys
             options={{ disableDefaultUI: true, zoomControl: true }}
           >
             {pathCoordinates.length > 0 && (
