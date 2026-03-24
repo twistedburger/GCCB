@@ -41,7 +41,7 @@ export default function LocationSearch({
 
   return (
     <gmp-place-autocomplete
-      className={`w-full ${className} ${disabled ? 'pointer-events-none opacity-50' : ''}`}
+      className={`${className} ${disabled ? 'pointer-events-none opacity-50' : ''}`}
       ref={autocompleteRef}
       placeholder={placeHolder}
       onInput={e => setLocation(e.target.value)}

@@ -189,170 +189,172 @@ function Home() {
           </Map>
         </APIProvider>
 
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 w-9/10 overflow-visible">
-          {!selectedRoute && !isEventDetail && (
-            <LocationSearch onSearch={handleSearch} />
-          )}
-          <Drawer.Root
-            open={true}
-            modal={false}
-            snapPoints={[0.095, 0.5, 1]}
-            activeSnapPoint={snapPoint}
-            setActiveSnapPoint={setSnapPoint}
-            noBodyStyles={true}
-            setBackgroundColorOnScale={false}
-            preventScrollRestoration={false}
-          >
-            <Drawer.Portal>
-              <Drawer.Content
-                {...(routeSnapPoint === 0.095 ? { inert: true } : {})}
-                onOpenAutoFocus={e => e.preventDefault()}
-                onFocus={e => {
-                  if (e.target === e.currentTarget) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }
-                }}
-                style={{
-                  zIndex: 20,
-                  marginLeft: '55px',
-                  width: 'calc(100% - 55px)',
-                  borderRadius: '24px 24px 0 0',
-                  height: '96%',
-                  position: 'fixed',
-                  bottom: 0,
-                  background: '#F9F9F9',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  pointerEvents: 'auto',
-                }}
-              >
-                <Drawer.Title className="sr-only">Search Results</Drawer.Title>
-                <Drawer.Description className="sr-only">
-                  Search results near your location
-                </Drawer.Description>
-                <div
-                  className="flex justify-center p-6"
-                  style={{ pointerEvents: 'auto' }}
-                >
-                  <div className="bg-text-primary rounded-full h-1.5 w-20" />
-                </div>
-                <div className="overflow-y-auto px-6 pb-36 flex flex-col gap-4">
-                  {address && (
-                    <>
-                      <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
-                        <TuneOutlined
-                          className="text-text-primary shrink-0"
-                          onClick={() => navigate('/filter')}
-                        />
-                        <GenericToggle
-                          value={isArriving}
-                          onChange={setIsArriving}
-                          labels={['Arriving Near', 'Departing Near']}
-                          className="shrink-0"
-                        />
-                        <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
-                          <PlaceOutlined className="mr-1" />
-                          {address}
-                        </span>
-                        <div
-                          className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
-                          style={{ scrollbarWidth: 'none' }}
-                        >
-                          <DisplayFilters
-                            filters={filters}
-                            setFilters={setFilters}
-                          />
-                        </div>
-                      </div>
-                      {cardsToDisplay.length === 0 ? (
-                        <p className="text-text-secondary text-sm text-center py-4">
-                          No results found. Try adjusting your filters.
-                        </p>
-                      ) : (
-                        cardsToDisplay.map(item =>
-                          filters.mainEventsOnly ? (
-                            <EventCard
-                              key={item.id}
-                              event={item}
-                              view={authorization}
-                            />
-                          ) : (
-                            <RouteCard
-                              key={item.id}
-                              route={item}
-                              view={authorization}
-                              individualView={true}
-                              onSelect={route => {
-                                handleRouteClick(route)
-                                document.activeElement?.blur()
-                              }}
-                            />
-                          )
-                        )
-                      )}
-                    </>
-                  )}
-                </div>
-              </Drawer.Content>
-            </Drawer.Portal>
-          </Drawer.Root>
-          <Drawer.Root
-            open={!!selectedRoute}
-            onOpenChange={open => !open && setSelectedRoute(null)}
-            modal={false}
-            snapPoints={[0.095, 0.25, 0.4, 0.8]} // 80% max, so padding in Route Detail is 25% from bottom
-            activeSnapPoint={routeSnapPoint}
-            setActiveSnapPoint={setRouteSnapPoint}
-            noBodyStyles={true}
-            setBackgroundColorOnScale={false}
-            dismissible={false}
-            preventScrollRestoration={false}
-          >
-            <Drawer.Portal>
-              <Drawer.Content
-                onOpenAutoFocus={e => e.preventDefault()}
-                onFocus={e => {
-                  if (e.target === e.currentTarget) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }
-                }}
-                style={{
-                  zIndex: 30,
-                  marginLeft: '55px',
-                  width: 'calc(100% - 55px)',
-                  borderRadius: '24px 24px 0 0',
-                  height: '96%',
-                  position: 'fixed',
-                  bottom: 0,
-                  background: '#F9F9F9',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  overflowY: 'hidden',
-                  pointerEvents: 'auto',
-                }}
-              >
-                <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
-                <Drawer.Description className="sr-only">
-                  Route and event details
-                </Drawer.Description>
-                {selectedRoute && (
-                  <RouteDetail
-                    selectedRoute={selectedRoute}
-                    onClose={() => {
-                      setSelectedRoute(null)
-                      setSnapPoint(0.5)
-                    }}
-                  />
-                )}
-              </Drawer.Content>
-            </Drawer.Portal>
-          </Drawer.Root>
-          <Outlet
-            context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
+        {!selectedRoute && !isEventDetail && (
+          <LocationSearch
+            className="rounded-xl absolute inset-x-0 top-0 m-6 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
+            focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
+            onSearch={handleSearch}
           />
-        </div>
+        )}
+        <Drawer.Root
+          open={true}
+          modal={false}
+          snapPoints={[0.095, 0.5, 1]}
+          activeSnapPoint={snapPoint}
+          setActiveSnapPoint={setSnapPoint}
+          noBodyStyles={true}
+          setBackgroundColorOnScale={false}
+          preventScrollRestoration={false}
+        >
+          <Drawer.Portal>
+            <Drawer.Content
+              {...(routeSnapPoint === 0.095 ? { inert: true } : {})}
+              onOpenAutoFocus={e => e.preventDefault()}
+              onFocus={e => {
+                if (e.target === e.currentTarget) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }
+              }}
+              style={{
+                zIndex: 20,
+                marginLeft: '55px',
+                width: 'calc(100% - 55px)',
+                borderRadius: '24px 24px 0 0',
+                height: '96%',
+                position: 'fixed',
+                bottom: 0,
+                background: '#F9F9F9',
+                display: 'flex',
+                flexDirection: 'column',
+                pointerEvents: 'auto',
+              }}
+            >
+              <Drawer.Title className="sr-only">Search Results</Drawer.Title>
+              <Drawer.Description className="sr-only">
+                Search results near your location
+              </Drawer.Description>
+              <div
+                className="flex justify-center p-6"
+                style={{ pointerEvents: 'auto' }}
+              >
+                <div className="bg-text-primary rounded-full h-1.5 w-20" />
+              </div>
+              <div className="overflow-y-auto px-6 pb-36 flex flex-col gap-4">
+                {address && (
+                  <>
+                    <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
+                      <TuneOutlined
+                        className="text-text-primary shrink-0"
+                        onClick={() => navigate('/filter')}
+                      />
+                      <GenericToggle
+                        value={isArriving}
+                        onChange={setIsArriving}
+                        labels={['Arriving Near', 'Departing Near']}
+                        className="shrink-0"
+                      />
+                      <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
+                        <PlaceOutlined className="mr-1" />
+                        {address}
+                      </span>
+                      <div
+                        className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
+                        style={{ scrollbarWidth: 'none' }}
+                      >
+                        <DisplayFilters
+                          filters={filters}
+                          setFilters={setFilters}
+                        />
+                      </div>
+                    </div>
+                    {cardsToDisplay.length === 0 ? (
+                      <p className="text-text-secondary text-sm text-center py-4">
+                        No results found. Try adjusting your filters.
+                      </p>
+                    ) : (
+                      cardsToDisplay.map(item =>
+                        filters.mainEventsOnly ? (
+                          <EventCard
+                            key={item.id}
+                            event={item}
+                            view={authorization}
+                          />
+                        ) : (
+                          <RouteCard
+                            key={item.id}
+                            route={item}
+                            view={authorization}
+                            individualView={true}
+                            onSelect={route => {
+                              handleRouteClick(route)
+                              document.activeElement?.blur()
+                            }}
+                          />
+                        )
+                      )
+                    )}
+                  </>
+                )}
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
+        <Drawer.Root
+          open={!!selectedRoute}
+          onOpenChange={open => !open && setSelectedRoute(null)}
+          modal={false}
+          snapPoints={[0.095, 0.25, 0.4, 0.8]} // 80% max, so padding in Route Detail is 25% from bottom
+          activeSnapPoint={routeSnapPoint}
+          setActiveSnapPoint={setRouteSnapPoint}
+          noBodyStyles={true}
+          setBackgroundColorOnScale={false}
+          dismissible={false}
+          preventScrollRestoration={false}
+        >
+          <Drawer.Portal>
+            <Drawer.Content
+              onOpenAutoFocus={e => e.preventDefault()}
+              onFocus={e => {
+                if (e.target === e.currentTarget) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }
+              }}
+              style={{
+                zIndex: 30,
+                marginLeft: '55px',
+                width: 'calc(100% - 55px)',
+                borderRadius: '24px 24px 0 0',
+                height: '96%',
+                position: 'fixed',
+                bottom: 0,
+                background: '#F9F9F9',
+                display: 'flex',
+                flexDirection: 'column',
+                overflowY: 'hidden',
+                pointerEvents: 'auto',
+              }}
+            >
+              <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
+              <Drawer.Description className="sr-only">
+                Route and event details
+              </Drawer.Description>
+              {selectedRoute && (
+                <RouteDetail
+                  selectedRoute={selectedRoute}
+                  onClose={() => {
+                    setSelectedRoute(null)
+                    setSnapPoint(0.5)
+                  }}
+                />
+              )}
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
+        <Outlet
+          context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
+        />
       </div>
       {/* Create Event modal */}
       {showCreateEvent && (
