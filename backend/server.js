@@ -523,17 +523,42 @@ app.get('/api/commute-history', async (req, res) => {
     })
 
     const commuteHistory = []
+
     for (const r of routes) {
       const savings = await analytics.computeRouteSavings(r)
+      const contributions = await analytics.toAnalyticsContributions(r, false)
+
+      // Total distance now from segments
+      const totalDistanceKm = contributions.reduce(
+        (sum, c) => sum + c.distanceKm,
+        0
+      )
+
+      // Dominant mode
+      const totalsByMode = {}
+      for (const c of contributions) {
+        totalsByMode[c.mode] = (totalsByMode[c.mode] || 0) + c.distanceKm
+      }
+
+      let dominantMode = 'other'
+      let maxDistance = -1
+
+      for (const [mode, dist] of Object.entries(totalsByMode)) {
+        if (dist > maxDistance) {
+          dominantMode = mode
+          maxDistance = dist
+        }
+      }
 
       commuteHistory.push({
         id: r.id,
         title: r.title,
         creator_id: r.creator_id,
-        transportation_mode: r.transportation_mode,
+        transportation_mode: dominantMode,
+        distance: analytics.roundToTwoDecimals(totalDistanceKm),
+
         origin: r.origin,
         destination: r.destination,
-        distance: r.distance,
         depart_time: r.depart_time,
         completed: r.completed,
         max_ppl: r.max_ppl,
@@ -561,6 +586,9 @@ app.get('/api/commute-history', async (req, res) => {
 /**
  * Returns a summary of trips, distances, CO2 savings, and trip counts,
  * filtered based on user role (admin or user).
+ * - One completed route still counts as one trip
+ * - Distance and CO2 savings are distributed across multiple modes
+ *   when detailed route path data exists
  *
  * @returns {Object} JSON response with analytics summary
  */
@@ -584,24 +612,49 @@ app.get('/api/analytics/summary', async (req, res) => {
       totalDistanceKm: 0,
       totalCo2SavedKg: 0,
 
-      tripFrequenciesByMode: { walk: 0, bicycle: 0, bus: 0, car: 0, other: 0 },
-      distanceByModeKm: { walk: 0, bicycle: 0, bus: 0, car: 0, other: 0 },
-      co2SavedByModeKg: { walk: 0, bicycle: 0, bus: 0, car: 0, other: 0 },
+      tripFrequenciesByMode: {
+        walk: 0,
+        bicycle: 0,
+        bus: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
+      distanceByModeKm: {
+        walk: 0,
+        bicycle: 0,
+        bus: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
+      co2SavedByModeKg: {
+        walk: 0,
+        bicycle: 0,
+        bus: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
     }
 
     for (const r of routes) {
-      const { mode, distanceKm, savedKg } = await analytics.toAnalyticsRecord(
-        r,
-        isAdmin
-      )
+      const contributions = await analytics.toAnalyticsContributions(r, isAdmin)
 
+      // One completed route still counts as one trip
       summary.tripCount += 1
-      summary.totalDistanceKm += distanceKm
-      summary.totalCo2SavedKg += savedKg
 
-      summary.tripFrequenciesByMode[mode] += 1
-      summary.distanceByModeKm[mode] += distanceKm
-      summary.co2SavedByModeKg[mode] += savedKg
+      for (const item of contributions) {
+        const mode =
+          item.mode in summary.tripFrequenciesByMode ? item.mode : 'other'
+
+        summary.totalDistanceKm += item.distanceKm
+        summary.totalCo2SavedKg += item.savedKg
+
+        summary.tripFrequenciesByMode[mode] += item.tripCount
+        summary.distanceByModeKm[mode] += item.distanceKm
+        summary.co2SavedByModeKg[mode] += item.savedKg
+      }
     }
 
     summary.totalDistanceKm = analytics.roundToTwoDecimals(
@@ -631,6 +684,8 @@ app.get('/api/analytics/summary', async (req, res) => {
  * Returns analytics grouped by transportation mode (chart-friendly array).
  * - Admins receive system-wide data across all completed routes.
  * - Users receive data only for their completed routes they participated in.
+ * - A single completed route contributes distance/CO2 to multiple modes
+ * - Trip count remains route-based and is assigned to the most dominant mode
  *
  * @returns {Object} JSON response with analytics data grouped by commute type
  */
@@ -665,6 +720,12 @@ app.get('/api/analytics/by-mode', async (req, res) => {
         totalDistanceKm: 0,
         totalCo2SavedKg: 0,
       },
+      rail: {
+        mode: 'rail',
+        tripCount: 0,
+        totalDistanceKm: 0,
+        totalCo2SavedKg: 0,
+      },
       car: {
         mode: 'car',
         tripCount: 0,
@@ -680,18 +741,17 @@ app.get('/api/analytics/by-mode', async (req, res) => {
     }
 
     for (const r of routes) {
-      const { mode, distanceKm, savedKg } = await analytics.toAnalyticsRecord(
-        r,
-        isAdmin
-      )
+      const contributions = await analytics.toAnalyticsContributions(r, isAdmin)
 
-      const modeStats = aggregates[mode] || aggregates.other
-      modeStats.tripCount += 1
-      modeStats.totalDistanceKm += distanceKm
-      modeStats.totalCo2SavedKg += savedKg
+      for (const item of contributions) {
+        const modeStats = aggregates[item.mode] || aggregates.other
+        modeStats.tripCount += item.tripCount
+        modeStats.totalDistanceKm += item.distanceKm
+        modeStats.totalCo2SavedKg += item.savedKg
+      }
     }
 
-    const data = ['walk', 'bicycle', 'bus', 'car', 'other'].map(key => {
+    const data = ['walk', 'bicycle', 'bus', 'rail', 'car', 'other'].map(key => {
       const item = aggregates[key]
       return {
         mode: item.mode,
