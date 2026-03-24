@@ -131,6 +131,7 @@ describe('GET /maps/api/js', () => {
 
   test('returns script content with correct content-type', async () => {
     fetch.mockResolvedValue({
+      ok: true,
       text: jest.fn().mockResolvedValue('console.log("maps");'),
     })
 
@@ -164,6 +165,25 @@ describe('GET /maps/api/js', () => {
       expect.stringContaining('callback=initMap')
     )
   })
+
+  test('returns 500 when fetch fails', async () => {
+    fetch.mockRejectedValue(new Error('Network failure'))
+
+    const response = await request(app).get('/maps/api/js')
+
+    expect(response.status).toBe(500)
+  })
+
+  test('handles non-ok response from Google', async () => {
+    fetch.mockResolvedValue({
+      ok: false,
+      status: 403,
+    })
+
+    const response = await request(app).get('/maps/api/js')
+
+    expect(response.status).toBe(403)
+  })
 })
 
 describe('GET /maps/geocode', () => {
@@ -178,6 +198,7 @@ describe('GET /maps/geocode', () => {
       status: 'OK',
     }
     fetch.mockResolvedValue({
+      ok: true,
       json: jest.fn().mockResolvedValue(mockData),
     })
 
@@ -209,6 +230,25 @@ describe('GET /maps/geocode', () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('key=test-api-key')
     )
+  })
+
+  test('returns 500 when fetch fails', async () => {
+    fetch.mockRejectedValue(new Error('Network failure'))
+
+    const response = await request(app).get('/maps/geocode?address=test')
+
+    expect(response.status).toBe(500)
+  })
+
+  test('handles non-ok response from Google', async () => {
+    fetch.mockResolvedValue({
+      ok: false,
+      status: 403,
+    })
+
+    const response = await request(app).get('/maps/geocode?address=test')
+
+    expect(response.status).toBe(403)
   })
 })
 

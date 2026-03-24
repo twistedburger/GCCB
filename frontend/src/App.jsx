@@ -13,6 +13,10 @@ import UserGuide from './pages/UserGuide'
 import { useState, useEffect } from 'react'
 import { authLevel, AuthProvider } from './utils/Authorization'
 import ProtectedRoute from './components/ProtectedRoute'
+import Filter from './pages/home/Filter'
+import Report from './pages/home/Report'
+import EventDetail from './pages/home/EventDetail'
+import Moderate from './pages/moderate/Moderate'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
@@ -45,7 +49,9 @@ function App() {
         <div className="app-container min-h-screen">
           {/* pages */}
           <div className="relative w-full min-h-screen flex bg-background-off-white">
-            {userAuthenticated && currentUser && <Sidebar />}{' '}
+            {userAuthenticated && currentUser && (
+              <Sidebar userRole={currentUser.role} />
+            )}{' '}
             <main className="flex-1 overflow-y-auto">
               <Routes>
                 <Route
@@ -62,7 +68,11 @@ function App() {
                       <Home />
                     )
                   }
-                />
+                >
+                  <Route path="filter" element={<Filter />} />
+                  <Route path="event/:id" element={<EventDetail />} />
+                  <Route path="report" element={<Report />} />
+                </Route>
                 <Route
                   element={
                     <ProtectedRoute requiredAuthorization={authLevel.USER} />
@@ -84,6 +94,15 @@ function App() {
                   />
                   <Route path="/dashboard/activity" element={<Activity />} />
                   <Route path="/user-guide" element={<UserGuide />} />
+                </Route>
+                <Route
+                  element={
+                    <ProtectedRoute
+                      requiredAuthorization={authLevel.MODERATOR}
+                    />
+                  }
+                >
+                  <Route path="/moderate" element={<Moderate />} />
                 </Route>
               </Routes>
             </main>

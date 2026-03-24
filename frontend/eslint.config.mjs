@@ -15,7 +15,6 @@ const compat = new FlatCompat({
 
 export default [
   { ignores: ["dist", "node_modules", "vite.config.js"] },
-  
   js.configs.recommended,
   pluginReact.configs.flat.recommended,
   
@@ -46,6 +45,7 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.node,
+        google: 'readonly',
       },
       parserOptions: {
         ecmaFeatures: { jsx: true },

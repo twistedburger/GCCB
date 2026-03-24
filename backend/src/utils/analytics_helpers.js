@@ -3,7 +3,7 @@
  *
  * @param {Object} params Parameters object.
  * @param {Object} params.db Database object
- * @param {Object} params.co2Calculator Object with method `calculateSaved` for CO2 savings calculations.
+ * @param {Object} params.co2Calculator Object with co2e calculations based on route segmentation
  * @param {Object} params.emissions Emissions constants.
  * @param {Object} params.emissions.EMISSIONS_G_PER_KM Emissions factors for different vehicle types.
  *
@@ -15,10 +15,34 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
   // Open for expansion and chart simplification
   const MODE_MAPPING = {
     walk: 'walk',
+    walking: 'walk',
+
     bicycle: 'bicycle',
-    cycle: 'bicycle', // treating cycle and bicycle as synonymous
+    bike: 'bicycle',
+    bicycling: 'bicycle',
+    cycle: 'bicycle',
+
     bus: 'bus',
-    transit: 'bus', // default transit as 'bus,' but update emissions constants if planning to expand .e.g train
+    intercity_bus: 'bus',
+    trolleybus: 'bus',
+    share_taxi: 'bus',
+
+    rail: 'rail',
+    subway: 'rail',
+    train: 'rail',
+    light_rail: 'rail',
+    tram: 'rail',
+    metro_rail: 'rail',
+    commuter_train: 'rail',
+    heavy_rail: 'rail',
+    high_speed_train: 'rail',
+    long_distance_train: 'rail',
+    monorail: 'rail',
+
+    transit: 'bus',
+
+    drive: 'car',
+    driving: 'car',
     car: 'car',
   }
 
@@ -32,6 +56,56 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     return String(mode || '')
       .trim()
       .toLowerCase()
+  }
+
+  /**
+   * Maps a transport mode to an analytics category.
+   *
+   * This is primarily used to convert route details with multiple modes
+   * into the smaller set of categories used by the dashboard charts.
+   *
+   * @param {string} mode The transportation mode.
+   * @returns {string} Analytics mode category (walk/bicycle/bus/rail/car/other).
+   */
+  function toAnalyticsMode(mode) {
+    const normalizedMode = normalizeMode(mode)
+    return MODE_MAPPING[normalizedMode] || 'other'
+  }
+
+  /**
+   * Helper function to resolves a transit step into a more specific mode.
+   * Maps those vehicle types into the dashboard's analytics categories.
+   *
+   * @param {Object} step A route step object from `route.path`.
+   * @returns {string} Normalized transportation mode.
+   */
+  function getTransitStepMode(step) {
+    const vehicleType = normalizeMode(
+      step?.transitDetails?.transitLine?.vehicle?.type
+    )
+
+    if (!vehicleType) {
+      return 'bus'
+    }
+
+    const analyticsMode = toAnalyticsMode(vehicleType)
+    return analyticsMode === 'other' ? 'bus' : analyticsMode
+  }
+
+  /**
+   * Resolves the transportation mode for a route step.
+   *
+   * @param {Object} step A route step object from `route.path`.
+   * @returns {string} Normalized transportation mode.
+   */
+  function getStepTransportationMode(step) {
+    const travelMode = normalizeMode(step?.travelMode)
+
+    if (travelMode === 'transit') {
+      return getTransitStepMode(step)
+    }
+
+    return toAnalyticsMode(travelMode)
   }
 
   /**
@@ -87,7 +161,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
    *
    * Passenger logic:
    * - Query returns `participant_count` (num rows in `user_route`).
-   * - Check if router creator is among the participants and include in calculation as passenger.
+   * - Check if route creator is among the participants and include in calculation as passenger.
    * - If for whatever reason the route creator is not a participant i.e. the driver is outside of the system,
    *   we include as a passenger for co2e savings calculations.
    *
@@ -134,25 +208,103 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
   }
 
   /**
+   * Returns the parsed `route.path` object when present.
+   *
+   * @param {Object} routeRow Route row from DB.
+   * @returns {Object|null} Parsed path object or null when unavailable/invalid.
+   */
+  function getRoutePathObject(routeRow) {
+    if (!routeRow?.path) return null
+
+    if (typeof routeRow.path === 'object') {
+      return routeRow.path
+    }
+
+    try {
+      return JSON.parse(routeRow.path)
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Extracts normalized route segments from detailed route path data.
+   *
+   * @param {Object} routeRow Route row from DB.
+   * @returns {Array<{ transportation_mode: string, distanceKm: number }>}
+   */
+  function extractRouteSegments(routeRow) {
+    const pathObject = getRoutePathObject(routeRow)
+    const legs = Array.isArray(pathObject?.legs) ? pathObject.legs : []
+
+    const segments = []
+
+    for (const leg of legs) {
+      const steps = Array.isArray(leg?.steps) ? leg.steps : []
+
+      for (const step of steps) {
+        const rawMode = getStepTransportationMode(step)
+        const distanceKm = Number(step?.distanceMeters || 0) / 1000
+
+        if (!rawMode || rawMode === 'other' || distanceKm <= 0) {
+          continue
+        }
+
+        segments.push({
+          transportation_mode: rawMode,
+          distanceKm,
+        })
+      }
+    }
+
+    return segments
+  }
+
+  /**
    * Computes CO2 savings for a given route using the CO2 calculator.
-   * If the route is by car, use carpool context to determine:
+   *
+   * If any car segment exists, use carpool context to determine:
    * - passengers (derived from user_route + creator inclusion)
-   * - vehicleFactor (derived from creator's latest vehicle EV flag)
+   * - vehicleFactor (derived from the creator's vehicle EV boolean flag)
    *
    * @param {Object} routeRow Route row from DB.
    * @param {string} routeRow.transportation_mode Transportation mode string.
    * @param {number|string} routeRow.distance Route distance in km.
    * @param {number} routeRow.id Route id.
    * @param {number} routeRow.creator_id Route creator user id.
+   * @param {Object|string} [routeRow.path] Optional route details JSON/object.
    *
    * @returns {Promise<{ savedKgUser: number, savedKgSystem: number, context: Object }>}
    */
   async function computeRouteSavings(routeRow) {
+    const segments = extractRouteSegments(routeRow)
+
+    if (segments.length > 0) {
+      let carpoolOptions = {}
+
+      const hasCarSegment = segments.some(
+        segment => toAnalyticsMode(segment.transportation_mode) === 'car'
+      )
+
+      if (hasCarSegment) {
+        const { passengers, vehicleFactor } = await getCarpoolContext(
+          routeRow.id,
+          routeRow.creator_id
+        )
+        carpoolOptions = { passengers, vehicleFactor }
+      }
+
+      return co2Calculator.calculateSavedFromSegments(segments, segment => {
+        const analyticsMode = toAnalyticsMode(segment.transportation_mode)
+        return analyticsMode === 'car' ? carpoolOptions : {}
+      })
+    }
+
     const mode = normalizeMode(routeRow.transportation_mode)
     const distanceKm = Number(routeRow.distance) || 0
 
     let options = {}
-    if (mode === 'car') {
+    if (toAnalyticsMode(mode) === 'car') {
       const { passengers, vehicleFactor } = await getCarpoolContext(
         routeRow.id,
         routeRow.creator_id
@@ -162,18 +314,13 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
 
     return co2Calculator.calculateSaved(
       distanceKm,
-      routeRow.transportation_mode,
+      toAnalyticsMode(routeRow.transportation_mode),
       options
     )
   }
 
   /**
    * Converts a route row into a normalized analytics record for aggregation.
-   *
-   * - `mode` is normalized into an analytics categories (walk/bicycle/bus/car/other)
-   * - `savedKg` is selected based on role:
-   *    - Admin: uses `savedKgSystem` (system-wide savings)
-   *    - User: uses `savedKgUser` (each individual user's share)
    *
    * @param {Object} routeRow Route row from DB.
    * @param {boolean} isAdmin True if admin (system scope).
@@ -187,8 +334,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
    */
   async function toAnalyticsRecord(routeRow, isAdmin) {
     const distanceKm = Number(routeRow.distance) || 0
-    const rawMode = normalizeMode(routeRow.transportation_mode)
-    const mode = MODE_MAPPING[rawMode] || 'other'
+    const mode = toAnalyticsMode(routeRow.transportation_mode)
 
     const savings = await computeRouteSavings(routeRow)
     const savedKg = isAdmin ? savings.savedKgSystem : savings.savedKgUser
@@ -196,14 +342,110 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     return { mode, distanceKm, savedKg, savings }
   }
 
+  /**
+   * Converts a route row into one or more analytics contributions for aggregation.
+   *
+   * @param {Object} routeRow Route row from DB.
+   * @param {boolean} isAdmin True if admin (system scope).
+   *
+   * @returns {Promise<Array<{
+   *   mode: string,
+   *   distanceKm: number,
+   *   savedKg: number,
+   *   tripCount: number
+   * }>>}
+   */
+  async function toAnalyticsContributions(routeRow, isAdmin) {
+    const segments = extractRouteSegments(routeRow)
+
+    if (segments.length > 0) {
+      let carpoolOptions = {}
+
+      const hasCarSegment = segments.some(
+        segment => toAnalyticsMode(segment.transportation_mode) === 'car'
+      )
+
+      if (hasCarSegment) {
+        const { passengers, vehicleFactor } = await getCarpoolContext(
+          routeRow.id,
+          routeRow.creator_id
+        )
+        carpoolOptions = { passengers, vehicleFactor }
+      }
+
+      const contributions = segments.map(segment => {
+        const mode = toAnalyticsMode(segment.transportation_mode)
+        const distanceKm = segment.distanceKm
+
+        const savings = co2Calculator.calculateSaved(
+          distanceKm,
+          mode,
+          mode === 'car' ? carpoolOptions : {}
+        )
+
+        return {
+          mode,
+          distanceKm,
+          savedKg: isAdmin ? savings.savedKgSystem : savings.savedKgUser,
+          tripCount: 0,
+        }
+      })
+
+      const totalsByMode = {}
+      for (const contribution of contributions) {
+        totalsByMode[contribution.mode] =
+          (totalsByMode[contribution.mode] || 0) + contribution.distanceKm
+      }
+
+      let dominantMode = 'other'
+      let maxDistance = -1
+
+      for (const [mode, totalDistance] of Object.entries(totalsByMode)) {
+        if (totalDistance > maxDistance) {
+          dominantMode = mode
+          maxDistance = totalDistance
+        }
+      }
+
+      const dominantContribution = contributions.find(
+        contribution => contribution.mode === dominantMode
+      )
+
+      if (dominantContribution) {
+        dominantContribution.tripCount = 1
+      }
+
+      return contributions
+    }
+
+    const distanceKm = Number(routeRow.distance) || 0
+    const mode = toAnalyticsMode(routeRow.transportation_mode)
+    const savings = await computeRouteSavings(routeRow)
+
+    return [
+      {
+        mode,
+        distanceKm,
+        savedKg: isAdmin ? savings.savedKgSystem : savings.savedKgUser,
+        tripCount: 1,
+      },
+    ]
+  }
+
   return {
     MODE_MAPPING,
     normalizeMode,
+    toAnalyticsMode,
+    getTransitStepMode,
+    getStepTransportationMode,
     roundToTwoDecimals,
     fetchCompletedRoutes,
     getCarpoolContext,
+    getRoutePathObject,
+    extractRouteSegments,
     computeRouteSavings,
     toAnalyticsRecord,
+    toAnalyticsContributions,
   }
 }
 

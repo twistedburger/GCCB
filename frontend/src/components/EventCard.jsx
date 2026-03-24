@@ -3,20 +3,16 @@ import bcitCover from '../assets/bcit.jpg'
 import {
   OutlinedFlagRounded,
   VerifiedOutlined,
-  CheckCircleOutlineRounded,
-  CancelOutlined,
-  AccountCircleOutlined,
   ReportGmailerrorred,
 } from '@mui/icons-material'
-import GenericButton from './GenericButton.jsx'
 import { useNavigate } from 'react-router-dom'
 
 export default function EventCard({ event, view }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()
+
   return (
     <div
-      id={`event-${event.id}`}
       onClick={() => {
         navigate(`/event/${event.id}`)
       }}
@@ -27,13 +23,17 @@ export default function EventCard({ event, view }) {
           src={bcitCover}
           className="h-24 w-full object-cover rounded-t-xl"
         />
-        {view != 'moderate' && (
+        {view != 'moderator' && (
           <ReportGmailerrorred
             className="absolute top-2 right-2"
             onClick={e => {
               e.stopPropagation()
               navigate(`/report`, {
-                state: { type: 'event', targetId: event.id },
+                state: {
+                  type: 'event',
+                  targetId: event.id,
+                  targetName: event.title,
+                },
               })
             }}
           />
@@ -42,12 +42,14 @@ export default function EventCard({ event, view }) {
       <div className="flex p-4 gap-4">
         <div className="flex flex-col justify-center text-center px-2 shrink-0">
           <span className="text-dark-grey font-medium">
-            {dateObj
-              .toLocaleDateString('en-US', { month: 'short' })
-              .toUpperCase()}
+            {dateObj && !isNaN(dateObj)
+              ? dateObj
+                  .toLocaleDateString('en-US', { month: 'short' })
+                  .toUpperCase()
+              : '—'}
           </span>
           <span className="text-2xl text-text-primary font-bold -mt-1">
-            {dateObj.getDate()}
+            {dateObj && !isNaN(dateObj) ? dateObj.getDate() : '—'}
           </span>
           <span className="text-xs text-text-secondary mt-1 whitespace-nowrap">
             {dateObj.toLocaleTimeString('en-US', {
@@ -74,24 +76,6 @@ export default function EventCard({ event, view }) {
           </span>
         </div>
       </div>
-
-      {/* Additional information for moderation view */}
-      {view == 'moderate' && (
-        <div className="flex justify-between mx-4 mb-3 gap-1">
-          <div className="flex items-center gap-1">
-            <AccountCircleOutlined fontSize="large" />
-            {event.creator_name}
-          </div>
-          <div className="flex justify-end">
-            <GenericButton onClick={() => {}} unstyled={true}>
-              <CheckCircleOutlineRounded fontSize="large" />
-            </GenericButton>
-            <GenericButton onClick={() => {}} unstyled={true}>
-              <CancelOutlined fontSize="large" />
-            </GenericButton>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

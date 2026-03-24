@@ -2,6 +2,7 @@ require('dotenv').config({ path: __dirname + '/.env' })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
+const axios = require('axios')
 const { serverStrings } = require('./locales/en/serverLocales')
 
 const app = express()
@@ -20,9 +21,6 @@ const config = {
   baseURL: 'http://localhost:3000',
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_DOMAIN,
-  // authorizationParams: {
-  //     connection: 'google-oauth2',
-  //   },
 }
 
 app.use(
@@ -41,27 +39,49 @@ const analytics = createAnalyticsHelpers({
 })
 
 app.get('/maps/api/js', async (req, res) => {
-  const params = new URLSearchParams(req.query)
-  params.set('key', process.env.GOOGLE_MAPS_API_KEY)
+  try {
+    const params = new URLSearchParams(req.query)
+    params.set('key', process.env.GOOGLE_MAPS_API_KEY)
 
-  const response = await fetch(
-    `https://maps.googleapis.com/maps/api/js?${params.toString()}`
-  )
-  const script = await response.text()
-  res.setHeader('Content-Type', 'application/javascript')
-  res.send(script)
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/js?${params.toString()}`
+    )
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: serverStrings.google })
+    }
+
+    const script = await response.text()
+    res.setHeader('Content-Type', 'application/javascript')
+    res.send(script)
+  } catch (err) {
+    const status = err.response?.status ?? 500
+    const message = err.response?.data?.error?.message ?? err.message
+    res.status(status).json({ error: message })
+  }
 })
 
 app.get('/maps/geocode', async (req, res) => {
-  const params = new URLSearchParams({
-    address: req.query.address,
-    key: process.env.GOOGLE_MAPS_API_KEY,
-  })
-  const response = await fetch(
-    `https://maps.googleapis.com/maps/api/geocode/json?${params}`
-  )
-  const data = await response.json()
-  res.json(data)
+  try {
+    const params = new URLSearchParams({
+      address: req.query.address,
+      key: process.env.GOOGLE_MAPS_API_KEY,
+    })
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?${params}`
+    )
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: serverStrings.google })
+    }
+
+    const data = await response.json()
+    res.json(data)
+  } catch (err) {
+    const status = err.response?.status ?? 500
+    const message = err.response?.data?.error?.message ?? err.message
+    res.status(status).json({ error: message })
+  }
 })
 
 app.get('/loginRoute', (req, res) => {
@@ -219,7 +239,7 @@ app.get('/authorize', async (req, res) => {
  * @returns events fetched from the db, or an empty array
  */
 app.get('/api/events', (req, res) => {
-  const { time, verified, transportation_modes } = req.query
+  const { time, verified, transportation_modes, need_approval } = req.query
 
   const conditions = []
   const values = []
@@ -237,6 +257,9 @@ app.get('/api/events', (req, res) => {
     const modes = transportation_modes.split(',')
     values.push(modes)
     conditions.push(`r.transportation_mode = ANY($${values.length})`)
+  }
+  if (need_approval === 'true') {
+    conditions.push(`e.need_approval = true AND e.verified = false`)
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
@@ -258,6 +281,31 @@ app.get('/api/events', (req, res) => {
       res.status(200).json(results.rows)
     }
   )
+})
+
+app.post('/api/requestRoute', async (req, res) => {
+  try {
+    const response = await axios.post(
+      'https://routes.googleapis.com/directions/v2:computeRoutes',
+      req.body,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
+          'X-Goog-FieldMask':
+            'routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.steps.transitDetails,routes.legs.steps.distanceMeters,routes.legs.steps.travelMode,routes.legs.steps.polyline',
+        },
+      }
+    )
+    if (!response.ok) {
+      return res.status(response.status).json({ error: serverStrings.google })
+    }
+    res.json(response.data)
+  } catch (err) {
+    const status = err.response?.status ?? 500
+    const message = err.response?.data?.error?.message ?? err.message
+    res.status(status).json({ error: message })
+  }
 })
 
 app.post('/api/createEvent', async (req, res) => {
@@ -351,11 +399,17 @@ app.get('/api/routes', (req, res) => {
 
   db.query(
     `SELECT DISTINCT r.*,
+      u.id as creator_id,
+      u.name as creator_name,
+      u.nickname,
+      u.profile_pic,
+      er.event_id,      
       (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
-     FROM route r
-     LEFT JOIN event_route er ON er.route_id = r.id
-     LEFT JOIN event e ON e.id = er.event_id
-     ${where}`,
+    FROM route r
+    LEFT JOIN "user" u ON u.id = r.creator_id
+    LEFT JOIN event_route er ON er.route_id = r.id
+    LEFT JOIN event e ON e.id = er.event_id
+    ${where}`,
     values,
     (error, results) => {
       if (error) {
@@ -468,7 +522,7 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
 })
 
 /**
- * Adds a report and corresponding resport junction to report_user, report_event, or report_route.
+ * Adds a report and corresponding report junction to report_user, report_event, or report_route.
  */
 app.post('/api/report', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -532,17 +586,42 @@ app.get('/api/commute-history', async (req, res) => {
     })
 
     const commuteHistory = []
+
     for (const r of routes) {
       const savings = await analytics.computeRouteSavings(r)
+      const contributions = await analytics.toAnalyticsContributions(r, false)
+
+      // Total distance now from segments
+      const totalDistanceKm = contributions.reduce(
+        (sum, c) => sum + c.distanceKm,
+        0
+      )
+
+      // Dominant mode
+      const totalsByMode = {}
+      for (const c of contributions) {
+        totalsByMode[c.mode] = (totalsByMode[c.mode] || 0) + c.distanceKm
+      }
+
+      let dominantMode = 'other'
+      let maxDistance = -1
+
+      for (const [mode, dist] of Object.entries(totalsByMode)) {
+        if (dist > maxDistance) {
+          dominantMode = mode
+          maxDistance = dist
+        }
+      }
 
       commuteHistory.push({
         id: r.id,
         title: r.title,
         creator_id: r.creator_id,
-        transportation_mode: r.transportation_mode,
+        transportation_mode: dominantMode,
+        distance: analytics.roundToTwoDecimals(totalDistanceKm),
+
         origin: r.origin,
         destination: r.destination,
-        distance: r.distance,
         depart_time: r.depart_time,
         completed: r.completed,
         max_ppl: r.max_ppl,
@@ -570,6 +649,9 @@ app.get('/api/commute-history', async (req, res) => {
 /**
  * Returns a summary of trips, distances, CO2 savings, and trip counts,
  * filtered based on user role (admin or user).
+ * - One completed route still counts as one trip
+ * - Distance and CO2 savings are distributed across multiple modes
+ *   when detailed route path data exists
  *
  * @returns {Object} JSON response with analytics summary
  */
@@ -593,24 +675,49 @@ app.get('/api/analytics/summary', async (req, res) => {
       totalDistanceKm: 0,
       totalCo2SavedKg: 0,
 
-      tripFrequenciesByMode: { walk: 0, bicycle: 0, bus: 0, car: 0, other: 0 },
-      distanceByModeKm: { walk: 0, bicycle: 0, bus: 0, car: 0, other: 0 },
-      co2SavedByModeKg: { walk: 0, bicycle: 0, bus: 0, car: 0, other: 0 },
+      tripFrequenciesByMode: {
+        walk: 0,
+        bicycle: 0,
+        bus: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
+      distanceByModeKm: {
+        walk: 0,
+        bicycle: 0,
+        bus: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
+      co2SavedByModeKg: {
+        walk: 0,
+        bicycle: 0,
+        bus: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
     }
 
     for (const r of routes) {
-      const { mode, distanceKm, savedKg } = await analytics.toAnalyticsRecord(
-        r,
-        isAdmin
-      )
+      const contributions = await analytics.toAnalyticsContributions(r, isAdmin)
 
+      // One completed route still counts as one trip
       summary.tripCount += 1
-      summary.totalDistanceKm += distanceKm
-      summary.totalCo2SavedKg += savedKg
 
-      summary.tripFrequenciesByMode[mode] += 1
-      summary.distanceByModeKm[mode] += distanceKm
-      summary.co2SavedByModeKg[mode] += savedKg
+      for (const item of contributions) {
+        const mode =
+          item.mode in summary.tripFrequenciesByMode ? item.mode : 'other'
+
+        summary.totalDistanceKm += item.distanceKm
+        summary.totalCo2SavedKg += item.savedKg
+
+        summary.tripFrequenciesByMode[mode] += item.tripCount
+        summary.distanceByModeKm[mode] += item.distanceKm
+        summary.co2SavedByModeKg[mode] += item.savedKg
+      }
     }
 
     summary.totalDistanceKm = analytics.roundToTwoDecimals(
@@ -640,6 +747,8 @@ app.get('/api/analytics/summary', async (req, res) => {
  * Returns analytics grouped by transportation mode (chart-friendly array).
  * - Admins receive system-wide data across all completed routes.
  * - Users receive data only for their completed routes they participated in.
+ * - A single completed route contributes distance/CO2 to multiple modes
+ * - Trip count remains route-based and is assigned to the most dominant mode
  *
  * @returns {Object} JSON response with analytics data grouped by commute type
  */
@@ -674,6 +783,12 @@ app.get('/api/analytics/by-mode', async (req, res) => {
         totalDistanceKm: 0,
         totalCo2SavedKg: 0,
       },
+      rail: {
+        mode: 'rail',
+        tripCount: 0,
+        totalDistanceKm: 0,
+        totalCo2SavedKg: 0,
+      },
       car: {
         mode: 'car',
         tripCount: 0,
@@ -689,18 +804,17 @@ app.get('/api/analytics/by-mode', async (req, res) => {
     }
 
     for (const r of routes) {
-      const { mode, distanceKm, savedKg } = await analytics.toAnalyticsRecord(
-        r,
-        isAdmin
-      )
+      const contributions = await analytics.toAnalyticsContributions(r, isAdmin)
 
-      const modeStats = aggregates[mode] || aggregates.other
-      modeStats.tripCount += 1
-      modeStats.totalDistanceKm += distanceKm
-      modeStats.totalCo2SavedKg += savedKg
+      for (const item of contributions) {
+        const modeStats = aggregates[item.mode] || aggregates.other
+        modeStats.tripCount += item.tripCount
+        modeStats.totalDistanceKm += item.distanceKm
+        modeStats.totalCo2SavedKg += item.savedKg
+      }
     }
 
-    const data = ['walk', 'bicycle', 'bus', 'car', 'other'].map(key => {
+    const data = ['walk', 'bicycle', 'bus', 'rail', 'car', 'other'].map(key => {
       const item = aggregates[key]
       return {
         mode: item.mode,
@@ -726,5 +840,62 @@ if (require.main === module) {
     console.log(`GCCB Backend listening on port ${port}`)
   })
 }
+
+/**
+ * Returns reports to be reviewed by the moderator.
+ * @returns pending reports, or an empty array
+ */
+app.get('/api/reports', async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        r.*,
+        CASE
+          WHEN ru.user_id IS NOT NULL THEN 'user'
+          WHEN re.event_id IS NOT NULL THEN 'event'
+          WHEN rr.route_id IS NOT NULL THEN 'route'
+        END AS report_target,
+        COALESCE(ru.user_id, re.event_id, rr.route_id) AS target_id
+      FROM report r
+      LEFT JOIN report_user ru ON r.id = ru.report_id
+      LEFT JOIN report_event re ON r.id = re.report_id
+      LEFT JOIN report_route rr ON r.id = rr.report_id
+      WHERE r.status = 'pending'
+      ORDER BY r.created_at ASC
+    `)
+
+    // get report details for user, event, and route respectively
+    const reports = await Promise.all(
+      result.rows.map(async report => {
+        let target_details = null
+
+        if (report.report_target === 'user') {
+          const res = await db.query('SELECT * FROM "user" WHERE id = $1', [
+            report.target_id,
+          ])
+          target_details = res.rows[0]
+        } else if (report.report_target === 'event') {
+          const res = await db.query('SELECT * FROM event WHERE id = $1', [
+            report.target_id,
+          ])
+          target_details = res.rows[0]
+        } else if (report.report_target === 'route') {
+          const res = await db.query(
+            'SELECT r.*, er.event_id FROM route r LEFT JOIN event_route er ON r.id = er.route_id WHERE id = $1',
+            [report.target_id]
+          )
+          target_details = res.rows[0]
+        }
+
+        return { ...report, target_details }
+      })
+    )
+
+    res.status(200).json(reports)
+  } catch (error) {
+    console.error('Error fetching reports:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
 
 module.exports = app

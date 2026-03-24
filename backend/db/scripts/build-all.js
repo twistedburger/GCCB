@@ -14,6 +14,7 @@ const config = {
     'add_user_last_login.sql',
     'create_report_table.sql',
     'add_created_at_column_event_and_route.sql',
+    'update_path_data_type.sql',
   ],
 }
 

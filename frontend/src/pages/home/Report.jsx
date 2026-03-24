@@ -1,12 +1,12 @@
 import GenericButton from '../../components/GenericButton'
-import DropDownList from '../../components/DropDownList'
+import Select from 'react-select'
 import { Cancel } from '@mui/icons-material'
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Report() {
   const location = useLocation()
-  const { type, targetId } = location.state
+  const { type, targetId, targetName } = location.state
   const navigate = useNavigate()
 
   const reasonMenu = [
@@ -15,9 +15,10 @@ export default function Report() {
     'Dangerous Activity',
     'Discrimination',
     'Other',
-  ]
+  ].map(r => ({ value: r, label: r }))
+
   const [isClosing, setIsClosing] = useState(false)
-  const [reason, setReason] = useState(reasonMenu[0])
+  const [reason, setReason] = useState(reasonMenu[0].value)
   const [explanation, setExplanation] = useState('')
   const [explanationError, setExplanationError] = useState('')
 
@@ -46,12 +47,14 @@ export default function Report() {
   return (
     <>
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ml-13.75 ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
         style={{ maxHeight: '100dvh', overflowY: 'auto' }}
+        onPointerDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
       >
         <div className="px-6 py-4 flex flex-col h-screen">
           <div className="flex flex-row justify-between text-text-primary">
-            <span className="text-2xl font-medium">Report</span>
+            <span className="text-2xl font-medium">Report {targetName}</span>
             <GenericButton
               onClick={closeWithAnimation}
               unstyled={true}
@@ -61,10 +64,11 @@ export default function Report() {
             </GenericButton>
           </div>
           <div className="flex flex-col gap-2">
-            <div className="-mx-2 *:min-w-86">
-              <DropDownList
-                items={reasonMenu}
-                onChange={e => setReason(e.target.value)}
+            <div className=" *:mx-0 *:w-full">
+              <Select
+                options={reasonMenu}
+                value={{ value: reason, label: reason }}
+                onChange={e => setReason(e.value)}
               />
             </div>
             <textarea

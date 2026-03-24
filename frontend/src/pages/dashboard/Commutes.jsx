@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
-import DropDownList from '../../components/DropDownList'
+import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
 import { formatKg, formatKm } from '../../utils/analyticsHelpers'
 
@@ -52,9 +52,30 @@ function Commutes() {
     const value = String(rawMode).trim().toLowerCase()
 
     if (['walk', 'walking'].includes(value)) return 'walk'
-    if (['bicycle', 'bike', 'cycling', 'cycle'].includes(value))
+    if (['bicycle', 'bike', 'cycling', 'cycle', 'bicycling'].includes(value)) {
       return 'bicycle'
-    if (['bus', 'transit', 'train', 'skytrain'].includes(value)) return 'bus'
+    }
+    if (['bus', 'transit', 'intercity_bus', 'trolleybus'].includes(value)) {
+      return 'bus'
+    }
+    if (
+      [
+        'rail',
+        'train',
+        'skytrain',
+        'subway',
+        'light_rail',
+        'tram',
+        'metro_rail',
+        'commuter_train',
+        'heavy_rail',
+        'high_speed_train',
+        'long_distance_train',
+        'monorail',
+      ].includes(value)
+    ) {
+      return 'rail'
+    }
     if (['car', 'carpool', 'drive', 'driving'].includes(value)) return 'car'
 
     return 'other'
@@ -141,8 +162,22 @@ function Commutes() {
   }
 
   function formatRouteMode(value) {
-    if (!value) return 'Unknown mode'
-    return String(value)
+    const normalized = normalizeMode(value)
+
+    switch (normalized) {
+      case 'walk':
+        return 'Walk'
+      case 'bicycle':
+        return 'Bicycle'
+      case 'bus':
+        return 'Bus'
+      case 'rail':
+        return 'Rail'
+      case 'car':
+        return 'Car / Carpool'
+      default:
+        return 'Other'
+    }
   }
 
   return (
@@ -176,9 +211,13 @@ function Commutes() {
               <label className="mb-1 text-sm font-semibold text-zinc-700">
                 Date range
               </label>
-              <DropDownList
-                items={['all', '7d', '30d']}
-                onChange={e => setDateRange(e.target.value)}
+              <Select
+                options={['all', '7d', '30d'].map(r => ({
+                  value: r,
+                  label: r,
+                }))}
+                value={{ value: dateRange, label: dateRange }}
+                onChange={e => setDateRange(e.value)}
               />
             </div>
 
@@ -186,9 +225,34 @@ function Commutes() {
               <label className="mb-1 text-sm font-semibold text-zinc-700">
                 Transportation mode
               </label>
-              <DropDownList
-                items={['all', 'walk', 'bicycle', 'bus', 'car']}
-                onChange={e => setMode(e.target.value)}
+              <Select
+                options={[
+                  'all',
+                  'walk',
+                  'bicycle',
+                  'bus',
+                  'rail',
+                  'car',
+                  'other',
+                ].map(r => ({
+                  value: r,
+                  label:
+                    r === 'all'
+                      ? 'All'
+                      : r === 'walk'
+                        ? 'Walk'
+                        : r === 'bicycle'
+                          ? 'Bicycle'
+                          : r === 'bus'
+                            ? 'Bus'
+                            : r === 'rail'
+                              ? 'Rail'
+                              : r === 'car'
+                                ? 'Car / Carpool'
+                                : 'Other',
+                }))}
+                value={{ value: mode, label: mode }}
+                onChange={e => setMode(e.value)}
               />
             </div>
           </div>
