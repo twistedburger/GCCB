@@ -19,8 +19,21 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
   const { user } = useAuth()
 
+  const toggleRouteJoin = id => {
+    setAddedRoutes(prev =>
+      prev.map(route =>
+        route.id === id ? { ...route, isJoined: !route.isJoined } : route
+      )
+    )
+  }
+
   const handleRouteSubmit = route => {
-    const routeWithId = { ...route, id: crypto.randomUUID() }
+    console.log('HandleRouteSubmit', route)
+    const routeWithId = {
+      ...route,
+      id: crypto.randomUUID(),
+      isJoined: false,
+    }
     setAddedRoutes([...addedRoutes, routeWithId])
   }
 
@@ -44,22 +57,39 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         credentials: 'include',
         body: JSON.stringify(eventData),
       })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Server Error: ${response.status}`)
+      }
+
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('Error creating event:', error)
+      console.error('Error in createEvent helper:', error)
       throw error
     }
   }
 
-  const createRoute = async routeData => {
+  const createRoute = async (eventId, routeData, creator_id) => {
     try {
       const response = await fetch('http://localhost:3000/api/createRoute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(routeData),
+        body: JSON.stringify({
+          eventId,
+          ...routeData,
+          creator_id,
+        }),
       })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.error || `Route Creation Failed: ${response.status}`
+        )
+      }
       const data = await response.json()
       return data
     } catch (error) {
@@ -92,16 +122,19 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         event_time: datetime,
         location: selectedPlace,
         description: eventDesc,
+        verified: false,
+        need_approval: false,
       }
 
       const { id: newEventId } = await createEvent(eventData)
 
       if (addedRoutes.length > 0) {
         const routePromises = addedRoutes.map(route =>
-          createRoute(newEventId, route)
+          createRoute(newEventId, route, user.id)
         )
         await Promise.all(routePromises)
       }
+
       onSubmit({
         success: true,
         message: 'Event and routes created successfully!',
@@ -194,7 +227,13 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
                     onClick={() => removeRoute(route.id)}
                   />
                 </GenericButton>
-                <RouteCard key={route.id} route={route} individualView={true} />
+                <RouteCard
+                  key={route.id}
+                  route={route}
+                  isDraft={true}
+                  individualView={true}
+                  onToggleJoin={toggleRouteJoin}
+                />
               </div>
             ))}
           </div>

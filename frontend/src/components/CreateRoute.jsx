@@ -110,6 +110,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       description: routeDesc,
       distance: distance,
       path: polyline,
+      completed: false,
     }
     onSubmit(routeData)
   }

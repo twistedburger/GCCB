@@ -297,9 +297,6 @@ app.post('/api/requestRoute', async (req, res) => {
         },
       }
     )
-    if (!response.ok) {
-      return res.status(response.status).json({ error: serverStrings.google })
-    }
     res.json(response.data)
   } catch (err) {
     const status = err.response?.status ?? 500
@@ -314,11 +311,28 @@ app.post('/api/createEvent', async (req, res) => {
   }
 
   try {
-    const { title, creator_id, event_time, location, description } = req.body
+    const {
+      title,
+      creator_id,
+      event_time,
+      location,
+      verified,
+      need_approval,
+      description,
+    } = req.body
 
     const result = await db.query(
-      'INSERT INTO event (title, creator_id, event_time, location, description, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [title, creator_id, event_time, location, description, new Date()]
+      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        title,
+        creator_id,
+        event_time,
+        location,
+        verified,
+        need_approval,
+        description,
+        new Date(),
+      ]
     )
 
     res.status(201).json(result.rows[0])
@@ -333,31 +347,59 @@ app.post('/api/createRoute', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const { eventId, routeData } = req.body
+  const {
+    eventId,
+    title,
+    creator_id,
+    transportation_mode,
+    origin,
+    destination,
+    depart_time,
+    max_ppl,
+    distance,
+    path,
+    completed,
+    description,
+  } = req.body
+  const isJoined = req.body.isJoined
   const client = await pool.connect()
 
   try {
     await client.query('BEGIN')
 
     const routeQuery = `
-      INSERT INTO routes (route_name, start_point, end_point, distance, created_at)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO route (title, creator_id, transportation_mode, origin, destination, depart_time, max_ppl, distance, path, completed, description, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id;
     `
     const routeResult = await client.query(routeQuery, [
-      routeData.name,
-      routeData.start,
-      routeData.end,
-      routeData.distance,
+      title,
+      creator_id,
+      transportation_mode,
+      origin,
+      destination,
+      depart_time,
+      max_ppl,
+      distance,
+      path,
+      completed,
+      description,
       new Date(),
     ])
     const routeId = routeResult.rows[0].id
 
     const junctionQuery = `
-      INSERT INTO event_routes (event_id, route_id)
+      INSERT INTO event_route (event_id, route_id)
       VALUES ($1, $2);
     `
     await client.query(junctionQuery, [eventId, routeId])
+
+    if (isJoined) {
+      await client.query(
+        'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
+        [creator_id, routeId]
+      )
+    }
 
     await client.query('COMMIT')
     res.status(201).json({ success: true, routeId })
