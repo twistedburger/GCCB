@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import { useEffect, useState } from 'react'
 import { Close } from '@mui/icons-material'
+import GenericButton from './GenericButton'
 
 export function Modal({ isOpen, onClose, children, title }) {
   const [animateIn, setAnimateIn] = useState(false)
@@ -33,13 +34,14 @@ export function Modal({ isOpen, onClose, children, title }) {
         `}
       >
         {/* Close Button */}
-        <button
+        <GenericButton
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors p-1"
+          unstyled={true}
+          customStyling="absolute top-4 right-4 z-50 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
           aria-label="Close modal"
         >
           <Close fontSize="large" />
-        </button>
+        </GenericButton>
 
         {/* Content */}
         <div className="p-8 overflow-y-auto max-h-[calc(90vh-2rem)]">
