@@ -3,7 +3,7 @@ import { useAuth } from '../utils/Authorization'
 import PropTypes from 'prop-types'
 import { authLevel } from '../utils/Authorization'
 
-const CheckAuthorization = (authorization, requiredAuthorization) => {
+export const CheckAuthorization = (authorization, requiredAuthorization) => {
   let authorizationLevel = 0
 
   for (const value of Object.values(authLevel)) {

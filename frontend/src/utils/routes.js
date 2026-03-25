@@ -7,7 +7,7 @@ export const TravelMode = Object.freeze({
   Bike: 'BICYCLE',
 })
 
-function isValidTravelMode(value) {
+export function isValidTravelMode(value) {
   return Object.values(TravelMode).includes(value)
 }
 
