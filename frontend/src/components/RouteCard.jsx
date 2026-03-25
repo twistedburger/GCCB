@@ -9,7 +9,6 @@ import {
   DateRangeRounded,
 } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 
 export default function RouteCard({
   route,
@@ -20,7 +19,6 @@ export default function RouteCard({
   onSelect,
   onToggleJoin,
 }) {
-  const navigate = useNavigate()
   const dateObj = new Date(route.depart_time)
   const [peopleGoing, setPeopleGoing] = useState(0)
   const [isJoined, setIsJoined] = useState(false)
@@ -136,13 +134,13 @@ export default function RouteCard({
                 customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
                 onClick={e => {
                   e.stopPropagation()
-                  navigate(`/report`, {
-                    state: {
-                      type: 'route',
-                      targetId: route.id,
-                      targetName: route.title,
-                    },
-                  })
+                  // navigate(`/report`, {
+                  //   state: {
+                  //     type: 'route',
+                  //     targetId: route.id,
+                  //     targetName: route.title,
+                  //   },
+                  // })
                 }}
               >
                 <span>Report</span>

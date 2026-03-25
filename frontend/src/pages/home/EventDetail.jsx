@@ -99,7 +99,7 @@ export default function EventDetail() {
   return (
     <div>
       <div
-        className={`fixed left-1/2 -translate-x-1/2 z-[100] top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
+        className={`fixed left-1/2 -translate-x-1/2 z-100 top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
     whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
     ${
       alert?.visible
@@ -243,13 +243,13 @@ export default function EventDetail() {
                               <MenuItem
                                 onClick={() => {
                                   setAnchorEl(null)
-                                  navigate(`/report`, {
-                                    state: {
-                                      type: 'event',
-                                      targetId: event.id,
-                                      targetName: event.title,
-                                    },
-                                  })
+                                  // navigate(`/report`, {
+                                  //   state: {
+                                  //     type: 'event',
+                                  //     targetId: event.id,
+                                  //     targetName: event.title,
+                                  //   },
+                                  // })
                                 }}
                               >
                                 Report Event
@@ -257,13 +257,13 @@ export default function EventDetail() {
                               <MenuItem
                                 onClick={() => {
                                   setAnchorEl(null)
-                                  navigate(`/report`, {
-                                    state: {
-                                      type: 'user',
-                                      targetId: event.creator_id,
-                                      targetName: event.creator_name,
-                                    },
-                                  })
+                                  // navigate(`/report`, {
+                                  //   state: {
+                                  //     type: 'user',
+                                  //     targetId: event.creator_id,
+                                  //     targetName: event.creator_name,
+                                  //   },
+                                  // })
                                 }}
                               >
                                 Report Organizer

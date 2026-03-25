@@ -20,6 +20,7 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
 import { Modal } from '../components/Modal'
+import Report from '../components/Report'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -29,12 +30,6 @@ console.warn = (...args) => {
   )
     return // Suppress no API warning, since key exists
   originalWarn(...args)
-}
-
-const originalError = console.error
-console.error = (...args) => {
-  if (typeof args[0] === 'string' && args[0].includes('aria-hidden')) return // Suppress aria-hidden focus conflicts from Vaul drawers
-  originalError(...args)
 }
 
 function Home() {
@@ -57,6 +52,8 @@ function Home() {
   const navigate = useNavigate()
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [alert, setAlert] = useState(null)
+  const [reportData, setReportData] = useState(null)
+  const [showReport, setShowReport] = useState(false)
 
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
@@ -156,7 +153,7 @@ function Home() {
   return (
     <div data-vaul-drawer-wrapper className="relative w-full h-full">
       <div
-        className={`fixed left-1/2 -translate-x-1/2 z-[100] top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
+        className={`fixed left-1/2 -translate-x-1/2 z-100 top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
         whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
         ${alert?.visible ? 'translate-y-12 opacity-100' : '-translate-y-full opacity-0'}
         ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
@@ -188,7 +185,7 @@ function Home() {
 
         {!selectedRoute && !isEventDetail && (
           <LocationSearch
-            className="rounded-xl absolute inset-x-0 top-0 m-6 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
+            className="rounded-xl absolute inset-x-0 top-0 m-12 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
             onSearch={handleSearch}
           />
@@ -276,6 +273,10 @@ function Home() {
                             key={item.id}
                             event={item}
                             view={authorization}
+                            onReport={data => {
+                              setReportData(data)
+                              setShowReport(true)
+                            }}
                           />
                         ) : (
                           <RouteCard
@@ -312,6 +313,22 @@ function Home() {
       {/* Create Event modal */}
       <Modal isOpen={showCreateEvent} onClose={() => setShowCreateEvent(false)}>
         <CreateEvent onSubmit={handleFormResult} />
+      </Modal>
+
+      {/* Report Modal */}
+      <Modal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title={reportData ? `Report ${reportData.title}` : 'Report'}
+      >
+        {reportData && (
+          <Report
+            type={reportData.type}
+            targetId={reportData.id}
+            onClose={() => setShowReport(false)}
+            setAlert={setAlert}
+          />
+        )}
       </Modal>
 
       <GenericButton
