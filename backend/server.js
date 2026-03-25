@@ -348,7 +348,7 @@ app.post('/api/createRoute', async (req, res) => {
   }
 
   const {
-    eventId,
+    event_id,
     title,
     creator_id,
     transportation_mode,
@@ -386,23 +386,23 @@ app.post('/api/createRoute', async (req, res) => {
       description,
       new Date(),
     ])
-    const routeId = routeResult.rows[0].id
+    const route_id = routeResult.rows[0].id
 
     const junctionQuery = `
       INSERT INTO event_route (event_id, route_id)
       VALUES ($1, $2);
     `
-    await client.query(junctionQuery, [eventId, routeId])
+    await client.query(junctionQuery, [event_id, route_id])
 
     if (isJoined) {
       await client.query(
         'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-        [creator_id, routeId]
+        [creator_id, route_id]
       )
     }
 
     await client.query('COMMIT')
-    res.status(201).json({ success: true, routeId })
+    res.status(201).json({ success: true, route_id })
   } catch (error) {
     console.error('Database Error Detail:', error)
     await client.query('ROLLBACK')
