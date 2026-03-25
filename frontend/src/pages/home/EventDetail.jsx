@@ -24,9 +24,9 @@ export default function EventDetail() {
   const [anchorEl, setAnchorEl] = useState(null)
   const menuOpen = Boolean(anchorEl)
   const [selectedRoute, setSelectedRoute] = useState(null)
-  const { setSnapPoint } = useOutletContext()
+  const { setSnapPoint, setSelectedRoute: setHomeSelectedRoute } =
+    useOutletContext()
   const [eventSnapPoint, setEventSnapPoint] = useState(1)
-  const [routeSnapPoint, setRouteSnapPoint] = useState(0.25)
   const { authorization } = useAuth()
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function EventDetail() {
         open={open}
         onOpenChange={open => !open && handleClose()}
         modal={false}
-        snapPoints={[0.095, 1]}
+        snapPoints={[0.01, 1]}
         activeSnapPoint={eventSnapPoint}
         setActiveSnapPoint={setEventSnapPoint}
         noBodyStyles={true}
@@ -214,8 +214,16 @@ export default function EventDetail() {
                               view={authorization}
                               individualView={false}
                               onSelect={route => {
-                                setSelectedRoute(route)
-                                setEventSnapPoint(0.095)
+                                const fullRoute = {
+                                  ...route,
+                                  creator_id: event.creator_id,
+                                  creator_name: event.creator_name,
+                                  nickname: event.nickname,
+                                  profile_pic: event.profile_pic,
+                                }
+                                setSelectedRoute(fullRoute)
+                                setHomeSelectedRoute(fullRoute)
+                                setEventSnapPoint(0.01)
                                 setSnapPoint(0.095)
                                 document.activeElement?.blur()
                               }}
@@ -235,62 +243,15 @@ export default function EventDetail() {
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
-      <Drawer.Root
-        open={!!selectedRoute}
-        onOpenChange={open => !open && setSelectedRoute(null)}
-        modal={false}
-        snapPoints={[0.095, 0.25, 0.4]}
-        activeSnapPoint={routeSnapPoint}
-        setActiveSnapPoint={setRouteSnapPoint}
-        noBodyStyles={true}
-        setBackgroundColorOnScale={false}
-        dismissible={false}
-        preventScrollRestoration={false}
-      >
-        <Drawer.Portal>
-          <Drawer.Overlay style={{ pointerEvents: 'none' }} />
-          <Drawer.Content
-            onOpenAutoFocus={e => e.preventDefault()}
-            onCloseAutoFocus={e => e.preventDefault()}
-            style={{
-              zIndex: 50,
-              marginLeft: '55px',
-              width: 'calc(100% - 55px)',
-              borderRadius: '24px 24px 0 0',
-              height: '96%',
-              position: 'fixed',
-              bottom: 0,
-              background: 'transparent',
-              display: 'flex',
-              flexDirection: 'column',
-              pointerEvents: 'none',
-            }}
-          >
-            <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
-            <Drawer.Description className="sr-only">
-              Route details
-            </Drawer.Description>
-            <div
-              style={{
-                pointerEvents: 'auto',
-                background: '#F9F9F9',
-                borderRadius: '24px 24px 0 0',
-              }}
-            >
-              {selectedRoute && (
-                <RouteDetail
-                  selectedRoute={selectedRoute}
-                  onClose={() => {
-                    setSelectedRoute(null)
-                    setEventSnapPoint(1)
-                    setSnapPoint(1)
-                  }}
-                />
-              )}
-            </div>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
+      <RouteDetail
+        selectedRoute={selectedRoute}
+        onClose={() => {
+          setSelectedRoute(null)
+          setHomeSelectedRoute(null)
+          setEventSnapPoint(1)
+          setSnapPoint(1)
+        }}
+      />
     </div>
   )
 }

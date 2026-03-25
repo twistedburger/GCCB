@@ -261,58 +261,13 @@ function Home() {
             </Drawer.Content>
           </Drawer.Portal>
         </Drawer.Root>
-        <Drawer.Root
-          open={!!selectedRoute}
-          onOpenChange={open => !open && setSelectedRoute(null)}
-          modal={false}
-          snapPoints={[0.095, 0.25, 0.4, 0.8]} // 80% max, so padding in Route Detail is 25% from bottom
-          activeSnapPoint={routeSnapPoint}
-          setActiveSnapPoint={setRouteSnapPoint}
-          noBodyStyles={true}
-          setBackgroundColorOnScale={false}
-          dismissible={false}
-          preventScrollRestoration={false}
-        >
-          <Drawer.Portal>
-            <Drawer.Content
-              onOpenAutoFocus={e => e.preventDefault()}
-              onFocus={e => {
-                if (e.target === e.currentTarget) {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }
-              }}
-              style={{
-                zIndex: 30,
-                marginLeft: '55px',
-                width: 'calc(100% - 55px)',
-                borderRadius: '24px 24px 0 0',
-                height: '96%',
-                position: 'fixed',
-                bottom: 0,
-                background: '#F9F9F9',
-                display: 'flex',
-                flexDirection: 'column',
-                overflowY: 'hidden',
-                pointerEvents: 'auto',
-              }}
-            >
-              <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
-              <Drawer.Description className="sr-only">
-                Route and event details
-              </Drawer.Description>
-              {selectedRoute && (
-                <RouteDetail
-                  selectedRoute={selectedRoute}
-                  onClose={() => {
-                    setSelectedRoute(null)
-                    setSnapPoint(0.5)
-                  }}
-                />
-              )}
-            </Drawer.Content>
-          </Drawer.Portal>
-        </Drawer.Root>
+        <RouteDetail
+          selectedRoute={isEventDetail ? null : selectedRoute}
+          onClose={() => {
+            setSelectedRoute(null)
+            setSnapPoint(0.5)
+          }}
+        />
         <Outlet
           context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
         />
@@ -341,7 +296,8 @@ function MapController({ center, route }) {
     decodedPath.forEach(point => bounds.extend(point))
     map.fitBounds(bounds)
 
-    if (route.transportation_mode.toUpperCase() === TravelMode.Transit) {
+    const mode = route.transportation_mode.toUpperCase()
+    if (mode === TravelMode.Transit || mode === 'BUS') {
       // overwrite the line if transit
       const routeLines = []
       const legColors = {

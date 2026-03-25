@@ -8,8 +8,11 @@ import { TravelMode } from '../../utils/routes'
 import { useState, useEffect } from 'react'
 import TransitLegCard from '../../components/TransitLegCard'
 import { useAuth } from '../../utils/Authorization'
+import { Drawer } from 'vaul'
 
 export default function RouteDetail({ selectedRoute, onClose }) {
+  console.log(selectedRoute)
+  const [snapPoint, setSnapPoint] = useState(0.25)
   const [transitLegs, setTransitLegs] = useState([])
   const navigate = useNavigate()
   const { authorization } = useAuth()
@@ -20,8 +23,8 @@ export default function RouteDetail({ selectedRoute, onClose }) {
   }
 
   const calculateTransitLegs = route => {
-    if (route.transportation_mode.toUpperCase() != TravelMode.Transit) {
-      // assume only transit has different steps
+    const mode = route.transportation_mode.toUpperCase()
+    if (mode !== TravelMode.Transit && mode !== 'BUS') {
       setTransitLegs([])
       return
     }
@@ -58,7 +61,6 @@ export default function RouteDetail({ selectedRoute, onClose }) {
           distance: step.distanceMeters,
         }
       }
-
       legs.push(leg)
     })
     setTransitLegs(legs)
@@ -68,77 +70,108 @@ export default function RouteDetail({ selectedRoute, onClose }) {
     if (selectedRoute) calculateTransitLegs(selectedRoute)
   }, [selectedRoute])
 
-  if (!selectedRoute) return null
-
   return (
-    <div className="flex flex-col max-h-full rounded-t-3xl">
-      <div className="flex justify-between items-start px-4 pt-2">
-        <div className="w-8" />
-        <div className="bg-text-primary rounded-full h-1.5 w-20 mt-2" />
-        <GenericButton
-          onClick={handleClose}
-          unstyled
-          customStyling="text-text-primary scale-110"
-        >
-          <Cancel />
-        </GenericButton>
-      </div>
-      <div className="flex flex-col overflow-y-auto pb-[25dvh] px-6">
-        {' '}
-        {/* drawer snap point is 80% max, so padding in Route Detail is 25% from bottom*/}
-        <div className="flex flex-col pt-4 pb-4">
-          <h3 className="font-semibold text-xl text-text-primary pb-2">
-            {selectedRoute.title}
-          </h3>
-          <span className="text-xs text-text-secondary">
-            {selectedRoute.description}
-          </span>
-          <RouteCard
-            route={selectedRoute}
-            view={authorization}
-            routeDetailView={true}
-          />
-        </div>
-        <p className="font-semibold pt-4 pb-2 text-text-primary">
-          {transitLegs.length > 0 ? 'Transit Details' : ''}
-        </p>
-        <div className="flex flex-col gap-2">
-          {transitLegs.map((leg, index) => (
-            <TransitLegCard
-              key={index}
-              name={leg.name}
-              type={leg.type}
-              distance={leg.distance}
-            />
-          ))}
-        </div>
-        <p className="font-semibold pt-4 pb-2 text-text-primary">
-          {transitLegs.length > 0 ? 'Transit Details' : ''}
-        </p>
-        <div className="flex flex-col gap-2">
-          {transitLegs.map((leg, index) => (
-            <TransitLegCard
-              key={index}
-              name={leg.name}
-              type={leg.type}
-              distance={leg.distance}
-            />
-          ))}
-        </div>
-        <p className="font-semibold pt-4 pb-2 text-text-primary">Organizer</p>
-        <OrganizerCard
-          user={{
-            id: selectedRoute.creator_id,
-            name: selectedRoute.creator_name,
-            nickname: selectedRoute.nickname,
-            profile_pic: selectedRoute.profile_pic,
-            role: '',
-            description: '',
-            active: true,
+    <Drawer.Root
+      open={!!selectedRoute}
+      onOpenChange={open => !open && onClose()}
+      modal={false}
+      snapPoints={[0.095, 0.25, 0.4, 0.8]}
+      activeSnapPoint={snapPoint}
+      setActiveSnapPoint={setSnapPoint}
+      noBodyStyles={true}
+      setBackgroundColorOnScale={false}
+      dismissible={false}
+      preventScrollRestoration={false}
+    >
+      <Drawer.Portal>
+        <Drawer.Content
+          onOpenAutoFocus={e => e.preventDefault()}
+          onFocus={e => {
+            if (e.target === e.currentTarget) {
+              e.preventDefault()
+              e.stopPropagation()
+            }
           }}
-        />
-      </div>
-    </div>
+          style={{
+            zIndex: 50,
+            marginLeft: '55px',
+            width: 'calc(100% - 55px)',
+            borderRadius: '24px 24px 0 0',
+            height: '96%',
+            position: 'fixed',
+            bottom: 0,
+            background: '#F9F9F9',
+            display: 'flex',
+            flexDirection: 'column',
+            overflowY: 'hidden',
+            pointerEvents: 'auto',
+          }}
+        >
+          <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
+          <Drawer.Description className="sr-only">
+            Route and event details
+          </Drawer.Description>
+          {selectedRoute && (
+            <div className="flex flex-col max-h-full rounded-t-3xl">
+              <div className="flex justify-between items-start px-4 pt-2">
+                <div className="w-8" />
+                <div className="bg-text-primary rounded-full h-1.5 w-20 mt-2" />
+                <GenericButton
+                  onClick={handleClose}
+                  unstyled
+                  customStyling="text-text-primary scale-110"
+                >
+                  <Cancel />
+                </GenericButton>
+              </div>
+              <div className="flex flex-col overflow-y-auto pb-[25dvh] px-6">
+                {/* drawer snap point is 80% max, so padding in Route Detail is 25% from bottom */}
+                <div className="flex flex-col pb-4">
+                  <h3 className="font-semibold text-xl text-text-primary pb-2">
+                    {selectedRoute.title}
+                  </h3>
+                  <span className="text-xs text-text-secondary">
+                    {selectedRoute.description}
+                  </span>
+                  <RouteCard
+                    route={selectedRoute}
+                    view={authorization}
+                    routeDetailView={true}
+                  />
+                </div>
+                <p className="font-semibold pt-4 pb-2 text-text-primary">
+                  {transitLegs.length > 0 ? 'Transit Details' : ''}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {transitLegs.map((leg, index) => (
+                    <TransitLegCard
+                      key={index}
+                      name={leg.name}
+                      type={leg.type}
+                      distance={leg.distance}
+                    />
+                  ))}
+                </div>
+                <p className="font-semibold pt-4 pb-2 text-text-primary">
+                  Organizer
+                </p>
+                <OrganizerCard
+                  user={{
+                    id: selectedRoute.creator_id,
+                    name: selectedRoute.creator_name,
+                    nickname: selectedRoute.nickname,
+                    profile_pic: selectedRoute.profile_pic,
+                    role: '',
+                    description: '',
+                    active: true,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
   )
 }
 
