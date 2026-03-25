@@ -28,7 +28,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   }
 
   const handleRouteSubmit = route => {
-    console.log('HandleRouteSubmit', route)
     const routeWithId = {
       ...route,
       id: crypto.randomUUID(),
@@ -221,11 +220,9 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
                 <GenericButton
                   unstyled={true}
                   customStyling="absolute top-2 right-2 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                  onClick={() => removeRoute(route.id)}
                 >
-                  <Close
-                    fontSize="small"
-                    onClick={() => removeRoute(route.id)}
-                  />
+                  <Close fontSize="small" />
                 </GenericButton>
                 <RouteCard
                   key={route.id}
