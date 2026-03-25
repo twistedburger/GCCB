@@ -279,8 +279,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
 
             {!routePreview && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
-                {startLoc && endLoc
-                  ? "Locations set! Click 'Preview' to see the path."
+                {transportationMode && departTime && startLoc && endLoc
+                  ? "Click 'Preview' to see the path."
                   : 'Select transportation mode, departure time, origin, and destination to preview the route map.'}
               </div>
             )}
