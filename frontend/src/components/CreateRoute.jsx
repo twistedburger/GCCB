@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import LocationSearch from './LocationSearch'
@@ -72,7 +72,6 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             : null,
         }
       )
-      console.log('Route preview data:', route)
       setRoutePreview(route)
       setDistance(route.distanceMeters)
       setPolyline(route.polyline.encodedPolyline)
@@ -84,12 +83,14 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     }
   }
 
-  const pathCoordinates = routePreview?.polyline?.encodedPolyline
-    ? decode(routePreview.polyline.encodedPolyline).map(([lat, lng]) => ({
-        lat,
-        lng,
-      }))
-    : []
+  const pathCoordinates = useMemo(() => {
+    return routePreview?.polyline?.encodedPolyline
+      ? decode(routePreview.polyline.encodedPolyline).map(([lat, lng]) => ({
+          lat,
+          lng,
+        }))
+      : []
+  }, [routePreview])
 
   const handleAddRoute = e => {
     e.preventDefault()

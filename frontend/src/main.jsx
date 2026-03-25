@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
-import { AuthProvider } from '../context/AuthContext'
+import { UserProvider } from '../context/UserContext'
 import './index.css'
 
 const script = document.createElement('script')
@@ -11,9 +11,9 @@ script.src =
 window.__mapsReady = () => {
   createRoot(document.getElementById('root')).render(
     <StrictMode>
-      <AuthProvider>
+      <UserProvider>
         <App />
-      </AuthProvider>
+      </UserProvider>
     </StrictMode>
   )
 }

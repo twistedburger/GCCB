@@ -6,7 +6,7 @@ import GenericButton from './GenericButton'
 import CreateRoute from './CreateRoute'
 import LocationSearch from './LocationSearch'
 import RouteCard from './RouteCard'
-import { useAuth } from '../../context/AuthContext'
+import { useUser } from '../../context/UserContext'
 
 const CreateEvent = ({ initLoc, onSubmit }) => {
   const [addedRoutes, setAddedRoutes] = useState([])
@@ -17,7 +17,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [eventDesc, setEventDesc] = useState('')
   const [errors, setErrors] = useState({})
 
-  const { user } = useAuth()
+  const { user } = useUser()
 
   const toggleRouteJoin = id => {
     setAddedRoutes(prev =>
@@ -71,14 +71,14 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
     }
   }
 
-  const createRoute = async (eventId, routeData, creator_id) => {
+  const createRoute = async (event_id, routeData, creator_id) => {
     try {
       const response = await fetch('http://localhost:3000/api/createRoute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          eventId,
+          event_id,
           ...routeData,
           creator_id,
         }),
@@ -126,11 +126,11 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         need_approval: false,
       }
 
-      const { id: newEventId } = await createEvent(eventData)
+      const { id: newevent_id } = await createEvent(eventData)
 
       if (addedRoutes.length > 0) {
         const routePromises = addedRoutes.map(route =>
-          createRoute(newEventId, route, user.id)
+          createRoute(newevent_id, route, user.id)
         )
         await Promise.all(routePromises)
       }
@@ -138,7 +138,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
       onSubmit({
         success: true,
         message: 'Event and routes created successfully!',
-        eventId: newEventId,
+        event_id: newevent_id,
       })
     } catch (error) {
       console.error('Error creating event. Please try again.')

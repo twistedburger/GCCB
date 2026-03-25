@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types'
 import { createContext, useContext, useState, useEffect } from 'react'
 
-const AuthContext = createContext(null)
+const UserContext = createContext(null)
 
 // Returns user object if authenticated, otherwise null
-export function AuthProvider({ children }) {
+export function UserProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -15,14 +15,14 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false))
   }, [])
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <UserContext.Provider value={{ user, setUser, loading }}>
       {children}
-    </AuthContext.Provider>
+    </UserContext.Provider>
   )
 }
 
-export const useAuth = () => useContext(AuthContext)
+export const useUser = () => useContext(UserContext)
 
-AuthProvider.propTypes = {
+UserProvider.propTypes = {
   children: PropTypes.node.isRequired,
 }
