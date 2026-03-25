@@ -13,6 +13,9 @@ import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Drawer } from 'vaul'
 import { useAuth } from '../../utils/Authorization'
+import CreateRoute from '../../components/CreateRoute'
+import { Modal } from '../../components/Modal'
+import { useUser } from '../../../context/UserContext'
 
 export default function EventDetail() {
   const location = useLocation()
@@ -27,7 +30,60 @@ export default function EventDetail() {
   const { setSnapPoint, setSelectedRoute: setHomeSelectedRoute } =
     useOutletContext()
   const [eventSnapPoint, setEventSnapPoint] = useState(1)
+  const [addRoute, setAddRoute] = useState(false)
+  const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
+  const { user } = useUser()
+
+  const handleClose = () => {
+    setOpen(false)
+    setTimeout(() => navigate(-1), 300)
+  }
+
+  const handleAddRoute = async routeData => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/createRoute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          ...routeData,
+          creator_id: user.id,
+          event_id: event.id,
+        }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+
+        setAlert({
+          type: result.success ? 'success' : 'error',
+          visible: true,
+        })
+
+        setTimeout(() => {
+          setAlert(prev => (prev ? { ...prev, visible: false } : null))
+        }, 2000)
+
+        const newRouteForState = {
+          id: result.route_id,
+          ...routeData,
+          created_at: new Date(),
+        }
+
+        setEvent(prevEvent => ({
+          ...prevEvent,
+          routes: [...(prevEvent.routes || []), newRouteForState],
+        }))
+      } else {
+        console.error('Failed to create route')
+      }
+    } catch (error) {
+      console.error('Error creating route:', error)
+    }
+  }
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -40,13 +96,53 @@ export default function EventDetail() {
     fetchEvent()
   }, [id])
 
-  const handleClose = () => {
-    setOpen(false)
-    setTimeout(() => navigate(-1), 300)
-  }
-
   return (
     <div>
+      <div
+        className={`fixed left-1/2 -translate-x-1/2 z-[100] top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
+    whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
+    ${
+      alert?.visible
+        ? 'translate-y-12 opacity-100 pointer-events-auto'
+        : '-translate-y-full opacity-0 pointer-events-none'
+    }
+    ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
+  `}
+      >
+        {alert?.type === 'success'
+          ? 'Route created successfully!'
+          : 'Error creating route. Please try again.'}
+      </div>
+      {event && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 45,
+              marginLeft: '27px',
+            }}
+          >
+            <GenericButton type="button" onClick={() => setAddRoute(true)}>
+              Add a Route
+            </GenericButton>
+          </div>
+
+          {addRoute && (
+            <Modal isOpen={true} onClose={() => setAddRoute(false)}>
+              <CreateRoute
+                initLoc={event.location}
+                onSubmit={routeData => {
+                  handleAddRoute(routeData)
+                  setAddRoute(false)
+                }}
+              />
+            </Modal>
+          )}
+        </>
+      )}
       <Drawer.Root
         open={open}
         onOpenChange={open => !open && handleClose()}

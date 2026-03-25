@@ -1,4 +1,4 @@
-import SearchBar from '../components/SearchBar'
+import LocationSearch from '../components/LocationSearch'
 import {
   APIProvider,
   Map,
@@ -8,16 +8,18 @@ import {
 } from '@vis.gl/react-google-maps'
 import GenericToggle from '../components/GenericToggle'
 import GenericButton from '../components/GenericButton'
-import { PlaceOutlined, TuneOutlined } from '@mui/icons-material'
+import { Add, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
 import PropTypes from 'prop-types'
+import CreateEvent from '../components/CreateEvent'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
+import { Modal } from '../components/Modal'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -53,6 +55,9 @@ function Home() {
     mainEventsOnly: true,
   })
   const navigate = useNavigate()
+  const [showCreateEvent, setShowCreateEvent] = useState(false)
+  const [alert, setAlert] = useState(null)
+
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
 
@@ -80,6 +85,22 @@ function Home() {
     } catch (err) {
       console.error('geocode fetch failed:', err)
     }
+  }
+
+  const handleFormResult = result => {
+    if (result.success) {
+      setShowCreateEvent(false)
+    }
+
+    setAlert({
+      type: result.success ? 'success' : 'error',
+      text: result.message,
+      visible: true,
+    })
+
+    setTimeout(() => {
+      setAlert(prev => (prev ? { ...prev, visible: false } : null))
+    }, 2000)
   }
 
   useEffect(() => {
@@ -134,6 +155,16 @@ function Home() {
 
   return (
     <div data-vaul-drawer-wrapper className="relative w-full h-full">
+      <div
+        className={`fixed left-1/2 -translate-x-1/2 z-[100] top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
+        whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
+        ${alert?.visible ? 'translate-y-12 opacity-100' : '-translate-y-full opacity-0'}
+        ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
+      `}
+      >
+        {alert?.text}
+      </div>
+
       <div>
         <APIProvider
           apiKey=""
@@ -154,8 +185,13 @@ function Home() {
             <MapController center={userLocation} route={selectedRoute} />
           </Map>
         </APIProvider>
+
         {!selectedRoute && !isEventDetail && (
-          <SearchBar onSearch={handleSearch} />
+          <LocationSearch
+            className="rounded-xl absolute inset-x-0 top-0 m-6 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
+            focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
+            onSearch={handleSearch}
+          />
         )}
         <Drawer.Root
           open={true}
@@ -272,6 +308,22 @@ function Home() {
           context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
         />
       </div>
+
+      {/* Create Event modal */}
+      <Modal isOpen={showCreateEvent} onClose={() => setShowCreateEvent(false)}>
+        <CreateEvent onSubmit={handleFormResult} />
+      </Modal>
+
+      <GenericButton
+        unstyled={true}
+        customStyling="absolute bottom-24 right-6 z-50 bg-blue-primary text-white rounded-full p-3 shadow-lg 
+                transition-transform duration-200 active:scale-90 hover:scale-110"
+        onClick={() => {
+          setShowCreateEvent(true)
+        }}
+      >
+        <Add fontSize="large" />
+      </GenericButton>
     </div>
   )
 }

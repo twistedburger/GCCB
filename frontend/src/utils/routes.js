@@ -7,7 +7,7 @@ export const TravelMode = Object.freeze({
   Bike: 'BICYCLE',
 })
 
-function isValidTravelMode(value) {
+export function isValidTravelMode(value) {
   return Object.values(TravelMode).includes(value)
 }
 
@@ -35,6 +35,10 @@ export async function calculateRoute(
     computeAlternativeRoutes: false,
     languageCode: 'en-US',
     units: 'METRIC',
+  }
+
+  if (_travelMode === 'DRIVE' && (_departureTime || _arrivalTime)) {
+    routeBody.routingPreference = 'TRAFFIC_AWARE'
   }
 
   //Note that arrival time will superceed departure time, if both are specified
