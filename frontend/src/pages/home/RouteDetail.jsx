@@ -11,7 +11,6 @@ import { useAuth } from '../../utils/Authorization'
 import { Drawer } from 'vaul'
 
 export default function RouteDetail({ selectedRoute, onClose }) {
-  console.log(selectedRoute)
   const [snapPoint, setSnapPoint] = useState(0.25)
   const [transitLegs, setTransitLegs] = useState([])
   const navigate = useNavigate()
@@ -23,8 +22,7 @@ export default function RouteDetail({ selectedRoute, onClose }) {
   }
 
   const calculateTransitLegs = route => {
-    const mode = route.transportation_mode.toUpperCase()
-    if (mode !== TravelMode.Transit && mode !== 'BUS') {
+    if (route.transportation_mode.toUpperCase() != TravelMode.Transit) {
       setTransitLegs([])
       return
     }

@@ -296,8 +296,7 @@ function MapController({ center, route }) {
     decodedPath.forEach(point => bounds.extend(point))
     map.fitBounds(bounds)
 
-    const mode = route.transportation_mode.toUpperCase()
-    if (mode === TravelMode.Transit || mode === 'BUS') {
+    if (route.transportation_mode.toUpperCase() === TravelMode.Transit) {
       // overwrite the line if transit
       const routeLines = []
       const legColors = {
