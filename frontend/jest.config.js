@@ -1,4 +1,5 @@
 module.exports = {
+  verbose: true,
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
   setupFiles: ['<rootDir>/jest.setup.cjs'],
