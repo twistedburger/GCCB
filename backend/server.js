@@ -360,8 +360,8 @@ app.post('/api/createRoute', async (req, res) => {
     path,
     completed,
     description,
+    isJoined,
   } = req.body
-  const isJoined = req.body.isJoined
   const client = await pool.connect()
 
   try {
