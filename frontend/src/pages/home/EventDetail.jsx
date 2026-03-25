@@ -41,7 +41,6 @@ export default function EventDetail() {
   }
 
   const handleAddRoute = async routeData => {
-    console.log(routeData)
     try {
       const response = await fetch(`http://localhost:3000/api/createRoute`, {
         method: 'POST',
@@ -61,7 +60,6 @@ export default function EventDetail() {
 
         setAlert({
           type: result.success ? 'success' : 'error',
-          text: result.message,
           visible: true,
         })
 
@@ -123,8 +121,8 @@ export default function EventDetail() {
               bottom: '24px',
               left: '50%',
               transform: 'translateX(-50%)',
-              zIndex: 45, // above Vaul drawer (z-40) but below modal (z-200)
-              marginLeft: '27px', // half of the 55px sidebar offset
+              zIndex: 45,
+              marginLeft: '27px',
             }}
           >
             <GenericButton type="button" onClick={() => setAddRoute(true)}>
