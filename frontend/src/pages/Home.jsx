@@ -356,7 +356,7 @@ function Home() {
       <GenericButton
         unstyled={true}
         customStyling="absolute bottom-24 right-6 z-50 bg-blue-primary text-white rounded-full p-3 shadow-lg 
-                transition-transform duration-200 active:scale-90 hover:scale-110"
+                transition-transform duration-200 active:scale-100 hover:scale-110"
         onClick={() => {
           setShowCreateEvent(true)
         }}

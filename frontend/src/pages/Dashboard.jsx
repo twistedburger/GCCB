@@ -204,7 +204,6 @@ function Dashboard() {
               onClick={() => {
                 window.location.href = 'http://localhost:3000/logoutRoute'
               }}
-              className="m-0"
             >
               Logout
             </GenericButton>
