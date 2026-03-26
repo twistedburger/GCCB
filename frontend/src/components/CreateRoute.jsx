@@ -74,7 +74,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       )
       setRoutePreview(route)
       setDistance(route.distanceMeters)
-      setPolyline(route.polyline.encodedPolyline)
+      setPolyline(route)
     } catch (err) {
       setRouteError(err.message)
       setRoutePreview(null)
