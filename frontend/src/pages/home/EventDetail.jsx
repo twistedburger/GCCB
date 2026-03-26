@@ -16,6 +16,7 @@ import { useAuth } from '../../utils/Authorization'
 import CreateRoute from '../../components/CreateRoute'
 import { Modal } from '../../components/Modal'
 import { useUser } from '../../../context/UserContext'
+import Report from '../../components/Report'
 
 export default function EventDetail() {
   const location = useLocation()
@@ -34,6 +35,9 @@ export default function EventDetail() {
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
   const { user } = useUser()
+
+  const [showReport, setShowReport] = useState(false)
+  const [reportData, setReportData] = useState(null)
 
   const handleClose = () => {
     setOpen(false)
@@ -59,7 +63,8 @@ export default function EventDetail() {
         const result = await response.json()
 
         setAlert({
-          type: result.success ? 'success' : 'error',
+          type: 'success',
+          message: 'Route created successfully!',
           visible: true,
         })
 
@@ -78,7 +83,11 @@ export default function EventDetail() {
           routes: [...(prevEvent.routes || []), newRouteForState],
         }))
       } else {
-        console.error('Failed to create route')
+        setAlert({
+          type: 'error',
+          message: 'Failed to create route.',
+          visible: true,
+        })
       }
     } catch (error) {
       console.error('Error creating route:', error)
@@ -109,9 +118,7 @@ export default function EventDetail() {
     ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
   `}
       >
-        {alert?.type === 'success'
-          ? 'Route created successfully!'
-          : 'Error creating route. Please try again.'}
+        {alert?.message}
       </div>
       {event && (
         <>
@@ -243,13 +250,12 @@ export default function EventDetail() {
                               <MenuItem
                                 onClick={() => {
                                   setAnchorEl(null)
-                                  // navigate(`/report`, {
-                                  //   state: {
-                                  //     type: 'event',
-                                  //     targetId: event.id,
-                                  //     targetName: event.title,
-                                  //   },
-                                  // })
+                                  setReportData({
+                                    type: 'event',
+                                    targetId: event.id,
+                                    title: event.title,
+                                  })
+                                  setShowReport(true)
                                 }}
                               >
                                 Report Event
@@ -257,13 +263,12 @@ export default function EventDetail() {
                               <MenuItem
                                 onClick={() => {
                                   setAnchorEl(null)
-                                  // navigate(`/report`, {
-                                  //   state: {
-                                  //     type: 'user',
-                                  //     targetId: event.creator_id,
-                                  //     targetName: event.creator_name,
-                                  //   },
-                                  // })
+                                  setReportData({
+                                    type: 'user',
+                                    targetId: event.creator_id,
+                                    title: event.creator_name,
+                                  })
+                                  setShowReport(true)
                                 }}
                               >
                                 Report Organizer
@@ -333,6 +338,56 @@ export default function EventDetail() {
                       </div>
                     </div>
                   </div>
+                  <Drawer.NestedRoot
+                    open={showReport}
+                    onOpenChange={setShowReport}
+                    shouldScaleBackground={false}
+                    dismissible={false}
+                  >
+                    <Drawer.Portal>
+                      <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
+                      <Drawer.Content
+                        onPointerDownOutside={() => setShowReport(false)}
+                        className="fixed bottom-0 left-13.75 right-0 z-50 flex flex-col rounded-t-3xl bg-white"
+                      >
+                        <div className="flex-1 p-4">
+                          <div className="absolute top-4 right-4 z-10">
+                            <GenericButton
+                              onClick={() => setShowReport(false)}
+                              unstyled={true}
+                              customStyling="text-text-primary scale-110"
+                            >
+                              <Cancel />
+                            </GenericButton>
+                          </div>
+                          {reportData && (
+                            <>
+                              <Drawer.Title className="text-lg font-bold mb-4">
+                                Report {reportData.title}
+                              </Drawer.Title>
+                              <Drawer.Description className="sr-only">
+                                Report Page
+                              </Drawer.Description>
+                              <Report
+                                type={reportData.type}
+                                targetId={reportData.targetId}
+                                onClose={() => setShowReport(false)}
+                                setAlert={reportAlert => {
+                                  setAlert({
+                                    ...reportAlert,
+                                    message:
+                                      reportAlert.type === 'success'
+                                        ? 'Report submitted successfully.'
+                                        : 'Failed to submit report.',
+                                  })
+                                }}
+                              />
+                            </>
+                          )}
+                        </div>
+                      </Drawer.Content>
+                    </Drawer.Portal>
+                  </Drawer.NestedRoot>
                 </div>
               )}
             </div>

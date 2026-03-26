@@ -10,7 +10,7 @@ export default function Report({ type, targetId, onClose, setAlert }) {
     'Dangerous Activity',
     'Discrimination',
     'Other',
-  ].map(r => ({ value: r, label: r }))
+  ].map(r => ({ value: r, label: r, textvalue: r }))
 
   const [reason, setReason] = useState(reasonMenu[0].value)
   const [explanation, setExplanation] = useState('')
@@ -47,9 +47,11 @@ export default function Report({ type, targetId, onClose, setAlert }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 h-80">
       <div className=" *:mx-0 *:w-full">
         <Select
+          instanceId="report-reason-select"
+          aria-label="Select a reason for reporting"
           options={reasonMenu}
           value={{ value: reason, label: reason }}
           onChange={e => setReason(e.value)}
@@ -60,6 +62,7 @@ export default function Report({ type, targetId, onClose, setAlert }) {
         value={explanation}
         onChange={e => setExplanation(e.target.value)}
         placeholder="Please describe the issue..."
+        aria-label="Description of the report"
         className="w-full rounded-xl border-2 border-medium-grey p-3 text-sm text-text-primary resize-none h-32 focus:outline-none focus:border-blue-primary"
       />
       {explanationError && (
