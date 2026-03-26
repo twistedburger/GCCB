@@ -17,9 +17,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [startLoc, setStartLoc] = useState(null)
   const [endLoc, setEndLoc] = useState(initLoc)
   const [distance, setDistance] = useState(null)
-  const [polyline, setPolyline] = useState(null)
+  const [route, setRoute] = useState(null)
   const [errors, setErrors] = useState({})
-  const [routePreview, setRoutePreview] = useState(null)
   const [isFetchingRoute, setIsFetchingRoute] = useState(false)
   const [routeError, setRouteError] = useState(null)
   const [mapKey, setMapKey] = useState(0)
@@ -43,11 +42,15 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     if (!startLoc) newErrors.startLoc = 'Starting location is required'
     if (!endLoc) newErrors.endLoc = 'Destination is required'
     if (!departTime) newErrors.departTime = 'Departure time is required'
+    if (transportationMode && startLoc && endLoc && departTime && !route) {
+      newErrors.route =
+        'Please click "Get Route" to calculate the path before confirming.'
+    }
     return newErrors
   }
 
   const handleGetRoute = async () => {
-    setRoutePreview(null)
+    setRoute(null)
     setIsFetchingRoute(true)
     setRouteError(null)
     setMapKey(prev => prev + 1)
@@ -72,25 +75,25 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             : null,
         }
       )
-      setRoutePreview(route)
       setDistance(route.distanceMeters)
-      setPolyline(route.polyline.encodedPolyline)
+      setRoute(route)
+      setErrors(prev => ({ ...prev, route: null }))
     } catch (err) {
       setRouteError(err.message)
-      setRoutePreview(null)
+      setRoute(null)
     } finally {
       setIsFetchingRoute(false)
     }
   }
 
   const pathCoordinates = useMemo(() => {
-    return routePreview?.polyline?.encodedPolyline
-      ? decode(routePreview.polyline.encodedPolyline).map(([lat, lng]) => ({
+    return route?.polyline?.encodedPolyline
+      ? decode(route.polyline.encodedPolyline).map(([lat, lng]) => ({
           lat,
           lng,
         }))
       : []
-  }, [routePreview])
+  }, [route])
 
   const handleAddRoute = e => {
     e.preventDefault()
@@ -110,7 +113,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       depart_time: departTime,
       description: routeDesc,
       distance: distance,
-      path: polyline,
+      path: route,
       completed: false,
     }
     onSubmit(routeData)
@@ -137,7 +140,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         selectedModes={[]}
         onChange={modes => {
           setTransportationMode(modes || '')
-          setRoutePreview(null)
+          setRoute(null)
           setRouteError(null)
         }}
         multiple={false}
@@ -242,12 +245,17 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             disabled={isFetchingRoute}
             className="w-full bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
           >
-            {isFetchingRoute ? 'Calculating...' : 'Preview Route Path'}
+            {isFetchingRoute ? 'Calculating...' : 'Get Route'}
           </GenericButton>
           {routeError && (
-            <p className="text-red-500 text-xs mt-1">{routeError}</p>
+            <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
+              {routeError}
+            </p>
           )}
         </div>
+      )}
+      {departTime && startLoc && endLoc && errors.route && (
+        <p className="flex justify-end text-red-500 text-xs">{errors.route}</p>
       )}
 
       {/* Mini Map */}
@@ -268,7 +276,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           >
             {pathCoordinates.length > 0 && (
               <Polyline
-                key={routePreview.polyline.encodedPolyline}
+                key={route.polyline.encodedPolyline}
                 path={pathCoordinates}
                 options={{
                   strokeColor: '#3b82f6',
@@ -278,11 +286,11 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
               />
             )}
 
-            {!routePreview && (
+            {!route && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
                 {transportationMode && departTime && startLoc && endLoc
-                  ? "Click 'Preview' to see the path."
-                  : 'Select transportation mode, departure time, origin, and destination to preview the route map.'}
+                  ? "Click 'Get Route' to see the path."
+                  : 'Select transportation mode, departure time, origin, and destination to get the route.'}
               </div>
             )}
           </GoogleMap>
