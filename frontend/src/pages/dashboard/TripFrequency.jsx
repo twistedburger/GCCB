@@ -121,8 +121,7 @@ function TripFrequency() {
 
   const isAdmin = summary?.scope === 'system'
 
-  // Chart data always shows all modes with data, regardless of the mode filter
-  const allChartData = useMemo(() => {
+  const chartData = useMemo(() => {
     return (byMode?.data ?? [])
       .filter(row => row.tripCount > 0)
       .map(row => ({
@@ -241,7 +240,7 @@ function TripFrequency() {
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
               Loading charts...
             </div>
-          ) : allChartData.length === 0 ? (
+          ) : chartData.length === 0 ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
               No chart data available yet.
             </div>
@@ -253,7 +252,7 @@ function TripFrequency() {
               >
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart
-                    data={allChartData}
+                    data={chartData}
                     margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
                   >
                     <CartesianGrid {...GRID_STYLE} vertical={false} />
