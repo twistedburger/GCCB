@@ -496,7 +496,6 @@ app.get('/api/eventdetail/:id', async (req, res) => {
     event.routes = routesResult.rows
 
     res.status(200).json(event)
-    console.log(event)
   } catch (error) {
     console.error('Error fetching event detail:', error)
     res.status(500).json({ error: 'Failed to fetch event detail' })
@@ -936,6 +935,33 @@ app.get('/api/reports', async (req, res) => {
     res.status(200).json(reports)
   } catch (error) {
     console.error('Error fetching reports:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Returns the routes the user has joined.
+ * @returns an array of trips a user has joined (via user_route junction table), or an empty array
+ */
+app.get('/api/my-trips', async (req, res) => {
+  try {
+    const user = await selectUser(req)
+    if (!user)
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+
+    const query = `
+      SELECT DISTINCT r.*, 
+             (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
+      FROM route r
+      INNER JOIN user_route ur ON ur.route_id = r.id
+      WHERE ur.user_id = $1
+      ORDER BY r.depart_time DESC
+    `
+
+    const results = await db.query(query, [user.id])
+    res.status(200).json(results.rows)
+  } catch (error) {
+    console.error('Error fetching my trips:', error)
     res.status(500).send(serverStrings.errors.generic)
   }
 })
