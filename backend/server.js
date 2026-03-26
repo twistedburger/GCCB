@@ -954,7 +954,7 @@ app.get('/api/my-trips', async (req, res) => {
     // TODO: decide on permanent approach: DB trigger or node-cron job to update the completed
     // column automatically, or dedicated endpoint if the user needs to manually mark a trip complete.
     const query = `
-      SELECT DISTINCT r.*, 
+      SELECT r.*, 
              e.event_time,
              (SELECT COUNT(*) FROM user_route ur2 WHERE ur2.route_id = r.id) as people_going,
              (e.event_time < NOW()) AS completed
