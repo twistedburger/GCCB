@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Close } from '@mui/icons-material'
 import GenericButton from './GenericButton'
 
-export function Modal({ isOpen, onClose, children, title }) {
+export default function Modal({ isOpen, onClose, children, title }) {
   const [animateIn, setAnimateIn] = useState(false)
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function Modal({ isOpen, onClose, children, title }) {
 
         {/* Content */}
         <div className="p-8 overflow-y-auto max-h-[calc(90vh-2rem)]">
-          {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
+          {title && <h2 className="text-xl font-bold mb-4">{title}</h2>}
           {children}
         </div>
       </div>
