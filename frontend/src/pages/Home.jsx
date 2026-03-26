@@ -20,7 +20,6 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
 import { Modal } from '../components/Modal'
-import { ConfirmationDialog } from '../components/ConfirmationDialog'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -150,12 +149,6 @@ function Home() {
 
   return (
     <div data-vaul-drawer-wrapper className="relative w-full h-full">
-      <ConfirmationDialog
-        isOpen={true}
-        onClose={() => {}}
-        onConfirm={() => {}}
-        variant="danger"
-      />
       <div
         className={`fixed left-1/2 -translate-x-1/2 z-[100] top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
         whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
