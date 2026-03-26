@@ -243,6 +243,7 @@ app.get('/api/events', (req, res) => {
 
   const conditions = []
   const values = []
+  conditions.push(`e.event_time > NOW()`)
 
   if (time) {
     values.push(time)
@@ -421,6 +422,7 @@ app.get('/api/routes', (req, res) => {
 
   const conditions = []
   const values = []
+  conditions.push(`r.depart_time > NOW()`)
 
   if (time) {
     values.push(time)
@@ -445,7 +447,7 @@ app.get('/api/routes', (req, res) => {
       u.name as creator_name,
       u.nickname,
       u.profile_pic,
-      er.event_id,      
+      er.event_id,   
       (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
     FROM route r
     LEFT JOIN "user" u ON u.id = r.creator_id
