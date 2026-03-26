@@ -207,6 +207,25 @@ app.post('/createNewUser', async (req, res) => {
   }
 })
 
+app.put('/updateProfile', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const currentUser = await selectUser(req)
+    const { name, nickname, description } = req.body
+    const result = await db.query(
+      'UPDATE "user" SET name = $1, nickname = $2, description = $3 WHERE id = $4 RETURNING *',
+      [name, nickname, description, currentUser.id]
+    )
+    res.json({ user: result.rows[0] })
+  } catch (error) {
+    console.error(error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
 async function insertUserFromForm(name, email, formData) {
   const { nickname, description } = formData
   const results = await db.query(
