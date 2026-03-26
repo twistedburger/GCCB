@@ -32,11 +32,8 @@ export default function MyTrips() {
         const data = await response.json()
         if (!Array.isArray(data)) return
 
-        const now = new Date()
-        setActiveTrips(data.filter(trip => new Date(trip.depart_time) > now))
-        setCompletedTrips(
-          data.filter(trip => new Date(trip.depart_time) <= now)
-        )
+        setActiveTrips(data.filter(trip => !trip.completed))
+        setCompletedTrips(data.filter(trip => trip.completed))
       } catch (err) {
         console.error('Fetch error:', err)
       }
@@ -60,7 +57,11 @@ export default function MyTrips() {
         {tripsToDisplay.map(trip => (
           <RouteCardWrapper key={trip.id} route={trip} mapsReady={mapsReady}>
             <div className="*:shadow-white">
-              <RouteCard route={trip} individualView={true} />
+              <RouteCard
+                route={trip}
+                individualView={true}
+                isCompleted={trip.completed}
+              />
             </div>
           </RouteCardWrapper>
         ))}

@@ -949,11 +949,19 @@ app.get('/api/my-trips', async (req, res) => {
     if (!user)
       return res.status(404).json({ error: serverStrings.errors.noUser })
 
+    // "completed" column in route table temporarily overridden by computing "completed" based on event's event_time
+    // while we decide how to compute if a route has been completed (button vs. automatic).
+    // TODO: decide on permanent approach: DB trigger or node-cron job to update the completed
+    // column automatically, or dedicated endpoint if the user needs to manually mark a trip complete.
     const query = `
       SELECT DISTINCT r.*, 
-             (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
+             e.event_time,
+             (SELECT COUNT(*) FROM user_route ur2 WHERE ur2.route_id = r.id) as people_going,
+             (e.event_time < NOW()) AS completed
       FROM route r
       INNER JOIN user_route ur ON ur.route_id = r.id
+      LEFT JOIN event_route er ON r.id = er.route_id
+      LEFT JOIN event e on e.id = er.event_id
       WHERE ur.user_id = $1
       ORDER BY r.depart_time DESC
     `
