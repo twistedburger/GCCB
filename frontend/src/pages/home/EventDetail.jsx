@@ -313,6 +313,10 @@ export default function EventDetail() {
                               key={route.id}
                               route={route}
                               view={authorization}
+                              onReport={data => {
+                                setReportData(data)
+                                setShowReport(true)
+                              }}
                               individualView={false}
                               onSelect={route => {
                                 const fullRoute = {
@@ -373,6 +377,7 @@ export default function EventDetail() {
                                 targetId={reportData.targetId}
                                 onClose={() => setShowReport(false)}
                                 setAlert={reportAlert => {
+                                  if (!reportAlert || !reportAlert.type) return
                                   setAlert({
                                     ...reportAlert,
                                     message:
@@ -401,6 +406,16 @@ export default function EventDetail() {
           setHomeSelectedRoute(null)
           setEventSnapPoint(1)
           setSnapPoint(1)
+        }}
+        setAlert={reportAlert => {
+          if (!reportAlert?.type) return
+          setAlert({
+            ...reportAlert,
+            message:
+              reportAlert.type === 'success'
+                ? 'Report submitted successfully.'
+                : 'Failed to submit report.',
+          })
         }}
       />
     </div>

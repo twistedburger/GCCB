@@ -84,20 +84,16 @@ function Home() {
     }
   }
 
-  const handleFormResult = result => {
-    if (result.success) {
-      setShowCreateEvent(false)
-    }
-
-    setAlert({
-      type: result.success ? 'success' : 'error',
-      text: result.message,
-      visible: true,
-    })
-
+  const showAlert = (type, text) => {
+    setAlert({ type, text, visible: true })
     setTimeout(() => {
       setAlert(prev => (prev ? { ...prev, visible: false } : null))
     }, 2000)
+  }
+
+  const handleFormResult = result => {
+    if (result.success) setShowCreateEvent(false)
+    showAlert(result.success ? 'success' : 'error', result.message)
   }
 
   useEffect(() => {
@@ -304,6 +300,7 @@ function Home() {
             setSelectedRoute(null)
             setSnapPoint(0.5)
           }}
+          setAlert={setAlert}
         />
         <Outlet
           context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
@@ -326,7 +323,15 @@ function Home() {
             type={reportData.type}
             targetId={reportData.id}
             onClose={() => setShowReport(false)}
-            setAlert={setAlert}
+            setAlert={reportAlert => {
+              if (!reportAlert?.type) return
+              showAlert(
+                reportAlert.type,
+                reportAlert.type === 'success'
+                  ? 'Report submitted successfully.'
+                  : 'Failed to submit report.'
+              )
+            }}
           />
         )}
       </Modal>

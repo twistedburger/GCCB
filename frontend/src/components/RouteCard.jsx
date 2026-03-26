@@ -18,6 +18,7 @@ export default function RouteCard({
   routeDetailView = false,
   onSelect,
   onToggleJoin,
+  onReport,
 }) {
   const dateObj = new Date(route.depart_time)
   const [peopleGoing, setPeopleGoing] = useState(0)
@@ -134,13 +135,13 @@ export default function RouteCard({
                 customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
                 onClick={e => {
                   e.stopPropagation()
-                  // navigate(`/report`, {
-                  //   state: {
-                  //     type: 'route',
-                  //     targetId: route.id,
-                  //     targetName: route.title,
-                  //   },
-                  // })
+                  if (onReport) {
+                    onReport({
+                      type: 'route',
+                      targetId: route.id,
+                      title: route.title || route.route_name || '',
+                    })
+                  }
                 }}
               >
                 <span>Report</span>
@@ -181,5 +182,6 @@ RouteCard.propTypes = {
   individualView: PropTypes.bool,
   onSelect: PropTypes.func,
   onToggleJoin: PropTypes.func,
+  onReport: PropTypes.func,
   routeDetailView: PropTypes.bool,
 }

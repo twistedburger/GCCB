@@ -9,12 +9,15 @@ import { useState, useEffect } from 'react'
 import TransitLegCard from '../../components/TransitLegCard'
 import { useAuth } from '../../utils/Authorization'
 import { Drawer } from 'vaul'
+import Report from '../../components/Report'
 
-export default function RouteDetail({ selectedRoute, onClose }) {
+export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
   const [snapPoint, setSnapPoint] = useState(0.25)
   const [transitLegs, setTransitLegs] = useState([])
   const navigate = useNavigate()
   const { authorization } = useAuth()
+  const [showReport, setShowReport] = useState(false)
+  const [reportData, setReportData] = useState(null)
 
   const handleClose = () => {
     if (onClose) onClose()
@@ -72,7 +75,7 @@ export default function RouteDetail({ selectedRoute, onClose }) {
     <Drawer.Root
       open={!!selectedRoute}
       onOpenChange={open => !open && onClose()}
-      modal={false}
+      modal={true}
       snapPoints={[0.095, 0.25, 0.4, 0.8]}
       activeSnapPoint={snapPoint}
       setActiveSnapPoint={setSnapPoint}
@@ -135,6 +138,10 @@ export default function RouteDetail({ selectedRoute, onClose }) {
                     route={selectedRoute}
                     view={authorization}
                     routeDetailView={true}
+                    onReport={data => {
+                      setReportData(data)
+                      setShowReport(true)
+                    }}
                   />
                 </div>
                 <p className="font-semibold pt-4 pb-2 text-text-primary">
@@ -167,6 +174,71 @@ export default function RouteDetail({ selectedRoute, onClose }) {
               </div>
             </div>
           )}
+          <Drawer.NestedRoot
+            open={showReport}
+            onOpenChange={setShowReport}
+            shouldScaleBackground={false}
+            dismissible={false}
+            modal={true}
+          >
+            <Drawer.Portal>
+              <Drawer.Overlay className="fixed inset-0 z-60 bg-black/40" />
+              <Drawer.Content
+                onOpenAutoFocus={e => {
+                  const focusable =
+                    e.currentTarget.querySelector('button, input')
+                  if (focusable) focusable.focus()
+                }}
+                onPointerDownOutside={() => setShowReport(false)}
+                className="fixed bottom-0 left-13.75 right-0 z-60 flex flex-col rounded-t-3xl bg-white"
+              >
+                <div className="flex-1 p-4">
+                  <div className="absolute top-4 right-4 z-10">
+                    <GenericButton
+                      onClick={() => setShowReport(false)}
+                      unstyled={true}
+                      customStyling="text-text-primary scale-110"
+                      autoFocus
+                    >
+                      <Cancel />
+                    </GenericButton>
+                  </div>
+                  {reportData && (
+                    <>
+                      <Drawer.Title className="text-lg font-bold mb-4">
+                        Report {reportData.title}
+                      </Drawer.Title>
+                      <Drawer.Description className="sr-only">
+                        Report Page
+                      </Drawer.Description>
+                      <Report
+                        type={reportData.type}
+                        targetId={reportData.targetId}
+                        onClose={() => setShowReport(false)}
+                        setAlert={reportAlert => {
+                          if (!reportAlert?.type) return
+                          setAlert({
+                            type: reportAlert.type,
+                            text:
+                              reportAlert.type === 'success'
+                                ? 'Report submitted successfully.'
+                                : 'Failed to submit report.',
+                            visible: true,
+                          })
+
+                          setTimeout(() => {
+                            setAlert(prev =>
+                              prev ? { ...prev, visible: false } : null
+                            )
+                          }, 2000)
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
+              </Drawer.Content>
+            </Drawer.Portal>
+          </Drawer.NestedRoot>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
@@ -183,4 +255,5 @@ RouteDetail.propTypes = {
     profile_pic: PropTypes.string,
   }),
   onClose: PropTypes.func,
+  setAlert: PropTypes.func,
 }
