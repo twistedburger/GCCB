@@ -13,13 +13,13 @@ import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
+import Modal from '../components/Modal'
 import PropTypes from 'prop-types'
 import CreateEvent from '../components/CreateEvent'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
-import { Modal } from '../components/Modal'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
