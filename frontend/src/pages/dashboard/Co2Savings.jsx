@@ -13,7 +13,7 @@ import PropTypes from 'prop-types'
 import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import ChartCard from '../../components/analytics/ChartCard'
-import Modal from '../../components/Modal'
+import { Modal } from '../../components/Modal'
 import GenericButton from '../../components/GenericButton'
 import { formatKg, formatKm } from '../../utils/analyticsHelpers'
 import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
@@ -188,7 +188,7 @@ function Co2Savings() {
   }, [byMode?.data])
 
   return (
-    <div className="mx-auto w-full max-w-5xl p-4">
+    <div className="relative mx-auto w-full max-w-5xl p-4">
       <GenericButton
         type="button"
         onClick={() => navigate(-1)}
@@ -226,7 +226,6 @@ function Co2Savings() {
         isOpen={showMethodology}
         onClose={() => setShowMethodology(false)}
         title="How CO₂e savings are calculated"
-        className="max-w-2xl"
       >
         <div className="text-sm text-zinc-700 space-y-5">
           <div>
