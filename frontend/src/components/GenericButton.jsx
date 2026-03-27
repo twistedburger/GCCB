@@ -9,7 +9,7 @@ export default function GenericButton({
   type = 'button',
 }) {
   const defaultStyling =
-    'm-2 px-8 py-1 rounded-xl font-medium w-fit bg-blue-primary text-white'
+    'm-2 px-8 py-1 rounded-xl font-medium w-fit bg-blue-primary text-white hover:scale-110 active:scale-100 transition-all disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed'
 
   return (
     <button
