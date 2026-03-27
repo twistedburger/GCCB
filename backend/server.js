@@ -963,6 +963,10 @@ app.get('/api/reports', async (req, res) => {
  * @returns an array of trips a user has joined (via user_route junction table), or an empty array
  */
 app.get('/api/my-trips', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
   try {
     const user = await selectUser(req)
     if (!user)
