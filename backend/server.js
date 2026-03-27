@@ -1019,4 +1019,39 @@ app.post('/api/moderateReport', async (req, res) => {
   }
 })
 
+/**
+ * Verifies an event.
+ */
+app.post('/api/verifyEvent', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    if (!user)
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+
+    const { event_id, status, rejection_reason, rejection_detail } = req.body
+
+    // update the event_verification_table
+    await db.query(
+      'UPDATE event_verification SET status = $1, rejection_reason = $2, rejection_detail = $3, verified_by = $4, verified_at = NOW() WHERE event_id = $5',
+      [status, rejection_reason, rejection_detail, user.id, event_id]
+    )
+
+    // update the actual event
+    if (status == 'approved') {
+      await db.query('UPDATE event SET verified = true WHERE id = $1', [
+        event_id,
+      ])
+    }
+
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('Database Error:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
 module.exports = app

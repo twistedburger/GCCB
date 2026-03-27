@@ -68,9 +68,10 @@ function Moderate() {
                     />
                   </div>
                   <ModerationActions
-                    reportInformation={report}
+                    information={report}
                     onSuccess={fetchReportQueue}
                     setAlert={setAlert}
+                    mode={'report'}
                   />
                 </div>
               )}
@@ -89,9 +90,10 @@ function Moderate() {
                     />
                   </div>
                   <ModerationActions
-                    reportInformation={report}
+                    information={report}
                     onSuccess={fetchReportQueue}
                     setAlert={setAlert}
+                    mode={'report'}
                   />
                 </div>
               )}
@@ -103,9 +105,10 @@ function Moderate() {
                     <OrganizerCard user={report.target_details} />
                   </div>
                   <ModerationActions
-                    reportInformation={report}
+                    information={report}
                     onSuccess={fetchReportQueue}
                     setAlert={setAlert}
+                    mode={'report'}
                   />
                 </div>
               )}
@@ -122,7 +125,14 @@ function Moderate() {
               <div className="*:shadow-white">
                 <EventCard event={event} view={authorization} />
               </div>
-              <ModerationActions />
+              <div className="-mt-4">
+                <ModerationActions
+                  information={event.id}
+                  onSuccess={fetchPendingEvents}
+                  setAlert={setAlert}
+                  mode={'event'}
+                />
+              </div>
             </div>
           </div>
         ))}

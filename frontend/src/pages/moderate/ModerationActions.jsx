@@ -7,56 +7,89 @@ import { moderationStrings } from '../../locales/en/moderation'
 import Select from 'react-select'
 
 export default function ModerationActions({
-  reportInformation,
+  information,
   onSuccess,
   setAlert,
+  mode,
 }) {
+  const isReport = mode === 'report'
   const [confirmReport, setConfirmReport] = useState(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectionDetail, setRejectionDetail] = useState('')
-  const invalidReasons = [
-    'No Violation',
-    'Duplicate Report',
-    'Insufficient Evidence',
-    'Misuse',
-    'Other',
-  ].map(r => ({ value: r, label: r }))
+  const invalidReports = moderationStrings.invalidReports.map(r => ({
+    value: r,
+    label: r,
+  }))
+  const invalidVerifications = moderationStrings.invalidVerifications.map(
+    r => ({ value: r, label: r })
+  )
 
-  const submitReport = async reportData => {
+  const submitReport = async data => {
     try {
       const response = await fetch('http://localhost:3000/api/moderateReport', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(reportData),
+        body: JSON.stringify(data),
       })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || `Server Error: ${response.status}`)
       }
-      const data = await response.json()
-      return data
+      const result = await response.json()
+      return result
     } catch (error) {
       console.error('Error submitting report')
       throw error
     }
   }
 
-  const handleSubmit = async status => {
-    const reportData = {
-      report_id: reportInformation.id,
-      report_target: reportInformation.report_target,
-      target_id: reportInformation.target_id,
-      rejection_reason: rejectionReason,
-      rejection_detail: rejectionDetail,
-      status: status,
-    }
+  const submitVerification = async data => {
     try {
-      await submitReport(reportData)
+      const response = await fetch('http://localhost:3000/api/verifyEvent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Server Error: ${response.status}`)
+      }
+      const result = await response.json()
+      return result
+    } catch (error) {
+      console.error('Error verifying event')
+      throw error
+    }
+  }
+
+  const handleSubmit = async status => {
+    const data = isReport
+      ? {
+          report_id: information.id,
+          report_target: information.report_target,
+          target_id: information.target_id,
+          rejection_reason: rejectionReason,
+          rejection_detail: rejectionDetail,
+          status: status,
+        }
+      : {
+          event_id: information,
+          status: status,
+          rejection_reason: rejectionReason,
+          rejection_detail: rejectionDetail,
+        }
+    console.log(data)
+    try {
+      isReport ? await submitReport(data) : await submitVerification(data)
       setAlert({
         type: 'success',
-        text: 'Report submitted successfully.',
+        text: isReport
+          ? 'Report submitted successfully.'
+          : 'Event verified successfully.',
         visible: true,
       })
       setTimeout(() => {
@@ -88,16 +121,16 @@ export default function ModerationActions({
       {/* Check and X buttons*/}
       {showActions && (
         <div
-          className={`flex gap-1 ${reportInformation ? 'justify-between' : 'justify-end'}`}
+          className={`flex gap-1 ${isReport && information ? 'justify-between' : 'justify-end'}`}
         >
-          {reportInformation && (
+          {isReport && information && (
             <div className="flex flex-col pt-2 pb-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-text-primary">
                   {moderationStrings.reportReason}
                 </span>
                 <span className="text-xs text-text-secondary">
-                  {reportInformation.reason}
+                  {information.reason}
                 </span>
               </div>
               <div className="flex items-start gap-2">
@@ -105,7 +138,7 @@ export default function ModerationActions({
                   {moderationStrings.details}
                 </span>
                 <span className="text-xs text-text-secondary">
-                  {reportInformation.explanation}
+                  {information.explanation}
                 </span>
               </div>
             </div>
@@ -147,22 +180,20 @@ export default function ModerationActions({
           cancelText={moderationStrings.cancel}
           variant="primary"
         >
-          {moderationStrings.confirmApprove(
-            reportInformation ? 'report' : 'event'
-          )}
+          {moderationStrings.confirmApprove(isReport ? 'report' : 'event')}
         </ConfirmationDialog>
       </div>
 
-      {/* Invalid report, moderator must add a reason (dropdown or other + text) */}
+      {/* Invalid, moderator must add a reason (dropdown or other + text) */}
       {confirmReport === 'decline' && (
-        <div className="flex flex-col gap-2 py-2">
+        <div className="flex flex-col gap-2 py-2 px-2">
           <span className="text-xs font-semibold text-text-primary">
-            Reason for invalid report
+            {`Reason for invalid ${isReport ? 'report' : 'verification'}`}
           </span>
 
           {/* Dropdown */}
           <Select
-            options={invalidReasons}
+            options={isReport ? invalidReports : invalidVerifications}
             value={
               rejectionReason
                 ? { value: rejectionReason, label: rejectionReason }
@@ -211,13 +242,8 @@ export default function ModerationActions({
 }
 
 ModerationActions.propTypes = {
-  reportInformation: PropTypes.shape({
-    id: PropTypes.number,
-    reason: PropTypes.string,
-    explanation: PropTypes.string,
-    report_target: PropTypes.string,
-    target_id: PropTypes.number,
-  }),
+  information: PropTypes.object,
   onSuccess: PropTypes.func,
   setAlert: PropTypes.func,
+  mode: PropTypes.oneOf(['report', 'event']).isRequired,
 }
