@@ -923,7 +923,13 @@ app.get('/api/reports', async (req, res) => {
           target_details = res.rows[0]
         } else if (report.report_target === 'route') {
           const res = await db.query(
-            'SELECT r.*, er.event_id FROM route r LEFT JOIN event_route er ON r.id = er.route_id WHERE id = $1',
+            `SELECT 
+              r.*, 
+              er.event_id,
+              (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
+            FROM route r 
+            LEFT JOIN event_route er ON r.id = er.route_id 
+            WHERE id = $1`,
             [report.target_id]
           )
           target_details = res.rows[0]
