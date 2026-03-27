@@ -482,14 +482,12 @@ describe('POST /api/report', () => {
     db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] }) // mocks insert into report table, returns report_id to insert into report junction table
     db.query.mockResolvedValueOnce({ rows: [] }) // mocks insert into report junction table, doesn't return anything
 
-    const response = await request(app)
-      .post('/api/report')
-      .send({
-        type: 'event',
-        targetId: 1,
-        reason: 'Spam or Misleading Information',
-        explanation: 'This is spam',
-      })
+    const response = await request(app).post('/api/report').send({
+      type: 'event',
+      targetId: 1,
+      reason: 'Spam or Misleading Information',
+      explanation: 'This is spam',
+    })
 
     expect(response.status).toBe(200)
     expect(response.body).toEqual({ success: true })
@@ -504,14 +502,12 @@ describe('POST /api/report', () => {
     db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
     db.query.mockResolvedValueOnce({ rows: [] })
 
-    const response = await request(app)
-      .post('/api/report')
-      .send({
-        type: 'user',
-        targetId: 2,
-        reason: 'Other',
-        explanation: 'Rude behavior',
-      })
+    const response = await request(app).post('/api/report').send({
+      type: 'user',
+      targetId: 2,
+      reason: 'Other',
+      explanation: 'Rude behavior',
+    })
 
     expect(response.status).toBe(200)
     expect(response.body).toEqual({ success: true })
@@ -526,14 +522,12 @@ describe('POST /api/report', () => {
     db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
     db.query.mockResolvedValueOnce({ rows: [] })
 
-    const response = await request(app)
-      .post('/api/report')
-      .send({
-        type: 'route',
-        targetId: 3,
-        reason: 'Dangerous Activity',
-        explanation: 'Dangerous route',
-      })
+    const response = await request(app).post('/api/report').send({
+      type: 'route',
+      targetId: 3,
+      reason: 'Dangerous Activity',
+      explanation: 'Dangerous route',
+    })
 
     expect(response.status).toBe(200)
     expect(response.body).toEqual({ success: true })
@@ -548,14 +542,12 @@ describe('POST /api/report', () => {
     db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
     db.query.mockResolvedValueOnce({ rows: [] })
 
-    await request(app)
-      .post('/api/report')
-      .send({
-        type: 'event',
-        targetId: 1,
-        reason: 'Inappropriate Content',
-        explanation: 'Bad content',
-      })
+    await request(app).post('/api/report').send({
+      type: 'event',
+      targetId: 1,
+      reason: 'Inappropriate Content',
+      explanation: 'Bad content',
+    })
 
     expect(db.query).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO report'),
@@ -567,14 +559,12 @@ describe('POST /api/report', () => {
     db.query.mockResolvedValueOnce({ rows: mockUser, rowCount: 1 })
     db.query.mockRejectedValueOnce(new Error('Database error'))
 
-    const response = await request(app)
-      .post('/api/report')
-      .send({
-        type: 'event',
-        targetId: 1,
-        reason: 'Spam or Misleading Information',
-        explanation: 'This is spam',
-      })
+    const response = await request(app).post('/api/report').send({
+      type: 'event',
+      targetId: 1,
+      reason: 'Spam or Misleading Information',
+      explanation: 'This is spam',
+    })
 
     expect(response.status).toBe(500)
   })
@@ -584,14 +574,12 @@ describe('POST /api/report', () => {
     db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
     db.query.mockRejectedValueOnce(new Error('Database error'))
 
-    const response = await request(app)
-      .post('/api/report')
-      .send({
-        type: 'event',
-        targetId: 1,
-        reason: 'Spam or Misleading Information',
-        explanation: 'This is spam',
-      })
+    const response = await request(app).post('/api/report').send({
+      type: 'event',
+      targetId: 1,
+      reason: 'Spam or Misleading Information',
+      explanation: 'This is spam',
+    })
 
     expect(response.status).toBe(500)
   })
