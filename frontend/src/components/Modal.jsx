@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Close } from '@mui/icons-material'
 import GenericButton from './GenericButton'
 
-export function Modal({ isOpen, onClose, children, title }) {
+export default function Modal({ isOpen, onClose, children, title }) {
   const [animateIn, setAnimateIn] = useState(false)
 
   useEffect(() => {
