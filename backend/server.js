@@ -1054,4 +1054,24 @@ app.post('/api/verifyEvent', async (req, res) => {
   }
 })
 
+/**
+ * Returns events to be verified by the moderator.
+ * @returns pending verifications, or an empty array
+ */
+app.get('/api/pendingVerifications', async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT ev.event_id, e.* FROM event_verification ev
+      LEFT JOIN "event" e ON e.id = ev.event_id
+      WHERE ev.status = 'pending'
+      ORDER BY ev.verified_at ASC
+    `)
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error fetching pending verifications:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
 module.exports = app
