@@ -6,7 +6,11 @@ import ConfirmationDialog from '../../components/ConfirmationDialog'
 import { moderationStrings } from '../../locales/en/moderation'
 import Select from 'react-select'
 
-export default function ModerationActions({ reportInformation }) {
+export default function ModerationActions({
+  reportInformation,
+  onSuccess,
+  setAlert,
+}) {
   const [confirmReport, setConfirmReport] = useState(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectionDetail, setRejectionDetail] = useState('')
@@ -18,7 +22,58 @@ export default function ModerationActions({ reportInformation }) {
     'Other',
   ].map(r => ({ value: r, label: r }))
 
-  async function handleConfirm() {}
+  const submitReport = async reportData => {
+    try {
+      const response = await fetch('http://localhost:3000/api/moderateReport', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(reportData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Server Error: ${response.status}`)
+      }
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error submitting report')
+      throw error
+    }
+  }
+
+  const handleSubmit = async status => {
+    const reportData = {
+      report_id: reportInformation.id,
+      report_target: reportInformation.report_target,
+      target_id: reportInformation.target_id,
+      rejection_reason: rejectionReason,
+      rejection_detail: rejectionDetail,
+      status: status,
+    }
+    try {
+      await submitReport(reportData)
+      setAlert({
+        type: 'success',
+        text: 'Report submitted successfully.',
+        visible: true,
+      })
+      setTimeout(() => {
+        setAlert(prev => (prev ? { ...prev, visible: false } : null))
+        onSuccess?.()
+      }, 2000)
+    } catch {
+      setAlert({
+        type: 'error',
+        text: 'Something went wrong. Please try again.',
+        visible: true,
+      })
+      setTimeout(() => {
+        setAlert(prev => (prev ? { ...prev, visible: false } : null))
+      }, 2000)
+    }
+  }
 
   function handleCancel() {
     setConfirmReport(null)
@@ -86,7 +141,7 @@ export default function ModerationActions({ reportInformation }) {
         <ConfirmationDialog
           isOpen={confirmReport === 'approve'}
           onClose={handleCancel}
-          onConfirm={handleConfirm}
+          onConfirm={() => handleSubmit('approved')}
           title="Approve"
           confirmText={moderationStrings.ok}
           cancelText={moderationStrings.cancel}
@@ -132,10 +187,7 @@ export default function ModerationActions({ reportInformation }) {
           {/* ok/cancel */}
           <div className="flex justify-end gap-1">
             <GenericButton
-              onClick={e => {
-                e.stopPropagation()
-                handleConfirm()
-              }}
+              onClick={() => handleSubmit('rejected')}
               unstyled={true}
               customStyling="text-xs bg-red-700 text-white font-medium px-4 py-1 rounded-lg"
             >
@@ -164,5 +216,8 @@ ModerationActions.propTypes = {
     reason: PropTypes.string,
     explanation: PropTypes.string,
     report_target: PropTypes.string,
+    target_id: PropTypes.number,
   }),
+  onSuccess: PropTypes.func,
+  setAlert: PropTypes.func,
 }

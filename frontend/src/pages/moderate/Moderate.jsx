@@ -9,32 +9,42 @@ import ModerationActions from './ModerationActions'
 
 function Moderate() {
   const navigate = useNavigate()
+  const [alert, setAlert] = useState(null)
   const [reportQueue, setReportQueue] = useState([])
   const [eventQueue, setEventQueue] = useState([])
   const [viewingReports, setViewingReports] = useState(true)
   const { authorization } = useAuth()
 
+  const fetchReportQueue = async () => {
+    const response = await fetch(`http://localhost:3000/api/reports`)
+    const data = await response.json()
+    setReportQueue(data)
+  }
+
+  const fetchPendingEvents = async () => {
+    const response = await fetch(
+      `http://localhost:3000/api/events?need_approval=true`
+    )
+    const data = await response.json()
+    setEventQueue(data)
+  }
+
   useEffect(() => {
-    const fetchReportQueue = async () => {
-      const response = await fetch(`http://localhost:3000/api/reports`)
-      const data = await response.json()
-      setReportQueue(data)
-    }
-
-    const fetchPendingEvents = async () => {
-      const response = await fetch(
-        `http://localhost:3000/api/events?need_approval=true`
-      )
-      const data = await response.json()
-      setEventQueue(data)
-    }
-
     fetchReportQueue()
     fetchPendingEvents()
   }, [])
 
   return (
     <div className="px-6">
+      <div
+        className={`fixed left-1/2 -translate-x-1/2 z-100 top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
+          whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
+          ${alert?.visible ? 'translate-y-12 opacity-100' : '-translate-y-full opacity-0'}
+          ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
+        `}
+      >
+        {alert?.text}
+      </div>
       <div className="flex justify-center mt-6 mb-4 *:w-full">
         <GenericToggle
           value={viewingReports}
@@ -57,7 +67,11 @@ function Moderate() {
                       view={authorization}
                     />
                   </div>
-                  <ModerationActions reportInformation={report} />
+                  <ModerationActions
+                    reportInformation={report}
+                    onSuccess={fetchReportQueue}
+                    setAlert={setAlert}
+                  />
                 </div>
               )}
 
@@ -74,7 +88,11 @@ function Moderate() {
                       }}
                     />
                   </div>
-                  <ModerationActions reportInformation={report} />
+                  <ModerationActions
+                    reportInformation={report}
+                    onSuccess={fetchReportQueue}
+                    setAlert={setAlert}
+                  />
                 </div>
               )}
 
@@ -84,7 +102,11 @@ function Moderate() {
                   <div className="*:shadow-white">
                     <OrganizerCard user={report.target_details} />
                   </div>
-                  <ModerationActions reportInformation={report} />
+                  <ModerationActions
+                    reportInformation={report}
+                    onSuccess={fetchReportQueue}
+                    setAlert={setAlert}
+                  />
                 </div>
               )}
             </div>

@@ -573,31 +573,16 @@ app.post('/api/report', async (req, res) => {
   try {
     const user = await selectUser(req)
     const { type, targetId, reason, explanation } = req.body
-    const result = await db.query(
-      'INSERT INTO report (reporter_id, reason, explanation) VALUES ($1, $2, $3) RETURNING id',
-      [user.id, reason, explanation]
+
+    await db.query(
+      'INSERT INTO report (reporter_id, reason, explanation, report_target, target_id) VALUES ($1, $2, $3, $4, $5)',
+      [user.id, reason, explanation, type, targetId]
     )
-    const reportId = result.rows[0].id
-    if (type == 'user') {
-      await db.query(
-        'INSERT INTO report_user (report_id, user_id) VALUES ($1, $2)',
-        [reportId, targetId]
-      )
-    } else if (type == 'event') {
-      await db.query(
-        'INSERT INTO report_event (report_id, event_id) VALUES ($1, $2)',
-        [reportId, targetId]
-      )
-    } else if (type == 'route') {
-      await db.query(
-        'INSERT INTO report_route (report_id, route_id) VALUES ($1, $2)',
-        [reportId, targetId]
-      )
-    }
+
     res.json({ success: true })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Failed to join route' })
+    res.status(500).json({ error: 'Failed to submit report' })
   }
 })
 
@@ -890,20 +875,9 @@ if (require.main === module) {
 app.get('/api/reports', async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT 
-        r.*,
-        CASE
-          WHEN ru.user_id IS NOT NULL THEN 'user'
-          WHEN re.event_id IS NOT NULL THEN 'event'
-          WHEN rr.route_id IS NOT NULL THEN 'route'
-        END AS report_target,
-        COALESCE(ru.user_id, re.event_id, rr.route_id) AS target_id
-      FROM report r
-      LEFT JOIN report_user ru ON r.id = ru.report_id
-      LEFT JOIN report_event re ON r.id = re.report_id
-      LEFT JOIN report_route rr ON r.id = rr.report_id
-      WHERE r.status = 'pending'
-      ORDER BY r.created_at ASC
+      SELECT * FROM report
+      WHERE status = 'pending'
+      ORDER BY created_at ASC
     `)
 
     // get report details for user, event, and route respectively
@@ -929,7 +903,7 @@ app.get('/api/reports', async (req, res) => {
               (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
             FROM route r 
             LEFT JOIN event_route er ON r.id = er.route_id 
-            WHERE id = $1`,
+            WHERE r.id = $1`,
             [report.target_id]
           )
           target_details = res.rows[0]
@@ -943,6 +917,48 @@ app.get('/api/reports', async (req, res) => {
   } catch (error) {
     console.error('Error fetching reports:', error)
     res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Submits a report. On approval of a valid report, status gets changed to "approved"" and the reported event/route/user reported column gets
+ * incremented by 1. On rejection of an invalid report, status gets changed to "rejected" and the rejection reason and optional detail (text)
+ * is saved.
+ */
+app.post('/api/moderateReport', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const {
+      report_id,
+      report_target,
+      target_id,
+      rejection_reason,
+      rejection_detail,
+      status,
+    } = req.body
+
+    // update the report
+    await db.query(
+      'UPDATE report SET status = $1, rejection_reason = $2, rejection_detail = $3 WHERE id = $4',
+      [status, rejection_reason, rejection_detail, report_id]
+    )
+
+    // increment reported count on target if approved
+    if (status === 'approved') {
+      const table = report_target === 'user' ? '"user"' : report_target
+      await db.query(
+        `UPDATE ${table} SET reported = reported + 1 WHERE id = $1`,
+        [target_id]
+      )
+    }
+
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('Database Error:', error)
+    res.status(500).json({ error: 'Internal Server Error' })
   }
 })
 
