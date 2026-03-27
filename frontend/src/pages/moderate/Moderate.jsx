@@ -3,9 +3,9 @@ import EventCard from '../../components/EventCard'
 import RouteCard from '../../components/RouteCard'
 import OrganizerCard from '../../components/OrganizerCard'
 import GenericToggle from '../../components/GenericToggle'
-import ModeratorCardWrapper from './ModeratorCardWrapper'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../utils/Authorization'
+import ModerationActions from './ModerationActions'
 
 function Moderate() {
   const navigate = useNavigate()
@@ -50,19 +50,20 @@ function Moderate() {
             <div key={report.id}>
               {/* Event Report, click leads to event details */}
               {report.report_target == 'event' && (
-                <ModeratorCardWrapper reportInformation={report}>
+                <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
                     <EventCard
                       event={report.target_details}
                       view={authorization}
                     />
                   </div>
-                </ModeratorCardWrapper>
+                  <ModerationActions reportInformation={report} />
+                </div>
               )}
 
               {/* Route Report, click leads to event details */}
               {report.report_target == 'route' && (
-                <ModeratorCardWrapper reportInformation={report}>
+                <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
                     <RouteCard
                       route={report.target_details}
@@ -73,16 +74,18 @@ function Moderate() {
                       }}
                     />
                   </div>
-                </ModeratorCardWrapper>
+                  <ModerationActions reportInformation={report} />
+                </div>
               )}
 
               {/* User Report, no click/no profile view yet? */}
               {report.report_target == 'user' && (
-                <ModeratorCardWrapper reportInformation={report}>
+                <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
                     <OrganizerCard user={report.target_details} />
                   </div>
-                </ModeratorCardWrapper>
+                  <ModerationActions reportInformation={report} />
+                </div>
               )}
             </div>
           ))}
@@ -93,11 +96,12 @@ function Moderate() {
       {!viewingReports &&
         eventQueue.map(event => (
           <div key={event.id}>
-            <ModeratorCardWrapper>
+            <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
               <div className="*:shadow-white">
                 <EventCard event={event} view={authorization} />
               </div>
-            </ModeratorCardWrapper>
+              <ModerationActions />
+            </div>
           </div>
         ))}
     </div>
