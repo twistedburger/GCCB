@@ -50,6 +50,9 @@ function Moderate() {
       >
         {alert?.text}
       </div>
+      <p className="text-[23px] text-text-primary font-medium mb-4">
+        Pending Reports
+      </p>
       {/* Disable verification for now */}
       {/* <div className="flex justify-center mt-6 mb-4 *:w-full">
         <GenericToggle

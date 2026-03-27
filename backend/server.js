@@ -258,7 +258,7 @@ app.get('/authorize', async (req, res) => {
  * @returns events fetched from the db, or an empty array
  */
 app.get('/api/events', (req, res) => {
-  const { time, verified, transportation_modes, need_approval } = req.query
+  const { time, verified, transportation_modes } = req.query
 
   const conditions = []
   const values = []
@@ -277,9 +277,7 @@ app.get('/api/events', (req, res) => {
     values.push(modes)
     conditions.push(`r.transportation_mode = ANY($${values.length})`)
   }
-  if (need_approval === 'true') {
-    conditions.push(`e.need_approval = true AND e.verified = false`)
-  }
+  conditions.push(`e.reported < 3`)
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
@@ -455,7 +453,7 @@ app.get('/api/routes', (req, res) => {
   if (verified === 'true') {
     conditions.push(`e.verified = true`)
   }
-
+  conditions.push(`r.reported < 3`)
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   db.query(

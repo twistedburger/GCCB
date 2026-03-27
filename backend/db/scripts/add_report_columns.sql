@@ -4,11 +4,10 @@ ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "reported" INTEGER DEFAULT 0;
 
 ALTER TABLE "report" ADD COLUMN IF NOT EXISTS "rejection_reason" VARCHAR(50);
 ALTER TABLE "report" ADD COLUMN IF NOT EXISTS "rejection_detail" VARCHAR(100);
-
 ALTER TABLE "report" ADD COLUMN IF NOT EXISTS "report_target" VARCHAR(10);
 ALTER TABLE "report" ADD COLUMN IF NOT EXISTS "target_id" INTEGER;
 
--- Move information from junction tables to report table if the junction tables exist
+-- Remove junction tables. Move information from junction tables to report table if the junction tables exist.
 DO $$
 BEGIN
   IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'report_user') THEN
