@@ -6,7 +6,6 @@ import GenericButton from './GenericButton'
 import CreateRoute from './CreateRoute'
 import LocationSearch from './LocationSearch'
 import RouteCard from './RouteCard'
-import { useUser } from '../../context/UserContext'
 
 const CreateEvent = ({ initLoc, onSubmit }) => {
   const [addedRoutes, setAddedRoutes] = useState([])
@@ -16,8 +15,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [datetime, setDatetime] = useState('')
   const [eventDesc, setEventDesc] = useState('')
   const [errors, setErrors] = useState({})
-
-  const { user } = useUser()
 
   const toggleRouteJoin = id => {
     setAddedRoutes(prev =>
@@ -100,14 +97,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const handleEventSubmit = async e => {
     e.preventDefault()
 
-    if (!user) {
-      onSubmit({
-        success: false,
-        message: 'You must be logged in to create an event.',
-      })
-      return
-    }
-
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -117,7 +106,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
     try {
       const eventData = {
         title: eventName,
-        creator_id: user.id,
         event_time: datetime,
         location: selectedPlace,
         description: eventDesc,
@@ -129,7 +117,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
       if (addedRoutes.length > 0) {
         const routePromises = addedRoutes.map(route =>
-          createRoute(newevent_id, route, user.id)
+          createRoute(newevent_id, route)
         )
         await Promise.all(routePromises)
       }
