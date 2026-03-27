@@ -71,13 +71,9 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
           <div className="w-28 h-28 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-sm">
             <Person className="text-gray-300" style={{ fontSize: 60 }} />
           </div>
-          <button
-            type="button"
-            onClick={handleChangePhoto}
-            className="bg-blue-primary text-white px-6 py-2 rounded-full text-sm font-semibold hover:bg-blue-600 active:scale-95 transition-all shadow-md"
-          >
+          <GenericButton onClick={handleChangePhoto}>
             Change Photo
-          </button>
+          </GenericButton>
         </div>
 
         {/* Info Section (Read Only) */}
@@ -115,13 +111,11 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
             type="submit"
             onSubmit={handleSubmit}
             disabled={!!nicknameError}
-            unstyled={true}
             customStyling={`
-              py-2 px-6 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95
               ${
                 nicknameError
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-primary text-white hover:bg-blue-600 hover:shadow-blue-200'
+                  : ''
               }
             `}
           >
