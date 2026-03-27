@@ -19,7 +19,7 @@ import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
-import { Modal } from '../components/Modal'
+import Modal from '../components/Modal'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
