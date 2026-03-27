@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Close } from '@mui/icons-material'
 import GenericButton from './GenericButton'
 
-export default function Modal({ isOpen, onClose, children, title, className }) {
+export function Modal({ isOpen, onClose, children, title }) {
   const [animateIn, setAnimateIn] = useState(false)
 
   useEffect(() => {
@@ -28,10 +28,9 @@ export default function Modal({ isOpen, onClose, children, title, className }) {
 
       {/* Modal */}
       <div
-        className={`relative bg-white w-full rounded-3xl shadow-2xl 
+        className={`relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl 
           max-h-[90vh] overflow-hidden transform transition-all duration-300 ease-out
           ${animateIn ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-8'}
-          ${className ?? ''}
         `}
       >
         {/* Close Button */}
@@ -59,5 +58,4 @@ Modal.propTypes = {
   onClose: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
   title: PropTypes.string,
-  className: PropTypes.string,
 }
