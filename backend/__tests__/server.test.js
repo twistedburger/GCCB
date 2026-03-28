@@ -23,6 +23,9 @@ const expectedAuthorizedUser = {
 
 jest.mock('../db', () => ({
   query: jest.fn(),
+  pool: {
+    connect: jest.fn(),
+  },
 }))
 
 let app = require('../server')
@@ -466,6 +469,124 @@ describe('GET /sso_list', () => {
     const response = await request(app).get('/sso_list')
 
     expect(response.status).toBe(500)
+  })
+})
+
+describe('POST /api/createRoute', () => {
+  let mockClient
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockIsAuthenticated.mockReturnValue(true)
+
+    mockClient = {
+      query: jest.fn(),
+      release: jest.fn(),
+    }
+
+    db.pool.connect.mockResolvedValue(mockClient)
+    db.query.mockResolvedValue({ rows: [{ id: 1 }], rowCount: 1 })
+  })
+
+  test('should always release client even on failure', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({}) // BEGIN
+      .mockRejectedValueOnce(new Error('DB down'))
+
+    await request(app).post('/api/createRoute').send({ title: 'Test' })
+
+    expect(mockClient.release).toHaveBeenCalledTimes(1)
+  })
+
+  test('should create route and link to event (isJoined: false)', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({}) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ id: 101 }] }) // INSERT route
+      .mockResolvedValueOnce({}) // INSERT event_route
+      .mockResolvedValueOnce({}) // COMMIT
+
+    const response = await request(app)
+      .post('/api/createRoute')
+      .send({ event_id: 5, title: 'Morning Commute', isJoined: false })
+
+    expect(response.status).toBe(201)
+    expect(response.body).toEqual({ success: true, route_id: 101 })
+    expect(mockClient.query).toHaveBeenCalledWith(
+      expect.stringContaining('BEGIN')
+    )
+    expect(mockClient.release).toHaveBeenCalled()
+  })
+
+  test('should insert into user_route if isJoined is true', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({}) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ id: 102 }] }) // INSERT route
+      .mockResolvedValueOnce({}) // INSERT event_route
+      .mockResolvedValueOnce({}) // INSERT user_route
+      .mockResolvedValueOnce({}) // COMMIT
+
+    const response = await request(app)
+      .post('/api/createRoute')
+      .send({ event_id: 5, title: 'Joined Route', isJoined: true })
+
+    expect(response.status).toBe(201)
+
+    const userRouteCall = mockClient.query.mock.calls.find(call =>
+      call[0].includes('INSERT INTO user_route')
+    )
+    expect(userRouteCall).toBeDefined()
+    expect(userRouteCall[1]).toEqual([1, 102])
+  })
+
+  test('should rollback and return 500 on route insert failure', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({}) // BEGIN
+      .mockRejectedValueOnce(new Error('Transaction Error')) // INSERT route fails
+
+    const response = await request(app)
+      .post('/api/createRoute')
+      .send({ title: 'Broken Route' })
+
+    expect(response.status).toBe(500)
+    expect(response.body.error).toBe('Failed to create and link route')
+    expect(mockClient.query).toHaveBeenCalledWith(
+      expect.stringContaining('ROLLBACK')
+    )
+    expect(mockClient.release).toHaveBeenCalled()
+  })
+
+  test('should rollback and return 500 on event_route insert failure', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({}) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ id: 104 }] }) // INSERT route succeeds
+      .mockRejectedValueOnce(new Error('FK violation')) // INSERT event_route fails
+
+    const response = await request(app)
+      .post('/api/createRoute')
+      .send({ event_id: 999, title: 'Orphan Route', isJoined: false })
+
+    expect(response.status).toBe(500)
+    expect(mockClient.query).toHaveBeenCalledWith(
+      expect.stringContaining('ROLLBACK')
+    )
+  })
+
+  test('should rollback and return 500 on user_route insert failure (isJoined: true)', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({}) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ id: 105 }] }) // INSERT route
+      .mockResolvedValueOnce({}) // INSERT event_route
+      .mockRejectedValueOnce(new Error('user_route failed')) // INSERT user_route fails
+
+    const response = await request(app)
+      .post('/api/createRoute')
+      .send({ event_id: 5, title: 'Test', isJoined: true })
+
+    expect(response.status).toBe(500)
+    expect(mockClient.query).toHaveBeenCalledWith(
+      expect.stringContaining('ROLLBACK')
+    )
+    expect(mockClient.release).toHaveBeenCalledTimes(1)
   })
 })
 

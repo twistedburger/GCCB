@@ -14,7 +14,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Drawer } from 'vaul'
 import { useAuth } from '../../utils/Authorization'
 import CreateRoute from '../../components/CreateRoute'
-import { useUser } from '../../../context/UserContext'
 import Modal from '../../components/Modal'
 import Report from '../../components/Report'
 
@@ -34,7 +33,6 @@ export default function EventDetail() {
   const [addRoute, setAddRoute] = useState(false)
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
-  const { user } = useUser()
 
   const [showReport, setShowReport] = useState(false)
   const [reportData, setReportData] = useState(null)
@@ -54,7 +52,6 @@ export default function EventDetail() {
         credentials: 'include',
         body: JSON.stringify({
           ...routeData,
-          creator_id: user.id,
           event_id: event.id,
         }),
       })
