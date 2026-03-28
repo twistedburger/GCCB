@@ -50,12 +50,6 @@ export default function Filter() {
     closeWithAnimation()
   }
 
-  const handleModeToggle = mode => {
-    setTransportationModes(prev =>
-      prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]
-    )
-  }
-
   return (
     <>
       <div
@@ -76,7 +70,7 @@ export default function Filter() {
             </div>
             <TransportationModeSelect
               selectedModes={transportationModes}
-              onChange={handleModeToggle}
+              onChange={setTransportationModes}
               multiple={true}
             />
             <p className="py-2 font-semibold">Time</p>
