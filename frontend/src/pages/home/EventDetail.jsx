@@ -34,7 +34,6 @@ export default function EventDetail() {
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
 
-  const [showReport, setShowReport] = useState(false)
   const [reportData, setReportData] = useState(null)
 
   const handleClose = () => {
@@ -252,7 +251,6 @@ export default function EventDetail() {
                                     targetId: event.id,
                                     title: event.title,
                                   })
-                                  setShowReport(true)
                                 }}
                               >
                                 Report Event
@@ -265,7 +263,6 @@ export default function EventDetail() {
                                     targetId: event.creator_id,
                                     title: event.creator_name,
                                   })
-                                  setShowReport(true)
                                 }}
                               >
                                 Report Organizer
@@ -310,10 +307,7 @@ export default function EventDetail() {
                               key={route.id}
                               route={route}
                               view={authorization}
-                              onReport={data => {
-                                setReportData(data)
-                                setShowReport(true)
-                              }}
+                              onReport={data => setReportData(data)}
                               individualView={false}
                               onSelect={route => {
                                 const fullRoute = {
@@ -340,21 +334,23 @@ export default function EventDetail() {
                     </div>
                   </div>
                   <Drawer.NestedRoot
-                    open={showReport}
-                    onOpenChange={setShowReport}
+                    open={!!reportData}
+                    onOpenChange={open => {
+                      if (!open) setReportData(null)
+                    }}
                     shouldScaleBackground={false}
                     dismissible={false}
                   >
                     <Drawer.Portal>
                       <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
                       <Drawer.Content
-                        onPointerDownOutside={() => setShowReport(false)}
+                        onPointerDownOutside={() => setReportData(null)}
                         className="fixed bottom-0 left-13.75 right-0 z-50 flex flex-col rounded-t-3xl bg-white"
                       >
                         <div className="flex-1 p-4">
                           <div className="absolute top-4 right-4 z-10">
                             <GenericButton
-                              onClick={() => setShowReport(false)}
+                              onClick={() => setReportData(null)}
                               unstyled={true}
                               customStyling="text-text-primary scale-110"
                             >
@@ -372,7 +368,7 @@ export default function EventDetail() {
                               <Report
                                 type={reportData.type}
                                 targetId={reportData.targetId}
-                                onClose={() => setShowReport(false)}
+                                onClose={() => setReportData(null)}
                                 setAlert={reportAlert => {
                                   if (!reportAlert || !reportAlert.type) return
                                   setAlert({

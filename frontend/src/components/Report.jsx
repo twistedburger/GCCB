@@ -48,28 +48,30 @@ export default function Report({ type, targetId, onClose, setAlert }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 h-60">
-      <div className=" *:mx-0 *:w-full">
-        <Select
-          instanceId="report-reason-select"
-          aria-label="Select a reason for reporting"
-          options={reasonMenu}
-          value={{ value: reason, label: reason }}
-          onChange={e => setReason(e.value)}
+    <div className="flex flex-col gap-2 h-65 justify-between">
+      <div className="flex flex-col gap-2">
+        <div className=" *:mx-0 *:w-full">
+          <Select
+            instanceId="report-reason-select"
+            aria-label="Select a reason for reporting"
+            options={reasonMenu}
+            value={{ value: reason, label: reason }}
+            onChange={e => setReason(e.value)}
+          />
+        </div>
+        <TextBox
+          value={explanation}
+          onChange={e => {
+            setExplanation(e.target.value)
+            if (explanationError) setExplanationError('')
+          }}
+          placeholder={'Please describe the issue...'}
+          aria-label="Description of the report"
+          error={explanationError}
+          multiline={true}
         />
       </div>
-      <TextBox
-        value={explanation}
-        onChange={e => {
-          setExplanation(e.target.value)
-          if (explanationError) setExplanationError('')
-        }}
-        placeholder={'Please describe the issue...'}
-        aria-label="Description of the report"
-        error={explanationError}
-        multiline={true}
-      />
-      <div className="flex justify-center">
+      <div className="flex justify-center place-content-end">
         <GenericButton onClick={handleSubmit}>Submit</GenericButton>
       </div>
     </div>
