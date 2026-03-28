@@ -1,4 +1,5 @@
 import GenericButton from './GenericButton'
+import TextBox from './TextBox'
 import Select from 'react-select'
 import { useState } from 'react'
 import PropTypes from 'prop-types'
@@ -47,7 +48,7 @@ export default function Report({ type, targetId, onClose, setAlert }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 h-80">
+    <div className="flex flex-col gap-2 h-60">
       <div className=" *:mx-0 *:w-full">
         <Select
           instanceId="report-reason-select"
@@ -57,17 +58,17 @@ export default function Report({ type, targetId, onClose, setAlert }) {
           onChange={e => setReason(e.value)}
         />
       </div>
-      <textarea
-        required
+      <TextBox
         value={explanation}
-        onChange={e => setExplanation(e.target.value)}
-        placeholder="Please describe the issue..."
+        onChange={e => {
+          setExplanation(e.target.value)
+          if (explanationError) setExplanationError('')
+        }}
+        placeholder={'Please describe the issue...'}
         aria-label="Description of the report"
-        className="w-full rounded-xl border-2 border-medium-grey p-3 text-sm text-text-primary resize-none h-32 focus:outline-none focus:border-blue-primary"
+        error={explanationError}
+        multiline={true}
       />
-      {explanationError && (
-        <p className="text-red-500 text-xs -mt-1.5">{explanationError}</p>
-      )}
       <div className="flex justify-center">
         <GenericButton onClick={handleSubmit}>Submit</GenericButton>
       </div>
