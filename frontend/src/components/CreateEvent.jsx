@@ -109,7 +109,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         event_time: datetime,
         location: selectedPlace,
         description: eventDesc,
-        verified: false,
         need_approval: false,
       }
 

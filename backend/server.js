@@ -331,14 +331,9 @@ app.post('/api/createEvent', async (req, res) => {
 
   try {
     const user = await selectUser(req)
-    const {
-      title,
-      event_time,
-      location,
-      verified,
-      need_approval,
-      description,
-    } = req.body
+    const route_verified = user.role === 'moderator'
+
+    const { title, event_time, location, need_approval, description } = req.body
 
     const result = await db.query(
       'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
@@ -347,7 +342,7 @@ app.post('/api/createEvent', async (req, res) => {
         user.id,
         event_time,
         location,
-        verified,
+        route_verified,
         need_approval,
         description,
         new Date(),
