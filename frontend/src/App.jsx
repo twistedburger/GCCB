@@ -89,8 +89,14 @@ function App() {
                     path="/dashboard/trip-frequency"
                     element={<TripFrequency />}
                   />
-                  <Route path="/dashboard/activity" element={<Activity />} />
                   <Route path="/user-guide" element={<UserGuide />} />
+                </Route>
+                <Route
+                  element={
+                    <ProtectedRoute requiredAuthorization={authLevel.ADMIN} />
+                  }
+                >
+                  <Route path="/dashboard/activity" element={<Activity />} />
                 </Route>
                 <Route
                   element={
