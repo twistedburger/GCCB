@@ -328,24 +328,19 @@ app.post('/api/createEvent', async (req, res) => {
   }
 
   try {
-    const {
-      title,
-      creator_id,
-      event_time,
-      location,
-      verified,
-      need_approval,
-      description,
-    } = req.body
+    const user = await selectUser(req)
+    const route_verified = user.role === 'moderator'
+
+    const { title, event_time, location, need_approval, description } = req.body
 
     const result = await db.query(
       'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [
         title,
-        creator_id,
+        user.id,
         event_time,
         location,
-        verified,
+        route_verified,
         need_approval,
         description,
         new Date(),
@@ -367,7 +362,6 @@ app.post('/api/createRoute', async (req, res) => {
   const {
     event_id,
     title,
-    creator_id,
     transportation_mode,
     origin,
     destination,
@@ -382,6 +376,7 @@ app.post('/api/createRoute', async (req, res) => {
   const client = await pool.connect()
 
   try {
+    const user = await selectUser(req)
     await client.query('BEGIN')
 
     const routeQuery = `
@@ -391,7 +386,7 @@ app.post('/api/createRoute', async (req, res) => {
     `
     const routeResult = await client.query(routeQuery, [
       title,
-      creator_id,
+      user.id,
       transportation_mode,
       origin,
       destination,
@@ -414,7 +409,7 @@ app.post('/api/createRoute', async (req, res) => {
     if (isJoined) {
       await client.query(
         'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-        [creator_id, route_id]
+        [user.id, route_id]
       )
     }
 
