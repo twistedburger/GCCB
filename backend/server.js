@@ -258,6 +258,10 @@ app.get('/authorize', async (req, res) => {
  * @returns events fetched from the db, or an empty array
  */
 app.get('/api/events', (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
   const {
     time,
     verified,
@@ -456,6 +460,10 @@ app.post('/api/createRoute', async (req, res) => {
  * @returns routes fetched from the db, or an empty array
  */
 app.get('/api/routes', (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
   const {
     time,
     transportation_modes,
