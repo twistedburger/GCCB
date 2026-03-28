@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { CheckOutlined, CloseOutlined } from '@mui/icons-material'
 import GenericButton from '../../components/GenericButton'
 import ConfirmationDialog from '../../components/ConfirmationDialog'
+import TextBox from '../../components/TextBox'
 import { moderationStrings } from '../../locales/en/moderation'
 import Select from 'react-select'
 
@@ -16,6 +17,7 @@ export default function ModerationActions({
   const [confirmReport, setConfirmReport] = useState(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectionDetail, setRejectionDetail] = useState('')
+  const [detailError, setDetailError] = useState('')
   const invalidReports = moderationStrings.invalidReports.map(r => ({
     value: r,
     label: r,
@@ -82,7 +84,6 @@ export default function ModerationActions({
           rejection_reason: rejectionReason,
           rejection_detail: rejectionDetail,
         }
-    console.log(data)
     try {
       isReport ? await submitReport(data) : await submitVerification(data)
       setAlert({
@@ -112,6 +113,7 @@ export default function ModerationActions({
     setConfirmReport(null)
     setRejectionReason('')
     setRejectionDetail('')
+    setDetailError('')
   }
 
   const showActions = confirmReport === null
@@ -199,7 +201,11 @@ export default function ModerationActions({
                 ? { value: rejectionReason, label: rejectionReason }
                 : null
             }
-            onChange={e => setRejectionReason(e.value)}
+            onChange={e => {
+              setRejectionReason(e.value)
+              setRejectionDetail('')
+              setDetailError('')
+            }}
             placeholder="Select a reason..."
             menuPortalTarget={document.body}
             styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
@@ -207,18 +213,28 @@ export default function ModerationActions({
 
           {/* Textbox */}
           {rejectionReason === 'Other' && (
-            <textarea
+            <TextBox
+              error={detailError}
               value={rejectionDetail}
-              onChange={e => setRejectionDetail(e.target.value)}
-              placeholder="Please describe the reason..."
-              className="text-xs border border-zinc-300 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-blue-primary resize-none h-20"
+              onChange={e => {
+                setRejectionDetail(e.target.value)
+                if (detailError) setDetailError('')
+              }}
+              multiline
+              placeholder={'Please provide a reason for the invalid report...'}
             />
           )}
 
           {/* ok/cancel */}
           <div className="flex justify-end gap-1">
             <GenericButton
-              onClick={() => handleSubmit('rejected')}
+              onClick={() => {
+                if (rejectionReason === 'Other' && rejectionDetail === '') {
+                  setDetailError('Explanation for invalid report required.')
+                  return
+                }
+                handleSubmit('rejected')
+              }}
               unstyled={true}
               customStyling="text-xs bg-red-700 text-white font-medium px-4 py-1 rounded-lg"
             >
