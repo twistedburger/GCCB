@@ -6,7 +6,6 @@ import GenericButton from './GenericButton'
 import CreateRoute from './CreateRoute'
 import LocationSearch from './LocationSearch'
 import RouteCard from './RouteCard'
-import { useUser } from '../../context/UserContext'
 import ConfirmationDialog from './ConfirmationDialog'
 
 const CreateEvent = ({ initLoc, onSubmit }) => {
@@ -18,7 +17,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [eventDesc, setEventDesc] = useState('')
   const [errors, setErrors] = useState({})
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const { user } = useUser()
+
   const toggleRouteJoin = id => {
     setAddedRoutes(prev =>
       prev.map(route =>
@@ -71,12 +70,11 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   }
 
   const handleConfirmSubmit = async () => {
-    setIsDialogOpen(false) // Close dialog immediately
+    setIsDialogOpen(false)
 
     try {
       const eventData = {
         title: eventName,
-        creator_id: user.id,
         event_time: datetime,
         location: selectedPlace,
         description: eventDesc,
@@ -88,7 +86,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
       if (addedRoutes.length > 0) {
         const routePromises = addedRoutes.map(route =>
-          createRoute(newevent_id, route, user.id)
+          createRoute(newevent_id, route)
         )
         await Promise.all(routePromises)
       }
@@ -136,14 +134,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
   const handleEventSubmit = async e => {
     e.preventDefault()
-
-    if (!user) {
-      onSubmit({
-        success: false,
-        message: 'You must be logged in to create an event.',
-      })
-      return
-    }
 
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
