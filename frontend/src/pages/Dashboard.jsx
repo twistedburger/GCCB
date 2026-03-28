@@ -6,6 +6,7 @@ import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { formatKg, formatKm, getMostUsedMode } from '../utils/analyticsHelpers'
+import { useUser } from '../../context/UserContext.jsx'
 
 function ProfileHeader({ user, onEdit }) {
   const displayName = user?.name ?? 'Unknown User'
@@ -32,13 +33,13 @@ function ProfileHeader({ user, onEdit }) {
           <div className="mt-3 text-sm text-zinc-700">{displayDescription}</div>
         </div>
 
-        <button
-          type="button"
+        <GenericButton
           onClick={onEdit}
-          className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+          unstyled={true}
+          customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
         >
           Edit Profile
-        </button>
+        </GenericButton>
       </div>
     </div>
   )
@@ -58,53 +59,14 @@ ProfileHeader.propTypes = {
 function Dashboard() {
   const [isEditing, setIsEditing] = useState(false)
 
-  const [user, setUser] = useState(null)
-  const [loadingUser, setLoadingUser] = useState(true)
-  const [userError, setUserError] = useState('')
-
   const [summary, setSummary] = useState(null)
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [summaryError, setSummaryError] = useState('')
 
+  const { user, loadingUser, userError, setUser } = useUser()
   const navigate = useNavigate()
 
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        setLoadingUser(true)
-        setUserError('')
-
-        const response = await fetch('http://localhost:3000/authenticateUser', {
-          credentials: 'include',
-        })
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch user: ${response.status}`)
-        }
-
-        const data = await response.json()
-
-        if (!data.isAuthenticated) {
-          setUserError('User is not authenticated.')
-          setUser(null)
-          return
-        }
-
-        if (!data.user) {
-          setUserError('Authenticated user was not found in the database.')
-          setUser(null)
-          return
-        }
-
-        setUser(data.user)
-      } catch (error) {
-        console.error('Failed to load user', error)
-        setUserError('Failed to load user profile.')
-      } finally {
-        setLoadingUser(false)
-      }
-    }
-
     async function fetchSummary() {
       try {
         setLoadingSummary(true)
@@ -133,13 +95,21 @@ function Dashboard() {
       }
     }
 
-    fetchUser()
     fetchSummary()
   }, [])
 
-  const handleSubmit = formData => {
-    console.log('Form submitted with data:', formData)
-    // TODO: send PUT request to backend to update user info
+  const handleSubmit = async formData => {
+    const result = await fetch('http://localhost:3000/updateProfile', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
+    const response = await result.json()
+    setUser(response.user)
+    setIsEditing(false)
   }
 
   const isAdmin = user?.role === 'admin'
@@ -234,7 +204,6 @@ function Dashboard() {
               onClick={() => {
                 window.location.href = 'http://localhost:3000/logoutRoute'
               }}
-              className="m-0"
             >
               Logout
             </GenericButton>

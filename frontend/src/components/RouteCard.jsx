@@ -15,6 +15,7 @@ export default function RouteCard({
   view,
   isDraft = false,
   individualView,
+  isCompleted = false,
   routeDetailView = false,
   onSelect,
   onToggleJoin,
@@ -100,6 +101,7 @@ export default function RouteCard({
                 {route.origin || route.start_point}{' '}
                 {!routeDetailView &&
                   route.depart_time &&
+                  !isCompleted &&
                   `@ ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
               </p>
             </div>
@@ -124,6 +126,21 @@ export default function RouteCard({
                   `(${route.max_ppl - peopleGoing} seats left)`}
               </p>
             </div>
+            {isCompleted && route.event_time && (
+              <div className="flex flex-row text-text-secondary text-xs items-center leading-none -ml-1 pt-1">
+                <b>Completed:&nbsp;</b>
+                {new Date(route.event_time).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}{' '}
+                {new Date(route.event_time).toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -147,27 +164,28 @@ export default function RouteCard({
                 <span>Report</span>
               </GenericButton>
             )}
-            {activeJoinedState ? (
-              <GenericButton
-                unstyled
-                customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
-                onClick={handleLeave}
-              >
-                <div className="flex flex-row items-center gap-1">
-                  <Logout fontSize="12px" />
-                  <span>Leave</span>
-                </div>
-              </GenericButton>
-            ) : (
-              <GenericButton
-                unstyled
-                disabled={isFull}
-                customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
-                onClick={handleJoin}
-              >
-                Join
-              </GenericButton>
-            )}
+            {!isCompleted &&
+              (activeJoinedState ? (
+                <GenericButton
+                  unstyled
+                  customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
+                  onClick={handleLeave}
+                >
+                  <div className="flex flex-row items-center gap-1">
+                    <Logout fontSize="12px" />
+                    <span>Leave</span>
+                  </div>
+                </GenericButton>
+              ) : (
+                <GenericButton
+                  unstyled
+                  disabled={isFull}
+                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
+                  onClick={handleJoin}
+                >
+                  Join
+                </GenericButton>
+              ))}
           </div>
         )}
       </div>
@@ -180,6 +198,7 @@ RouteCard.propTypes = {
   view: PropTypes.string,
   isDraft: PropTypes.bool,
   individualView: PropTypes.bool,
+  isCompleted: PropTypes.bool,
   onSelect: PropTypes.func,
   onToggleJoin: PropTypes.func,
   onReport: PropTypes.func,

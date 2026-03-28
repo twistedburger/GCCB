@@ -28,7 +28,7 @@ export default function Modal({ isOpen, onClose, children, title }) {
 
       {/* Modal */}
       <div
-        className={`relative bg-white w-full rounded-3xl shadow-2xl 
+        className={`relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl 
           max-h-[90vh] overflow-hidden transform transition-all duration-300 ease-out
           ${animateIn ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-8'}
         `}
