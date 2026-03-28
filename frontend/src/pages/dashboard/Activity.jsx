@@ -1,116 +1,402 @@
-import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
+import PropTypes from 'prop-types'
 import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import ChartCard from '../../components/analytics/ChartCard'
-import ChartPlaceholder from '../../components/analytics/ChartPlaceholder'
 import GenericButton from '../../components/GenericButton'
+import {
+  AXIS_TICK_STYLE,
+  GRID_STYLE,
+  THEME_COLORS,
+} from '../../utils/chartConfig'
+
+const STATUS_COLORS = {
+  upcoming: THEME_COLORS.blue,
+  completed: THEME_COLORS.green,
+  rejected: THEME_COLORS.orange,
+}
+
+const GRANULARITIES = ['daily', 'monthly', 'quarterly']
+
+function StatusTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null
+  const row = payload[0].payload
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-md text-sm">
+      <p className="font-semibold text-zinc-800">{row.label}</p>
+      <p className="text-zinc-600">
+        {row.count} {row.count === 1 ? 'route' : 'routes'}
+      </p>
+    </div>
+  )
+}
+
+StatusTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.arrayOf(
+    PropTypes.shape({
+      payload: PropTypes.shape({
+        label: PropTypes.string,
+        count: PropTypes.number,
+      }),
+    })
+  ),
+}
+
+function RejectionTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null
+  const row = payload[0].payload
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-md text-sm">
+      <p className="font-semibold text-zinc-800">{row.reason}</p>
+      <p className="text-zinc-600">
+        {row.count} {row.count === 1 ? 'route' : 'routes'}
+      </p>
+    </div>
+  )
+}
+
+RejectionTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.arrayOf(
+    PropTypes.shape({
+      payload: PropTypes.shape({
+        reason: PropTypes.string,
+        count: PropTypes.number,
+      }),
+    })
+  ),
+}
+
+function TimeseriesTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-md text-sm">
+      <p className="font-semibold text-zinc-800 mb-1">{label}</p>
+      {payload.map(entry => (
+        <p key={entry.name} style={{ color: entry.color }}>
+          {entry.name}: {Number(entry.value).toFixed(2)} kg
+        </p>
+      ))}
+    </div>
+  )
+}
+
+TimeseriesTooltip.propTypes = {
+  active: PropTypes.bool,
+  label: PropTypes.string,
+  payload: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      value: PropTypes.number,
+      color: PropTypes.string,
+    })
+  ),
+}
 
 function Activity() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const role = location.state?.role ?? 'student'
-  const isAdmin = role === 'admin'
 
-  const S = adminAnalyticsEn.activity
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  // Safeguard: handle via auth or redirect later
-  if (!isAdmin) {
-    return (
-      <>
-        <GenericButton
-          type="button"
-          onClick={() => navigate(-1)}
-          unstyled
-          customStyling="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
-        >
-          {adminAnalyticsEn.common.back}
-        </GenericButton>
+  const [timeseriesAll, setTimeseriesAll] = useState({
+    daily: [],
+    monthly: [],
+    quarterly: [],
+  })
+  const [timeseriesLoading, setTimeseriesLoading] = useState(false)
+  const [granularity, setGranularity] = useState('daily')
 
-        <h1>{S.guard.pageTitle}</h1>
-        <p>{S.guard.message}</p>
-      </>
-    )
-  }
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        setError('')
+        const res = await fetch('http://localhost:3000/api/activity/summary', {
+          credentials: 'include',
+        })
+        if (!res.ok) throw new Error('Failed to fetch activity summary')
+        setData(await res.json())
+      } catch (err) {
+        console.error('Failed to load activity summary', err)
+        setError('Failed to load activity data.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    async function fetchAllTimeseries() {
+      try {
+        setTimeseriesLoading(true)
+        const [daily, monthly, quarterly] = await Promise.all(
+          GRANULARITIES.map(g =>
+            fetch(
+              `http://localhost:3000/api/activity/co2-timeseries?granularity=${g}`,
+              { credentials: 'include' }
+            ).then(res => {
+              if (!res.ok) throw new Error(`Failed to fetch ${g} timeseries`)
+              return res.json()
+            })
+          )
+        )
+        setTimeseriesAll({
+          daily: daily.data ?? [],
+          monthly: monthly.data ?? [],
+          quarterly: quarterly.data ?? [],
+        })
+      } catch (err) {
+        console.error('Failed to load time-series data', err)
+      } finally {
+        setTimeseriesLoading(false)
+      }
+    }
+    fetchAllTimeseries()
+  }, [])
 
   const kpis = [
-    { label: S.metrics.activeRouteCreators7d, value: '25' },
-    { label: S.metrics.upcomingRoutes, value: '18' },
-    { label: S.metrics.completionRate30d, value: '74%' },
-    { label: S.metrics.rejectedRoutes30d, value: '9' },
+    {
+      label: 'Active Route Creators',
+      value: loading ? '...' : `${data?.kpis.activeCreators7d ?? 0}`,
+      subvalue: 'In the last 7 days',
+    },
+    {
+      label: 'Completion Rate',
+      value: loading ? '...' : `${data?.kpis.completionRate30d ?? 0}%`,
+      subvalue: 'In the last 30 days',
+    },
+    {
+      label: 'Rejected Routes',
+      value: loading ? '...' : `${data?.kpis.rejectedRoutes30d ?? 0}`,
+      subvalue: 'In the last 30 days',
+    },
+    {
+      label: 'Average Group Size',
+      value: loading ? '...' : `${data?.kpis.avgGroupSize ?? 0}`,
+      subvalue: 'Participants per completed route',
+    },
   ]
 
+  const statusChartData = data
+    ? [
+        {
+          label: 'Upcoming',
+          count: data.statusBreakdown.upcoming,
+          fill: STATUS_COLORS.upcoming,
+        },
+        {
+          label: 'Completed',
+          count: data.statusBreakdown.completed,
+          fill: STATUS_COLORS.completed,
+        },
+        {
+          label: 'Rejected',
+          count: data.statusBreakdown.rejected,
+          fill: STATUS_COLORS.rejected,
+        },
+      ]
+    : []
+
+  const rejectionChartData = data?.rejectionReasons ?? []
+  const activeTimeseriesData = timeseriesAll[granularity]
+
   return (
-    <>
-      <button type="button" onClick={() => navigate(-1)}>
-        {adminAnalyticsEn.common.back}
-      </button>
-
-      <h1>{S.pageTitle}</h1>
-      <p>
-        Viewing as: <strong>{role}</strong>
-      </p>
-
-      <hr />
-
-      <AnalyticsBlock
-        title={S.filters.blockTitle}
-        description={S.filters.blockDescription}
+    <div className="mx-auto w-full max-w-5xl p-4">
+      <GenericButton
+        type="button"
+        onClick={() => navigate(-1)}
+        unstyled
+        customStyling="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
       >
-        <ul>
-          <li>
-            <strong>{S.filters.dateRangeLabel}</strong>{' '}
-            {S.filters.dateRangeValue}
-          </li>
-          <li>
-            <strong>{S.filters.statusLabel}</strong> {S.filters.statusValue}
-          </li>
-        </ul>
-      </AnalyticsBlock>
+        Back
+      </GenericButton>
 
-      <AnalyticsBlock
-        title={S.metrics.blockTitle}
-        description={S.metrics.blockDescription}
-      >
-        <KpiGrid items={kpis} />
-      </AnalyticsBlock>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">Platform Activity</h1>
+        <p className="mt-1 text-sm text-zinc-600">
+          Monitor platform-wide engagement; track how routes are being created,
+          completed, and rejected across the community.
+        </p>
+      </div>
 
-      <AnalyticsBlock
-        title={S.charts.blockTitle}
-        description={S.charts.blockDescription}
-      >
-        <div style={{ display: 'grid', gap: 12 }}>
-          <ChartCard
-            title={S.charts.activeCreatorsOverTime.title}
-            subtitle={S.charts.activeCreatorsOverTime.subtitle}
-          >
-            <ChartPlaceholder
-              label={S.charts.activeCreatorsOverTime.placeholderLabel}
-            />
-          </ChartCard>
-
-          <ChartCard
-            title={S.charts.upcomingVsCompleted.title}
-            subtitle={S.charts.upcomingVsCompleted.subtitle}
-          >
-            <ChartPlaceholder
-              label={S.charts.upcomingVsCompleted.placeholderLabel}
-            />
-          </ChartCard>
-
-          <ChartCard
-            title={S.charts.rejectionReasons.title}
-            subtitle={S.charts.rejectionReasons.subtitle}
-          >
-            <ChartPlaceholder
-              label={S.charts.rejectionReasons.placeholderLabel}
-            />
-          </ChartCard>
+      {error ? (
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
         </div>
-      </AnalyticsBlock>
+      ) : null}
 
-      <hr />
-    </>
+      <div className="flex flex-col">
+        <AnalyticsBlock
+          title="At a glance"
+          description="Key platform activity metrics. Creator and rejection counts use a rolling 7 or 30 day window."
+        >
+          <KpiGrid items={kpis} />
+        </AnalyticsBlock>
+
+        <AnalyticsBlock
+          title="Route status breakdown"
+          description="All-time count of routes by current status."
+        >
+          {loading ? (
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+              Loading charts...
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              <ChartCard
+                title="Upcoming vs completed vs rejected"
+                subtitle="Total route counts by status"
+              >
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart
+                    data={statusChartData}
+                    margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
+                  >
+                    <CartesianGrid {...GRID_STYLE} vertical={false} />
+                    <XAxis dataKey="label" tick={AXIS_TICK_STYLE} />
+                    <YAxis
+                      tick={AXIS_TICK_STYLE}
+                      width={40}
+                      allowDecimals={false}
+                    />
+                    <Tooltip content={<StatusTooltip />} />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="fill" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard
+                title="Rejection reasons"
+                subtitle="Route counts grouped by rejection reason"
+              >
+                {rejectionChartData.length === 0 ? (
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+                    No rejected routes on record.
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={240}>
+                    <BarChart
+                      data={rejectionChartData}
+                      layout="vertical"
+                      margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
+                    >
+                      <CartesianGrid {...GRID_STYLE} horizontal={false} />
+                      <XAxis
+                        type="number"
+                        tick={AXIS_TICK_STYLE}
+                        allowDecimals={false}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="reason"
+                        tick={AXIS_TICK_STYLE}
+                        width={120}
+                      />
+                      <Tooltip content={<RejectionTooltip />} />
+                      <Bar
+                        dataKey="count"
+                        radius={[0, 6, 6, 0]}
+                        fill={STATUS_COLORS.rejected}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
+            </div>
+          )}
+        </AnalyticsBlock>
+
+        <AnalyticsBlock
+          title="CO₂e over time"
+          description="Estimated baseline emissions vs actual emissions across completed routes. The gap between the two lines represents CO₂e saved by the community."
+        >
+          <div className="mb-4 flex gap-2">
+            {GRANULARITIES.map(g => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => setGranularity(g)}
+                className={`rounded-xl px-3 py-1.5 text-xs font-medium capitalize transition-colors
+                  ${
+                    granularity === g
+                      ? 'bg-blue-primary text-white'
+                      : 'border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50'
+                  }`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+
+          <ChartCard
+            title="Baseline vs actual CO₂e emissions"
+            subtitle="kg CO₂e per period; baseline assumes every participant drove solo"
+          >
+            {timeseriesLoading ? (
+              <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+                Loading chart...
+              </div>
+            ) : activeTimeseriesData.length === 0 ? (
+              <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+                No completed route data available for this view.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart
+                  data={activeTimeseriesData}
+                  margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+                >
+                  <CartesianGrid {...GRID_STYLE} />
+                  <XAxis dataKey="period" tick={AXIS_TICK_STYLE} />
+                  <YAxis
+                    tick={AXIS_TICK_STYLE}
+                    width={60}
+                    tickFormatter={v => `${v} kg`}
+                  />
+                  <Tooltip content={<TimeseriesTooltip />} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="baselineKg"
+                    name="Baseline"
+                    stroke={THEME_COLORS.orange}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="actualKg"
+                    name="Actual"
+                    stroke={THEME_COLORS.blue}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+        </AnalyticsBlock>
+      </div>
+    </div>
   )
 }
 
