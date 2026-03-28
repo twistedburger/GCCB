@@ -45,7 +45,7 @@ function Home() {
   const [filters, setFilters] = useState({
     time: null,
     transportationModes: [],
-    radius: 100,
+    radius: 500,
     verifiedEventsOnly: false,
     mainEventsOnly: true,
   })
@@ -65,7 +65,7 @@ function Home() {
     setFilters({
       time: null,
       transportationModes: [],
-      radius: 100,
+      radius: 500,
       verifiedEventsOnly: false,
       mainEventsOnly: true,
     })
@@ -450,11 +450,11 @@ function DisplayFilters({ filters, setFilters }) {
       default: true,
     })
   }
-  if (filters.radius !== 100)
+  if (filters.radius !== 500)
     activeFilters.push({
       label: `${filters.radius}m`,
       key: 'radius',
-      default: 100,
+      default: 500,
     })
 
   if (activeFilters.length === 0) return null
