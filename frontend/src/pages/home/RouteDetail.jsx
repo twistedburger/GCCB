@@ -198,7 +198,6 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                       onClick={() => setShowReport(false)}
                       unstyled={true}
                       customStyling="text-text-primary scale-110"
-                      autoFocus
                     >
                       <Cancel />
                     </GenericButton>

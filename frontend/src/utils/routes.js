@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const TravelMode = Object.freeze({
-  Transit: 'BUS',
+  Transit: 'TRANSIT',
   Carpool: 'DRIVE',
   Walk: 'WALK',
   Bike: 'BICYCLE',
