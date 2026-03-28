@@ -36,8 +36,7 @@ function Home() {
   const location = useLocation()
   const isEventDetail = location.pathname.includes('/event/')
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
-  const [snapPoint, setSnapPoint] = useState(0.095)
-  const [routeSnapPoint, setRouteSnapPoint] = useState(0.25)
+  const [snapPoint, setSnapPoint] = useState(0.085)
   const [isArriving, setIsArriving] = useState(true)
   const [address, setAddress] = useState('')
   const [cardsToDisplay, setCardsToDisplay] = useState([])
@@ -62,13 +61,6 @@ function Home() {
     setAddress(newLocation)
     setSnapPoint(1)
     setSelectedRoute(null)
-    setFilters({
-      time: null,
-      transportationModes: [],
-      radius: 500,
-      verifiedEventsOnly: false,
-      mainEventsOnly: true,
-    })
 
     try {
       const response = await fetch(
@@ -111,38 +103,38 @@ function Home() {
   }, [])
 
   useEffect(() => {
-    const fetchCards = async () => {
-      const params = new URLSearchParams()
+    const params = new URLSearchParams()
+    if (filters.time) params.append('time', filters.time)
+    if (filters.transportationModes.length > 0)
+      params.append(
+        'transportation_modes',
+        filters.transportationModes.join(',')
+      )
+    if (filters.verifiedEventsOnly) params.append('verified', true)
+    if (filters.radius) params.append('radius', filters.radius)
+    params.append('isArriving', isArriving)
+    params.append('longitude', userLocation.lng)
+    params.append('latitude', userLocation.lat)
 
-      if (filters.time) params.append('time', filters.time)
-      if (filters.transportationModes.length > 0)
-        params.append(
-          'transportation_modes',
-          filters.transportationModes.join(',')
-        )
-      if (filters.verifiedEventsOnly) params.append('verified', true)
-      if (filters.radius) params.append('radius', filters.radius)
+    const url = filters.mainEventsOnly
+      ? `http://localhost:3000/api/events?${params}`
+      : `http://localhost:3000/api/routes?${params}`
 
-      if (filters.mainEventsOnly) {
-        const response = await fetch(
-          `http://localhost:3000/api/events?${params}`
-        )
-        const data = await response.json()
-        setCardsToDisplay(data)
-      } else {
-        const response = await fetch(
-          `http://localhost:3000/api/routes?${params}`
-        )
-        const data = await response.json()
-        setCardsToDisplay(data)
-      }
+    fetch(url)
+      .then(res => res.json())
+      .then(data => setCardsToDisplay(data))
+  }, [filters, userLocation, isArriving])
+
+  useEffect(() => {
+    if (snapPoint !== 1) {
+      setTimeout(() => {
+        document.activeElement?.blur()
+      }, 300)
     }
-    fetchCards()
-  }, [filters, userLocation])
+  }, [snapPoint])
 
   const handleRouteClick = route => {
-    setSnapPoint(0.095)
-    setRouteSnapPoint(0.25)
+    setSnapPoint(0.085)
     setSelectedRoute(route)
   }
 
@@ -189,17 +181,18 @@ function Home() {
         <Drawer.Root
           open={true}
           modal={false}
-          snapPoints={[0.095, 0.5, 1]}
+          snapPoints={[0.085, 1]}
           activeSnapPoint={snapPoint}
           setActiveSnapPoint={setSnapPoint}
           noBodyStyles={true}
           setBackgroundColorOnScale={false}
           preventScrollRestoration={false}
+          trap={false}
         >
           <Drawer.Portal>
             <Drawer.Content
-              {...(routeSnapPoint === 0.095 ? { inert: true } : {})}
               onOpenAutoFocus={e => e.preventDefault()}
+              onFocusOutside={e => e.preventDefault()}
               onFocus={e => {
                 if (e.target === e.currentTarget) {
                   e.preventDefault()
@@ -230,7 +223,10 @@ function Home() {
               >
                 <div className="bg-text-primary rounded-full h-1.5 w-20" />
               </div>
-              <div className="overflow-y-auto px-6 pb-36 flex flex-col gap-4">
+              <div
+                {...(snapPoint === 0.085 ? { inert: true } : {})}
+                className="overflow-y-auto px-6 pb-36 flex flex-col gap-4"
+              >
                 {address && (
                   <>
                     <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
@@ -240,7 +236,9 @@ function Home() {
                       />
                       <GenericToggle
                         value={isArriving}
-                        onChange={setIsArriving}
+                        onChange={() => {
+                          setIsArriving(prev => !prev)
+                        }}
                         labels={['Arriving Near', 'Departing Near']}
                         className="shrink-0"
                       />
@@ -280,10 +278,7 @@ function Home() {
                             route={item}
                             view={authorization}
                             individualView={true}
-                            onSelect={route => {
-                              handleRouteClick(route)
-                              document.activeElement?.blur()
-                            }}
+                            onSelect={handleRouteClick}
                           />
                         )
                       )
@@ -298,7 +293,7 @@ function Home() {
           selectedRoute={isEventDetail ? null : selectedRoute}
           onClose={() => {
             setSelectedRoute(null)
-            setSnapPoint(0.5)
+            setSnapPoint(1)
           }}
           setAlert={setAlert}
         />
@@ -340,9 +335,7 @@ function Home() {
         unstyled={true}
         customStyling="absolute bottom-24 right-6 z-50 bg-blue-primary text-white rounded-full p-3 shadow-lg 
                 transition-transform duration-200 active:scale-100 hover:scale-110"
-        onClick={() => {
-          setShowCreateEvent(true)
-        }}
+        onClick={() => setShowCreateEvent(true)}
       >
         <Add fontSize="large" />
       </GenericButton>

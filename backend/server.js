@@ -258,7 +258,16 @@ app.get('/authorize', async (req, res) => {
  * @returns events fetched from the db, or an empty array
  */
 app.get('/api/events', (req, res) => {
-  const { time, verified, transportation_modes, need_approval } = req.query
+  const {
+    time,
+    verified,
+    transportation_modes,
+    need_approval,
+    radius,
+    isArriving,
+    latitude,
+    longitude,
+  } = req.query
 
   const conditions = []
   const values = []
@@ -280,6 +289,21 @@ app.get('/api/events', (req, res) => {
   }
   if (need_approval === 'true') {
     conditions.push(`e.need_approval = true AND e.verified = false`)
+  }
+  if (radius && latitude && longitude) {
+    values.push(parseFloat(longitude))
+    values.push(parseFloat(latitude))
+    values.push(parseFloat(radius))
+
+    if (isArriving === 'true') {
+      conditions.push(
+        `ST_DWithin(e.location_geog, ST_SetSRID(ST_MakePoint($${values.length - 2}, $${values.length - 1}), 4326)::geography, $${values.length})`
+      )
+    } else {
+      conditions.push(
+        `ST_DWithin(r.origin_geog, ST_SetSRID(ST_MakePoint($${values.length - 2}, $${values.length - 1}), 4326)::geography, $${values.length})`
+      )
+    }
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
@@ -437,7 +461,15 @@ app.post('/api/createRoute', async (req, res) => {
  * @returns routes fetched from the db, or an empty array
  */
 app.get('/api/routes', (req, res) => {
-  const { time, transportation_modes, verified } = req.query
+  const {
+    time,
+    transportation_modes,
+    verified,
+    radius,
+    isArriving,
+    latitude,
+    longitude,
+  } = req.query
 
   const conditions = []
   const values = []
@@ -456,6 +488,21 @@ app.get('/api/routes', (req, res) => {
   }
   if (verified === 'true') {
     conditions.push(`e.verified = true`)
+  }
+  if (radius && latitude && longitude) {
+    values.push(parseFloat(longitude))
+    values.push(parseFloat(latitude))
+    values.push(parseFloat(radius))
+
+    if (isArriving === 'true') {
+      conditions.push(
+        `ST_DWithin(e.location_geog, ST_SetSRID(ST_MakePoint($${values.length - 2}, $${values.length - 1}), 4326)::geography, $${values.length})`
+      )
+    } else {
+      conditions.push(
+        `ST_DWithin(r.origin_geog, ST_SetSRID(ST_MakePoint($${values.length - 2}, $${values.length - 1}), 4326)::geography, $${values.length})`
+      )
+    }
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
