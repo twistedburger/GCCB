@@ -7,6 +7,7 @@ import OrganizerCard from '../../components/OrganizerCard'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../utils/Authorization'
 import ModerationActions from './ModerationActions'
+import Alert from '../../components/Alert'
 
 function Moderate() {
   const navigate = useNavigate()
@@ -41,15 +42,13 @@ function Moderate() {
 
   return (
     <div className="px-6 pt-6">
-      <div
-        className={`fixed left-1/2 -translate-x-1/2 z-100 top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
-          whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
-          ${alert?.visible ? 'translate-y-12 opacity-100' : '-translate-y-full opacity-0'}
-          ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
-        `}
-      >
-        {alert?.text}
-      </div>
+      {alert && (
+        <Alert
+          message={alert.text}
+          type={alert.type}
+          onTimeout={() => setAlert(null)}
+        />
+      )}
       <p className="text-[23px] text-text-primary font-medium mb-4">
         Pending Reports
       </p>

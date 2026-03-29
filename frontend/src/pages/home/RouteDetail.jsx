@@ -214,23 +214,7 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                         type={reportData.type}
                         targetId={reportData.targetId}
                         onClose={() => setShowReport(false)}
-                        setAlert={reportAlert => {
-                          if (!reportAlert?.type) return
-                          setAlert({
-                            type: reportAlert.type,
-                            text:
-                              reportAlert.type === 'success'
-                                ? 'Report submitted successfully.'
-                                : 'Failed to submit report.',
-                            visible: true,
-                          })
-
-                          setTimeout(() => {
-                            setAlert(prev =>
-                              prev ? { ...prev, visible: false } : null
-                            )
-                          }, 2000)
-                        }}
+                        setAlert={setAlert}
                       />
                     </>
                   )}
