@@ -100,6 +100,14 @@ function Home() {
     }
   }, [snapPoint])
 
+  useEffect(() => {
+    if (isEventDetail) {
+      setSnapPoint(0.085)
+    } else {
+      setSnapPoint(1)
+    }
+  }, [isEventDetail])
+
   const handleRouteClick = route => {
     setSnapPoint(0.085)
     setSelectedRoute(route)
