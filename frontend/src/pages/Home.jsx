@@ -3,7 +3,6 @@ import {
   APIProvider,
   Map,
   AdvancedMarker,
-  useMap,
   Pin,
 } from '@vis.gl/react-google-maps'
 import GenericToggle from '../components/GenericToggle'
@@ -15,12 +14,10 @@ import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
 import Modal from '../components/Modal'
 import Alert from '../components/Alert'
-import PropTypes from 'prop-types'
 import CreateEvent from '../components/CreateEvent'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
-import { TravelMode } from '../utils/routes'
 import Report from '../components/Report'
 import { useLocationSearch } from '../utils/HomeHooks'
 import {
@@ -29,6 +26,8 @@ import {
   locationSetError,
   locationSetSuccess,
 } from '../utils/HomeUtils'
+import DisplayFilters from '../components/DisplayFilters'
+import MapController from '../components/MapController'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -312,163 +311,6 @@ function Home() {
       </GenericButton>
     </div>
   )
-}
-
-function MapController({ center, route }) {
-  const map = useMap()
-  useEffect(() => {
-    if (map && center) {
-      map.panTo(center)
-    }
-  }, [map, center])
-
-  useEffect(() => {
-    if (!map || !route) {
-      return
-    }
-
-    const routeLine = route.path.polyline.encodedPolyline
-    const decodedPath = google.maps.geometry.encoding.decodePath(routeLine)
-
-    const bounds = new google.maps.LatLngBounds()
-    decodedPath.forEach(point => bounds.extend(point))
-    map.fitBounds(bounds)
-
-    if (route.transportation_mode.toUpperCase() === TravelMode.Transit) {
-      // overwrite the line if transit
-      const routeLines = []
-      const legColors = {
-        walk: '#34A853',
-        transit: ['#4285F4', '#EA4335'],
-      }
-
-      route.path.legs[0].steps.forEach((step, index) => {
-        let color =
-          step.travelMode === TravelMode.Walk
-            ? legColors.walk
-            : legColors.transit[index % 2] // alternate color for transfers
-
-        const decodedPath = google.maps.geometry.encoding.decodePath(
-          step.polyline.encodedPolyline
-        )
-
-        const polyline = new google.maps.Polyline({
-          path: decodedPath,
-          geodesic: true,
-          strokeColor: color,
-          strokeOpacity: 1.0,
-          strokeWeight: 10,
-          map,
-        })
-
-        routeLines.push(polyline)
-      })
-
-      return () => {
-        routeLines.forEach(line => line.setMap(null))
-        routeLines.length = 0
-      }
-    } else {
-      // else draw the single line
-      const polyline = new google.maps.Polyline({
-        path: decodedPath,
-        geodesic: true,
-        strokeColor: '#4285F4',
-        strokeOpacity: 1.0,
-        strokeWeight: 10,
-        map,
-      })
-
-      return () => polyline.setMap(null)
-    }
-  }, [map, route])
-
-  return null
-}
-
-function DisplayFilters({ filters, setFilters }) {
-  const activeFilters = []
-
-  if (filters.time)
-    activeFilters.push({
-      label: `${filters.time}`,
-      key: 'time',
-      default: null,
-    })
-  if (filters.transportationModes.length > 0)
-    activeFilters.push({
-      label: filters.transportationModes.join(', '),
-      key: 'transportationModes',
-      default: [],
-    })
-  if (filters.verifiedEventsOnly)
-    activeFilters.push({
-      label: 'Verified only',
-      key: 'verifiedEventsOnly',
-      default: false,
-    })
-  if (!filters.mainEventsOnly) {
-    activeFilters.push({
-      label: 'Display Individual Routes',
-      key: 'mainEventsOnly',
-      default: true,
-    })
-  }
-  if (filters.radius !== 500)
-    activeFilters.push({
-      label: `${filters.radius}m`,
-      key: 'radius',
-      default: 500,
-    })
-
-  if (activeFilters.length === 0) return null
-
-  return (
-    <div className="flex gap-2 overflow-x-auto pb-0.5 shrink-0">
-      {activeFilters.map(f => (
-        <GenericButton
-          key={f.key}
-          unstyled
-          customStyling="flex items-center gap-1 whitespace-nowrap px-3 py-1 rounded-full border border-light-grey bg-white text-[14px] text-text-secondary shrink-0 capitalize"
-          onClick={() => {
-            setFilters(prev => {
-              const updatedFilters = {
-                time: prev.time,
-                transportationModes: prev.transportationModes,
-                radius: prev.radius,
-                verifiedEventsOnly: prev.verifiedEventsOnly,
-                mainEventsOnly: prev.mainEventsOnly,
-              }
-              updatedFilters[f.key] = f.default
-              return updatedFilters
-            })
-          }}
-        >
-          {f.label}
-          <span className="text-medium-grey text-xs">✕</span>
-        </GenericButton>
-      ))}
-    </div>
-  )
-}
-
-MapController.propTypes = {
-  center: PropTypes.shape({
-    lat: PropTypes.number.isRequired,
-    lng: PropTypes.number.isRequired,
-  }).isRequired,
-  route: PropTypes.object.isRequired,
-}
-
-DisplayFilters.propTypes = {
-  filters: PropTypes.shape({
-    time: PropTypes.object,
-    transportationModes: PropTypes.arrayOf(PropTypes.string).isRequired,
-    verifiedEventsOnly: PropTypes.bool,
-    mainEventsOnly: PropTypes.bool,
-    radius: PropTypes.number,
-  }).isRequired,
-  setFilters: PropTypes.func.isRequired,
 }
 
 export default Home
