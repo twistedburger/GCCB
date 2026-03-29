@@ -15,6 +15,7 @@ import { Drawer } from 'vaul'
 import { useAuth } from '../../utils/Authorization'
 import CreateRoute from '../../components/CreateRoute'
 import Modal from '../../components/Modal'
+import Alert from '../../components/Alert'
 import Report from '../../components/Report'
 
 export default function EventDetail() {
@@ -40,14 +41,11 @@ export default function EventDetail() {
     setOpen(false)
     setTimeout(() => navigate(-1), 300)
   }
-
   const handleAddRoute = async routeData => {
     try {
       const response = await fetch(`http://localhost:3000/api/createRoute`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           ...routeData,
@@ -55,38 +53,32 @@ export default function EventDetail() {
         }),
       })
 
+      const result = await response.json()
+
+      setAlert({
+        type: response.ok ? 'success' : 'error',
+        message: response.ok
+          ? 'Route created successfully!'
+          : 'Error creating route. Please try again.',
+      })
+
       if (response.ok) {
-        const result = await response.json()
-
-        setAlert({
-          type: 'success',
-          message: 'Route created successfully!',
-          visible: true,
-        })
-
-        setTimeout(() => {
-          setAlert(prev => (prev ? { ...prev, visible: false } : null))
-        }, 2000)
-
         const newRouteForState = {
           id: result.route_id,
           ...routeData,
           created_at: new Date(),
         }
-
         setEvent(prevEvent => ({
           ...prevEvent,
           routes: [...(prevEvent.routes || []), newRouteForState],
         }))
-      } else {
-        setAlert({
-          type: 'error',
-          message: 'Failed to create route.',
-          visible: true,
-        })
       }
     } catch (error) {
       console.error('Error creating route:', error)
+      setAlert({
+        type: 'error',
+        message: 'Something went wrong. Please try again.',
+      })
     }
   }
 
@@ -103,19 +95,13 @@ export default function EventDetail() {
 
   return (
     <div>
-      <div
-        className={`fixed left-1/2 -translate-x-1/2 z-100 top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
-    whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
-    ${
-      alert?.visible
-        ? 'translate-y-12 opacity-100 pointer-events-auto'
-        : '-translate-y-full opacity-0 pointer-events-none'
-    }
-    ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
-  `}
-      >
-        {alert?.message}
-      </div>
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onTimeout={() => setAlert(null)}
+        />
+      )}
       {event && (
         <>
           <div

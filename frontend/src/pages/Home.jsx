@@ -14,6 +14,7 @@ import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
 import Modal from '../components/Modal'
+import Alert from '../components/Alert'
 import PropTypes from 'prop-types'
 import CreateEvent from '../components/CreateEvent'
 import { useAuth } from '../utils/Authorization'
@@ -76,16 +77,15 @@ function Home() {
     }
   }
 
-  const showAlert = (type, text) => {
-    setAlert({ type, text, visible: true })
-    setTimeout(() => {
-      setAlert(prev => (prev ? { ...prev, visible: false } : null))
-    }, 2000)
-  }
-
   const handleFormResult = result => {
-    if (result.success) setShowCreateEvent(false)
-    showAlert(result.success ? 'success' : 'error', result.message)
+    if (result.success) {
+      setShowCreateEvent(false)
+    }
+
+    setAlert({
+      type: result.success ? 'success' : 'error',
+      text: result.message,
+    })
   }
 
   useEffect(() => {
@@ -140,15 +140,13 @@ function Home() {
 
   return (
     <div data-vaul-drawer-wrapper className="relative w-full h-full">
-      <div
-        className={`fixed left-1/2 -translate-x-1/2 z-100 top-0 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-2xl 
-        whitespace-nowrap flex items-center gap-2 transition-all duration-500 ease-in-out
-        ${alert?.visible ? 'translate-y-12 opacity-100' : '-translate-y-full opacity-0'}
-        ${alert?.type === 'success' ? 'bg-green-600' : 'bg-red-600'}
-      `}
-      >
-        {alert?.text}
-      </div>
+      {alert && (
+        <Alert
+          message={alert.text}
+          type={alert.type}
+          onTimeout={() => setAlert(null)}
+        />
+      )}
 
       <div>
         <APIProvider
@@ -320,12 +318,13 @@ function Home() {
             onClose={() => setShowReport(false)}
             setAlert={reportAlert => {
               if (!reportAlert?.type) return
-              showAlert(
-                reportAlert.type,
-                reportAlert.type === 'success'
-                  ? 'Report submitted successfully.'
-                  : 'Failed to submit report.'
-              )
+              setAlert({
+                type: reportAlert.type,
+                text:
+                  reportAlert.type === 'success'
+                    ? 'Report submitted successfully.'
+                    : 'Failed to submit report.',
+              })
             }}
           />
         )}
