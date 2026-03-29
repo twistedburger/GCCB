@@ -120,7 +120,7 @@ function Home() {
       ? `http://localhost:3000/api/events?${params}`
       : `http://localhost:3000/api/routes?${params}`
 
-    fetch(url)
+    fetch(url, { credentials: 'include' })
       .then(res => res.json())
       .then(data => setCardsToDisplay(data))
   }, [filters, userLocation, isArriving])
