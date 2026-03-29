@@ -7,7 +7,7 @@ import {
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 
-export default function EventCard({ event, view }) {
+export default function EventCard({ event, view, onReport }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()
 
@@ -28,13 +28,7 @@ export default function EventCard({ event, view }) {
             className="absolute top-2 right-2"
             onClick={e => {
               e.stopPropagation()
-              navigate(`/report`, {
-                state: {
-                  type: 'event',
-                  targetId: event.id,
-                  targetName: event.title,
-                },
-              })
+              onReport({ id: event.id, title: event.title, type: 'event' })
             }}
           />
         )}
@@ -83,4 +77,5 @@ export default function EventCard({ event, view }) {
 EventCard.propTypes = {
   event: PropTypes.object.isRequired,
   view: PropTypes.string,
+  onReport: PropTypes.func.isRequired,
 }

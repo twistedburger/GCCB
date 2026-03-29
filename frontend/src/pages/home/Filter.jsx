@@ -19,7 +19,7 @@ export default function Filter() {
     filters?.transportationModes ?? []
   )
   const [time, setTime] = useState(filters?.time ? dayjs(filters.time) : null)
-  const [radius, setRadius] = useState(filters?.radius ?? 100)
+  const [radius, setRadius] = useState(filters?.radius ?? 500)
   const [verifiedEventsOnly, setVerifiedEventsOnly] = useState(
     filters?.verifiedEventsOnly ?? false
   )
@@ -50,12 +50,6 @@ export default function Filter() {
     closeWithAnimation()
   }
 
-  const handleModeToggle = mode => {
-    setTransportationModes(prev =>
-      prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]
-    )
-  }
-
   return (
     <>
       <div
@@ -76,7 +70,7 @@ export default function Filter() {
             </div>
             <TransportationModeSelect
               selectedModes={transportationModes}
-              onChange={handleModeToggle}
+              onChange={setTransportationModes}
               multiple={true}
             />
             <p className="py-2 font-semibold">Time</p>
@@ -103,10 +97,10 @@ export default function Filter() {
               <Slider
                 value={radius}
                 onChange={(e, newValue) => setRadius(newValue)}
-                min={100}
+                min={500}
                 max={2000}
-                shiftStep={100}
-                step={100}
+                shiftStep={250}
+                step={250}
                 marks
               />
             </div>
@@ -132,7 +126,7 @@ export default function Filter() {
             <GenericButton
               onClick={() => {
                 setTime(null)
-                setRadius(100)
+                setRadius(500)
                 setVerifiedEventsOnly(false)
                 setMainEventsOnly(true)
                 setTransportationModes([])

@@ -1,7 +1,11 @@
 import PropTypes from 'prop-types'
 
 export default function GenericToggle({ value, onChange, labels }) {
-  const toggle = () => onChange(!value)
+  const toggle = e => {
+    e.stopPropagation()
+    onChange(!value)
+    e.currentTarget.blur()
+  }
 
   return (
     <div

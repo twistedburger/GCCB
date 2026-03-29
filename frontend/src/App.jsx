@@ -14,7 +14,6 @@ import { useState, useEffect } from 'react'
 import { authLevel, AuthProvider } from './utils/Authorization'
 import ProtectedRoute from './components/ProtectedRoute'
 import Filter from './pages/home/Filter'
-import Report from './pages/home/Report'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
 
@@ -71,7 +70,6 @@ function App() {
                 >
                   <Route path="filter" element={<Filter />} />
                   <Route path="event/:id" element={<EventDetail />} />
-                  <Route path="report" element={<Report />} />
                 </Route>
                 <Route
                   element={

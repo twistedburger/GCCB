@@ -6,6 +6,7 @@ import GenericButton from './GenericButton'
 import CreateRoute from './CreateRoute'
 import LocationSearch from './LocationSearch'
 import RouteCard from './RouteCard'
+import ConfirmationDialog from './ConfirmationDialog'
 
 const CreateEvent = ({ initLoc, onSubmit }) => {
   const [addedRoutes, setAddedRoutes] = useState([])
@@ -15,6 +16,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [datetime, setDatetime] = useState('')
   const [eventDesc, setEventDesc] = useState('')
   const [errors, setErrors] = useState({})
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const toggleRouteJoin = id => {
     setAddedRoutes(prev =>
@@ -67,6 +69,42 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
     }
   }
 
+  const handleConfirmSubmit = async () => {
+    setIsDialogOpen(false)
+
+    try {
+      const eventData = {
+        title: eventName,
+        event_time: datetime,
+        location: selectedPlace,
+        description: eventDesc,
+        verified: false,
+        need_approval: false,
+      }
+
+      const { id: newevent_id } = await createEvent(eventData)
+
+      if (addedRoutes.length > 0) {
+        const routePromises = addedRoutes.map(route =>
+          createRoute(newevent_id, route)
+        )
+        await Promise.all(routePromises)
+      }
+
+      onSubmit({
+        success: true,
+        message: 'Event and routes created successfully!',
+        event_id: newevent_id,
+      })
+    } catch (error) {
+      console.error('Error creating event:', error)
+      onSubmit({
+        success: false,
+        message: error.message || 'Failed to create event.',
+      })
+    }
+  }
+
   const createRoute = async (event_id, routeData, creator_id) => {
     try {
       const response = await fetch('http://localhost:3000/api/createRoute', {
@@ -103,41 +141,21 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
       return
     }
 
-    try {
-      const eventData = {
-        title: eventName,
-        event_time: datetime,
-        location: selectedPlace,
-        description: eventDesc,
-        need_approval: false,
-      }
-
-      const { id: newevent_id } = await createEvent(eventData)
-
-      if (addedRoutes.length > 0) {
-        const routePromises = addedRoutes.map(route =>
-          createRoute(newevent_id, route)
-        )
-        await Promise.all(routePromises)
-      }
-
-      onSubmit({
-        success: true,
-        message: 'Event and routes created successfully!',
-        event_id: newevent_id,
-      })
-    } catch (error) {
-      console.error('Error creating event. Please try again.')
-      onSubmit({
-        success: false,
-        message: error.message || 'Failed to create event. Please try again.',
-      })
-    }
+    setIsDialogOpen(true)
   }
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Create a New Event</h1>
+      <ConfirmationDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onConfirm={handleConfirmSubmit}
+        title="Confirm Event Creation"
+      >
+        {`Are you sure you want to create "${eventName}" with ${addedRoutes.length} route(s)?`}
+      </ConfirmationDialog>
+
       <form className="space-y-4" onSubmit={handleEventSubmit}>
         <div>
           <TextBox
