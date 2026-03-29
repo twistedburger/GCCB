@@ -16,6 +16,7 @@ import { useAuth } from '../../utils/Authorization'
 import CreateRoute from '../../components/CreateRoute'
 import Modal from '../../components/Modal'
 import Alert from '../../components/Alert'
+import Report from '../../components/Report'
 
 export default function EventDetail() {
   const location = useLocation()
@@ -27,12 +28,14 @@ export default function EventDetail() {
   const [anchorEl, setAnchorEl] = useState(null)
   const menuOpen = Boolean(anchorEl)
   const [selectedRoute, setSelectedRoute] = useState(null)
-  const { setSnapPoint } = useOutletContext()
+  const { setSnapPoint, setSelectedRoute: setHomeSelectedRoute } =
+    useOutletContext()
   const [eventSnapPoint, setEventSnapPoint] = useState(1)
-  const [routeSnapPoint, setRouteSnapPoint] = useState(0.25)
   const [addRoute, setAddRoute] = useState(false)
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
+
+  const [reportData, setReportData] = useState(null)
 
   const handleClose = () => {
     setOpen(false)
@@ -133,7 +136,7 @@ export default function EventDetail() {
         open={open}
         onOpenChange={open => !open && handleClose()}
         modal={false}
-        snapPoints={[0.095, 1]}
+        snapPoints={[0.01, 1]}
         activeSnapPoint={eventSnapPoint}
         setActiveSnapPoint={setEventSnapPoint}
         noBodyStyles={true}
@@ -229,12 +232,10 @@ export default function EventDetail() {
                               <MenuItem
                                 onClick={() => {
                                   setAnchorEl(null)
-                                  navigate(`/report`, {
-                                    state: {
-                                      type: 'event',
-                                      targetId: event.id,
-                                      targetName: event.title,
-                                    },
+                                  setReportData({
+                                    type: 'event',
+                                    targetId: event.id,
+                                    title: event.title,
                                   })
                                 }}
                               >
@@ -243,12 +244,10 @@ export default function EventDetail() {
                               <MenuItem
                                 onClick={() => {
                                   setAnchorEl(null)
-                                  navigate(`/report`, {
-                                    state: {
-                                      type: 'user',
-                                      targetId: event.creator_id,
-                                      targetName: event.creator_name,
-                                    },
+                                  setReportData({
+                                    type: 'user',
+                                    targetId: event.creator_id,
+                                    title: event.creator_name,
                                   })
                                 }}
                               >
@@ -294,10 +293,19 @@ export default function EventDetail() {
                               key={route.id}
                               route={route}
                               view={authorization}
+                              onReport={data => setReportData(data)}
                               individualView={false}
                               onSelect={route => {
-                                setSelectedRoute(route)
-                                setEventSnapPoint(0.095)
+                                const fullRoute = {
+                                  ...route,
+                                  creator_id: event.creator_id,
+                                  creator_name: event.creator_name,
+                                  nickname: event.nickname,
+                                  profile_pic: event.profile_pic,
+                                }
+                                setSelectedRoute(fullRoute)
+                                setHomeSelectedRoute(fullRoute)
+                                setEventSnapPoint(0.01)
                                 setSnapPoint(0.095)
                                 document.activeElement?.blur()
                               }}
@@ -311,68 +319,84 @@ export default function EventDetail() {
                       </div>
                     </div>
                   </div>
+                  <Drawer.NestedRoot
+                    open={!!reportData}
+                    onOpenChange={open => {
+                      if (!open) setReportData(null)
+                    }}
+                    shouldScaleBackground={false}
+                    dismissible={false}
+                  >
+                    <Drawer.Portal>
+                      <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
+                      <Drawer.Content
+                        onPointerDownOutside={() => setReportData(null)}
+                        className="fixed bottom-0 left-13.75 right-0 z-50 flex flex-col rounded-t-3xl bg-white"
+                      >
+                        <div className="flex-1 p-4">
+                          <div className="absolute top-4 right-4 z-10">
+                            <GenericButton
+                              onClick={() => setReportData(null)}
+                              unstyled={true}
+                              customStyling="text-text-primary scale-110"
+                            >
+                              <Cancel />
+                            </GenericButton>
+                          </div>
+                          {reportData && (
+                            <>
+                              <Drawer.Title className="text-lg font-bold mb-4">
+                                Report {reportData.title}
+                              </Drawer.Title>
+                              <Drawer.Description className="sr-only">
+                                Report Page
+                              </Drawer.Description>
+                              <Report
+                                type={reportData.type}
+                                targetId={reportData.targetId}
+                                onClose={() => setReportData(null)}
+                                setAlert={reportAlert => {
+                                  if (!reportAlert || !reportAlert.type) return
+                                  setAlert({
+                                    ...reportAlert,
+                                    message:
+                                      reportAlert.type === 'success'
+                                        ? 'Report submitted successfully.'
+                                        : 'Failed to submit report.',
+                                  })
+                                }}
+                              />
+                            </>
+                          )}
+                        </div>
+                      </Drawer.Content>
+                    </Drawer.Portal>
+                  </Drawer.NestedRoot>
                 </div>
               )}
             </div>
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
-      <Drawer.Root
-        open={!!selectedRoute}
-        onOpenChange={open => !open && setSelectedRoute(null)}
-        modal={false}
-        snapPoints={[0.095, 0.25, 0.4]}
-        activeSnapPoint={routeSnapPoint}
-        setActiveSnapPoint={setRouteSnapPoint}
-        noBodyStyles={true}
-        setBackgroundColorOnScale={false}
-        dismissible={false}
-        preventScrollRestoration={false}
-      >
-        <Drawer.Portal>
-          <Drawer.Overlay style={{ pointerEvents: 'none' }} />
-          <Drawer.Content
-            onOpenAutoFocus={e => e.preventDefault()}
-            onCloseAutoFocus={e => e.preventDefault()}
-            style={{
-              zIndex: 50,
-              marginLeft: '55px',
-              width: 'calc(100% - 55px)',
-              borderRadius: '24px 24px 0 0',
-              height: '96%',
-              position: 'fixed',
-              bottom: 0,
-              background: 'transparent',
-              display: 'flex',
-              flexDirection: 'column',
-              pointerEvents: 'none',
-            }}
-          >
-            <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
-            <Drawer.Description className="sr-only">
-              Route details
-            </Drawer.Description>
-            <div
-              style={{
-                pointerEvents: 'auto',
-                background: '#F9F9F9',
-                borderRadius: '24px 24px 0 0',
-              }}
-            >
-              {selectedRoute && (
-                <RouteDetail
-                  selectedRoute={selectedRoute}
-                  onClose={() => {
-                    setSelectedRoute(null)
-                    setEventSnapPoint(1)
-                    setSnapPoint(1)
-                  }}
-                />
-              )}
-            </div>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
+      <RouteDetail
+        selectedRoute={selectedRoute}
+        onClose={() => {
+          setSelectedRoute(null)
+          setHomeSelectedRoute(null)
+          setEventSnapPoint(1)
+          setSnapPoint(1)
+        }}
+        setAlert={reportAlert => {
+          if (!reportAlert?.type) return
+          setAlert({
+            ...reportAlert,
+            message:
+              reportAlert.type === 'success'
+                ? 'Report submitted successfully.'
+                : 'Failed to submit report.',
+          })
+        }}
+      />
     </div>
   )
 }

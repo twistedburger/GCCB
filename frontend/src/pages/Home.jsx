@@ -21,6 +21,7 @@ import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
+import Report from '../components/Report'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -36,8 +37,7 @@ function Home() {
   const location = useLocation()
   const isEventDetail = location.pathname.includes('/event/')
   const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
-  const [snapPoint, setSnapPoint] = useState(0.095)
-  const [routeSnapPoint, setRouteSnapPoint] = useState(0.25)
+  const [snapPoint, setSnapPoint] = useState(0.085)
   const [isArriving, setIsArriving] = useState(true)
   const [address, setAddress] = useState('')
   const [cardsToDisplay, setCardsToDisplay] = useState([])
@@ -45,13 +45,15 @@ function Home() {
   const [filters, setFilters] = useState({
     time: null,
     transportationModes: [],
-    radius: 100,
+    radius: 500,
     verifiedEventsOnly: false,
     mainEventsOnly: true,
   })
   const navigate = useNavigate()
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [alert, setAlert] = useState(null)
+  const [reportData, setReportData] = useState(null)
+  const [showReport, setShowReport] = useState(false)
 
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
@@ -60,13 +62,6 @@ function Home() {
     setAddress(newLocation)
     setSnapPoint(1)
     setSelectedRoute(null)
-    setFilters({
-      time: null,
-      transportationModes: [],
-      radius: 100,
-      verifiedEventsOnly: false,
-      mainEventsOnly: true,
-    })
 
     try {
       const response = await fetch(
@@ -108,38 +103,38 @@ function Home() {
   }, [])
 
   useEffect(() => {
-    const fetchCards = async () => {
-      const params = new URLSearchParams()
+    const params = new URLSearchParams()
+    if (filters.time) params.append('time', filters.time)
+    if (filters.transportationModes.length > 0)
+      params.append(
+        'transportation_modes',
+        filters.transportationModes.join(',')
+      )
+    if (filters.verifiedEventsOnly) params.append('verified', true)
+    if (filters.radius) params.append('radius', filters.radius)
+    params.append('isArriving', isArriving)
+    params.append('longitude', userLocation.lng)
+    params.append('latitude', userLocation.lat)
 
-      if (filters.time) params.append('time', filters.time)
-      if (filters.transportationModes.length > 0)
-        params.append(
-          'transportation_modes',
-          filters.transportationModes.join(',')
-        )
-      if (filters.verifiedEventsOnly) params.append('verified', true)
-      if (filters.radius) params.append('radius', filters.radius)
+    const url = filters.mainEventsOnly
+      ? `http://localhost:3000/api/events?${params}`
+      : `http://localhost:3000/api/routes?${params}`
 
-      if (filters.mainEventsOnly) {
-        const response = await fetch(
-          `http://localhost:3000/api/events?${params}`
-        )
-        const data = await response.json()
-        setCardsToDisplay(data)
-      } else {
-        const response = await fetch(
-          `http://localhost:3000/api/routes?${params}`
-        )
-        const data = await response.json()
-        setCardsToDisplay(data)
-      }
+    fetch(url)
+      .then(res => res.json())
+      .then(data => setCardsToDisplay(data))
+  }, [filters, userLocation, isArriving])
+
+  useEffect(() => {
+    if (snapPoint !== 1) {
+      setTimeout(() => {
+        document.activeElement?.blur()
+      }, 300)
     }
-    fetchCards()
-  }, [filters, userLocation])
+  }, [snapPoint])
 
   const handleRouteClick = route => {
-    setSnapPoint(0.095)
-    setRouteSnapPoint(0.25)
+    setSnapPoint(0.085)
     setSelectedRoute(route)
   }
 
@@ -176,7 +171,7 @@ function Home() {
 
         {!selectedRoute && !isEventDetail && (
           <LocationSearch
-            className="rounded-xl absolute inset-x-0 top-0 m-6 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
+            className="rounded-xl absolute inset-x-0 top-0 m-12 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
             onSearch={handleSearch}
           />
@@ -184,17 +179,18 @@ function Home() {
         <Drawer.Root
           open={true}
           modal={false}
-          snapPoints={[0.095, 0.5, 1]}
+          snapPoints={[0.085, 1]}
           activeSnapPoint={snapPoint}
           setActiveSnapPoint={setSnapPoint}
           noBodyStyles={true}
           setBackgroundColorOnScale={false}
           preventScrollRestoration={false}
+          trap={false}
         >
           <Drawer.Portal>
             <Drawer.Content
-              {...(routeSnapPoint === 0.095 ? { inert: true } : {})}
               onOpenAutoFocus={e => e.preventDefault()}
+              onFocusOutside={e => e.preventDefault()}
               onFocus={e => {
                 if (e.target === e.currentTarget) {
                   e.preventDefault()
@@ -225,7 +221,10 @@ function Home() {
               >
                 <div className="bg-text-primary rounded-full h-1.5 w-20" />
               </div>
-              <div className="overflow-y-auto px-6 pb-36 flex flex-col gap-4">
+              <div
+                {...(snapPoint === 0.085 ? { inert: true } : {})}
+                className="overflow-y-auto px-6 pb-36 flex flex-col gap-4"
+              >
                 {address && (
                   <>
                     <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
@@ -235,7 +234,9 @@ function Home() {
                       />
                       <GenericToggle
                         value={isArriving}
-                        onChange={setIsArriving}
+                        onChange={() => {
+                          setIsArriving(prev => !prev)
+                        }}
                         labels={['Arriving Near', 'Departing Near']}
                         className="shrink-0"
                       />
@@ -264,6 +265,10 @@ function Home() {
                             key={item.id}
                             event={item}
                             view={authorization}
+                            onReport={data => {
+                              setReportData(data)
+                              setShowReport(true)
+                            }}
                           />
                         ) : (
                           <RouteCard
@@ -271,10 +276,7 @@ function Home() {
                             route={item}
                             view={authorization}
                             individualView={true}
-                            onSelect={route => {
-                              handleRouteClick(route)
-                              document.activeElement?.blur()
-                            }}
+                            onSelect={handleRouteClick}
                           />
                         )
                       )
@@ -285,58 +287,14 @@ function Home() {
             </Drawer.Content>
           </Drawer.Portal>
         </Drawer.Root>
-        <Drawer.Root
-          open={!!selectedRoute}
-          onOpenChange={open => !open && setSelectedRoute(null)}
-          modal={false}
-          snapPoints={[0.095, 0.25, 0.4, 0.8]} // 80% max, so padding in Route Detail is 25% from bottom
-          activeSnapPoint={routeSnapPoint}
-          setActiveSnapPoint={setRouteSnapPoint}
-          noBodyStyles={true}
-          setBackgroundColorOnScale={false}
-          dismissible={false}
-          preventScrollRestoration={false}
-        >
-          <Drawer.Portal>
-            <Drawer.Content
-              onOpenAutoFocus={e => e.preventDefault()}
-              onFocus={e => {
-                if (e.target === e.currentTarget) {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }
-              }}
-              style={{
-                zIndex: 30,
-                marginLeft: '55px',
-                width: 'calc(100% - 55px)',
-                borderRadius: '24px 24px 0 0',
-                height: '96%',
-                position: 'fixed',
-                bottom: 0,
-                background: '#F9F9F9',
-                display: 'flex',
-                flexDirection: 'column',
-                overflowY: 'hidden',
-                pointerEvents: 'auto',
-              }}
-            >
-              <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
-              <Drawer.Description className="sr-only">
-                Route and event details
-              </Drawer.Description>
-              {selectedRoute && (
-                <RouteDetail
-                  selectedRoute={selectedRoute}
-                  onClose={() => {
-                    setSelectedRoute(null)
-                    setSnapPoint(0.5)
-                  }}
-                />
-              )}
-            </Drawer.Content>
-          </Drawer.Portal>
-        </Drawer.Root>
+        <RouteDetail
+          selectedRoute={isEventDetail ? null : selectedRoute}
+          onClose={() => {
+            setSelectedRoute(null)
+            setSnapPoint(1)
+          }}
+          setAlert={setAlert}
+        />
         <Outlet
           context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
         />
@@ -347,13 +305,36 @@ function Home() {
         <CreateEvent onSubmit={handleFormResult} />
       </Modal>
 
+      {/* Report Modal */}
+      <Modal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title={reportData ? `Report ${reportData.title}` : 'Report'}
+      >
+        {reportData && (
+          <Report
+            type={reportData.type}
+            targetId={reportData.id}
+            onClose={() => setShowReport(false)}
+            setAlert={reportAlert => {
+              if (!reportAlert?.type) return
+              setAlert({
+                type: reportAlert.type,
+                text:
+                  reportAlert.type === 'success'
+                    ? 'Report submitted successfully.'
+                    : 'Failed to submit report.',
+              })
+            }}
+          />
+        )}
+      </Modal>
+
       <GenericButton
         unstyled={true}
         customStyling="absolute bottom-24 right-6 z-50 bg-blue-primary text-white rounded-full p-3 shadow-lg 
                 transition-transform duration-200 active:scale-100 hover:scale-110"
-        onClick={() => {
-          setShowCreateEvent(true)
-        }}
+        onClick={() => setShowCreateEvent(true)}
       >
         <Add fontSize="large" />
       </GenericButton>
@@ -461,11 +442,11 @@ function DisplayFilters({ filters, setFilters }) {
       default: true,
     })
   }
-  if (filters.radius !== 100)
+  if (filters.radius !== 500)
     activeFilters.push({
       label: `${filters.radius}m`,
       key: 'radius',
-      default: 100,
+      default: 500,
     })
 
   if (activeFilters.length === 0) return null
