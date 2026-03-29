@@ -1,6 +1,6 @@
 import { render, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import CommuteIcon from '../../components/CommuteIcon'
+import CommuteIcon from '../CommuteIcon'
 
 describe('CommuteIcon Component', () => {
   it('renders correct icon for car type', () => {

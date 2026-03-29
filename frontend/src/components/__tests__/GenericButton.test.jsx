@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import GenericButton from '../../components/GenericButton'
+import GenericButton from '../GenericButton'
 import { PlaceOutlined } from '@mui/icons-material'
 
 describe('GenericButton Component', () => {
