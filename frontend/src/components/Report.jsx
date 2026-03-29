@@ -33,17 +33,10 @@ export default function Report({ type, targetId, onClose, setAlert }) {
 
       if (response.ok) {
         onClose()
-        setAlert({
-          type: 'success',
-          text: 'Report submitted successfully.',
-          visible: true,
-        })
-        setTimeout(() => {
-          setAlert(prev => (prev ? { ...prev, visible: false } : null))
-        }, 2000)
+        setAlert({ type: 'success', text: 'Report submitted successfully.' })
       }
     } catch {
-      setAlert({ type: 'error', text: 'Failed to send report.', visible: true })
+      setAlert({ type: 'error', text: 'Failed to send report.' })
     }
   }
 
