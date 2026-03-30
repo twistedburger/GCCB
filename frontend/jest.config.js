@@ -1,4 +1,5 @@
 module.exports = {
+  clearMocks: true,
   verbose: true,
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
