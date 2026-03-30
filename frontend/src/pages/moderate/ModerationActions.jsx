@@ -7,7 +7,12 @@ import TextBox from '../../components/TextBox'
 import { moderationStrings } from '../../locales/en/moderation'
 import Select from 'react-select'
 
-export default function ModerationActions({ information, setAlert, mode }) {
+export default function ModerationActions({
+  information,
+  setAlert,
+  onSuccess,
+  mode,
+}) {
   const isReport = mode === 'report'
   const [confirmReport, setConfirmReport] = useState(null)
   const [rejectionReason, setRejectionReason] = useState('')
@@ -87,6 +92,7 @@ export default function ModerationActions({ information, setAlert, mode }) {
           ? 'Report submitted successfully.'
           : 'Event verified successfully.',
       })
+      onSuccess()
     } catch {
       setAlert({
         type: 'error',
@@ -246,5 +252,6 @@ export default function ModerationActions({ information, setAlert, mode }) {
 ModerationActions.propTypes = {
   information: PropTypes.object.isRequired,
   setAlert: PropTypes.func.isRequired,
+  onSuccess: PropTypes.func.isRequired,
   mode: PropTypes.oneOf(['report', 'event']).isRequired,
 }

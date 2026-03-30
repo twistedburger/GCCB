@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import EventCard from '../../components/EventCard'
 import RouteCard from '../../components/RouteCard'
 import OrganizerCard from '../../components/OrganizerCard'
@@ -49,7 +49,7 @@ function Moderate() {
           onTimeout={() => setAlert(null)}
         />
       )}
-      <p className="text-[23px] text-text-primary font-medium mb-4">
+      <p className="text-[23px] text-text-primary font-medium">
         Pending Reports
       </p>
       {/* Disable verification for now */}
@@ -63,9 +63,9 @@ function Moderate() {
 
       {/* Pending reports */}
       {viewingReports && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mt-4 mb-4">
           {reportQueue.map(report => (
-            <div key={report.id}>
+            <React.Fragment key={report.id}>
               {/* Event Report, click leads to event details */}
               {report.report_target == 'event' && (
                 <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
@@ -120,7 +120,7 @@ function Moderate() {
                   />
                 </div>
               )}
-            </div>
+            </React.Fragment>
           ))}
         </div>
       )}
