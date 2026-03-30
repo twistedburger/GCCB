@@ -37,7 +37,6 @@ describe('LocationSearch', () => {
   })
 
   //disabled state tests
-
   test('applies disabled styles when disabled prop is true', () => {
     render(<LocationSearch onSearch={onSearch} disabled={true} />)
     const el = document.querySelector('gmp-place-autocomplete')
@@ -65,7 +64,6 @@ describe('LocationSearch', () => {
   })
 
   //keyboard action tests
-
   test('calls onSearch with current location on Enter key', () => {
     render(<LocationSearch onSearch={onSearch} defaultLocation="Vancouver" />)
     const el = document.querySelector('gmp-place-autocomplete')
@@ -102,8 +100,6 @@ describe('LocationSearch', () => {
     const mockPrediction = { toPlace: jest.fn().mockReturnValue(mockPlace) }
 
     await act(async () => {
-      // CustomEvent puts data on event.detail, but the component reads event.placePrediction
-      // directly, so we attach it manually after creation
       const event = new CustomEvent('gmp-select', { bubbles: true })
       event.placePrediction = mockPrediction
       el.dispatchEvent(event)
