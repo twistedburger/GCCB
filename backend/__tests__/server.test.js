@@ -473,10 +473,15 @@ describe('GET /sso_list', () => {
 })
 
 describe('POST /api/createRoute', () => {
+  test('should return 403 if user is not authenticated', async () => {
+    mockIsAuthenticated.mockReturnValue(false)
+    const response = await request(app).post('/api/createRoute').send({})
+    expect(response.status).toBe(403)
+  })
+
   let mockClient
 
   beforeEach(() => {
-    jest.clearAllMocks()
     mockIsAuthenticated.mockReturnValue(true)
 
     mockClient = {
@@ -587,6 +592,97 @@ describe('POST /api/createRoute', () => {
       expect.stringContaining('ROLLBACK')
     )
     expect(mockClient.release).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('POST /api/createEvent', () => {
+  const standardDbUser = { id: 1, role: 'user' }
+  const moderatorDbUser = { id: 2, role: 'moderator' }
+
+  beforeEach(() => {
+    mockIsAuthenticated.mockReturnValue(true)
+  })
+
+  test('should return 403 if user is not authenticated', async () => {
+    mockIsAuthenticated.mockReturnValue(false)
+    const response = await request(app).post('/api/createEvent').send({})
+    expect(response.status).toBe(403)
+  })
+
+  test('should create event and return 201 with event data', async () => {
+    const mockEvent = { id: 10, title: 'Morning Ride' }
+
+    db.query.mockResolvedValueOnce({ rows: [standardDbUser], rowCount: 1 })
+    db.query.mockResolvedValueOnce({ rows: [mockEvent] })
+
+    const response = await request(app).post('/api/createEvent').send({
+      title: 'Morning Ride',
+      event_time: '2026-04-15T08:00:00Z',
+    })
+
+    expect(response.status).toBe(201)
+    expect(response.body).toEqual(mockEvent)
+  })
+
+  test('should set verified to true if creator is a moderator', async () => {
+    db.query.mockResolvedValueOnce({ rows: [moderatorDbUser] })
+    db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
+
+    await request(app).post('/api/createEvent').send({ title: 'Mod Event' })
+
+    const insertCall = db.query.mock.calls.find(call =>
+      call[0].includes('INSERT INTO event')
+    )
+    expect(insertCall[1][4]).toBe(true)
+  })
+
+  test('should set verified to false if creator is not a moderator', async () => {
+    db.query.mockResolvedValueOnce({ rows: [standardDbUser] })
+    db.query.mockResolvedValueOnce({ rows: [{ id: 100 }] })
+
+    await request(app).post('/api/createEvent').send({ title: 'User Event' })
+
+    const insertCall = db.query.mock.calls.find(call =>
+      call[0].includes('INSERT INTO event')
+    )
+    expect(insertCall[1][4]).toBe(false)
+  })
+
+  test('should pass correct parameters to db.query', async () => {
+    const payload = {
+      title: 'Param Check',
+      event_time: '2026-04-15T12:00:00Z',
+      location: 'Burnaby',
+      need_approval: false,
+      description: 'Testing params',
+    }
+
+    db.query.mockResolvedValueOnce({ rows: [standardDbUser] })
+    db.query.mockResolvedValueOnce({ rows: [{ id: 101 }] })
+
+    await request(app).post('/api/createEvent').send(payload)
+
+    const insertCall = db.query.mock.calls.find(call =>
+      call[0].includes('INSERT INTO event')
+    )
+    const [query, params] = insertCall
+
+    expect(query).toContain('RETURNING *')
+    expect(params[0]).toBe(payload.title)
+    expect(params[1]).toBe(1)
+    expect(params[7]).toBeInstanceOf(Date)
+  })
+
+  test('should return 500 on db.query failure', async () => {
+    db.query.mockResolvedValueOnce({ rows: [standardDbUser] }) // works
+    db.query.mockRejectedValueOnce(new Error('DB connection lost'))
+
+    const response = await request(app)
+      .post('/api/createEvent')
+      .send({ title: 'Fail' })
+
+    expect(response.status).toBe(500)
+    expect(response.body).toEqual({ error: 'Internal Server Error' })
   })
 })
 
