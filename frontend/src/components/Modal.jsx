@@ -18,7 +18,7 @@ export default function Modal({ isOpen, onClose, children, title }) {
   if (!isOpen && !animateIn) return null
 
   return (
-    <div className="absolute inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="absolute inset-0 z-100 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         onClick={onClose}

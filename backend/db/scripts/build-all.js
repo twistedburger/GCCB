@@ -15,6 +15,10 @@ const config = {
     'create_report_table.sql',
     'add_created_at_column_event_and_route.sql',
     'update_path_data_type.sql',
+    'add_geog_columns.sql',
+    'add_report_columns.sql',
+    // only need this script if you add manual verification
+    // 'create_event_verification_table.sql',
   ],
 }
 

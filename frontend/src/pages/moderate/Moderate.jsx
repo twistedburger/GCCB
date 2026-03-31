@@ -1,68 +1,92 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import EventCard from '../../components/EventCard'
 import RouteCard from '../../components/RouteCard'
 import OrganizerCard from '../../components/OrganizerCard'
-import GenericToggle from '../../components/GenericToggle'
-import ModeratorCardWrapper from './ModeratorCardWrapper'
+// Disable verification for now.
+// import GenericToggle from '../../components/GenericToggle'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../utils/Authorization'
+import ModerationActions from './ModerationActions'
+import Alert from '../../components/Alert'
 
 function Moderate() {
   const navigate = useNavigate()
+  const [alert, setAlert] = useState(null)
   const [reportQueue, setReportQueue] = useState([])
-  const [eventQueue, setEventQueue] = useState([])
-  const [viewingReports, setViewingReports] = useState(true)
+  // Disable verification for now.
+  // const [eventQueue, setEventQueue] = useState([])
+  // const [viewingReports, setViewingReports] = useState(true)
+  const [viewingReports] = useState(true)
   const { authorization } = useAuth()
 
+  const fetchReportQueue = async () => {
+    const response = await fetch(`http://localhost:3000/api/reports`)
+    const data = await response.json()
+    setReportQueue(data)
+  }
+
+  // Disable verification for now.
+  // const fetchPendingEvents = async () => {
+  //   const response = await fetch(
+  //     `http://localhost:3000/api/pendingVerifications`
+  //   )
+  //   const data = await response.json()
+  //   setEventQueue(data)
+  // }
+
   useEffect(() => {
-    const fetchReportQueue = async () => {
-      const response = await fetch(`http://localhost:3000/api/reports`)
-      const data = await response.json()
-      setReportQueue(data)
-    }
-
-    const fetchPendingEvents = async () => {
-      const response = await fetch(
-        `http://localhost:3000/api/events?need_approval=true`
-      )
-      const data = await response.json()
-      setEventQueue(data)
-    }
-
     fetchReportQueue()
-    fetchPendingEvents()
+    // Disable verification for now.
+    // fetchPendingEvents()
   }, [])
 
   return (
-    <div className="px-6">
-      <div className="flex justify-center mt-6 mb-4 *:w-full">
+    <div className="px-6 pt-6">
+      {alert && (
+        <Alert
+          message={alert.text}
+          type={alert.type}
+          onTimeout={() => setAlert(null)}
+        />
+      )}
+      <p className="text-[23px] text-text-primary font-medium">
+        Pending Reports
+      </p>
+      {/* Disable verification for now */}
+      {/* <div className="flex justify-center mt-6 mb-4 *:w-full">
         <GenericToggle
           value={viewingReports}
           onChange={setViewingReports}
           labels={['Reports', 'Events']}
         />
-      </div>
+      </div> */}
 
       {/* Pending reports */}
       {viewingReports && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mt-4 mb-4">
           {reportQueue.map(report => (
-            <div key={report.id}>
+            <React.Fragment key={report.id}>
               {/* Event Report, click leads to event details */}
               {report.report_target == 'event' && (
-                <ModeratorCardWrapper reportInformation={report}>
+                <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
                     <EventCard
                       event={report.target_details}
                       view={authorization}
                     />
                   </div>
-                </ModeratorCardWrapper>
+                  <ModerationActions
+                    information={report}
+                    onSuccess={fetchReportQueue}
+                    setAlert={setAlert}
+                    mode={'report'}
+                  />
+                </div>
               )}
 
               {/* Route Report, click leads to event details */}
               {report.report_target == 'route' && (
-                <ModeratorCardWrapper reportInformation={report}>
+                <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
                     <RouteCard
                       route={report.target_details}
@@ -73,33 +97,53 @@ function Moderate() {
                       }}
                     />
                   </div>
-                </ModeratorCardWrapper>
+                  <ModerationActions
+                    information={report}
+                    onSuccess={fetchReportQueue}
+                    setAlert={setAlert}
+                    mode={'report'}
+                  />
+                </div>
               )}
 
               {/* User Report, no click/no profile view yet? */}
               {report.report_target == 'user' && (
-                <ModeratorCardWrapper reportInformation={report}>
+                <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
                     <OrganizerCard user={report.target_details} />
                   </div>
-                </ModeratorCardWrapper>
+                  <ModerationActions
+                    information={report}
+                    onSuccess={fetchReportQueue}
+                    setAlert={setAlert}
+                    mode={'report'}
+                  />
+                </div>
               )}
-            </div>
+            </React.Fragment>
           ))}
         </div>
       )}
 
-      {/* Events to be verified */}
-      {!viewingReports &&
+      {/* Events to be verified, disabled for now. */}
+      {/* {!viewingReports &&
         eventQueue.map(event => (
           <div key={event.id}>
-            <ModeratorCardWrapper>
+            <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
               <div className="*:shadow-white">
                 <EventCard event={event} view={authorization} />
               </div>
-            </ModeratorCardWrapper>
+              <div className="-mt-4">
+                <ModerationActions
+                  information={event.id}
+                  onSuccess={fetchPendingEvents}
+                  setAlert={setAlert}
+                  mode={'event'}
+                />
+              </div>
+            </div>
           </div>
-        ))}
+        ))} */}
     </div>
   )
 }
