@@ -169,7 +169,14 @@ export default function RouteCard({
                 <GenericButton
                   unstyled
                   customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
-                  onClick={handleLeave}
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (onToggleJoin && !isDraft) {
+                      onToggleJoin()
+                    } else {
+                      handleLeave(e)
+                    }
+                  }}
                 >
                   <div className="flex flex-row items-center gap-1">
                     <Logout fontSize="12px" />
