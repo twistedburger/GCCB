@@ -9,7 +9,7 @@ import {
 import GenericToggle from '../components/GenericToggle'
 import GenericButton from '../components/GenericButton'
 import { Add, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
@@ -79,6 +79,7 @@ function Home() {
 
   const handleFormResult = result => {
     if (result.success) {
+      fetchCards()
       setShowCreateEvent(false)
     }
 
@@ -102,7 +103,7 @@ function Home() {
     )
   }, [])
 
-  useEffect(() => {
+  const fetchCards = useCallback(() => {
     const params = new URLSearchParams()
     if (filters.time) params.append('time', filters.time)
     if (filters.transportationModes.length > 0)
@@ -124,6 +125,10 @@ function Home() {
       .then(res => res.json())
       .then(data => setCardsToDisplay(data))
   }, [filters, userLocation, isArriving])
+
+  useEffect(() => {
+    fetchCards()
+  }, [fetchCards])
 
   useEffect(() => {
     if (snapPoint !== 1) {

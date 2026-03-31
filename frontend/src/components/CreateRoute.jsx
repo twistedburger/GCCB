@@ -16,6 +16,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [departTime, setDepartTime] = useState('')
   const [startLoc, setStartLoc] = useState(null)
   const [endLoc, setEndLoc] = useState(initLoc)
+  const [LatLng, setLatLng] = useState(null)
   const [distance, setDistance] = useState(null)
   const [route, setRoute] = useState(null)
   const [errors, setErrors] = useState({})
@@ -115,6 +116,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       distance: distance,
       path: route,
       completed: false,
+      latitude: LatLng[0],
+      longitude: LatLng[1],
     }
     onSubmit(routeData)
   }
@@ -208,7 +211,10 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           className={`w-full flex justify-end rounded-xl bg-gray-50 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             outline-none transition-all text-text-primary placeholder:text-secondary
             ${errors.startLoc ? 'border border-red-500' : 'focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100'}`}
-          onSearch={location => setStartLoc(location)}
+          onSearch={(location, latitude, longitude) => {
+            setStartLoc(location)
+            setLatLng([latitude, longitude])
+          }}
         />
         {errors.startLoc && (
           <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">

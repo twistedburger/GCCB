@@ -359,10 +359,18 @@ app.post('/api/createEvent', async (req, res) => {
     const user = await selectUser(req)
     const route_verified = user.role === 'moderator'
 
-    const { title, event_time, location, need_approval, description } = req.body
+    const {
+      title,
+      event_time,
+      location,
+      need_approval,
+      description,
+      longitude,
+      latitude,
+    } = req.body
 
     const result = await db.query(
-      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326)) RETURNING *',
       [
         title,
         user.id,
@@ -372,6 +380,8 @@ app.post('/api/createEvent', async (req, res) => {
         need_approval,
         description,
         new Date(),
+        longitude,
+        latitude,
       ]
     )
 
@@ -400,6 +410,8 @@ app.post('/api/createRoute', async (req, res) => {
     completed,
     description,
     isJoined,
+    latitude,
+    longitude,
   } = req.body
   const client = await pool.connect()
 
@@ -408,8 +420,8 @@ app.post('/api/createRoute', async (req, res) => {
     await client.query('BEGIN')
 
     const routeQuery = `
-      INSERT INTO route (title, creator_id, transportation_mode, origin, destination, depart_time, max_ppl, distance, path, completed, description, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO route (title, creator_id, transportation_mode, origin, destination, depart_time, max_ppl, distance, path, completed, description, created_at, origin_geog)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
       RETURNING id;
     `
     const routeResult = await client.query(routeQuery, [
@@ -425,6 +437,8 @@ app.post('/api/createRoute', async (req, res) => {
       completed,
       description,
       new Date(),
+      longitude,
+      latitude,
     ])
     const route_id = routeResult.rows[0].id
 
