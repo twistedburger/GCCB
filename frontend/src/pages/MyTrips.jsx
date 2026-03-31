@@ -85,6 +85,7 @@ export default function MyTrips() {
                 <RouteCard
                   route={trip}
                   individualView={true}
+                  routeDetailView={true}
                   isCompleted={trip.completed}
                   onToggleJoin={() => setConfirmLeave(trip)}
                 />

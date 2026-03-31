@@ -105,16 +105,17 @@ export default function RouteCard({
                   `@ ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
               </p>
             </div>
-            {routeDetailView && route.depart_time && (
-              <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
-                <DateRangeRounded className="mr-1 -ml-1" fontSize="small" />
-                <p>{`${dateObj.toLocaleDateString('en-US', { month: 'long' })} ${dateObj.getDate()} @ ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}</p>
-              </div>
-            )}
-            {individualView && (
+            {(individualView || routeDetailView) && (
               <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
                 <OutlinedFlagRounded className="mr-1 -ml-1" fontSize="small" />
                 <p>{route.destination || route.end_point}</p>
+              </div>
+            )}
+            {((routeDetailView && route.depart_time) ||
+              (onToggleJoin && !isDraft && route.depart_time)) && (
+              <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
+                <DateRangeRounded className="mr-1 -ml-1" fontSize="small" />
+                <p>{`${dateObj.toLocaleDateString('en-US', { month: 'long' })} ${dateObj.getDate()} @ ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}</p>
               </div>
             )}
             <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
@@ -146,7 +147,7 @@ export default function RouteCard({
 
         {view !== 'moderator' && (
           <div className="flex flex-col gap-1">
-            {!individualView && !isDraft && (
+            {(!isDraft || onToggleJoin) && !individualView && (
               <GenericButton
                 unstyled
                 customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
