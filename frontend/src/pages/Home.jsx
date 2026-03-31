@@ -32,20 +32,23 @@ console.warn = (...args) => {
     return // Suppress no API warning, since key exists
   originalWarn(...args)
 }
+// Vancouver default if the user does not allow to use their location, change as per localization :)
+const DEFAULT_COORDINATES = { lat: 49.26, lng: -123.11 }
 
 function Home() {
   const location = useLocation()
   const isEventDetail = location.pathname.includes('/event/')
-  const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
+  const [userLocation, setUserLocation] = useState(DEFAULT_COORDINATES)
   const [snapPoint, setSnapPoint] = useState(0.085)
   const [isArriving, setIsArriving] = useState(true)
   const [address, setAddress] = useState('')
   const [cardsToDisplay, setCardsToDisplay] = useState([])
   const [selectedRoute, setSelectedRoute] = useState(null)
   const [filters, setFilters] = useState({
+    location: userLocation,
     time: null,
     transportationModes: [],
-    radius: 500,
+    radius: 2000,
     verifiedEventsOnly: false,
     mainEventsOnly: true,
   })
@@ -96,9 +99,11 @@ function Home() {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         })
+        setAddress('Current Location')
       },
       () => {
         console.log('Location access denied, using default')
+        setAddress('Vancouver, BC')
       }
     )
   }, [])
@@ -245,10 +250,29 @@ function Home() {
                         labels={['Arriving Near', 'Departing Near']}
                         className="shrink-0"
                       />
-                      <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
-                        <PlaceOutlined className="mr-1" />
-                        {address}
-                      </span>
+                      <GenericButton
+                        unstyled={true}
+                        onClick={() => {
+                          navigator.geolocation.getCurrentPosition(
+                            position => {
+                              setUserLocation({
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude,
+                              })
+                              setAddress('Current Location')
+                            },
+                            () => {
+                              setUserLocation(DEFAULT_COORDINATES)
+                              setAddress('Vancouver, BC')
+                            }
+                          )
+                        }}
+                      >
+                        <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
+                          <PlaceOutlined className="mr-1" />
+                          {address}
+                        </span>
+                      </GenericButton>
                       <div
                         className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
                         style={{ scrollbarWidth: 'none' }}
