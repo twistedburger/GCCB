@@ -12,6 +12,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [addedRoutes, setAddedRoutes] = useState([])
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [selectedLatLng, setSelectedLatLng] = useState(null)
+  const [banner, setBanner] = useState('')
   const [addRoute, setAddRoute] = useState(false)
   const [eventName, setEventName] = useState('')
   const [datetime, setDatetime] = useState('')
@@ -80,6 +81,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         location: selectedPlace,
         latitude: selectedLatLng[0],
         longitude: selectedLatLng[1],
+        banner: banner,
         description: eventDesc,
         verified: false,
         need_approval: false,
@@ -177,15 +179,10 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
             className={`w-full flex justify-end rounded-xl bg-gray-50 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             outline-none transition-all text-text-primary placeholder:text-secondary 
             ${errors.location ? 'border border-red-500' : 'focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100'}`}
-            onSearch={(location, latitude, longitude) => {
-              console.log(
-                'location search result:',
-                location,
-                latitude,
-                longitude
-              )
+            onSearch={(location, latitude, longitude, banner) => {
               setSelectedPlace(location)
               setSelectedLatLng([latitude, longitude])
+              setBanner(banner)
             }}
             placeHolder="Enter event location"
             disabled={addRoute || addedRoutes.length > 0}

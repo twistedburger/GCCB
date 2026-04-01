@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types'
-import bcitCover from '../assets/bcit.jpg'
 import {
   OutlinedFlagRounded,
   VerifiedOutlined,
@@ -20,7 +19,7 @@ export default function EventCard({ event, view, onReport }) {
     >
       <div className="relative">
         <img
-          src={bcitCover}
+          src={event.banner_url}
           className="h-24 w-full object-cover rounded-t-xl"
         />
         {view != 'moderator' && (

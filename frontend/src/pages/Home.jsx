@@ -273,10 +273,7 @@ function Home() {
                           {address}
                         </span>
                       </GenericButton>
-                      <div
-                        className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
-                        style={{ scrollbarWidth: 'none' }}
-                      >
+                      <div className="pt-0.5">
                         <DisplayFilters
                           filters={filters}
                           setFilters={setFilters}
@@ -486,7 +483,7 @@ function DisplayFilters({ filters, setFilters }) {
         <GenericButton
           key={f.key}
           unstyled
-          customStyling="flex items-center gap-1 whitespace-nowrap px-3 py-1 rounded-full border border-light-grey bg-white text-[14px] text-text-secondary shrink-0 capitalize"
+          customStyling="flex items-center justify-center gap-1 whitespace-nowrap px-3 py-1 rounded-full border border-light-grey bg-white text-[14px] text-text-secondary shrink-0 capitalize"
           onClick={() => {
             setFilters(prev => {
               const updatedFilters = {

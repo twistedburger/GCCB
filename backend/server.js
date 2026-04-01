@@ -367,10 +367,11 @@ app.post('/api/createEvent', async (req, res) => {
       description,
       longitude,
       latitude,
+      banner,
     } = req.body
 
     const result = await db.query(
-      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326)) RETURNING *',
+      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11) RETURNING *',
       [
         title,
         user.id,
@@ -382,6 +383,7 @@ app.post('/api/createEvent', async (req, res) => {
         new Date(),
         longitude,
         latitude,
+        banner,
       ]
     )
 

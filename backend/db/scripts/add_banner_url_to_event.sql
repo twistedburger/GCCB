@@ -1,0 +1,5 @@
+ALTER TABLE "event" ADD COLUMN IF NOT EXISTS banner_url VARCHAR(255);
+
+UPDATE event SET banner_url = 'https://lh3.googleusercontent.com/place-photos/AL8-SNHPlYpTp1QLDzkaEaBwb8EWVzcv6ypB4Z1108g-H1vn_Pnc5Df1kyXG-T-MCEBuaVAomUvo5kF1ZlimCHfadIflWqOscgI7mfyjrsZYmjzzIONDDFceBbRCfjw6vHv8zSS3y2UH5yGrsV8zWg=s4800-w2448' WHERE id = 1;
+UPDATE event SET banner_url = 'https://lh3.googleusercontent.com/place-photos/AL8-SNETH8LOcg4EiKsm5ZoxWZjSxTxU5vAU97PaDlGSTXp1dIoQgOEP9MId5vQ47bqmn9NmgVMOuI9nRhFiEmsKWMn8QxUD3YYzzDU4vKEOQ4CAWjo3o4Z2o8ec2ULu9Md6Y33vQCHzbooj941TRTU=s4800-w4800' WHERE id = 2;
+UPDATE event SET banner_url = 'https://lh3.googleusercontent.com/place-photos/AL8-SNFQMR1EbFLKcobMTuT-xS7k-3_tgUjgOFknyvpu4k6n_yV6t244bIHqMl8JC_yi42iA1_fgsDKi-QUYZN_2Wwrm2iXBiWLGqu0AGvZrJicLrMyns9vFMa4U506fJBxDBueE9Qg_Df7oNRWWTQ=s4800-w3044' WHERE id = 3;

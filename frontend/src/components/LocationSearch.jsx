@@ -23,13 +23,18 @@ export default function LocationSearch({
     const handleSelect = async event => {
       const placePrediction = event.placePrediction
       const place = placePrediction.toPlace()
-      await place.fetchFields({ fields: ['formattedAddress', 'location'] })
+      // photos for banner url
+      await place.fetchFields({
+        fields: ['formattedAddress', 'location', 'photos'],
+      })
 
       const address = place.formattedAddress
       const latitude = place.location.lat()
       const longitude = place.location.lng()
+      // returns an array, just get the first one
+      const banner = place.photos[0].getURI()
       setLocation(address)
-      onSearch(address, latitude, longitude)
+      onSearch(address, latitude, longitude, banner)
     }
 
     if (el) {
