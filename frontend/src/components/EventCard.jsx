@@ -1,14 +1,54 @@
 import PropTypes from 'prop-types'
+import bcitCover from '../assets/bcit.jpg'
 import {
   OutlinedFlagRounded,
   VerifiedOutlined,
   ReportGmailerrorred,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 
 export default function EventCard({ event, view, onReport }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()
+  const [bannerUrl, setBannerUrl] = useState(event.banner_url)
+
+  useEffect(() => {
+    const refreshBanner = async () => {
+      if (!event.place_id) {
+        setBannerUrl(bcitCover)
+        return
+      }
+      try {
+        const response = await fetch(
+          'http://localhost:3000/api/refresh-banner',
+          {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              place_id: event.place_id,
+              event_id: event.id,
+            }),
+          }
+        )
+        const data = await response.json()
+        setBannerUrl(data.banner_url || bcitCover)
+      } catch (err) {
+        console.error('Refresh failed', err)
+        setBannerUrl(bcitCover)
+      }
+    }
+
+    if (!event.banner_url) {
+      refreshBanner()
+      return
+    }
+
+    const img = new Image()
+    img.src = event.banner_url
+    img.onerror = () => refreshBanner()
+  }, [event.id, event.banner_url, event.place_id])
 
   return (
     <div
@@ -19,7 +59,7 @@ export default function EventCard({ event, view, onReport }) {
     >
       <div className="relative">
         <img
-          src={event.banner_url}
+          src={bannerUrl || bcitCover}
           className="h-24 w-full object-cover rounded-t-xl"
         />
         {view != 'moderator' && (

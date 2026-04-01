@@ -328,6 +328,67 @@ app.get('/api/events', (req, res) => {
   )
 })
 
+/**
+ * Update dates the banner_url column in the events table for the given event id.
+ * @returns the new banner_url fetched from the google maps API.
+ */
+app.post('/api/refresh-banner', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const { place_id, event_id } = req.body
+  const eventId = parseInt(event_id, 10)
+
+  try {
+    const response = await axios.get(
+      `https://places.googleapis.com/v1/places/${place_id}`,
+      {
+        headers: {
+          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
+          'X-Goog-FieldMask': 'photos',
+        },
+      }
+    )
+
+    // need the photo name to get the banner url
+    const photoName = response.data.photos?.[0]?.name
+    if (!photoName) {
+      return res.status(404).json({ error: 'No photos found for this place' })
+    }
+
+    const photoResponse = await axios.get(
+      `https://places.googleapis.com/v1/${photoName}/media`,
+      {
+        params: {
+          maxWidthPx: 800,
+          skipHttpRedirect: true,
+        },
+        headers: {
+          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
+        },
+      }
+    )
+    const new_url = photoResponse.data.photoUri
+
+    db.query(
+      `UPDATE event SET banner_url = $1 WHERE id = $2;`,
+      [new_url, eventId],
+      error => {
+        if (error) {
+          console.error('Error updating DB:', error)
+          return res.status(500).send(serverStrings.errors.generic)
+        }
+        res.status(200).json({ banner_url: new_url })
+      }
+    )
+  } catch (err) {
+    const status = err.response?.status ?? 500
+    const message = err.response?.data?.error?.message ?? err.message
+    res.status(status).json({ error: message })
+  }
+})
+
 app.post('/api/requestRoute', async (req, res) => {
   try {
     const response = await axios.post(
@@ -368,10 +429,11 @@ app.post('/api/createEvent', async (req, res) => {
       longitude,
       latitude,
       banner,
+      place_id,
     } = req.body
 
     const result = await db.query(
-      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11) RETURNING *',
+      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11, $12) RETURNING *',
       [
         title,
         user.id,
@@ -384,6 +446,7 @@ app.post('/api/createEvent', async (req, res) => {
         longitude,
         latitude,
         banner,
+        place_id,
       ]
     )
 
