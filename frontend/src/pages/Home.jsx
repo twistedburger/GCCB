@@ -22,6 +22,7 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import { TravelMode } from '../utils/routes'
 import Report from '../components/Report'
+import { CircularProgress } from '@mui/material'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -57,6 +58,7 @@ function Home() {
   const [alert, setAlert] = useState(null)
   const [reportData, setReportData] = useState(null)
   const [showReport, setShowReport] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
@@ -109,6 +111,7 @@ function Home() {
   }, [])
 
   const fetchCards = useCallback(() => {
+    setLoading(true)
     const params = new URLSearchParams()
     if (filters.time) params.append('time', filters.time)
     if (filters.transportationModes.length > 0)
@@ -128,7 +131,10 @@ function Home() {
 
     fetch(url, { credentials: 'include' })
       .then(res => res.json())
-      .then(data => setCardsToDisplay(data))
+      .then(data => {
+        setCardsToDisplay(data)
+        setLoading(false)
+      })
   }, [filters, userLocation, isArriving])
 
   useEffect(() => {
@@ -245,7 +251,19 @@ function Home() {
                       <GenericToggle
                         value={isArriving}
                         onChange={() => {
-                          setIsArriving(prev => !prev)
+                          const newIsArriving = !isArriving
+                          setIsArriving(newIsArriving)
+                          if (!newIsArriving) {
+                            setFilters(prev => ({
+                              ...prev,
+                              mainEventsOnly: false,
+                            }))
+                          } else {
+                            setFilters(prev => ({
+                              ...prev,
+                              mainEventsOnly: true,
+                            }))
+                          }
                         }}
                         labels={['Arriving Near', 'Departing Near']}
                         className="shrink-0"
@@ -280,7 +298,11 @@ function Home() {
                         />
                       </div>
                     </div>
-                    {cardsToDisplay.length === 0 ? (
+                    {loading ? (
+                      <div className="flex justify-center py-8">
+                        <CircularProgress />
+                      </div>
+                    ) : cardsToDisplay.length === 0 ? (
                       <p className="text-text-secondary text-sm text-center py-4">
                         No results found. Try adjusting your filters.
                       </p>

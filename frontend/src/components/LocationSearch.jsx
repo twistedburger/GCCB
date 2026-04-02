@@ -33,7 +33,7 @@ export default function LocationSearch({
       const longitude = place.location.lng()
       // returns an array, just get the first one for the banner
       // save the url for event banner, save the place id to later update the url if it expires
-      const banner = place.photos[0].getURI()
+      const banner = place.photos?.[0]?.getURI() || null
       const placeId = place.id
       setLocation(address)
       onSearch(address, latitude, longitude, banner, placeId)
