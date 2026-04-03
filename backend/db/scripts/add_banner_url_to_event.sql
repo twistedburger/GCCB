@@ -1,5 +1,5 @@
 -- Save banner urls, save placeId to update banner_url when url expires
-ALTER TABLE "event" ADD COLUMN IF NOT EXISTS banner_url VARCHAR(255);
+ALTER TABLE "event" ADD COLUMN IF NOT EXISTS banner_url TEXT;
 ALTER TABLE "event" ADD COLUMN IF NOT EXISTS place_id VARCHAR(50);
 
 UPDATE event SET place_id = 'ChIJ4S7wxnhxhlQRFGfmMvQ74LQ' WHERE id = 1;
