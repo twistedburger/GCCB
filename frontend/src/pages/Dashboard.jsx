@@ -147,11 +147,10 @@ function Dashboard() {
           onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
-          title: 'Average Group Size',
-          value: 'Coming soon',
-          subtitle: 'Planned admin metric',
-          onClick: () =>
-            console.log('Placeholder: Average group size page later'),
+          title: 'Platform Activity',
+          value: 'View',
+          subtitle: 'Route status, creators, rejections',
+          onClick: () => navigate('/dashboard/activity'),
         },
       ]
     : [
