@@ -147,7 +147,7 @@ export default function RouteCard({
 
         {view !== 'moderator' && (
           <div className="flex flex-col gap-1">
-            {(!isDraft || onToggleJoin) && !individualView && (
+            {((!isDraft && onToggleJoin) || !individualView) && (
               <GenericButton
                 unstyled
                 customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
