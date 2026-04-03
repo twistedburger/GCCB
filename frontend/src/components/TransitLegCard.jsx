@@ -9,7 +9,7 @@ function TransitLegCard({ name, type, distance, className }) {
     >
       <div className="flex p-4 gap-4">
         <CommuteIcon
-          type={type === TravelMode.Walk ? 'walk' : 'bus'}
+          type={type === TravelMode.Walk ? 'walk' : 'transit'}
           clickable={false}
         />
 
