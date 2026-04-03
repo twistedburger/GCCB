@@ -17,6 +17,7 @@ import CreateRoute from '../../components/CreateRoute'
 import Modal from '../../components/Modal'
 import Alert from '../../components/Alert'
 import Report from '../../components/Report'
+import { createPortal } from 'react-dom'
 
 export default function EventDetail() {
   const location = useLocation()
@@ -119,17 +120,19 @@ export default function EventDetail() {
             </GenericButton>
           </div>
 
-          {addRoute && (
-            <Modal isOpen={true} onClose={() => setAddRoute(false)}>
-              <CreateRoute
-                initLoc={event.location}
-                onSubmit={routeData => {
-                  handleAddRoute(routeData)
-                  setAddRoute(false)
-                }}
-              />
-            </Modal>
-          )}
+          {addRoute &&
+            createPortal(
+              <Modal isOpen={true} onClose={() => setAddRoute(false)}>
+                <CreateRoute
+                  initLoc={event.location}
+                  onSubmit={routeData => {
+                    handleAddRoute(routeData)
+                    setAddRoute(false)
+                  }}
+                />
+              </Modal>,
+              document.getElementById('app-container')
+            )}
         </>
       )}
       <Drawer.Root

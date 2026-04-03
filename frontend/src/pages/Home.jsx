@@ -28,6 +28,7 @@ import {
 } from '../utils/HomeUtils'
 import DisplayFilters from '../components/DisplayFilters'
 import MapController from '../components/MapController'
+import { createPortal } from 'react-dom'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -106,7 +107,11 @@ function Home() {
   }
 
   return (
-    <div data-vaul-drawer-wrapper className="relative w-full h-full">
+    <div
+      id="app-container"
+      data-vaul-drawer-wrapper
+      className="relative w-full h-full"
+    >
       {alert && (
         <Alert
           message={alert.text}
@@ -267,48 +272,59 @@ function Home() {
         />
       </div>
 
-      {/* Create Event modal */}
-      <Modal isOpen={showCreateEvent} onClose={() => setShowCreateEvent(false)}>
-        <CreateEvent
-          onSubmit={result =>
-            handleFormResult(result, { setShowCreateEvent, setAlert })
-          }
-        />
-      </Modal>
-
-      {/* Report Modal */}
-      <Modal
-        isOpen={showReport}
-        onClose={() => setShowReport(false)}
-        title={reportData ? `Report ${reportData.title}` : 'Report'}
-      >
-        {reportData && (
-          <Report
-            type={reportData.type}
-            targetId={reportData.id}
-            onClose={() => setShowReport(false)}
-            setAlert={reportAlert => {
-              if (!reportAlert?.type) return
-              setAlert({
-                type: reportAlert.type,
-                text:
-                  reportAlert.type === 'success'
-                    ? 'Report submitted successfully.'
-                    : 'Failed to submit report.',
-              })
-            }}
-          />
+      {showCreateEvent &&
+        createPortal(
+          <Modal
+            isOpen={showCreateEvent}
+            onClose={() => setShowCreateEvent(false)}
+          >
+            <CreateEvent
+              onSubmit={result =>
+                handleFormResult(result, { setShowCreateEvent, setAlert })
+              }
+            />
+          </Modal>,
+          document.getElementById('app-container')
         )}
-      </Modal>
 
-      <GenericButton
-        unstyled={true}
-        customStyling="absolute bottom-24 right-6 z-50 bg-blue-primary text-white rounded-full p-3 shadow-lg 
+      {showReport &&
+        createPortal(
+          <Modal
+            isOpen={showReport}
+            onClose={() => setShowReport(false)}
+            title={reportData ? `Report ${reportData.title}` : 'Report'}
+          >
+            {reportData && (
+              <Report
+                type={reportData.type}
+                targetId={reportData.id}
+                onClose={() => setShowReport(false)}
+                setAlert={reportAlert => {
+                  if (!reportAlert?.type) return
+                  setAlert({
+                    type: reportAlert.type,
+                    text:
+                      reportAlert.type === 'success'
+                        ? 'Report submitted successfully.'
+                        : 'Failed to submit report.',
+                  })
+                }}
+              />
+            )}
+          </Modal>,
+          document.getElementById('app-container')
+        )}
+
+      {snapPoint === 0.085 && (
+        <GenericButton
+          unstyled={true}
+          customStyling="absolute bottom-24 right-6 z-50 bg-blue-primary text-white rounded-full p-3 shadow-lg 
                 transition-transform duration-200 active:scale-100 hover:scale-110"
-        onClick={() => setShowCreateEvent(true)}
-      >
-        <Add fontSize="large" />
-      </GenericButton>
+          onClick={() => setShowCreateEvent(true)}
+        >
+          <Add fontSize="large" />
+        </GenericButton>
+      )}
     </div>
   )
 }
