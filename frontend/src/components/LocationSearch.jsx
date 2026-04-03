@@ -13,7 +13,7 @@ export default function LocationSearch({
 
   useEffect(() => {
     if (autocompleteRef.current) {
-      autocompleteRef.current.value = defaultLocation
+      autocompleteRef.current.value = defaultLocation ?? ''
     }
   }, [defaultLocation])
 

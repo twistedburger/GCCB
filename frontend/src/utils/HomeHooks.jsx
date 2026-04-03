@@ -18,6 +18,7 @@ export function useLocationSearch() {
       console.error('geocode fetch failed:', err)
     }
   }, [])
+  const clearSearch = () => setAddress('')
 
-  return { searchedLocationResult, searchAddress, handleSearch }
+  return { searchedLocationResult, searchAddress, handleSearch, clearSearch }
 }

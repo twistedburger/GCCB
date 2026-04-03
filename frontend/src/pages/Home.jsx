@@ -63,12 +63,13 @@ function Home() {
   const [alert, setAlert] = useState(null)
   const [reportData, setReportData] = useState(null)
   const [showReport, setShowReport] = useState(false)
-  const [loading] = useState(false)
+  const [locationInput, setLocationInput] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
 
-  const { searchedLocationResult, searchAddress, handleSearch } =
+  const { searchedLocationResult, searchAddress, handleSearch, clearSearch } =
     useLocationSearch()
 
   useEffect(() => {
@@ -87,14 +88,21 @@ function Home() {
   }, [])
 
   useEffect(() => {
+    setLoading(true)
     const url = buildSearchURL(filters, userLocation, isArriving)
     fetch(url, { credentials: 'include' })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error: ${res.status}`)
         return res.json()
       })
-      .then(data => setCardsToDisplay(data))
-      .catch(err => console.error('Failed to fetch:', err))
+      .then(data => {
+        setCardsToDisplay(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to fetch:', err)
+        setLoading(false)
+      })
   }, [filters, userLocation, isArriving])
 
   useEffect(() => {
@@ -146,6 +154,7 @@ function Home() {
             className="rounded-xl absolute inset-x-0 top-0 m-12 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
             onSearch={handleSearch}
+            defaultLocation={locationInput}
           />
         )}
         <Drawer.Root
@@ -197,80 +206,98 @@ function Home() {
                 {...(snapPoint === 0.085 ? { inert: true } : {})}
                 className="overflow-y-auto px-6 pb-36 flex flex-col gap-4"
               >
-                {searchAddress && (
-                  <>
-                    <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
-                      <TuneOutlined
-                        className="text-text-primary shrink-0"
-                        onClick={() => navigate('/filter')}
-                      />
-                      <GenericToggle
-                        value={isArriving}
-                        onChange={() => {
-                          const newIsArriving = !isArriving
-                          setIsArriving(newIsArriving)
-                          if (!newIsArriving) {
-                            setFilters(prev => ({
-                              ...prev,
-                              mainEventsOnly: false,
-                            }))
-                          } else {
-                            setFilters(prev => ({
-                              ...prev,
-                              mainEventsOnly: true,
-                            }))
-                          }
-                        }}
-                        labels={['Arriving Near', 'Departing Near']}
-                        className="shrink-0"
-                      />
-                      <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
-                        <PlaceOutlined className="mr-1" />
-                        {searchAddress}
-                      </span>
-                      <div
-                        className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
-                        style={{ scrollbarWidth: 'none' }}
-                      >
-                        <DisplayFilters
-                          filters={filters}
-                          setFilters={setFilters}
-                        />
-                      </div>
-                    </div>
-                    {loading ? (
-                      <div className="flex justify-center py-8">
-                        <CircularProgress />
-                      </div>
-                    ) : cardsToDisplay.length === 0 ? (
-                      <p className="text-text-secondary text-sm text-center py-4">
-                        No results found. Try adjusting your filters.
-                      </p>
-                    ) : (
-                      cardsToDisplay.map(item =>
-                        filters.mainEventsOnly ? (
-                          <EventCard
-                            key={item.id}
-                            event={item}
-                            view={authorization}
-                            onReport={data => {
-                              setReportData(data)
-                              setShowReport(true)
-                            }}
-                          />
-                        ) : (
-                          <RouteCard
-                            key={item.id}
-                            route={item}
-                            view={authorization}
-                            individualView={true}
-                            onSelect={handleRouteClick}
-                          />
+                <>
+                  <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
+                    <TuneOutlined
+                      className="text-text-primary shrink-0"
+                      onClick={() => navigate('/filter')}
+                    />
+                    <GenericToggle
+                      value={isArriving}
+                      onChange={() => {
+                        const newIsArriving = !isArriving
+                        setIsArriving(newIsArriving)
+                        if (!newIsArriving) {
+                          setFilters(prev => ({
+                            ...prev,
+                            mainEventsOnly: false,
+                          }))
+                        } else {
+                          setFilters(prev => ({
+                            ...prev,
+                            mainEventsOnly: true,
+                          }))
+                        }
+                      }}
+                      labels={['Arriving Near', 'Departing Near']}
+                      className="shrink-0"
+                    />
+                    <GenericButton
+                      unstyled={true}
+                      customStyling={
+                        'text-text-secondary text-sm shrink-0 capitalize flex items-center'
+                      }
+                      onClick={() => {
+                        setLoading(true)
+                        navigator.geolocation.getCurrentPosition(
+                          locationSetSuccess(setUserLocation),
+                          locationSetError
                         )
+                        clearSearch()
+                        setLocationInput(prev => (prev === null ? '' : null))
+                        setSelectedRoute(null)
+                        setSnapPoint(1)
+                      }}
+                    >
+                      <PlaceOutlined className="mr-1" />
+                      {searchAddress ||
+                        (userLocation.lat === DEFAULT_COORDINATES.lat &&
+                        userLocation.lng === DEFAULT_COORDINATES.lng
+                          ? 'Vancouver, BC'
+                          : 'Current Location')}
+                    </GenericButton>
+                    <div
+                      className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
+                      style={{ scrollbarWidth: 'none' }}
+                    >
+                      <DisplayFilters
+                        filters={filters}
+                        setFilters={setFilters}
+                      />
+                    </div>
+                  </div>
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <CircularProgress />
+                    </div>
+                  ) : cardsToDisplay.length === 0 ? (
+                    <p className="text-text-secondary text-sm text-center py-4">
+                      No results found. Try adjusting your filters.
+                    </p>
+                  ) : (
+                    cardsToDisplay.map(item =>
+                      filters.mainEventsOnly ? (
+                        <EventCard
+                          key={item.id}
+                          event={item}
+                          view={authorization}
+                          onReport={data => {
+                            setReportData(data)
+                            setShowReport(true)
+                          }}
+                        />
+                      ) : (
+                        <RouteCard
+                          key={item.id}
+                          route={item}
+                          view={authorization}
+                          individualView={true}
+                          onSelect={handleRouteClick}
+                        />
                       )
-                    )}
-                  </>
-                )}
+                    )
+                  )}
+                </>
               </div>
             </Drawer.Content>
           </Drawer.Portal>
