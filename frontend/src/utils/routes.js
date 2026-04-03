@@ -61,7 +61,7 @@ export async function calculateRoute(
   } catch (err) {
     if (err.response) {
       throw new Error(
-        `Routes API error ${err.response.status}: ${err.response.data?.error?.message ?? 'Unknown error'}`
+        `Routes API error ${err.response.status}: ${err.response.data?.error ?? 'Unknown error'}`
       )
     } else if (err.request) {
       throw new Error('Network error: could not reach Routes API')
