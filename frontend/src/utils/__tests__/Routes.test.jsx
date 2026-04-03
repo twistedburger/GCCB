@@ -154,7 +154,7 @@ describe('Test calculateRoute', () => {
     axios.post.mockRejectedValue({
       response: {
         status: 400,
-        data: { error: { message: 'Bad Request' } },
+        data: { error: 'Bad Request' },
       },
     })
 
