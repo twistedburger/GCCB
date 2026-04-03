@@ -3,25 +3,31 @@ import {
   APIProvider,
   Map,
   AdvancedMarker,
-  useMap,
   Pin,
 } from '@vis.gl/react-google-maps'
 import GenericToggle from '../components/GenericToggle'
 import GenericButton from '../components/GenericButton'
 import { Add, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
 import Modal from '../components/Modal'
 import Alert from '../components/Alert'
-import PropTypes from 'prop-types'
 import CreateEvent from '../components/CreateEvent'
 import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
-import { TravelMode } from '../utils/routes'
 import Report from '../components/Report'
+import { useLocationSearch } from '../utils/HomeHooks'
+import {
+  buildSearchURL,
+  handleFormResult,
+  locationSetError,
+  locationSetSuccess,
+} from '../utils/HomeUtils'
+import DisplayFilters from '../components/DisplayFilters'
+import MapController from '../components/MapController'
 import { CircularProgress } from '@mui/material'
 
 const originalWarn = console.warn
@@ -42,7 +48,6 @@ function Home() {
   const [userLocation, setUserLocation] = useState(DEFAULT_COORDINATES)
   const [snapPoint, setSnapPoint] = useState(0.085)
   const [isArriving, setIsArriving] = useState(true)
-  const [address, setAddress] = useState('')
   const [cardsToDisplay, setCardsToDisplay] = useState([])
   const [selectedRoute, setSelectedRoute] = useState(null)
   const [filters, setFilters] = useState({
@@ -58,88 +63,39 @@ function Home() {
   const [alert, setAlert] = useState(null)
   const [reportData, setReportData] = useState(null)
   const [showReport, setShowReport] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading] = useState(false)
 
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
 
-  const handleSearch = async newLocation => {
-    setAddress(newLocation)
-    setSnapPoint(1)
-    setSelectedRoute(null)
+  const { searchedLocationResult, searchAddress, handleSearch } =
+    useLocationSearch()
 
-    try {
-      const response = await fetch(
-        `http://localhost:3000/maps/geocode?address=${encodeURIComponent(newLocation)}`
-      )
-      const data = await response.json()
-      if (data.status === 'OK') {
-        const { lat, lng } = data.results[0].geometry.location
-        setUserLocation({ lat, lng })
-      }
-    } catch (err) {
-      console.error('geocode fetch failed:', err)
+  useEffect(() => {
+    if (searchedLocationResult) {
+      setUserLocation(searchedLocationResult)
+      setSnapPoint(1)
+      setSelectedRoute(null)
     }
-  }
-
-  const handleFormResult = result => {
-    if (result.success) {
-      fetchCards()
-      setShowCreateEvent(false)
-    }
-
-    setAlert({
-      type: result.success ? 'success' : 'error',
-      text: result.message,
-    })
-  }
+  }, [searchedLocationResult])
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      position => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        })
-        setAddress('Current Location')
-      },
-      () => {
-        console.log('Location access denied, using default')
-        setAddress('Vancouver, BC')
-      }
+      locationSetSuccess(setUserLocation),
+      locationSetError
     )
   }, [])
 
-  const fetchCards = useCallback(() => {
-    setLoading(true)
-    const params = new URLSearchParams()
-    if (filters.time) params.append('time', filters.time)
-    if (filters.transportationModes.length > 0)
-      params.append(
-        'transportation_modes',
-        filters.transportationModes.join(',')
-      )
-    if (filters.verifiedEventsOnly) params.append('verified', true)
-    if (filters.radius) params.append('radius', filters.radius)
-    params.append('isArriving', isArriving)
-    params.append('longitude', userLocation.lng)
-    params.append('latitude', userLocation.lat)
-
-    const url = filters.mainEventsOnly
-      ? `http://localhost:3000/api/events?${params}`
-      : `http://localhost:3000/api/routes?${params}`
-
-    fetch(url, { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        setCardsToDisplay(data)
-        setLoading(false)
-      })
-  }, [filters, userLocation, isArriving])
-
   useEffect(() => {
-    fetchCards()
-  }, [fetchCards])
+    const url = buildSearchURL(filters, userLocation, isArriving)
+    fetch(url, { credentials: 'include' })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`)
+        return res.json()
+      })
+      .then(data => setCardsToDisplay(data))
+      .catch(err => console.error('Failed to fetch:', err))
+  }, [filters, userLocation, isArriving])
 
   useEffect(() => {
     if (snapPoint !== 1) {
@@ -241,7 +197,7 @@ function Home() {
                 {...(snapPoint === 0.085 ? { inert: true } : {})}
                 className="overflow-y-auto px-6 pb-36 flex flex-col gap-4"
               >
-                {address && (
+                {searchAddress && (
                   <>
                     <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
                       <TuneOutlined
@@ -268,30 +224,14 @@ function Home() {
                         labels={['Arriving Near', 'Departing Near']}
                         className="shrink-0"
                       />
-                      <GenericButton
-                        unstyled={true}
-                        onClick={() => {
-                          navigator.geolocation.getCurrentPosition(
-                            position => {
-                              setUserLocation({
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude,
-                              })
-                              setAddress('Current Location')
-                            },
-                            () => {
-                              setUserLocation(DEFAULT_COORDINATES)
-                              setAddress('Vancouver, BC')
-                            }
-                          )
-                        }}
+                      <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
+                        <PlaceOutlined className="mr-1" />
+                        {searchAddress}
+                      </span>
+                      <div
+                        className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
+                        style={{ scrollbarWidth: 'none' }}
                       >
-                        <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
-                          <PlaceOutlined className="mr-1" />
-                          {address}
-                        </span>
-                      </GenericButton>
-                      <div className="pt-0.5">
                         <DisplayFilters
                           filters={filters}
                           setFilters={setFilters}
@@ -350,7 +290,11 @@ function Home() {
 
       {/* Create Event modal */}
       <Modal isOpen={showCreateEvent} onClose={() => setShowCreateEvent(false)}>
-        <CreateEvent onSubmit={handleFormResult} />
+        <CreateEvent
+          onSubmit={result =>
+            handleFormResult(result, { setShowCreateEvent, setAlert })
+          }
+        />
       </Modal>
 
       {/* Report Modal */}
@@ -388,163 +332,6 @@ function Home() {
       </GenericButton>
     </div>
   )
-}
-
-function MapController({ center, route }) {
-  const map = useMap()
-  useEffect(() => {
-    if (map && center) {
-      map.panTo(center)
-    }
-  }, [map, center])
-
-  useEffect(() => {
-    if (!map || !route) {
-      return
-    }
-
-    const routeLine = route.path.polyline.encodedPolyline
-    const decodedPath = google.maps.geometry.encoding.decodePath(routeLine)
-
-    const bounds = new google.maps.LatLngBounds()
-    decodedPath.forEach(point => bounds.extend(point))
-    map.fitBounds(bounds)
-
-    if (route.transportation_mode.toUpperCase() === TravelMode.Transit) {
-      // overwrite the line if transit
-      const routeLines = []
-      const legColors = {
-        walk: '#34A853',
-        transit: ['#4285F4', '#EA4335'],
-      }
-
-      route.path.legs[0].steps.forEach((step, index) => {
-        let color =
-          step.travelMode === TravelMode.Walk
-            ? legColors.walk
-            : legColors.transit[index % 2] // alternate color for transfers
-
-        const decodedPath = google.maps.geometry.encoding.decodePath(
-          step.polyline.encodedPolyline
-        )
-
-        const polyline = new google.maps.Polyline({
-          path: decodedPath,
-          geodesic: true,
-          strokeColor: color,
-          strokeOpacity: 1.0,
-          strokeWeight: 10,
-          map,
-        })
-
-        routeLines.push(polyline)
-      })
-
-      return () => {
-        routeLines.forEach(line => line.setMap(null))
-        routeLines.length = 0
-      }
-    } else {
-      // else draw the single line
-      const polyline = new google.maps.Polyline({
-        path: decodedPath,
-        geodesic: true,
-        strokeColor: '#4285F4',
-        strokeOpacity: 1.0,
-        strokeWeight: 10,
-        map,
-      })
-
-      return () => polyline.setMap(null)
-    }
-  }, [map, route])
-
-  return null
-}
-
-function DisplayFilters({ filters, setFilters }) {
-  const activeFilters = []
-
-  if (filters.time)
-    activeFilters.push({
-      label: `${filters.time}`,
-      key: 'time',
-      default: null,
-    })
-  if (filters.transportationModes.length > 0)
-    activeFilters.push({
-      label: filters.transportationModes.join(', '),
-      key: 'transportationModes',
-      default: [],
-    })
-  if (filters.verifiedEventsOnly)
-    activeFilters.push({
-      label: 'Verified only',
-      key: 'verifiedEventsOnly',
-      default: false,
-    })
-  if (!filters.mainEventsOnly) {
-    activeFilters.push({
-      label: 'Display Individual Routes',
-      key: 'mainEventsOnly',
-      default: true,
-    })
-  }
-  if (filters.radius !== 500)
-    activeFilters.push({
-      label: `${filters.radius}m`,
-      key: 'radius',
-      default: 500,
-    })
-
-  if (activeFilters.length === 0) return null
-
-  return (
-    <div className="flex gap-2 overflow-x-auto pb-0.5 shrink-0">
-      {activeFilters.map(f => (
-        <GenericButton
-          key={f.key}
-          unstyled
-          customStyling="flex items-center justify-center gap-1 whitespace-nowrap px-3 py-1 rounded-full border border-light-grey bg-white text-[14px] text-text-secondary shrink-0 capitalize"
-          onClick={() => {
-            setFilters(prev => {
-              const updatedFilters = {
-                time: prev.time,
-                transportationModes: prev.transportationModes,
-                radius: prev.radius,
-                verifiedEventsOnly: prev.verifiedEventsOnly,
-                mainEventsOnly: prev.mainEventsOnly,
-              }
-              updatedFilters[f.key] = f.default
-              return updatedFilters
-            })
-          }}
-        >
-          {f.label}
-          <span className="text-medium-grey text-xs">✕</span>
-        </GenericButton>
-      ))}
-    </div>
-  )
-}
-
-MapController.propTypes = {
-  center: PropTypes.shape({
-    lat: PropTypes.number.isRequired,
-    lng: PropTypes.number.isRequired,
-  }).isRequired,
-  route: PropTypes.object.isRequired,
-}
-
-DisplayFilters.propTypes = {
-  filters: PropTypes.shape({
-    time: PropTypes.object,
-    transportationModes: PropTypes.arrayOf(PropTypes.string).isRequired,
-    verifiedEventsOnly: PropTypes.bool,
-    mainEventsOnly: PropTypes.bool,
-    radius: PropTypes.number,
-  }).isRequired,
-  setFilters: PropTypes.func.isRequired,
 }
 
 export default Home
