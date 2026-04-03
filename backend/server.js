@@ -392,6 +392,8 @@ app.post('/api/createRoute', async (req, res) => {
     title,
     transportation_mode,
     origin,
+    origin_lat,
+    origin_lng,
     destination,
     depart_time,
     max_ppl,
@@ -408,8 +410,8 @@ app.post('/api/createRoute', async (req, res) => {
     await client.query('BEGIN')
 
     const routeQuery = `
-      INSERT INTO route (title, creator_id, transportation_mode, origin, destination, depart_time, max_ppl, distance, path, completed, description, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO route (title, creator_id, transportation_mode, origin, origin_geog, destination, depart_time, max_ppl, distance, path, completed, description, created_at)
+      VALUES ($1, $2, $3, $4, ST_SetSRID(ST_MakePoint($5, $6), 4326), $7, $8, $9, $10, $11, $12)
       RETURNING id;
     `
     const routeResult = await client.query(routeQuery, [
@@ -417,6 +419,8 @@ app.post('/api/createRoute', async (req, res) => {
       user.id,
       transportation_mode,
       origin,
+      origin_lng,
+      origin_lat,
       destination,
       depart_time,
       max_ppl,
@@ -426,6 +430,7 @@ app.post('/api/createRoute', async (req, res) => {
       description,
       new Date(),
     ])
+    console.log('Route Insert Result:', routeResult.rows[0])
     const route_id = routeResult.rows[0].id
 
     const junctionQuery = `
