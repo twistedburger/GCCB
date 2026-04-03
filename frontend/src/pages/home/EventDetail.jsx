@@ -173,20 +173,23 @@ export default function EventDetail() {
                 overflowY: 'auto',
               }}
             >
-              <div className="relative">
-                <img src={bcitCover} className="h-32 w-full object-cover" />
-                <div className="absolute top-2 right-2">
-                  <GenericButton
-                    onClick={handleClose}
-                    unstyled={true}
-                    customStyling="text-text-primary scale-110"
-                  >
-                    <Cancel />
-                  </GenericButton>
-                </div>
-              </div>
               {event && dateObj && (
                 <div>
+                  <div className="relative">
+                    <img
+                      src={event.banner_url || bcitCover}
+                      className="h-32 w-full object-cover"
+                    />
+                    <div className="absolute top-2 right-2">
+                      <GenericButton
+                        onClick={handleClose}
+                        unstyled={true}
+                        customStyling="text-text-primary scale-110"
+                      >
+                        <Cancel />
+                      </GenericButton>
+                    </div>
+                  </div>
                   <div className="flex p-4 gap-4">
                     <div className="flex flex-col justify-center text-center px-2 shrink-0">
                       <span className="text-dark-grey font-medium">
