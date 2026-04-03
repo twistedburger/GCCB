@@ -329,7 +329,7 @@ app.get('/api/events', (req, res) => {
 })
 
 /**
- * Update dates the banner_url column in the events table for the given event id.
+ * Updates the banner_url column in the events table for the given event.
  * @returns the new banner_url fetched from the google maps API.
  */
 app.post('/api/refresh-banner', async (req, res) => {
