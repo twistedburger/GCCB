@@ -89,12 +89,14 @@ function Home() {
 
   useEffect(() => {
     setLoading(true)
-    const url = buildSearchURL(filters, userLocation, isArriving)
+    const apiMainEvents = isArriving ? filters.mainEventsOnly : false
+    const url = buildSearchURL(
+      { ...filters, mainEventsOnly: apiMainEvents },
+      userLocation,
+      isArriving
+    )
     fetch(url, { credentials: 'include' })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error: ${res.status}`)
-        return res.json()
-      })
+      .then(res => res.json())
       .then(data => {
         setCardsToDisplay(data)
         setLoading(false)
@@ -214,21 +216,7 @@ function Home() {
                     />
                     <GenericToggle
                       value={isArriving}
-                      onChange={() => {
-                        const newIsArriving = !isArriving
-                        setIsArriving(newIsArriving)
-                        if (!newIsArriving) {
-                          setFilters(prev => ({
-                            ...prev,
-                            mainEventsOnly: false,
-                          }))
-                        } else {
-                          setFilters(prev => ({
-                            ...prev,
-                            mainEventsOnly: true,
-                          }))
-                        }
-                      }}
+                      onChange={() => setIsArriving(!isArriving)}
                       labels={['Arriving Near', 'Departing Near']}
                       className="shrink-0"
                     />
@@ -263,6 +251,7 @@ function Home() {
                       <DisplayFilters
                         filters={filters}
                         setFilters={setFilters}
+                        isArriving={isArriving}
                       />
                     </div>
                   </div>
@@ -276,7 +265,7 @@ function Home() {
                     </p>
                   ) : (
                     cardsToDisplay.map(item =>
-                      filters.mainEventsOnly ? (
+                      isArriving && filters.mainEventsOnly ? (
                         <EventCard
                           key={item.id}
                           event={item}
