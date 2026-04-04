@@ -15,7 +15,7 @@ export default function MapController({ center, route }) {
     if (!map || !route) {
       return
     }
-
+    console.log(route)
     const routeLine = route.path.polyline.encodedPolyline
     const decodedPath = google.maps.geometry.encoding.decodePath(routeLine)
 
