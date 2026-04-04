@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 
 export default function LocationSearch({
+  clearRef,
   onSearch,
   defaultLocation = '',
   placeHolder = 'Search location...',
@@ -16,6 +17,22 @@ export default function LocationSearch({
       autocompleteRef.current.value = defaultLocation ?? ''
     }
   }, [defaultLocation])
+
+  // allows for LocationSearch input to be cleared when user clears location in landing page
+  useEffect(() => {
+    if (clearRef) {
+      clearRef.current = {
+        clear: () => {
+          const el = autocompleteRef.current
+          if (!el) return
+          el.value = '' // empties the text inside search bar
+          el.dispatchEvent(new Event('change', { bubbles: true })) // manually notifies the component text is empty to update UI
+          el.dispatchEvent(new InputEvent('input', { bubbles: true }))
+          setLocation('')
+        },
+      }
+    }
+  }, [clearRef])
 
   useEffect(() => {
     const el = autocompleteRef.current
@@ -63,6 +80,7 @@ export default function LocationSearch({
 
 LocationSearch.propTypes = {
   onSearch: PropTypes.func.isRequired,
+  clearRef: PropTypes.shape({ current: PropTypes.object }),
   defaultLocation: PropTypes.string,
   placeHolder: PropTypes.string,
   className: PropTypes.string,

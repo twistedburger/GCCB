@@ -61,29 +61,6 @@ app.get('/maps/api/js', async (req, res) => {
   }
 })
 
-app.get('/maps/geocode', async (req, res) => {
-  try {
-    const params = new URLSearchParams({
-      address: req.query.address,
-      key: process.env.GOOGLE_MAPS_API_KEY,
-    })
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?${params}`
-    )
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: serverStrings.google })
-    }
-
-    const data = await response.json()
-    res.json(data)
-  } catch (err) {
-    const status = err.response?.status ?? 500
-    const message = err.response?.data?.error?.message ?? err.message
-    res.status(status).json({ error: message })
-  }
-})
-
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
   const returnTo = req.query.returnTo || 'http://localhost:5173/'

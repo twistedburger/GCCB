@@ -8,7 +8,7 @@ import {
 import GenericToggle from '../components/GenericToggle'
 import GenericButton from '../components/GenericButton'
 import { Add, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
@@ -19,7 +19,6 @@ import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import Report from '../components/Report'
-import { useLocationSearch } from '../utils/HomeHooks'
 import {
   buildSearchURL,
   handleFormResult,
@@ -45,13 +44,13 @@ const DEFAULT_COORDINATES = { lat: 49.26, lng: -123.11 }
 function Home() {
   const location = useLocation()
   const isEventDetail = location.pathname.includes('/event/')
-  const [userLocation, setUserLocation] = useState(DEFAULT_COORDINATES)
+  const [userLocation, setUserLocation] = useState(null)
   const [snapPoint, setSnapPoint] = useState(0.085)
   const [isArriving, setIsArriving] = useState(true)
   const [cardsToDisplay, setCardsToDisplay] = useState([])
   const [selectedRoute, setSelectedRoute] = useState(null)
   const [filters, setFilters] = useState({
-    location: userLocation,
+    location: null,
     time: null,
     transportationModes: [],
     radius: 2000,
@@ -63,31 +62,31 @@ function Home() {
   const [alert, setAlert] = useState(null)
   const [reportData, setReportData] = useState(null)
   const [showReport, setShowReport] = useState(false)
-  const [locationInput, setLocationInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [searchAddress, setSearchAddress] = useState('')
+  const locationSearchRef = useRef(null)
 
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
 
-  const { searchedLocationResult, searchAddress, handleSearch, clearSearch } =
-    useLocationSearch()
-
-  useEffect(() => {
-    if (searchedLocationResult) {
-      setUserLocation(searchedLocationResult)
+  const handleSearch = (address, lat, lng) => {
+    if (lat && lng) {
+      setSearchAddress(address)
+      setUserLocation({ lat, lng })
       setSnapPoint(1)
       setSelectedRoute(null)
     }
-  }, [searchedLocationResult])
+  }
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       locationSetSuccess(setUserLocation),
-      locationSetError
+      () => setUserLocation(DEFAULT_COORDINATES)
     )
   }, [])
 
   useEffect(() => {
+    if (!userLocation) return
     setLoading(true)
     const apiMainEvents = isArriving ? filters.mainEventsOnly : false
     const url = buildSearchURL(
@@ -156,10 +155,10 @@ function Home() {
 
         {!selectedRoute && !isEventDetail && (
           <LocationSearch
+            clearRef={locationSearchRef}
             className="rounded-xl absolute inset-x-0 top-0 m-12 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
             onSearch={handleSearch}
-            defaultLocation={locationInput}
           />
         )}
         <Drawer.Root
@@ -230,20 +229,20 @@ function Home() {
                       }
                       onClick={() => {
                         setLoading(true)
+                        locationSearchRef.current?.clear()
+                        setSearchAddress('')
                         navigator.geolocation.getCurrentPosition(
                           locationSetSuccess(setUserLocation),
                           locationSetError
                         )
-                        clearSearch()
-                        setLocationInput(prev => (prev === null ? '' : null))
                         setSelectedRoute(null)
                         setSnapPoint(1)
                       }}
                     >
                       <PlaceOutlined className="mr-1" />
                       {searchAddress ||
-                        (userLocation.lat === DEFAULT_COORDINATES.lat &&
-                        userLocation.lng === DEFAULT_COORDINATES.lng
+                        (userLocation?.lat === DEFAULT_COORDINATES.lat &&
+                        userLocation?.lng === DEFAULT_COORDINATES.lng
                           ? 'Vancouver, BC'
                           : 'Current Location')}
                     </GenericButton>
