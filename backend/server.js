@@ -38,6 +38,14 @@ const analytics = createAnalyticsHelpers({
   emissions: { EMISSIONS_G_PER_KM },
 })
 
+/**
+ * Proxy server route to fetch map from google maps api
+ *
+ * If response is not ok, sends error json {error: error message}
+ * if error is thrown by api call, caught error is sent in same format.
+ *
+ * @returns {string} text response from google api
+ */
 app.get('/maps/api/js', async (req, res) => {
   try {
     const params = new URLSearchParams(req.query)
@@ -61,6 +69,9 @@ app.get('/maps/api/js', async (req, res) => {
   }
 })
 
+/**
+ * Login route routes to Auth0 authentication. Returns to homepage once login completed
+ */
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
   const returnTo = req.query.returnTo || 'http://localhost:5173/'
@@ -72,6 +83,9 @@ app.get('/loginRoute', (req, res) => {
   })
 })
 
+/**
+ * Logout route routes to Auth0 deauthentication. Returns to homepage once logout completed
+ */
 app.get('/logoutRoute', (req, res) => {
   const returnTo = req.query.returnTo || 'http://localhost:5173/'
   res.oidc.logout({
@@ -79,6 +93,19 @@ app.get('/logoutRoute', (req, res) => {
   })
 })
 
+/**
+ * Authenticate use route checks if the authentication is valid and fetches the current user from the database
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {Object} an authenticated user object:
+ * {
+ *    isAuthenticated: bool
+ *    user: object, user from DB
+ *    ssoProfile: object, set from auth0 if user was not in database
+ * }
+ */
 app.get('/authenticateUser', async (req, res) => {
   const isAuthenticated = req.oidc.isAuthenticated()
   const ssoProfile = req.oidc.user || null
@@ -116,7 +143,7 @@ app.get('/authenticateUser', async (req, res) => {
 /**
  * Checks if the authenticated user is active based on their last login time.
  * User is inactive if they haven't logged in for more than 60 days.
- * @returns user's active status
+ * @returns {Object} user's active status
  */
 async function checkAndUpdateActiveStatus(user) {
   if (!user.last_login) return true
@@ -135,7 +162,7 @@ async function checkAndUpdateActiveStatus(user) {
 
 /**
  * Select the current user from the DB. user must be authenticated
- * @returns the user fetched from the DB, or null
+ * @returns {Object} the user fetched from the DB, or null
  */
 async function selectUser(req) {
   const results = await db.query('SELECT * FROM "user" WHERE email = $1', [
@@ -148,6 +175,13 @@ async function selectUser(req) {
   return null
 }
 
+/**
+ * Get the current list of SSO partnered schools, and SSO connection strings.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} the list of SSO partners
+ */
 app.get('/sso_list', async (req, res) => {
   const search = req.query.search ? req.query.search : ''
   try {
@@ -162,6 +196,15 @@ app.get('/sso_list', async (req, res) => {
   }
 })
 
+/**
+ * Adds a new user to the database.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ * If the user is already in the database, a 400 status code is sent with an error message.
+ *
+ * @returns {Object} a json user objet
+ */
 app.post('/createNewUser', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
@@ -184,6 +227,15 @@ app.post('/createNewUser', async (req, res) => {
   }
 })
 
+/**
+ * Updates the user in the database
+ * 
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ * 
+ * @returns {Object} a json user object of the updated user
+
+ */
 app.put('/updateProfile', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
@@ -203,6 +255,14 @@ app.put('/updateProfile', async (req, res) => {
   }
 })
 
+/**
+ * Insert a user to the database
+ *
+ * @param {string} name name of the user
+ * @param {string} email email of the user
+ * @param {Object} formData an object with nickname and description strings
+ * @returns {Object} the newly inserted user
+ */
 async function insertUserFromForm(name, email, formData) {
   const { nickname, description } = formData
   const results = await db.query(
@@ -212,6 +272,14 @@ async function insertUserFromForm(name, email, formData) {
   return results.rows[0]
 }
 
+/**
+ * Get the user authorization level
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {Object} an authroization json
+ */
 app.get('/authorize', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
@@ -232,7 +300,11 @@ app.get('/authorize', async (req, res) => {
 
 /**
  * Returns the events for the landing page with applied filters if given.
- * @returns events fetched from the db, or an empty array
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} events fetched from the db, or an empty array
  */
 app.get('/api/events', (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -307,7 +379,12 @@ app.get('/api/events', (req, res) => {
 
 /**
  * Updates the banner_url column in the events table for the given event.
- * @returns the new banner_url fetched from the google maps API.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, or the api call has an error, a 500 status code is sent with an error json {error: string}.
+ * If no photo is found, a 404 page not found error is sent with an error json {error: string}.
+ *
+ * @returns {Object} the new banner_url fetched from the google maps API.
  */
 app.post('/api/refresh-banner', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -366,6 +443,14 @@ app.post('/api/refresh-banner', async (req, res) => {
   }
 })
 
+/**
+ * Requests a route from the google maps api.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the google maps api has an error, a 500 status code is sent with a json error {error: string}.
+ *
+ * @returns {Object} google maps route json
+ */
 app.post('/api/requestRoute', async (req, res) => {
   try {
     const response = await axios.post(
@@ -388,6 +473,14 @@ app.post('/api/requestRoute', async (req, res) => {
   }
 })
 
+/**
+ * Adds an event to the database
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} the newly added event
+ */
 app.post('/api/createEvent', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
@@ -434,6 +527,14 @@ app.post('/api/createEvent', async (req, res) => {
   }
 })
 
+/**
+ * Adds a route to the database
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} the newly added route
+ */
 app.post('/api/createRoute', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
@@ -515,7 +616,11 @@ app.post('/api/createRoute', async (req, res) => {
 
 /**
  * Returns the routes for the landing page with applied filters if given.
- * @returns routes fetched from the db, or an empty array
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {[Object]} routes fetched from the db, or an empty array
  */
 app.get('/api/routes', (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -595,7 +700,10 @@ app.get('/api/routes', (req, res) => {
 
 /**
  * Returns event details given a specific event id.
- * @returns an event
+ *
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} an event
  */
 app.get('/api/eventdetail/:id', async (req, res) => {
   const { id } = req.params
@@ -633,7 +741,13 @@ app.get('/api/eventdetail/:id', async (req, res) => {
 
 /**
  * Checks if the currently authenticated user has joined a specific route.
- * @returns a boolean
+ *
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} a json containing a boolean:
+ * {
+ *  isJoined: boolean
+ * }
  */
 app.get('/api/routes/:id/isJoined', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -654,6 +768,11 @@ app.get('/api/routes/:id/isJoined', async (req, res) => {
 
 /**
  * Adds a user to a route by adding a record to the user_route table.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} {success: true}
  */
 app.post('/api/routes/:id/join', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -673,7 +792,12 @@ app.post('/api/routes/:id/join', async (req, res) => {
 })
 
 /**
- * Removes a user to a route by removing a record to the user_route table. --> is this okay, or should we have a deleted column?
+ * Removes a user to a route by removing a record to the user_route table.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} {success:  true}
  */
 app.delete('/api/routes/:id/leave', async (req, res) => {
   if (!req.oidc.isAuthenticated())
@@ -693,6 +817,11 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
 
 /**
  * Adds a report and corresponding report junction to report_user, report_event, or report_route.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} {success: true}
  */
 app.post('/api/report', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -718,6 +847,11 @@ app.post('/api/report', async (req, res) => {
  * Retrieves the commute history for the authenticated user.
  * - Regular users get only their participated completed routes.
  * - Admins, superadmins, moderators do not have access to detailed user commute history.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ * If the user is not in the database, a 404 error is sent with an error message.
+ * If user authentication is not "user", a 403 status code is sent with an error json {error: string}.
  *
  * @returns {Object} JSON response containing commute history
  */
@@ -807,6 +941,10 @@ app.get('/api/commute-history', async (req, res) => {
  * - One completed route still counts as one trip
  * - Distance and CO2 savings are distributed across multiple modes
  *   when detailed route path data exists
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ * If the user is not in the database, a 404 error is sent with an error message.
  *
  * @returns {Object} JSON response with analytics summary
  */
@@ -905,6 +1043,10 @@ app.get('/api/analytics/summary', async (req, res) => {
  * - A single completed route contributes distance/CO2 to multiple modes
  * - Trip count remains route-based and is assigned to the most dominant mode
  *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ * If the user is not in the database, a 404 error is sent with an error message.
+ *
  * @returns {Object} JSON response with analytics data grouped by commute type
  */
 app.get('/api/analytics/by-mode', async (req, res) => {
@@ -998,7 +1140,10 @@ if (require.main === module) {
 
 /**
  * Returns reports to be reviewed by the moderator.
- * @returns pending reports, or an empty array
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} pending reports, or an empty array
  */
 app.get('/api/reports', async (req, res) => {
   try {
@@ -1050,7 +1195,12 @@ app.get('/api/reports', async (req, res) => {
 
 /**
  * Returns the routes the user has joined.
- * @returns an array of trips a user has joined (via user_route junction table), or an empty array
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ * If the user is not in the database, a 404 error is sent with an error json {error: string}.
+ *
+ * @returns {[Object]} an array of trips a user has joined (via user_route junction table), or an empty array
  */
 app.get('/api/my-trips', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -1092,6 +1242,11 @@ app.get('/api/my-trips', async (req, res) => {
  * and the reported event/route/user reported column gets incremented by 1.
  * On rejection of an invalid report, status gets changed to "rejected" and the
  * rejection reason and optional detail (text) is saved.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {Object} {success: true}
  */
 app.post('/api/moderateReport', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -1132,6 +1287,12 @@ app.post('/api/moderateReport', async (req, res) => {
 
 /**
  * Verifies an event.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ * If the user is not in the database, a 404 error is sent with an error json {error: string}.
+ *
+ * @returns {Object} {success: true}
  */
 app.post('/api/verifyEvent', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -1167,7 +1328,10 @@ app.post('/api/verifyEvent', async (req, res) => {
 
 /**
  * Returns events to be verified by the moderator.
- * @returns pending verifications, or an empty array
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} pending verifications, or an empty array
  */
 app.get('/api/pendingVerifications', async (req, res) => {
   try {
@@ -1192,6 +1356,11 @@ app.get('/api/pendingVerifications', async (req, res) => {
  * - # of routes created within 7 days
  * - # of routes completed within 30 days
  * - # of routes rejected within 30 days
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ * If the user is not in the database, a 404 error is sent with an error message.
+ * If user authentication is not "admin", a 403 status code is sent with an error message.
  *
  * @returns {Object} kpis, statusBreakdown, rejectionReasons
  */
@@ -1298,6 +1467,11 @@ app.get('/api/activity/summary', async (req, res) => {
 /**
  * Returns CO₂e baseline vs actual emissions grouped by time period.
  * Admin-only. Used for the time-series chart on the Activity page.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error message.
+ * If the user is not in the database, a 404 error is sent with an error message.
+ * If user authentication is not "user", a 403 status code is sent with an error message.
  *
  * @returns {Object} granularity and array of { period, baselineKg, actualKg, savedKg }
  */
