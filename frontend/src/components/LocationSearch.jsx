@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 
 export default function LocationSearch({
+  clearRef,
   onSearch,
   defaultLocation = '',
   placeHolder = 'Search location...',
@@ -13,9 +14,25 @@ export default function LocationSearch({
 
   useEffect(() => {
     if (autocompleteRef.current) {
-      autocompleteRef.current.value = defaultLocation
+      autocompleteRef.current.value = defaultLocation ?? ''
     }
   }, [defaultLocation])
+
+  // allows for LocationSearch input to be cleared when user clears location in landing page
+  useEffect(() => {
+    if (clearRef) {
+      clearRef.current = {
+        clear: () => {
+          const el = autocompleteRef.current
+          if (!el) return
+          el.value = '' // empties the text inside search bar
+          el.dispatchEvent(new Event('change', { bubbles: true })) // manually notifies the component text is empty to update UI
+          el.dispatchEvent(new InputEvent('input', { bubbles: true }))
+          setLocation('')
+        },
+      }
+    }
+  }, [clearRef])
 
   useEffect(() => {
     const el = autocompleteRef.current
@@ -23,11 +40,20 @@ export default function LocationSearch({
     const handleSelect = async event => {
       const placePrediction = event.placePrediction
       const place = placePrediction.toPlace()
-      await place.fetchFields({ fields: ['formattedAddress'] })
+      // photos for banner url, id to re-fetch banner url later if the photo url is expired
+      await place.fetchFields({
+        fields: ['formattedAddress', 'location', 'photos', 'id'],
+      })
 
       const address = place.formattedAddress
+      const latitude = place.location.lat()
+      const longitude = place.location.lng()
+      // returns an array, just get the first one for the banner
+      // save the url for event banner, save the place id to later update the url if it expires
+      const banner = place.photos?.[0]?.getURI() || null
+      const placeId = place.id
       setLocation(address)
-      onSearch(address)
+      onSearch(address, latitude, longitude, banner, placeId)
     }
 
     if (el) {
@@ -54,6 +80,7 @@ export default function LocationSearch({
 
 LocationSearch.propTypes = {
   onSearch: PropTypes.func.isRequired,
+  clearRef: PropTypes.shape({ current: PropTypes.object }),
   defaultLocation: PropTypes.string,
   placeHolder: PropTypes.string,
   className: PropTypes.string,

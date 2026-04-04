@@ -8,7 +8,7 @@ import {
 import GenericToggle from '../components/GenericToggle'
 import GenericButton from '../components/GenericButton'
 import { Add, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
@@ -19,7 +19,6 @@ import { useAuth } from '../utils/Authorization'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Drawer } from 'vaul'
 import Report from '../components/Report'
-import { useLocationSearch } from '../utils/HomeHooks'
 import {
   buildSearchURL,
   handleFormResult,
@@ -28,6 +27,7 @@ import {
 } from '../utils/HomeUtils'
 import DisplayFilters from '../components/DisplayFilters'
 import MapController from '../components/MapController'
+import { CircularProgress } from '@mui/material'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -38,19 +38,22 @@ console.warn = (...args) => {
     return // Suppress no API warning, since key exists
   originalWarn(...args)
 }
+// Vancouver default if the user does not allow to use their location, change as per localization :)
+const DEFAULT_COORDINATES = { lat: 49.26, lng: -123.11 }
 
 function Home() {
   const location = useLocation()
   const isEventDetail = location.pathname.includes('/event/')
-  const [userLocation, setUserLocation] = useState({ lat: 49.28, lng: -123.12 })
+  const [userLocation, setUserLocation] = useState(null)
   const [snapPoint, setSnapPoint] = useState(0.085)
   const [isArriving, setIsArriving] = useState(true)
   const [cardsToDisplay, setCardsToDisplay] = useState([])
   const [selectedRoute, setSelectedRoute] = useState(null)
   const [filters, setFilters] = useState({
+    location: null,
     time: null,
     transportationModes: [],
-    radius: 500,
+    radius: 2000,
     verifiedEventsOnly: false,
     mainEventsOnly: true,
   })
@@ -59,37 +62,51 @@ function Home() {
   const [alert, setAlert] = useState(null)
   const [reportData, setReportData] = useState(null)
   const [showReport, setShowReport] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [searchAddress, setSearchAddress] = useState('')
+  const locationSearchRef = useRef(null)
 
   const { authorizeUser, authorization } = useAuth()
   authorizeUser()
 
-  const { searchedLocationResult, searchAddress, handleSearch } =
-    useLocationSearch()
-
-  useEffect(() => {
-    if (searchedLocationResult) {
-      setUserLocation(searchedLocationResult)
+  const handleSearch = (address, lat, lng) => {
+    if (lat && lng) {
+      setSearchAddress(address)
+      setUserLocation({ lat, lng })
       setSnapPoint(1)
       setSelectedRoute(null)
     }
-  }, [searchedLocationResult])
+  }
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       locationSetSuccess(setUserLocation),
-      locationSetError
+      () => setUserLocation(DEFAULT_COORDINATES)
     )
   }, [])
 
   useEffect(() => {
-    const url = buildSearchURL(filters, userLocation, isArriving)
+    if (!userLocation) return
+    setLoading(true)
+    const apiMainEvents = isArriving ? filters.mainEventsOnly : false
+    const url = buildSearchURL(
+      { ...filters, mainEventsOnly: apiMainEvents },
+      userLocation,
+      isArriving
+    )
     fetch(url, { credentials: 'include' })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error: ${res.status}`)
         return res.json()
       })
-      .then(data => setCardsToDisplay(data))
-      .catch(err => console.error('Failed to fetch:', err))
+      .then(data => {
+        setCardsToDisplay(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to fetch:', err)
+        setLoading(false)
+      })
   }, [filters, userLocation, isArriving])
 
   useEffect(() => {
@@ -138,6 +155,7 @@ function Home() {
 
         {!selectedRoute && !isEventDetail && (
           <LocationSearch
+            clearRef={locationSearchRef}
             className="rounded-xl absolute inset-x-0 top-0 m-12 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
             onSearch={handleSearch}
@@ -192,64 +210,85 @@ function Home() {
                 {...(snapPoint === 0.085 ? { inert: true } : {})}
                 className="overflow-y-auto px-6 pb-36 flex flex-col gap-4"
               >
-                {searchAddress && (
-                  <>
-                    <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
-                      <TuneOutlined
-                        className="text-text-primary shrink-0"
-                        onClick={() => navigate('/filter')}
-                      />
-                      <GenericToggle
-                        value={isArriving}
-                        onChange={() => {
-                          setIsArriving(prev => !prev)
-                        }}
-                        labels={['Arriving Near', 'Departing Near']}
-                        className="shrink-0"
-                      />
-                      <span className="text-text-secondary truncate text-sm shrink-0 capitalize">
-                        <PlaceOutlined className="mr-1" />
-                        {searchAddress}
-                      </span>
-                      <div
-                        className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
-                        style={{ scrollbarWidth: 'none' }}
-                      >
-                        <DisplayFilters
-                          filters={filters}
-                          setFilters={setFilters}
-                        />
-                      </div>
-                    </div>
-                    {cardsToDisplay.length === 0 ? (
-                      <p className="text-text-secondary text-sm text-center py-4">
-                        No results found. Try adjusting your filters.
-                      </p>
-                    ) : (
-                      cardsToDisplay.map(item =>
-                        filters.mainEventsOnly ? (
-                          <EventCard
-                            key={item.id}
-                            event={item}
-                            view={authorization}
-                            onReport={data => {
-                              setReportData(data)
-                              setShowReport(true)
-                            }}
-                          />
-                        ) : (
-                          <RouteCard
-                            key={item.id}
-                            route={item}
-                            view={authorization}
-                            individualView={true}
-                            onSelect={handleRouteClick}
-                          />
+                <>
+                  <div className="flex items-center gap-2 overflow-x-auto shrink-0 min-h-10">
+                    <TuneOutlined
+                      className="text-text-primary shrink-0"
+                      onClick={() => navigate('/filter')}
+                    />
+                    <GenericToggle
+                      value={isArriving}
+                      onChange={() => setIsArriving(!isArriving)}
+                      labels={['Arriving Near', 'Departing Near']}
+                      className="shrink-0"
+                    />
+                    <GenericButton
+                      unstyled={true}
+                      customStyling={
+                        'text-text-secondary text-sm shrink-0 capitalize flex items-center'
+                      }
+                      onClick={() => {
+                        setLoading(true)
+                        locationSearchRef.current?.clear()
+                        setSearchAddress('')
+                        navigator.geolocation.getCurrentPosition(
+                          locationSetSuccess(setUserLocation),
+                          locationSetError
                         )
+                        setSelectedRoute(null)
+                        setSnapPoint(1)
+                      }}
+                    >
+                      <PlaceOutlined className="mr-1" />
+                      {searchAddress ||
+                        (userLocation?.lat === DEFAULT_COORDINATES.lat &&
+                        userLocation?.lng === DEFAULT_COORDINATES.lng
+                          ? 'Vancouver, BC'
+                          : 'Current Location')}
+                    </GenericButton>
+                    <div
+                      className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
+                      style={{ scrollbarWidth: 'none' }}
+                    >
+                      <DisplayFilters
+                        filters={filters}
+                        setFilters={setFilters}
+                        isArriving={isArriving}
+                      />
+                    </div>
+                  </div>
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <CircularProgress />
+                    </div>
+                  ) : cardsToDisplay.length === 0 ? (
+                    <p className="text-text-secondary text-sm text-center py-4">
+                      No results found. Try adjusting your filters.
+                    </p>
+                  ) : (
+                    cardsToDisplay.map(item =>
+                      isArriving && filters.mainEventsOnly ? (
+                        <EventCard
+                          key={item.id}
+                          event={item}
+                          view={authorization}
+                          onReport={data => {
+                            setReportData(data)
+                            setShowReport(true)
+                          }}
+                        />
+                      ) : (
+                        <RouteCard
+                          key={item.id}
+                          route={item}
+                          view={authorization}
+                          individualView={true}
+                          onSelect={handleRouteClick}
+                        />
                       )
-                    )}
-                  </>
-                )}
+                    )
+                  )}
+                </>
               </div>
             </Drawer.Content>
           </Drawer.Portal>

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import GenericButton from './GenericButton'
 
-export default function DisplayFilters({ filters, setFilters }) {
+export default function DisplayFilters({ filters, setFilters, isArriving }) {
   const activeFilters = []
 
   if (filters.time)
@@ -22,7 +22,7 @@ export default function DisplayFilters({ filters, setFilters }) {
       key: 'verifiedEventsOnly',
       default: false,
     })
-  if (!filters.mainEventsOnly) {
+  if (!filters.mainEventsOnly && isArriving) {
     activeFilters.push({
       label: 'Display Individual Routes',
       key: 'mainEventsOnly',
@@ -76,4 +76,5 @@ DisplayFilters.propTypes = {
     radius: PropTypes.number,
   }).isRequired,
   setFilters: PropTypes.func.isRequired,
+  isArriving: PropTypes.bool.isRequired,
 }
