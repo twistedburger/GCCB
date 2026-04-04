@@ -10,9 +10,8 @@ import {
   TravelMode,
 } from '../utils/routes'
 import { decode } from 'google-polyline'
-import { APIProvider, Map } from '@vis.gl/react-google-maps'
-import MapController from '../components/MapController'
 import TransitLegCard from './TransitLegCard'
+import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
 
 const CreateRoute = ({ initLoc, onSubmit }) => {
@@ -293,39 +292,25 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
 
       {/* Mini Map */}
       <div className="rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 h-64 relative shadow-inner">
-        <APIProvider
-          apiKey=""
-          scriptUrl="http://localhost:3000/maps/api/js"
-          libraries={['geometry']}
+        <MainMap
+          defaultCenter={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
+          route={
+            route
+              ? { path: route, transportation_mode: transportationMode }
+              : null
+          }
+          onLoad={setMap}
+          onUnmount={() => setMap(null)}
+          mapKey={mapKey}
         >
-          <Map
-            mapId="6621f78cbdb1902f92a3d543"
-            key={mapKey}
-            className="absolute w-full h-full"
-            defaultCenter={
-              pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }
-            }
-            defaultZoom={17}
-            gestureHandling="greedy"
-            disableDefaultUI={true}
-            onLoad={setMap}
-            onUnmount={() => setMap(null)}
-          >
-            {route && (
-              <MapController
-                center={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
-                route={{ path: route, transportation_mode: transportationMode }}
-              />
-            )}
-            {!route && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
-                {transportationMode && departTime && startLoc && endLoc
-                  ? "Click 'Get Route' to see the path."
-                  : 'Select transportation mode, departure time, origin, and destination to get the route.'}
-              </div>
-            )}
-          </Map>
-        </APIProvider>
+          {!route && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
+              {transportationMode && departTime && startLoc && endLoc
+                ? "Click 'Get Route' to see the path."
+                : 'Select transportation mode, departure time, origin, and destination to get the route.'}
+            </div>
+          )}
+        </MainMap>
       </div>
       <p className="font-semibold pt-4 pb-2 text-text-primary">
         {transitLegs.length > 0 ? 'Transit Details' : ''}

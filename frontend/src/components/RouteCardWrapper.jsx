@@ -1,10 +1,9 @@
 import PropTypes from 'prop-types'
 import { useState, useMemo, useEffect } from 'react'
 import { ExpandMoreRounded } from '@mui/icons-material'
-import { APIProvider, Map } from '@vis.gl/react-google-maps'
 import { decode } from 'google-polyline'
 import GenericButton from './GenericButton'
-import MapController from './MapController'
+import MainMap from './MainMap'
 
 export default function RouteCardWrapper({ children, route, mapsReady }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -58,33 +57,14 @@ export default function RouteCardWrapper({ children, route, mapsReady }) {
                   Loading map...
                 </div>
               ) : (
-                <APIProvider
-                  apiKey=""
-                  scriptUrl="http://localhost:3000/maps/api/js"
-                  libraries={['geometry']}
-                >
-                  <Map
-                    mapId="6621f78cbdb1902f92a3d543"
-                    className="absolute w-full h-full"
-                    defaultCenter={
-                      pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }
-                    }
-                    defaultZoom={17}
-                    gestureHandling="greedy"
-                    disableDefaultUI={true}
-                    onLoad={setMap}
-                    onUnmount={() => setMap(null)}
-                  >
-                    {route && (
-                      <MapController
-                        center={
-                          pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }
-                        }
-                        route={route}
-                      />
-                    )}
-                  </Map>
-                </APIProvider>
+                <MainMap
+                  defaultCenter={
+                    pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }
+                  }
+                  route={route}
+                  onLoad={setMap}
+                  onUnmount={() => setMap(null)}
+                />
               )}
             </div>
           </div>
