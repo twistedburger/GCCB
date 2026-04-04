@@ -43,10 +43,15 @@ const analytics = createAnalyticsHelpers({
  *
  * If response is not ok, sends error json {error: error message}
  * if error is thrown by api call, caught error is sent in same format.
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  *
  * @returns {string} text response from google api
  */
 app.get('/maps/api/js', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
   try {
     const params = new URLSearchParams(req.query)
     params.set('key', process.env.GOOGLE_MAPS_API_KEY)
@@ -452,6 +457,10 @@ app.post('/api/refresh-banner', async (req, res) => {
  * @returns {Object} google maps route json
  */
 app.post('/api/requestRoute', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
   try {
     const response = await axios.post(
       'https://routes.googleapis.com/directions/v2:computeRoutes',

@@ -51,7 +51,8 @@ export async function calculateRoute(
   try {
     const response = await axios.post(
       'http://localhost:3000/api/requestRoute',
-      routeBody
+      routeBody,
+      { withCredentials: true }
     )
 
     const route = response.data.routes?.[0]
