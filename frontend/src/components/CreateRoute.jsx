@@ -10,12 +10,7 @@ import {
   TravelMode,
 } from '../utils/routes'
 import { decode } from 'google-polyline'
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-  Pin,
-} from '@vis.gl/react-google-maps'
+import { APIProvider, Map } from '@vis.gl/react-google-maps'
 import MapController from '../components/MapController'
 import TransitLegCard from './TransitLegCard'
 import GenericToggle from './GenericToggle'
@@ -316,11 +311,6 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             onLoad={setMap}
             onUnmount={() => setMap(null)}
           >
-            <AdvancedMarker
-              position={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
-            >
-              <Pin scale={0.75} />
-            </AdvancedMarker>
             {route && (
               <MapController
                 center={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}

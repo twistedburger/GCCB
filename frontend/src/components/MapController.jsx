@@ -3,6 +3,17 @@ import { useMap } from '@vis.gl/react-google-maps'
 import PropTypes from 'prop-types'
 import { TravelMode } from '../utils/routes'
 
+const createPin = (color, label) => {
+  const pin = new google.maps.marker.PinElement({
+    background: color,
+    borderColor: 'white',
+    glyphColor: 'white',
+    glyphText: label,
+    scale: 0.75,
+  })
+  return pin
+}
+
 export default function MapController({ center, route }) {
   const map = useMap()
   useEffect(() => {
@@ -15,7 +26,7 @@ export default function MapController({ center, route }) {
     if (!map || !route) {
       return
     }
-    console.log(route)
+
     const routeLine = route.path.polyline.encodedPolyline
     const decodedPath = google.maps.geometry.encoding.decodePath(routeLine)
 
@@ -23,13 +34,25 @@ export default function MapController({ center, route }) {
     decodedPath.forEach(point => bounds.extend(point))
     map.fitBounds(bounds)
 
+    let mapPins = []
+    mapPins.push(
+      new google.maps.marker.AdvancedMarkerElement({
+        position: decodedPath[0],
+        map,
+        content: createPin('#34A853', 'A').element,
+      })
+    )
+
     if (route.transportation_mode.toUpperCase() === TravelMode.Transit) {
       // overwrite the line if transit
       const routeLines = []
       const legColors = {
         walk: '#34A853',
-        transit: ['#4285F4', '#EA4335'],
+        transit: ['#4285F4', '#FBBC04'],
       }
+
+      mapPins = []
+      let lastType = ''
 
       route.path.legs[0].steps.forEach((step, index) => {
         let color =
@@ -51,9 +74,32 @@ export default function MapController({ center, route }) {
         })
 
         routeLines.push(polyline)
+        if (lastType === '' || lastType != step.travelMode) {
+          const pin = new google.maps.marker.AdvancedMarkerElement({
+            position: decodedPath[0],
+            map,
+            content: createPin(color, String.fromCharCode(65 + mapPins.length))
+              .element,
+          })
+
+          mapPins.push(pin)
+        }
+        lastType = step.travelMode
       })
 
+      mapPins.push(
+        new google.maps.marker.AdvancedMarkerElement({
+          position: decodedPath[decodedPath.length - 1],
+          map,
+          content: createPin(
+            '#EA4335',
+            String.fromCharCode(65 + mapPins.length)
+          ).element,
+        })
+      )
+
       return () => {
+        mapPins.forEach(pin => (pin.map = null))
         routeLines.forEach(line => line.setMap(null))
         routeLines.length = 0
       }
@@ -67,8 +113,21 @@ export default function MapController({ center, route }) {
         strokeWeight: 10,
         map,
       })
+      mapPins.push(
+        new google.maps.marker.AdvancedMarkerElement({
+          position: decodedPath[decodedPath.length - 1],
+          map,
+          content: createPin(
+            '#EA4335',
+            String.fromCharCode(65 + mapPins.length)
+          ).element,
+        })
+      )
 
-      return () => polyline.setMap(null)
+      return () => {
+        polyline.setMap(null)
+        mapPins.forEach(pin => (pin.map = null))
+      }
     }
   }, [map, route])
 
