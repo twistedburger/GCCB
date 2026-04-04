@@ -82,9 +82,8 @@ export function calculateTransitLegs(route) {
     const name =
       step.travelMode === TravelMode.Walk
         ? TravelMode.Walk
-        : step.transitDetails.transitLine.nameShort
-          ? step.transitDetails.transitLine.nameShort
-          : step.transitDetails.transitLine.name
+        : (step.transitDetails.transitLine.nameShort ??
+          step.transitDetails.transitLine.name)
     const type =
       step.travelMode === TravelMode.Walk
         ? TravelMode.Walk
