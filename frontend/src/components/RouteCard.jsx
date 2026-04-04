@@ -77,6 +77,16 @@ export default function RouteCard({
     setIsJoined(false)
     setPeopleGoing(prev => prev - 1)
   }
+
+  const handleClick = e => {
+    e.stopPropagation()
+    if (onToggleJoin && !isDraft) {
+      onToggleJoin()
+    } else {
+      handleLeave(e)
+    }
+  }
+
   return (
     <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
       <div
@@ -170,14 +180,7 @@ export default function RouteCard({
                 <GenericButton
                   unstyled
                   customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
-                  onClick={e => {
-                    e.stopPropagation()
-                    if (onToggleJoin && !isDraft) {
-                      onToggleJoin()
-                    } else {
-                      handleLeave(e)
-                    }
-                  }}
+                  onClick={handleClick}
                 >
                   <div className="flex flex-row items-center gap-1">
                     <Logout fontSize="12px" />
