@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { CheckAuthorization } from '../ProtectedRoute'
 import ProtectedRoute from '../ProtectedRoute'
-import { useAuth, authLevel } from '../../utils/Authorization'
+import { useAuth, authLevel } from '../../hooks/Authorization'
 
 describe('Test CheckAuthorization', () => {
   test('User when required is User', () => {
@@ -135,8 +135,8 @@ describe('Test CheckAuthorization', () => {
   })
 })
 
-jest.mock('../../utils/Authorization', () => ({
-  ...jest.requireActual('../../utils/Authorization'),
+jest.mock('../../hooks/Authorization', () => ({
+  ...jest.requireActual('../../hooks/Authorization'),
   useAuth: jest.fn(),
 }))
 

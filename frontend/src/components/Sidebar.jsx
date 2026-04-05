@@ -19,7 +19,7 @@ import {
   PersonOutlineOutlined,
   AdminPanelSettingsOutlined,
 } from '@mui/icons-material'
-import { authLevel } from '../utils/Authorization'
+import { authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
 
 const mainNavigation = [

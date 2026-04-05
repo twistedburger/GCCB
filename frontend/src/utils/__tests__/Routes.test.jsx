@@ -51,7 +51,8 @@ describe('Test calculateRoute', () => {
     expect(result).toEqual({ polyline: 'MockPolyline' })
     expect(axios.post).toHaveBeenCalledWith(
       'http://localhost:3000/api/requestRoute',
-      routeBody
+      routeBody,
+      { withCredentials: true }
     )
   })
 
@@ -83,7 +84,8 @@ describe('Test calculateRoute', () => {
     expect(result).toEqual({ polyline: 'MockPolyline' })
     expect(axios.post).toHaveBeenCalledWith(
       'http://localhost:3000/api/requestRoute',
-      routeBody
+      routeBody,
+      { withCredentials: true }
     )
   })
 
@@ -97,7 +99,8 @@ describe('Test calculateRoute', () => {
       expect.not.objectContaining({
         arrivalTime: expect.anything(),
         departureTime: expect.anything(),
-      })
+      }),
+      { withCredentials: true }
     )
   })
 
@@ -122,7 +125,8 @@ describe('Test calculateRoute', () => {
     expect(result).toEqual({ polyline: 'MockPolyline' })
     expect(axios.post).toHaveBeenCalledWith(
       'http://localhost:3000/api/requestRoute',
-      routeBody
+      routeBody,
+      { withCredentials: true }
     )
   })
 
