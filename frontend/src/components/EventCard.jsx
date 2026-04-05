@@ -33,7 +33,7 @@ export default function EventCard({ event, view, onReport }) {
           }
         )
         const data = await response.json()
-        setBannerUrl(data.banner_url || bcitCover)
+        setBannerUrl(data.bannerUrl || bcitCover)
       } catch (err) {
         console.error('Refresh failed', err)
         setBannerUrl(bcitCover)

@@ -319,7 +319,7 @@ app.get('/api/events', (req, res) => {
   const {
     time,
     verified,
-    transportation_modes,
+    transportation_modes: transportationModes,
     radius,
     isArriving,
     latitude,
@@ -339,8 +339,8 @@ app.get('/api/events', (req, res) => {
   if (verified === 'true') {
     conditions.push(`e.verified = true`)
   }
-  if (transportation_modes) {
-    const modes = transportation_modes.split(',')
+  if (transportationModes) {
+    const modes = transportationModes.split(',')
     values.push(modes)
     conditions.push(`lower(r.transportation_mode) = ANY($${values.length})`)
   }
@@ -396,12 +396,12 @@ app.post('/api/refresh-banner', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const { place_id, event_id } = req.body
-  const eventId = parseInt(event_id, 10)
+  const { place_id: placeID, event_id: eventID } = req.body
+  const eventId = parseInt(eventID, 10)
 
   try {
     const response = await axios.get(
-      `https://places.googleapis.com/v1/places/${place_id}`,
+      `https://places.googleapis.com/v1/places/${placeID}`,
       {
         headers: {
           'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
@@ -428,17 +428,17 @@ app.post('/api/refresh-banner', async (req, res) => {
         },
       }
     )
-    const new_url = photoResponse.data.photoUri
+    const newUrl = photoResponse.data.photoUri
 
     db.query(
       `UPDATE event SET banner_url = $1 WHERE id = $2;`,
-      [new_url, eventId],
+      [newUrl, eventId],
       error => {
         if (error) {
           console.error('Error updating DB:', error)
           return res.status(500).send(serverStrings.errors.generic)
         }
-        res.status(200).json({ banner_url: new_url })
+        res.status(200).json({ bannerUrl: newUrl })
       }
     )
   } catch (err) {
@@ -497,18 +497,18 @@ app.post('/api/createEvent', async (req, res) => {
 
   try {
     const user = await selectUser(req)
-    const route_verified = user.role === 'moderator'
+    const routeVerified = user.role === 'moderator'
 
     const {
       title,
-      event_time,
+      event_time: eventTime,
       location,
-      need_approval,
+      need_approval: needApproval,
       description,
       longitude,
       latitude,
       banner,
-      place_id,
+      place_id: placeID,
     } = req.body
 
     const result = await db.query(
@@ -516,16 +516,16 @@ app.post('/api/createEvent', async (req, res) => {
       [
         title,
         user.id,
-        event_time,
+        eventTime,
         location,
-        route_verified,
-        need_approval,
+        routeVerified,
+        needApproval,
         description,
         new Date(),
         longitude,
         latitude,
         banner,
-        place_id,
+        placeID,
       ]
     )
 
@@ -550,15 +550,15 @@ app.post('/api/createRoute', async (req, res) => {
   }
 
   const {
-    event_id,
+    event_id: eventID,
     title,
-    transportation_mode,
+    transportation_mode: transportationMode,
     origin,
     origin_lat,
     origin_lng,
     destination,
-    depart_time,
-    max_ppl,
+    depart_time: departTime,
+    max_ppl: maxPpl,
     distance,
     path,
     completed,
@@ -581,13 +581,13 @@ app.post('/api/createRoute', async (req, res) => {
     const routeResult = await client.query(routeQuery, [
       title,
       user.id,
-      transportation_mode,
+      transportationMode,
       origin,
       origin_lng,
       origin_lat,
       destination,
-      depart_time,
-      max_ppl,
+      departTime,
+      maxPpl,
       distance,
       path,
       completed,
@@ -596,24 +596,23 @@ app.post('/api/createRoute', async (req, res) => {
       longitude,
       latitude,
     ])
-    console.log('Route Insert Result:', routeResult.rows[0])
-    const route_id = routeResult.rows[0].id
+    const routeID = routeResult.rows[0].id
 
     const junctionQuery = `
       INSERT INTO event_route (event_id, route_id)
       VALUES ($1, $2);
     `
-    await client.query(junctionQuery, [event_id, route_id])
+    await client.query(junctionQuery, [eventID, routeID])
 
     if (isJoined) {
       await client.query(
         'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-        [user.id, route_id]
+        [user.id, routeID]
       )
     }
 
     await client.query('COMMIT')
-    res.status(201).json({ success: true, route_id })
+    res.status(201).json({ success: true, routeID })
   } catch (error) {
     console.error('Database Error Detail:', error)
     await client.query('ROLLBACK')
@@ -638,7 +637,7 @@ app.get('/api/routes', (req, res) => {
 
   const {
     time,
-    transportation_modes,
+    transportation_modes: transportationModes,
     verified,
     radius,
     isArriving,
@@ -656,8 +655,8 @@ app.get('/api/routes', (req, res) => {
       `r.depart_time BETWEEN ($${values.length}::timestamp - interval '2 hours') AND ($${values.length}::timestamp + interval '2 hours')`
     )
   }
-  if (transportation_modes) {
-    const modes = transportation_modes.split(',')
+  if (transportationModes) {
+    const modes = transportationModes.split(',')
     values.push(modes)
     conditions.push(`lower(r.transportation_mode) = ANY($${values.length})`)
   }
@@ -885,20 +884,24 @@ app.get('/api/commute-history', async (req, res) => {
 
     const commuteHistory = []
 
-    for (const r of routes) {
-      const savings = await analytics.computeRouteSavings(r)
-      const contributions = await analytics.toAnalyticsContributions(r, false)
+    for (const route of routes) {
+      const savings = await analytics.computeRouteSavings(route)
+      const contributions = await analytics.toAnalyticsContributions(
+        route,
+        false
+      )
 
       // Total distance now from segments
       const totalDistanceKm = contributions.reduce(
-        (sum, c) => sum + c.distanceKm,
+        (sum, contribution) => sum + contribution.distanceKm,
         0
       )
 
       // Dominant mode
       const totalsByMode = {}
-      for (const c of contributions) {
-        totalsByMode[c.mode] = (totalsByMode[c.mode] || 0) + c.distanceKm
+      for (const contribution of contributions) {
+        totalsByMode[contribution.mode] =
+          (totalsByMode[contribution.mode] || 0) + contribution.distanceKm
       }
 
       let dominantMode = 'other'
@@ -912,19 +915,19 @@ app.get('/api/commute-history', async (req, res) => {
       }
 
       commuteHistory.push({
-        id: r.id,
-        title: r.title,
-        creator_id: r.creator_id,
-        transportation_mode: dominantMode,
+        id: route.id,
+        title: route.title,
+        creatorId: route.creator_id,
+        transportationMode: dominantMode,
         distance: analytics.roundToTwoDecimals(totalDistanceKm),
 
-        origin: r.origin,
-        destination: r.destination,
-        depart_time: r.depart_time,
-        completed: r.completed,
-        max_ppl: r.max_ppl,
-        description: r.description,
-        path: r.path,
+        origin: route.origin,
+        destination: route.destination,
+        departTime: route.depart_time,
+        completed: route.completed,
+        maxPpl: route.max_ppl,
+        description: route.description,
+        path: route.path,
 
         savedKgUser: savings.savedKgUser,
         savedKgSystem: savings.savedKgSystem,
@@ -1003,8 +1006,11 @@ app.get('/api/analytics/summary', async (req, res) => {
       },
     }
 
-    for (const r of routes) {
-      const contributions = await analytics.toAnalyticsContributions(r, isAdmin)
+    for (const route of routes) {
+      const contributions = await analytics.toAnalyticsContributions(
+        route,
+        isAdmin
+      )
 
       // One completed route still counts as one trip
       summary.tripCount += 1
@@ -1029,12 +1035,12 @@ app.get('/api/analytics/summary', async (req, res) => {
       summary.totalCo2SavedKg
     )
 
-    for (const k of Object.keys(summary.distanceByModeKm)) {
-      summary.distanceByModeKm[k] = analytics.roundToTwoDecimals(
-        summary.distanceByModeKm[k]
+    for (const key of Object.keys(summary.distanceByModeKm)) {
+      summary.distanceByModeKm[key] = analytics.roundToTwoDecimals(
+        summary.distanceByModeKm[key]
       )
-      summary.co2SavedByModeKg[k] = analytics.roundToTwoDecimals(
-        summary.co2SavedByModeKg[k]
+      summary.co2SavedByModeKg[key] = analytics.roundToTwoDecimals(
+        summary.co2SavedByModeKg[key]
       )
     }
 
@@ -1109,8 +1115,11 @@ app.get('/api/analytics/by-mode', async (req, res) => {
       },
     }
 
-    for (const r of routes) {
-      const contributions = await analytics.toAnalyticsContributions(r, isAdmin)
+    for (const route of routes) {
+      const contributions = await analytics.toAnalyticsContributions(
+        route,
+        isAdmin
+      )
 
       for (const item of contributions) {
         const modeStats = aggregates[item.mode] || aggregates.other
@@ -1165,18 +1174,18 @@ app.get('/api/reports', async (req, res) => {
     // get report details for user, event, and route respectively
     const reports = await Promise.all(
       result.rows.map(async report => {
-        let target_details = null
+        let targetDetails = null
 
         if (report.report_target === 'user') {
           const res = await db.query('SELECT * FROM "user" WHERE id = $1', [
             report.target_id,
           ])
-          target_details = res.rows[0]
+          targetDetails = res.rows[0]
         } else if (report.report_target === 'event') {
           const res = await db.query('SELECT * FROM event WHERE id = $1', [
             report.target_id,
           ])
-          target_details = res.rows[0]
+          targetDetails = res.rows[0]
         } else if (report.report_target === 'route') {
           const res = await db.query(
             `SELECT 
@@ -1188,10 +1197,10 @@ app.get('/api/reports', async (req, res) => {
             WHERE r.id = $1`,
             [report.target_id]
           )
-          target_details = res.rows[0]
+          targetDetails = res.rows[0]
         }
 
-        return { ...report, target_details }
+        return { ...report, targetDetails }
       })
     )
 
@@ -1264,26 +1273,26 @@ app.post('/api/moderateReport', async (req, res) => {
 
   try {
     const {
-      report_id,
-      report_target,
-      target_id,
-      rejection_reason,
-      rejection_detail,
+      report_id: reportID,
+      report_target: reportTarget,
+      target_id: targetID,
+      rejection_reason: rejectionReason,
+      rejection_detail: rejectionDetail,
       status,
     } = req.body
 
     // update the report
     await db.query(
       'UPDATE report SET status = $1, rejection_reason = $2, rejection_detail = $3 WHERE id = $4',
-      [status, rejection_reason, rejection_detail, report_id]
+      [status, rejectionReason, rejectionDetail, reportID]
     )
 
     // increment reported count on target if approved
     if (status === 'approved') {
-      const table = report_target === 'user' ? '"user"' : report_target
+      const table = reportTarget === 'user' ? '"user"' : reportTarget
       await db.query(
         `UPDATE ${table} SET reported = reported + 1 WHERE id = $1`,
-        [target_id]
+        [targetID]
       )
     }
 
@@ -1313,18 +1322,23 @@ app.post('/api/verifyEvent', async (req, res) => {
     if (!user)
       return res.status(404).json({ error: serverStrings.errors.noUser })
 
-    const { event_id, status, rejection_reason, rejection_detail } = req.body
+    const {
+      event_id: eventID,
+      status,
+      rejection_reason: rejectionReason,
+      rejection_detail: rejectionDetail,
+    } = req.body
 
     // update the event_verification_table
     await db.query(
       'UPDATE event_verification SET status = $1, rejection_reason = $2, rejection_detail = $3, verified_by = $4, verified_at = NOW() WHERE event_id = $5',
-      [status, rejection_reason, rejection_detail, user.id, event_id]
+      [status, rejectionReason, rejectionDetail, user.id, eventID]
     )
 
     // update the actual event
     if (status == 'approved') {
       await db.query('UPDATE event SET verified = true WHERE id = $1', [
-        event_id,
+        eventID,
       ])
     }
 
@@ -1533,14 +1547,14 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
     }
 
     function getPeriodKey(date) {
-      const d = new Date(date)
-      const year = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
+      const calendarDate = new Date(date)
+      const year = calendarDate.getFullYear()
+      const month = String(calendarDate.getMonth() + 1).padStart(2, '0')
+      const day = String(calendarDate.getDate()).padStart(2, '0')
 
       if (granularity === 'daily') return `${year}-${month}-${day}`
       if (granularity === 'monthly') return `${year}-${month}`
-      const quarter = Math.ceil((d.getMonth() + 1) / 3)
+      const quarter = Math.ceil((calendarDate.getMonth() + 1) / 3)
       return `${year}-Q${quarter}`
     }
 

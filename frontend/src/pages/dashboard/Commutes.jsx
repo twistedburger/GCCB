@@ -116,9 +116,9 @@ function Commutes() {
 
     return routes.filter(route => {
       const matchesMode =
-        mode === 'all' || normalizeMode(route.transportation_mode) === mode
+        mode === 'all' || normalizeMode(route.transportationMode) === mode
 
-      const matchesDate = isWithinDateRange(route.depart_time, dateRange)
+      const matchesDate = isWithinDateRange(route.departTime, dateRange)
 
       return matchesMode && matchesDate
     })
