@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import GenericToggle from '../../components/GenericToggle'
+import GenericToggle from '../GenericToggle'
 
 describe('GenericToggle Component', () => {
   it('renders both labels', () => {

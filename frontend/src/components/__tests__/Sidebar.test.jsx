@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import Sidebar from '../../components/Sidebar'
+import Sidebar from '../Sidebar'
 import { authLevel } from '../../utils/Authorization'
 
 const mockNavigate = jest.fn()
