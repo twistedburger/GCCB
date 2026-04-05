@@ -1,3 +1,4 @@
+import { routeStrings } from '../../locales/en/routestrings'
 import { isValidTravelMode, calculateRoute, TravelMode } from '../RouteUtils'
 import axios from 'axios'
 jest.mock('axios')
@@ -57,7 +58,7 @@ describe('Test calculateRoute', () => {
   })
 
   test('Check invalid travel mode throws error', async () => {
-    const expectedError = 'Invalid travel mode'
+    const expectedError = routeStrings.invalidTravelMode
     await expect(
       calculateRoute(startLocation, endLocation, 'Tetris')
     ).rejects.toThrow(expectedError)
@@ -148,7 +149,7 @@ describe('Test calculateRoute', () => {
   test('Check error thrown if no routes are returned from the api', async () => {
     const mockRoutes = { routes: [] }
     axios.post.mockResolvedValue({ data: mockRoutes })
-    const expectedError = 'No routes returned from API'
+    const expectedError = routeStrings.noRoutesError
     await expect(
       calculateRoute(startLocation, endLocation, TravelMode.Transit)
     ).rejects.toThrow(expectedError)
@@ -164,7 +165,7 @@ describe('Test calculateRoute', () => {
 
     await expect(
       calculateRoute(startLocation, endLocation, travelMode)
-    ).rejects.toThrow('Routes API error 400: Bad Request')
+    ).rejects.toThrow(routeStrings.routeAPIError)
   })
 
   test('Check error thrown if there is an error in the request', async () => {
@@ -174,7 +175,7 @@ describe('Test calculateRoute', () => {
 
     await expect(
       calculateRoute(startLocation, endLocation, travelMode)
-    ).rejects.toThrow('Network error: could not reach Routes API')
+    ).rejects.toThrow(routeStrings.networkError)
   })
 
   test('Check route body contains all required fields', async () => {
