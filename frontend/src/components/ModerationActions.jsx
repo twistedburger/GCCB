@@ -1,12 +1,12 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { CheckOutlined, CloseOutlined } from '@mui/icons-material'
-import GenericButton from '../../components/GenericButton'
-import ConfirmationDialog from '../../components/ConfirmationDialog'
-import TextBox from '../../components/TextBox'
-import { moderationStrings } from '../../locales/en/moderation'
+import GenericButton from './GenericButton'
+import ConfirmationDialog from './ConfirmationDialog'
+import TextBox from './TextBox'
+import { moderationStrings } from '../locales/en/moderation'
 import Select from 'react-select'
-import { handleSubmit } from '../../utils/ModeratorUtils'
+import { handleSubmit } from '../utils/ModeratorUtils'
 
 /**
  * Component for moderator actions on reports and events

@@ -6,7 +6,7 @@ import OrganizerCard from '../../components/OrganizerCard'
 // import GenericToggle from '../../components/GenericToggle'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../utils/Authorization'
-import ModerationActions from './ModerationActions'
+import ModerationActions from '../../components/ModerationActions'
 import Alert from '../../components/Alert'
 
 /**
