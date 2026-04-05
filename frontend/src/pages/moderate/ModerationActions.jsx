@@ -6,7 +6,17 @@ import ConfirmationDialog from '../../components/ConfirmationDialog'
 import TextBox from '../../components/TextBox'
 import { moderationStrings } from '../../locales/en/moderation'
 import Select from 'react-select'
+import { handleSubmit } from '../../utils/ModeratorUtils'
 
+/**
+ * Component for moderator actions on reports and events
+ *
+ * @param {Object} information Information object
+ * @param {func} setAlert Callback function for an alert when a report is submitted
+ * @param {func} onSuccess Callback function if report submit succeeds
+ * @param {string} mode Type of action - Report or Event
+ * @returns {JSX.Entity}
+ */
 export default function ModerationActions({
   information,
   setAlert,
@@ -25,81 +35,6 @@ export default function ModerationActions({
   const invalidVerifications = moderationStrings.invalidVerifications.map(
     r => ({ value: r, label: r })
   )
-
-  const submitReport = async data => {
-    try {
-      const response = await fetch('http://localhost:3000/api/moderateReport', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Server Error: ${response.status}`)
-      }
-      const result = await response.json()
-      return result
-    } catch (error) {
-      console.error('Error submitting report')
-      throw error
-    }
-  }
-
-  const submitVerification = async data => {
-    try {
-      const response = await fetch('http://localhost:3000/api/verifyEvent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Server Error: ${response.status}`)
-      }
-      const result = await response.json()
-      return result
-    } catch (error) {
-      console.error('Error verifying event')
-      throw error
-    }
-  }
-
-  const handleSubmit = async status => {
-    const data = isReport
-      ? {
-          report_id: information.id,
-          report_target: information.report_target,
-          target_id: information.target_id,
-          rejection_reason: rejectionReason,
-          rejection_detail: rejectionDetail,
-          status: status,
-        }
-      : {
-          event_id: information,
-          status: status,
-          rejection_reason: rejectionReason,
-          rejection_detail: rejectionDetail,
-        }
-    try {
-      isReport ? await submitReport(data) : await submitVerification(data)
-      setAlert({
-        type: 'success',
-        text: isReport
-          ? 'Report submitted successfully.'
-          : 'Event verified successfully.',
-      })
-      onSuccess()
-    } catch {
-      setAlert({
-        type: 'error',
-        text: 'Something went wrong. Please try again.',
-      })
-    }
-  }
 
   function handleCancel() {
     setConfirmReport(null)
@@ -168,7 +103,17 @@ export default function ModerationActions({
         <ConfirmationDialog
           isOpen={confirmReport === 'approve'}
           onClose={handleCancel}
-          onConfirm={() => handleSubmit('approved')}
+          onConfirm={() =>
+            handleSubmit(
+              'approved',
+              isReport,
+              information,
+              rejectionReason,
+              rejectionDetail,
+              setAlert,
+              onSuccess
+            )
+          }
           title="Approve"
           confirmText={moderationStrings.ok}
           cancelText={moderationStrings.cancel}
@@ -225,7 +170,15 @@ export default function ModerationActions({
                   setDetailError('Explanation for invalid report required.')
                   return
                 }
-                handleSubmit('rejected')
+                handleSubmit(
+                  'rejected',
+                  isReport,
+                  information,
+                  rejectionReason,
+                  rejectionDetail,
+                  setAlert,
+                  onSuccess
+                )
               }}
               unstyled={true}
               customStyling="text-xs bg-red-700 text-white font-medium px-4 py-1 rounded-lg"
