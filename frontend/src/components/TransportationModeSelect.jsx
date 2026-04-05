@@ -13,7 +13,7 @@ export default function TransportationModeSelect({
       : [selectedModes].filter(Boolean)
   )
 
-  const modes = ['bus', 'bicycle', 'walk', 'car']
+  const modes = ['transit', 'bicycle', 'walk', 'car']
 
   const handleToggle = mode => {
     let nextState

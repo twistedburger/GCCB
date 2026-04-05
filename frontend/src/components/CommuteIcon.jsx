@@ -10,7 +10,7 @@ const CommuteIcon = ({ type, clickable = false, isSelected, onClick }) => {
   const icons = {
     car: DirectionsCar,
     bicycle: DirectionsBike,
-    bus: DirectionsBus,
+    transit: DirectionsBus,
     walk: DirectionsWalk,
   }
 
@@ -28,7 +28,7 @@ const CommuteIcon = ({ type, clickable = false, isSelected, onClick }) => {
 }
 
 CommuteIcon.propTypes = {
-  type: PropTypes.oneOf(['car', 'bicycle', 'bus', 'walk']).isRequired,
+  type: PropTypes.oneOf(['car', 'bicycle', 'transit', 'walk']).isRequired,
   clickable: PropTypes.bool,
   onClick: PropTypes.func,
   isSelected: PropTypes.bool,

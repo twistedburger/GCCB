@@ -7,6 +7,7 @@ import TransportationModeSelect from './TransportationModeSelect'
 import { calculateRoute, TravelMode } from '../utils/routes'
 import { decode } from 'google-polyline'
 import { GoogleMap, useJsApiLoader, Polyline } from '@react-google-maps/api'
+import GenericToggle from './GenericToggle'
 
 const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
@@ -28,6 +29,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
   })
+  const [isEV, setIsEV] = useState(false)
 
   const validate = () => {
     const newErrors = {}
@@ -57,7 +59,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     setMapKey(prev => prev + 1)
     try {
       const modeMapping = {
-        bus: 'Transit',
+        transit: 'Transit',
         walk: 'Walk',
         bicycle: 'Bike',
         car: 'Carpool',
@@ -110,6 +112,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       transportation_mode: transportationMode,
       max_ppl: maxPeople,
       origin: startLoc,
+      origin_lat: route?.startLocation.latitude,
+      origin_lng: route?.startLocation.longitude,
       destination: endLoc || initLoc,
       depart_time: departTime,
       description: routeDesc,
@@ -153,7 +157,20 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           {errors.transportationMode}
         </p>
       )}
-      {transportationMode && (
+
+      {/* When car is selected, show gas vs EV toggle and max people input */}
+      {transportationMode === 'car' && (
+        <GenericToggle
+          labels={['Gas', 'EV']}
+          value={!isEV}
+          onChange={newValue => {
+            console.log('Selected Label:', newValue ? 'Gas' : 'EV')
+            setIsEV(!newValue)
+          }}
+        />
+      )}
+
+      {transportationMode === 'car' && (
         <div>
           <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
             Max Number of People

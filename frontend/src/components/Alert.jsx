@@ -44,13 +44,18 @@ const Alert = ({ message, type, duration = 3000, onTimeout }) => {
         if (isExiting) onTimeoutRef.current?.()
       }}
       className={`
-        absolute top-20 left-1/2 -translate-x-1/2 z-[9999] w-max max-w-[80%]
+        fixed top-6 z-[9999] w-max max-w-[calc(80%-55px)]
         flex items-center gap-2 p-3 px-6
         rounded-full border-2 shadow-lg ${style.theme}
         transition-all duration-500 ease-in-out
         ${isExiting ? 'opacity-0 -translate-y-3 pointer-events-none' : 'opacity-100'}
         ${!entered && !isExiting ? 'animate-alert-in' : ''}
-      `}
+  `}
+      style={{
+        left: '50%',
+        marginLeft: '27.5px',
+        transform: 'translateX(-50%)',
+      }}
     >
       {style.icon}
       <span className="text-sm font-semibold">{message}</span>

@@ -444,6 +444,8 @@ app.post('/api/createRoute', async (req, res) => {
     title,
     transportation_mode,
     origin,
+    origin_lat,
+    origin_lng,
     destination,
     depart_time,
     max_ppl,
@@ -471,6 +473,8 @@ app.post('/api/createRoute', async (req, res) => {
       user.id,
       transportation_mode,
       origin,
+      origin_lng,
+      origin_lat,
       destination,
       depart_time,
       max_ppl,
@@ -482,6 +486,7 @@ app.post('/api/createRoute', async (req, res) => {
       longitude,
       latitude,
     ])
+    console.log('Route Insert Result:', routeResult.rows[0])
     const route_id = routeResult.rows[0].id
 
     const junctionQuery = `
