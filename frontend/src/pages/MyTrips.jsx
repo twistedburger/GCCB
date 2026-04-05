@@ -4,6 +4,11 @@ import RouteCardWrapper from '../components/RouteCardWrapper'
 import RouteCard from '../components/RouteCard'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 
+/**
+ * Display the MyTrips page
+ *
+ * @returns {JSX.Element}
+ */
 export default function MyTrips() {
   const [activeTrips, setActiveTrips] = useState([])
   const [completedTrips, setCompletedTrips] = useState([])

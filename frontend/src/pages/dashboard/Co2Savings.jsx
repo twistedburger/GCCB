@@ -36,6 +36,12 @@ const tooltipPayloadShape = PropTypes.arrayOf(
   })
 )
 
+/**
+ * Displays the CO2 tooltip if payload is active and valid.
+ *
+ * @param {Object} params Active status and payload
+ * @returns {JSX.Element}
+ */
 function Co2BarTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
@@ -57,6 +63,12 @@ Co2BarTooltip.propTypes = {
   payload: tooltipPayloadShape,
 }
 
+/**
+ * Displays the CO2 efficiency tooltip if payload is active and valid.
+ *
+ * @param {Object} params Active status and payload
+ * @returns {JSX.Element}
+ */
 function Co2EfficiencyTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
@@ -74,6 +86,11 @@ Co2EfficiencyTooltip.propTypes = {
   payload: tooltipPayloadShape,
 }
 
+/**
+ * CO2 Savings Page
+ *
+ * @returns {JSX.Element}
+ */
 function Co2Savings() {
   const navigate = useNavigate()
 

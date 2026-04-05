@@ -19,6 +19,10 @@ import Alert from '../../components/Alert'
 import Report from '../../components/Report'
 import { createPortal } from 'react-dom'
 
+/**
+ * Displays the event detail drawer
+ * @returns {JSX.Element}
+ */
 export default function EventDetail() {
   const location = useLocation()
   const id = location.pathname.split('/').pop()

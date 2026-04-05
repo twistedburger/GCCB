@@ -11,6 +11,14 @@ import { Drawer } from 'vaul'
 import Report from '../../components/Report'
 import { calculateTransitLegs } from '../../utils/routes'
 
+/**
+ * Drawer for displaying a route once selected.
+ *
+ * @param {Object} selectedRoute Currently selected route to be displayed
+ * @param {func} onClose Callback function for closing the route detail
+ * @param {func} setAlert Callback function for setting an alert
+ * @returns {JSX.Element}
+ */
 export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
   const [snapPoint, setSnapPoint] = useState(0.25)
   const navigate = useNavigate()

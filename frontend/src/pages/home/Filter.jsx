@@ -10,6 +10,10 @@ import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import TransportationModeSelect from '../../components/TransportationModeSelect.jsx'
 
+/**
+ * Displays the Filter page
+ * @returns {JSX.Element}
+ */
 export default function Filter() {
   const navigate = useNavigate()
   const { filters, setFilters } = useOutletContext()

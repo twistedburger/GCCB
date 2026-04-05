@@ -15,7 +15,7 @@ import { handleSubmit } from '../../utils/ModeratorUtils'
  * @param {func} setAlert Callback function for an alert when a report is submitted
  * @param {func} onSuccess Callback function if report submit succeeds
  * @param {string} mode Type of action - Report or Event
- * @returns {JSX.Entity}
+ * @returns {JSX.Element}
  */
 export default function ModerationActions({
   information,

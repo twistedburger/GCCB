@@ -36,6 +36,11 @@ console.warn = (...args) => {
 // Vancouver default if the user does not allow to use their location, change as per localization :)
 const DEFAULT_COORDINATES = { lat: 49.26, lng: -123.11 }
 
+/**
+ * Homepage
+ *
+ * @returns {JSX.Element}
+ */
 function Home() {
   const location = useLocation()
   const isEventDetail = location.pathname.includes('/event/')

@@ -7,6 +7,10 @@ import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
 import { formatKg, formatKm } from '../../utils/analyticsHelpers'
 
+/**
+ * Commutes Page
+ * @returns {JSX.Element}
+ */
 function Commutes() {
   const navigate = useNavigate()
   const [history, setHistory] = useState(null)

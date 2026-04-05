@@ -34,6 +34,12 @@ const tooltipPayloadShape = PropTypes.arrayOf(
   })
 )
 
+/**
+ * Displays the trip bar tooltip if payload is active and valid.
+ *
+ * @param {Object} params Active status and payload
+ * @returns {JSX.Element}
+ */
 function TripBarTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
@@ -53,6 +59,12 @@ TripBarTooltip.propTypes = {
   payload: tooltipPayloadShape,
 }
 
+/**
+ * Displays the average distance tooltip if payload is active and valid.
+ *
+ * @param {Object} params Active status and payload
+ * @returns {JSX.Element}
+ */
 function AvgDistanceTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
@@ -74,6 +86,10 @@ AvgDistanceTooltip.propTypes = {
   payload: tooltipPayloadShape,
 }
 
+/**
+ * Trip Frequency Page
+ * @returns {JSX.Element}
+ */
 function TripFrequency() {
   const navigate = useNavigate()
 

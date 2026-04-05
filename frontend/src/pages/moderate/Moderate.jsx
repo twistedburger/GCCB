@@ -9,6 +9,10 @@ import { useAuth } from '../../utils/Authorization'
 import ModerationActions from './ModerationActions'
 import Alert from '../../components/Alert'
 
+/**
+ * Creates the Moderator page.
+ * @returns {JSX.Element}
+ */
 function Moderate() {
   const navigate = useNavigate()
   const [alert, setAlert] = useState(null)
