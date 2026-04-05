@@ -21,7 +21,7 @@ import {
   AXIS_TICK_STYLE,
   GRID_STYLE,
   THEME_COLORS,
-} from '../../utils/chartConfig'
+} from '../../utils/ChartConfig'
 
 const STATUS_COLORS = {
   upcoming: THEME_COLORS.blue,

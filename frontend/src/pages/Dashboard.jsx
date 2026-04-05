@@ -5,7 +5,11 @@ import ProfileForm from '../components/ProfileForm'
 import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { formatKg, formatKm, getMostUsedMode } from '../utils/analyticsHelpers'
+import {
+  formatKg,
+  formatKm,
+  getMostUsedMode,
+} from '../utils/AnalyticsHelpers.js'
 import { useUser } from '../../context/UserContext.jsx'
 
 /**

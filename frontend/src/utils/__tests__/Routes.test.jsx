@@ -1,4 +1,4 @@
-import { isValidTravelMode, calculateRoute, TravelMode } from '../routes'
+import { isValidTravelMode, calculateRoute, TravelMode } from '../RouteUtils'
 import axios from 'axios'
 jest.mock('axios')
 

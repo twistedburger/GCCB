@@ -15,14 +15,14 @@ import KpiGrid from '../../components/analytics/KpiGrid'
 import ChartCard from '../../components/analytics/ChartCard'
 import Modal from '../../components/Modal'
 import GenericButton from '../../components/GenericButton'
-import { formatKg, formatKm } from '../../utils/analyticsHelpers'
+import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
 import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
 import {
   MODE_COLORS,
   MODE_LABELS,
   AXIS_TICK_STYLE,
   GRID_STYLE,
-} from '../../utils/chartConfig'
+} from '../../utils/ChartConfig'
 
 const tooltipPayloadShape = PropTypes.arrayOf(
   PropTypes.shape({

@@ -5,7 +5,7 @@ import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
-import { formatKg, formatKm } from '../../utils/analyticsHelpers'
+import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
 
 /**
  * Commutes Page

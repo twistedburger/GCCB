@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import CommuteIcon from './CommuteIcon'
-import { TravelMode } from '../utils/routes'
+import { TravelMode } from '../utils/RouteUtils'
 
 function TransitLegCard({ name, type, distance, className }) {
   return (

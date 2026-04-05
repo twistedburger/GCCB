@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useMap } from '@vis.gl/react-google-maps'
 import PropTypes from 'prop-types'
-import { TravelMode } from '../utils/routes'
+import { TravelMode } from '../utils/RouteUtils'
 
 const createPin = (color, label) => {
   const pin = new google.maps.marker.PinElement({
