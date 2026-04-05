@@ -1,3 +1,5 @@
+import { moderationStrings } from '../locales/en/moderation'
+
 /**
  * Handle report submitting.
  *
@@ -94,14 +96,14 @@ export const handleSubmit = async (
     setAlert({
       type: 'success',
       text: isReport
-        ? 'Report submitted successfully.'
-        : 'Event verified successfully.',
+        ? moderationStrings.submitReport
+        : moderationStrings.submitEvent,
     })
     onSuccess()
   } catch {
     setAlert({
       type: 'error',
-      text: 'Something went wrong. Please try again.',
+      text: moderationStrings.submitError,
     })
   }
 }
