@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import ProfileForm from '../../components/ProfileForm'
+import ProfileForm from '../ProfileForm'
 
 const mockUser = {
   name: 'Jane Doe',
