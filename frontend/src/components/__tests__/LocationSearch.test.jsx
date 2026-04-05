@@ -1,5 +1,5 @@
 import { render, fireEvent, act } from '@testing-library/react'
-import LocationSearch from '../../components/LocationSearch'
+import LocationSearch from '../LocationSearch'
 
 beforeAll(() => {
   if (!customElements.get('gmp-place-autocomplete')) {

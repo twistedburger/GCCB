@@ -1,5 +1,5 @@
 import { render, act } from '@testing-library/react'
-import Alert from '../../components/Alert'
+import Alert from '../Alert'
 
 describe('Alert', () => {
   const onTimeout = jest.fn()
