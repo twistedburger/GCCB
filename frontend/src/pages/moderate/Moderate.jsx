@@ -5,7 +5,7 @@ import OrganizerCard from '../../components/OrganizerCard'
 // Disable verification for now.
 // import GenericToggle from '../../components/GenericToggle'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../utils/Authorization'
+import { useAuth } from '../../hooks/Authorization'
 import ModerationActions from '../../components/ModerationActions'
 import Alert from '../../components/Alert'
 
