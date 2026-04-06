@@ -78,7 +78,6 @@ export function calculateTransitLegs(route) {
   route.path.legs[0].steps.forEach(step => {
     const last_leg = legs.at(-1)
     let leg
-    console.log(step.transitDetails)
     const name =
       step.travelMode === TravelMode.Walk
         ? TravelMode.Walk
