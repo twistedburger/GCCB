@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { routeStrings } from '../locales/en/routestrings'
 
 export const TravelMode = Object.freeze({
   Transit: 'TRANSIT',
@@ -13,10 +14,10 @@ export function isValidTravelMode(value) {
 
 /**
  *
- * @param {*} _origin origin location. prefer place id https://developers.google.com/maps/documentation/routes/specify_location?_gl=1*18yuyag*_up*MQ..*_ga*MTYyMTEwNzQwOS4xNzcyMzk1ODA4*_ga_SM8HXJ53K2*czE3NzIzOTU4MDgkbzEkZzAkdDE3NzIzOTc0ODckajYwJGwwJGgw*_ga_NRWSTWS78N*czE3NzIzOTU4MDgkbzEkZzEkdDE3NzIzOTgxMjQkajYwJGwwJGgw#place_id
- * @param {*} _destination destination location. prefer place id
- * @param {*} _travelMode TravelMode enum
- * @param {*} param3 times specified in format "yyyy-mm-ddThh:mm:ssZ". Optional
+ * @param {Object} _origin origin location. prefer place id https://developers.google.com/maps/documentation/routes/specify_location?_gl=1*18yuyag*_up*MQ..*_ga*MTYyMTEwNzQwOS4xNzcyMzk1ODA4*_ga_SM8HXJ53K2*czE3NzIzOTU4MDgkbzEkZzAkdDE3NzIzOTc0ODckajYwJGwwJGgw*_ga_NRWSTWS78N*czE3NzIzOTU4MDgkbzEkZzEkdDE3NzIzOTgxMjQkajYwJGwwJGgw#place_id
+ * @param {Object} _destination destination location. prefer place id
+ * @param {TravelMode} _travelMode TravelMode enum
+ * @param {string} _time times specified in format "yyyy-mm-ddThh:mm:ssZ". Optional
  */
 export async function calculateRoute(
   _origin,
@@ -25,7 +26,7 @@ export async function calculateRoute(
   { _arrivalTime, _departureTime } = {}
 ) {
   if (!isValidTravelMode(_travelMode)) {
-    throw new Error('Invalid travel mode')
+    throw new Error(routeStrings.invalidTravelMode)
   }
 
   const routeBody = {
@@ -51,20 +52,21 @@ export async function calculateRoute(
   try {
     const response = await axios.post(
       'http://localhost:3000/api/requestRoute',
-      routeBody
+      routeBody,
+      { withCredentials: true }
     )
 
     const route = response.data.routes?.[0]
-    if (!route) throw new Error('No routes returned from API')
+    if (!route) throw new Error(routeStrings.noRoutesError)
 
     return route
   } catch (err) {
     if (err.response) {
       throw new Error(
-        `Routes API error ${err.response.status}: ${err.response.data?.error ?? 'Unknown error'}`
+        `${routeStrings.routeAPIError} ${err.response.status}: ${err.response.data?.error ?? routeStrings.unkownError}`
       )
     } else if (err.request) {
-      throw new Error('Network error: could not reach Routes API')
+      throw new Error(routeStrings.networkError)
     }
     throw err
   }

@@ -14,14 +14,14 @@ import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import ChartCard from '../../components/analytics/ChartCard'
 import GenericButton from '../../components/GenericButton'
-import { formatKm, getMostUsedMode } from '../../utils/analyticsHelpers'
+import { formatKm, getMostUsedMode } from '../../utils/AnalyticsHelpers'
 import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
 import {
   MODE_COLORS,
   MODE_LABELS,
   AXIS_TICK_STYLE,
   GRID_STYLE,
-} from '../../utils/chartConfig'
+} from '../../utils/ChartConfig'
 
 const tooltipPayloadShape = PropTypes.arrayOf(
   PropTypes.shape({
@@ -34,6 +34,12 @@ const tooltipPayloadShape = PropTypes.arrayOf(
   })
 )
 
+/**
+ * Displays the trip bar tooltip if payload is active and valid.
+ *
+ * @param {Object} params Active status and payload
+ * @returns {JSX.Element}
+ */
 function TripBarTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
@@ -53,6 +59,12 @@ TripBarTooltip.propTypes = {
   payload: tooltipPayloadShape,
 }
 
+/**
+ * Displays the average distance tooltip if payload is active and valid.
+ *
+ * @param {Object} params Active status and payload
+ * @returns {JSX.Element}
+ */
 function AvgDistanceTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
@@ -74,6 +86,10 @@ AvgDistanceTooltip.propTypes = {
   payload: tooltipPayloadShape,
 }
 
+/**
+ * Trip Frequency Page
+ * @returns {JSX.Element}
+ */
 function TripFrequency() {
   const navigate = useNavigate()
 

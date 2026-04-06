@@ -2,6 +2,13 @@ import { PropTypes } from 'prop-types'
 
 import { t } from '../locales'
 
+/**
+ * Navigation button component.
+ *
+ * @param {string} target href location
+ * @param {string} label label for the button component
+ * @returns {JSX.Element}
+ */
 const NavButton = ({ target, label }) => (
   <a
     href={`#${target}`}
@@ -17,7 +24,13 @@ NavButton.propTypes = {
   label: PropTypes.string.isRequired,
 }
 
-// Individual cards for each topic in user guide
+/**
+ * Guide card component
+ *
+ * @param {number} id current id of the display card
+ * @param {Object} data data to display in the component
+ * @returns
+ */
 const GuideCard = ({ id, data }) => {
   return (
     <section
@@ -63,6 +76,12 @@ const GuideCard = ({ id, data }) => {
     </section>
   )
 }
+
+/**
+ * User Guide Page.
+ *
+ * @returns {JSX.Element}
+ */
 function UserGuide() {
   const { userGuide } = t
 

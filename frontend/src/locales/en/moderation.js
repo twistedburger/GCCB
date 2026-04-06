@@ -22,4 +22,7 @@ export const moderationStrings = {
     'Spam',
     'Other',
   ],
+  submitReport: 'Report submitted successfully.',
+  submitEvent: 'Event verified successfully.',
+  submitError: 'Something went wrong. Please try again.',
 }

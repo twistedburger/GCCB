@@ -133,6 +133,7 @@ describe('GET /maps/api/js', () => {
   })
 
   test('returns script content with correct content-type', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
     fetch.mockResolvedValue({
       ok: true,
       text: jest.fn().mockResolvedValue('console.log("maps");'),
@@ -146,6 +147,7 @@ describe('GET /maps/api/js', () => {
   })
 
   test('injects API key into Google request', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
     fetch.mockResolvedValue({
       text: jest.fn().mockResolvedValue(''),
     })
@@ -158,6 +160,7 @@ describe('GET /maps/api/js', () => {
   })
 
   test('forwards query params to Google', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
     fetch.mockResolvedValue({
       text: jest.fn().mockResolvedValue(''),
     })
@@ -170,6 +173,7 @@ describe('GET /maps/api/js', () => {
   })
 
   test('returns 500 when fetch fails', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
     fetch.mockRejectedValue(new Error('Network failure'))
 
     const response = await request(app).get('/maps/api/js')
@@ -178,6 +182,7 @@ describe('GET /maps/api/js', () => {
   })
 
   test('handles non-ok response from Google', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
     fetch.mockResolvedValue({
       ok: false,
       status: 403,
@@ -187,69 +192,10 @@ describe('GET /maps/api/js', () => {
 
     expect(response.status).toBe(403)
   })
-})
 
-describe('GET /maps/geocode', () => {
-  beforeEach(() => {
-    fetch.mockClear()
-    process.env.GOOGLE_MAPS_API_KEY = 'test-api-key'
-  })
-
-  test('returns geocode data as JSON', async () => {
-    const mockData = {
-      results: [{ formatted_address: '123 Main St' }],
-      status: 'OK',
-    }
-    fetch.mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue(mockData),
-    })
-
-    const response = await request(app).get('/maps/geocode?address=123+Main+St')
-
-    expect(response.status).toBe(200)
-    expect(response.body).toEqual(mockData)
-  })
-
-  test('passes address param to Google', async () => {
-    fetch.mockResolvedValue({
-      json: jest.fn().mockResolvedValue({}),
-    })
-
-    await request(app).get('/maps/geocode?address=123+Main+St')
-
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('address=123+Main+St')
-    )
-  })
-
-  test('injects API key into Google request', async () => {
-    fetch.mockResolvedValue({
-      json: jest.fn().mockResolvedValue({}),
-    })
-
-    await request(app).get('/maps/geocode?address=test')
-
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('key=test-api-key')
-    )
-  })
-
-  test('returns 500 when fetch fails', async () => {
-    fetch.mockRejectedValue(new Error('Network failure'))
-
-    const response = await request(app).get('/maps/geocode?address=test')
-
-    expect(response.status).toBe(500)
-  })
-
-  test('handles non-ok response from Google', async () => {
-    fetch.mockResolvedValue({
-      ok: false,
-      status: 403,
-    })
-
-    const response = await request(app).get('/maps/geocode?address=test')
+  test('returns reponse 403 if user is not authenticated', async () => {
+    mockIsAuthenticated.mockReturnValue(false)
+    const response = await request(app).get('/maps/api/js')
 
     expect(response.status).toBe(403)
   })

@@ -8,7 +8,7 @@ import {
   calculateRoute,
   calculateTransitLegs,
   TravelMode,
-} from '../utils/routes'
+} from '../utils/RouteUtils'
 import { decode } from 'google-polyline'
 import TransitLegCard from './TransitLegCard'
 import MainMap from './MainMap'

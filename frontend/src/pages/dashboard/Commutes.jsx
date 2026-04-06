@@ -5,8 +5,12 @@ import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
-import { formatKg, formatKm } from '../../utils/analyticsHelpers'
+import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
 
+/**
+ * Commutes Page
+ * @returns {JSX.Element}
+ */
 function Commutes() {
   const navigate = useNavigate()
   const [history, setHistory] = useState(null)
@@ -112,9 +116,9 @@ function Commutes() {
 
     return routes.filter(route => {
       const matchesMode =
-        mode === 'all' || normalizeMode(route.transportation_mode) === mode
+        mode === 'all' || normalizeMode(route.transportationMode) === mode
 
-      const matchesDate = isWithinDateRange(route.depart_time, dateRange)
+      const matchesDate = isWithinDateRange(route.departTime, dateRange)
 
       return matchesMode && matchesDate
     })

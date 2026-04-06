@@ -6,11 +6,19 @@ import { Cancel } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState, useMemo } from 'react'
 import TransitLegCard from '../../components/TransitLegCard'
-import { useAuth } from '../../utils/Authorization'
+import { useAuth } from '../../hooks/Authorization'
 import { Drawer } from 'vaul'
 import Report from '../../components/Report'
 import { calculateTransitLegs } from '../../utils/routes'
 
+/**
+ * Drawer for displaying a route once selected.
+ *
+ * @param {Object} selectedRoute Currently selected route to be displayed
+ * @param {func} onClose Callback function for closing the route detail
+ * @param {func} setAlert Callback function for setting an alert
+ * @returns {JSX.Element}
+ */
 export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
   const [snapPoint, setSnapPoint] = useState(0.25)
   const navigate = useNavigate()

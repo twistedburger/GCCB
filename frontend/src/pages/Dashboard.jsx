@@ -5,9 +5,20 @@ import ProfileForm from '../components/ProfileForm'
 import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { formatKg, formatKm, getMostUsedMode } from '../utils/analyticsHelpers'
+import {
+  formatKg,
+  formatKm,
+  getMostUsedMode,
+} from '../utils/AnalyticsHelpers.js'
 import { useUser } from '../../context/UserContext.jsx'
 
+/**
+ * Component for the profile header.
+ *
+ * @param {Object} user Current user
+ * @param {func} onEdit Callback function for when edit button is clicked
+ * @returns {JSX.Element}
+ */
 function ProfileHeader({ user, onEdit }) {
   const displayName = user?.name ?? 'Unknown User'
   const displayNickname = user?.nickname ?? 'No nickname'
@@ -56,6 +67,11 @@ ProfileHeader.propTypes = {
   onEdit: PropTypes.func.isRequired,
 }
 
+/**
+ * Dashboard page
+ *
+ * @returns {JSX.Element}
+ */
 function Dashboard() {
   const [isEditing, setIsEditing] = useState(false)
 

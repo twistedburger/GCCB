@@ -21,7 +21,7 @@ import {
   AXIS_TICK_STYLE,
   GRID_STYLE,
   THEME_COLORS,
-} from '../../utils/chartConfig'
+} from '../../utils/ChartConfig'
 
 const STATUS_COLORS = {
   upcoming: THEME_COLORS.blue,
@@ -31,6 +31,12 @@ const STATUS_COLORS = {
 
 const GRANULARITIES = ['daily', 'monthly', 'quarterly']
 
+/**
+ * Displays the status tooltip if payload is active and valid.
+ *
+ * @param {Object} params Active status and payload
+ * @returns {JSX.Element}
+ */
 function StatusTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
@@ -56,6 +62,12 @@ StatusTooltip.propTypes = {
   ),
 }
 
+/**
+ * Displays the rejection tooltip if payload is active and valid.
+ *
+ * @param {Object} params Active status and payload
+ * @returns {JSX.Element}
+ */
 function RejectionTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
@@ -81,6 +93,12 @@ RejectionTooltip.propTypes = {
   ),
 }
 
+/**
+ * Displays the timeseries tooltip if payload is active and valid. Displays with label
+ *
+ * @param {Object} params Active status, payload, and label
+ * @returns {JSX.Element}
+ */
 function TimeseriesTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
@@ -107,6 +125,11 @@ TimeseriesTooltip.propTypes = {
   ),
 }
 
+/**
+ * Activity page
+ *
+ * @returns {JSX.Element}
+ */
 function Activity() {
   const navigate = useNavigate()
 

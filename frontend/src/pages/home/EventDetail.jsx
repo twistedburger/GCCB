@@ -12,13 +12,17 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Drawer } from 'vaul'
-import { useAuth } from '../../utils/Authorization'
+import { useAuth } from '../../hooks/Authorization'
 import CreateRoute from '../../components/CreateRoute'
 import Modal from '../../components/Modal'
 import Alert from '../../components/Alert'
 import Report from '../../components/Report'
 import { createPortal } from 'react-dom'
 
+/**
+ * Displays the event detail drawer
+ * @returns {JSX.Element}
+ */
 export default function EventDetail() {
   const location = useLocation()
   const id = location.pathname.split('/').pop()

@@ -5,10 +5,14 @@ import OrganizerCard from '../../components/OrganizerCard'
 // Disable verification for now.
 // import GenericToggle from '../../components/GenericToggle'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../utils/Authorization'
-import ModerationActions from './ModerationActions'
+import { useAuth } from '../../hooks/Authorization'
+import ModerationActions from '../../components/ModerationActions'
 import Alert from '../../components/Alert'
 
+/**
+ * Creates the Moderator page.
+ * @returns {JSX.Element}
+ */
 function Moderate() {
   const navigate = useNavigate()
   const [alert, setAlert] = useState(null)

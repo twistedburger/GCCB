@@ -4,6 +4,11 @@ import { useState } from 'react'
 import { loginStrings } from '../locales/en/loginLocales'
 import { getSSOProviders, redirect } from '../utils/LoginUtils'
 
+/**
+ * Login Page
+ *
+ * @returns {JSX.Element}
+ */
 function Login() {
   const [selectedLogin, setSelectedLogin] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
