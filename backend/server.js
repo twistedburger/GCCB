@@ -99,7 +99,7 @@ app.get('/logoutRoute', (req, res) => {
 })
 
 /**
- * Authenticate use route checks if the authentication is valid and fetches the current user from the database
+ * Authenticate user route checks if the authentication is valid and fetches the current user from the database
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error message.
@@ -148,7 +148,7 @@ app.get('/authenticateUser', async (req, res) => {
 /**
  * Checks if the authenticated user is active based on their last login time.
  * User is inactive if they haven't logged in for more than 60 days.
- * @returns {Object} user's active status
+ * @returns {boolean} user's active status
  */
 async function checkAndUpdateActiveStatus(user) {
   if (!user.last_login) return true
@@ -283,7 +283,7 @@ async function insertUserFromForm(name, email, formData) {
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error message.
  *
- * @returns {Object} an authroization json
+ * @returns {Object} an authorization json
  */
 app.get('/authorize', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
@@ -1494,7 +1494,7 @@ app.get('/api/activity/summary', async (req, res) => {
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error message.
  * If the user is not in the database, a 404 error is sent with an error message.
- * If user authentication is not "user", a 403 status code is sent with an error message.
+ * If user authentication is not "admin", a 403 status code is sent with an error message.
  *
  * @returns {Object} granularity and array of { period, baselineKg, actualKg, savedKg }
  */
