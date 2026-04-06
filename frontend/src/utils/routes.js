@@ -69,3 +69,47 @@ export async function calculateRoute(
     throw err
   }
 }
+
+export function calculateTransitLegs(route) {
+  if (!route || route.transportation_mode.toUpperCase() != TravelMode.Transit) {
+    return { transitLegs: [] }
+  }
+  const legs = []
+  route.path.legs[0].steps.forEach(step => {
+    const last_leg = legs.at(-1)
+    let leg
+    const name =
+      step.travelMode === TravelMode.Walk
+        ? TravelMode.Walk
+        : (step.transitDetails.transitLine.nameShort ??
+          step.transitDetails.transitLine.name)
+    const type =
+      step.travelMode === TravelMode.Walk
+        ? TravelMode.Walk
+        : step.transitDetails.transitLine.vehicle.type
+
+    if (last_leg) {
+      const same_leg = last_leg.name === name
+      leg = {
+        name: name,
+        type: type,
+        distance: same_leg
+          ? last_leg.distance + step.distanceMeters
+          : step.distanceMeters,
+      }
+
+      if (same_leg) {
+        legs.pop()
+      }
+    } else {
+      leg = {
+        name: name,
+        type: type,
+        distance: step.distanceMeters,
+      }
+    }
+    legs.push(leg)
+  })
+
+  return { transitLegs: legs }
+}

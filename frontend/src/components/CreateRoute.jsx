@@ -4,9 +4,14 @@ import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import LocationSearch from './LocationSearch'
 import TransportationModeSelect from './TransportationModeSelect'
-import { calculateRoute, TravelMode } from '../utils/routes'
+import {
+  calculateRoute,
+  calculateTransitLegs,
+  TravelMode,
+} from '../utils/routes'
 import { decode } from 'google-polyline'
-import { GoogleMap, useJsApiLoader, Polyline } from '@react-google-maps/api'
+import TransitLegCard from './TransitLegCard'
+import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
 
 const CreateRoute = ({ initLoc, onSubmit }) => {
@@ -25,10 +30,6 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeError, setRouteError] = useState(null)
   const [mapKey, setMapKey] = useState(0)
   const [map, setMap] = useState(null)
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-  })
   const [isEV, setIsEV] = useState(false)
 
   const validate = () => {
@@ -97,6 +98,14 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         }))
       : []
   }, [route])
+
+  const { transitLegs } = useMemo(() => {
+    if (!route) return { transitLegs: [] }
+    return calculateTransitLegs({
+      path: route,
+      transportation_mode: transportationMode,
+    })
+  }, [route, transportationMode])
 
   const handleAddRoute = e => {
     e.preventDefault()
@@ -283,43 +292,39 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
 
       {/* Mini Map */}
       <div className="rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 h-64 relative shadow-inner">
-        {!isLoaded ? (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            Loading Map...
-          </div>
-        ) : (
-          <GoogleMap
-            key={mapKey}
-            mapContainerStyle={{ width: '100%', height: '100%' }}
-            zoom={12}
-            center={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
-            onLoad={setMap}
-            onUnmount={() => setMap(null)}
-            options={{ disableDefaultUI: true, zoomControl: true }}
-          >
-            {pathCoordinates.length > 0 && (
-              <Polyline
-                key={route.polyline.encodedPolyline}
-                path={pathCoordinates}
-                options={{
-                  strokeColor: '#3b82f6',
-                  strokeOpacity: 0.8,
-                  strokeWeight: 6,
-                }}
-              />
-            )}
-
-            {!route && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
-                {transportationMode && departTime && startLoc && endLoc
-                  ? "Click 'Get Route' to see the path."
-                  : 'Select transportation mode, departure time, origin, and destination to get the route.'}
-              </div>
-            )}
-          </GoogleMap>
-        )}
+        <MainMap
+          defaultCenter={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
+          route={
+            route
+              ? { path: route, transportation_mode: transportationMode }
+              : null
+          }
+          onLoad={setMap}
+          onUnmount={() => setMap(null)}
+          mapKey={mapKey}
+        >
+          {!route && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
+              {transportationMode && departTime && startLoc && endLoc
+                ? "Click 'Get Route' to see the path."
+                : 'Select transportation mode, departure time, origin, and destination to get the route.'}
+            </div>
+          )}
+        </MainMap>
       </div>
-
+      <p className="font-semibold pt-4 pb-2 text-text-primary">
+        {transitLegs.length > 0 ? 'Transit Details' : ''}
+      </p>
+      <div className="flex flex-col gap-2">
+        {transitLegs.map((leg, index) => (
+          <TransitLegCard
+            key={index}
+            name={leg.name}
+            type={leg.type}
+            distance={leg.distance}
+          />
+        ))}
+      </div>
       <TextBox
         label="Route Description"
         value={routeDesc}

@@ -4,16 +4,15 @@ import OrganizerCard from '../../components/OrganizerCard'
 import RouteCard from '../../components/RouteCard'
 import { Cancel } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { TravelMode } from '../../utils/routes'
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import TransitLegCard from '../../components/TransitLegCard'
 import { useAuth } from '../../utils/Authorization'
 import { Drawer } from 'vaul'
 import Report from '../../components/Report'
+import { calculateTransitLegs } from '../../utils/routes'
 
 export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
   const [snapPoint, setSnapPoint] = useState(0.25)
-  const [transitLegs, setTransitLegs] = useState([])
   const navigate = useNavigate()
   const { authorization } = useAuth()
   const [showReport, setShowReport] = useState(false)
@@ -24,52 +23,10 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
     else setTimeout(() => navigate(-1), 300)
   }
 
-  const calculateTransitLegs = route => {
-    if (route.transportation_mode.toUpperCase() != TravelMode.Transit) {
-      setTransitLegs([])
-      return
-    }
-    const legs = []
-    route.path.legs[0].steps.forEach(step => {
-      const last_leg = legs.at(-1)
-      let leg
-      const name =
-        step.travelMode === TravelMode.Walk
-          ? TravelMode.Walk
-          : step.transitDetails.transitLine.nameShort
-      const type =
-        step.travelMode === TravelMode.Walk
-          ? TravelMode.Walk
-          : step.transitDetails.transitLine.vehicle.type
-
-      if (last_leg) {
-        const same_leg = last_leg.name === name
-        leg = {
-          name: name,
-          type: type,
-          distance: same_leg
-            ? last_leg.distance + step.distanceMeters
-            : step.distanceMeters,
-        }
-
-        if (same_leg) {
-          legs.pop()
-        }
-      } else {
-        leg = {
-          name: name,
-          type: type,
-          distance: step.distanceMeters,
-        }
-      }
-      legs.push(leg)
-    })
-    setTransitLegs(legs)
-  }
-
-  useEffect(() => {
-    if (selectedRoute) calculateTransitLegs(selectedRoute)
-  }, [selectedRoute])
+  const { transitLegs } = useMemo(
+    () => calculateTransitLegs(selectedRoute),
+    [selectedRoute]
+  )
 
   return (
     <Drawer.Root

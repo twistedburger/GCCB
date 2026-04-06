@@ -1,10 +1,4 @@
 import LocationSearch from '../components/LocationSearch'
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-  Pin,
-} from '@vis.gl/react-google-maps'
 import GenericToggle from '../components/GenericToggle'
 import GenericButton from '../components/GenericButton'
 import { Add, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
@@ -26,7 +20,7 @@ import {
   locationSetSuccess,
 } from '../utils/HomeUtils'
 import DisplayFilters from '../components/DisplayFilters'
-import MapController from '../components/MapController'
+import MainMap from '../components/MainMap'
 import { createPortal } from 'react-dom'
 import { CircularProgress } from '@mui/material'
 
@@ -138,25 +132,11 @@ function Home() {
       )}
 
       <div>
-        <APIProvider
-          apiKey=""
-          scriptUrl="http://localhost:3000/maps/api/js"
-          libraries={['geometry']}
-        >
-          <Map
-            mapId="6621f78cbdb1902f92a3d543"
-            className="absolute w-full h-full"
-            defaultCenter={userLocation}
-            defaultZoom={17}
-            gestureHandling="greedy"
-            disableDefaultUI={true}
-          >
-            <AdvancedMarker position={userLocation}>
-              <Pin scale={0.75} />
-            </AdvancedMarker>
-            <MapController center={userLocation} route={selectedRoute} />
-          </Map>
-        </APIProvider>
+        <MainMap
+          defaultCenter={userLocation || DEFAULT_COORDINATES}
+          route={selectedRoute}
+          defaultPin={true}
+        />
 
         {!selectedRoute && !isEventDetail && (
           <LocationSearch

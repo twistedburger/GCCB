@@ -1,45 +1,9 @@
 import PropTypes from 'prop-types'
 import { useState, useMemo, useEffect } from 'react'
 import { ExpandMoreRounded } from '@mui/icons-material'
-import { GoogleMap, Polyline } from '@react-google-maps/api'
 import { decode } from 'google-polyline'
 import GenericButton from './GenericButton'
-
-function RouteMarkers({ pathCoordinates, map }) {
-  useEffect(() => {
-    if (!map || pathCoordinates.length === 0) return
-
-    const createPin = (color, label) => {
-      const pin = new google.maps.marker.PinElement({
-        background: color,
-        borderColor: 'white',
-        glyphColor: 'white',
-        glyphText: label,
-        scale: 0.6,
-      })
-      return pin
-    }
-
-    const startMarker = new google.maps.marker.AdvancedMarkerElement({
-      position: pathCoordinates[0],
-      map,
-      content: createPin('#22c55e', 'A').element,
-    })
-
-    const endMarker = new google.maps.marker.AdvancedMarkerElement({
-      position: pathCoordinates[pathCoordinates.length - 1],
-      map,
-      content: createPin('#ef4444', 'B').element,
-    })
-
-    return () => {
-      startMarker.map = null
-      endMarker.map = null
-    }
-  }, [map, pathCoordinates])
-
-  return null
-}
+import MainMap from './MainMap'
 
 export default function RouteCardWrapper({ children, route, mapsReady }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -93,35 +57,14 @@ export default function RouteCardWrapper({ children, route, mapsReady }) {
                   Loading map...
                 </div>
               ) : (
-                <GoogleMap
-                  mapContainerStyle={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '10px',
-                  }}
-                  zoom={12}
-                  center={
+                <MainMap
+                  defaultCenter={
                     pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }
                   }
+                  route={route}
                   onLoad={setMap}
                   onUnmount={() => setMap(null)}
-                  options={{
-                    disableDefaultUI: true,
-                    zoomControl: true,
-                    mapId: '6621f78cbdb1902f92a3d543',
-                  }}
-                >
-                  <Polyline
-                    path={pathCoordinates}
-                    options={{
-                      strokeColor: '#3b82f6',
-                      strokeOpacity: 0.8,
-                      strokeWeight: 6,
-                    }}
-                  />
-
-                  <RouteMarkers pathCoordinates={pathCoordinates} map={map} />
-                </GoogleMap>
+                />
               )}
             </div>
           </div>
@@ -129,16 +72,6 @@ export default function RouteCardWrapper({ children, route, mapsReady }) {
       )}
     </div>
   )
-}
-
-RouteMarkers.propTypes = {
-  pathCoordinates: PropTypes.arrayOf(
-    PropTypes.shape({
-      lat: PropTypes.number.isRequired,
-      lng: PropTypes.number.isRequired,
-    })
-  ).isRequired,
-  map: PropTypes.object,
 }
 
 RouteCardWrapper.propTypes = {
