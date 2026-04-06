@@ -133,7 +133,7 @@ function Home() {
 
       <div>
         <MainMap
-          defaultCenter={userLocation}
+          defaultCenter={userLocation || DEFAULT_COORDINATES}
           route={selectedRoute}
           defaultPin={true}
         />
