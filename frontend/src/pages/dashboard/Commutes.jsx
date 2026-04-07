@@ -54,8 +54,8 @@ function Commutes() {
 
   /**
    * Normalizes a raw mode input into a predefined category.
-   * @param rawMode The raw input that represents a mode of transportation
-   * @returns A normalized mode string, which can be one of: "walk", "bicycle",
+   * @param {string} rawMode The raw input that represents a mode of transportation
+   * @returns {string} A normalized mode string, which can be one of: "walk", "bicycle",
    * "bus", "rail", "car", or "other".
    */
   function normalizeMode(rawMode) {
@@ -96,9 +96,9 @@ function Commutes() {
   /**
    * Checks if a departure time falls within a specified date range.
    *
-   * @param {*} departTime The departure time as a date string or object
-   * @param {*} selectedRange The selected date range (all, 7d, or 30d)
-   * @returns true if the departure time is within the specified range; otherwise false.
+   * @param {string} departTime The departure time as a date string or object
+   * @param {string} selectedRange The selected date range (all, 7d, or 30d)
+   * @returns {boolean} true if the departure time is within the specified range; otherwise false.
    */
   function isWithinDateRange(departTime, selectedRange) {
     if (selectedRange === 'all') return true
@@ -174,8 +174,8 @@ function Commutes() {
   /**
    * Formats a departure time value into a readable string.
    *
-   * @param {*} value The departure time as a date string or object.
-   * @returns A formatted date string.
+   * @param {string} value The departure time as a date string or object.
+   * @returns {string} A formatted date string.
    */
   function formatDepartTime(value) {
     if (!value) return 'No departure time'
@@ -191,8 +191,8 @@ function Commutes() {
 
   /**
    * Formats a route mode value into a string.
-   * @param {*} value The raw route mode value
-   * @returns A string representing the route mode.
+   * @param {string} value The raw route mode value
+   * @returns {string} A string representing the route mode.
    */
   function formatRouteMode(value) {
     const normalized = normalizeMode(value)
