@@ -261,6 +261,7 @@ function Home() {
                         <EventCard
                           key={item.id}
                           event={item}
+                          hideReport={true}
                           onReport={data => {
                             setReportData(data)
                             setShowReport(true)
