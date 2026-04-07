@@ -249,13 +249,7 @@ function Co2Savings() {
             <h4 className="font-semibold text-zinc-900 mb-2">
               {co2Strings.modal.baseline.heading}
             </h4>
-            <p className="text-zinc-600">
-              {co2Strings.modal.baseline.body}{' '}
-              <span className="font-medium text-zinc-800">
-                {co2Strings.modal.baseline.factor}
-              </span>
-              {co2Strings.modal.baseline.bodySuffix}
-            </p>
+            <p className="text-zinc-600">{co2Strings.modal.baseline.body}</p>
           </div>
 
           <div>

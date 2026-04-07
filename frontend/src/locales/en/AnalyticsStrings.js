@@ -71,10 +71,7 @@ export const analyticsStrings = {
 
       baseline: {
         heading: 'Baseline',
-        body: 'The baseline is a solo petrol car emitting',
-        factor: '170 g CO₂e per vehicle-km',
-        bodySuffix:
-          '. Every saving is calculated as the difference between what a trip would have emitted under this baseline and what it actually emitted.',
+        body: 'The baseline is a solo petrol car emitting 170 g CO₂e per vehicle-km. Every saving is calculated as the difference between what a trip would have emitted under this baseline and what it actually emitted.',
       },
 
       emissionFactors: {
