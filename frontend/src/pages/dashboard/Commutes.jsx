@@ -131,9 +131,9 @@ function Commutes() {
 
     return routes.filter(route => {
       const matchesMode =
-        mode === 'all' || normalizeMode(route.transportation_mode) === mode
+        mode === 'all' || normalizeMode(route.transportationMode) === mode
 
-      const matchesDate = isWithinDateRange(route.depart_time, dateRange)
+      const matchesDate = isWithinDateRange(route.departTime, dateRange)
 
       return matchesMode && matchesDate
     })
@@ -333,7 +333,7 @@ function Commutes() {
                     </div>
 
                     <div className="text-sm text-zinc-500">
-                      {formatDepartTime(route.depart_time)}
+                      {formatDepartTime(route.departTime)}
                     </div>
                   </div>
 
@@ -342,7 +342,7 @@ function Commutes() {
                       <span className="font-medium">
                         {commuteStrings.route.mode}:
                       </span>{' '}
-                      {formatRouteMode(route.transportation_mode)}
+                      {formatRouteMode(route.transportationMode)}
                     </div>
 
                     <div>

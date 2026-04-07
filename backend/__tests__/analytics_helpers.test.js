@@ -117,9 +117,9 @@ describe('extractRouteSegments', () => {
     }
     const segments = extractRouteSegments(route)
     expect(segments).toHaveLength(2)
-    expect(segments[0].transportation_mode).toBe('walk')
+    expect(segments[0].transportationMode).toBe('walk')
     expect(segments[0].distanceKm).toBe(0.5)
-    expect(segments[1].transportation_mode).toBe('bus')
+    expect(segments[1].transportationMode).toBe('bus')
     expect(segments[1].distanceKm).toBe(8)
   })
 
@@ -148,7 +148,7 @@ describe('extractRouteSegments', () => {
     }
     const segments = extractRouteSegments(route)
     expect(segments).toHaveLength(1)
-    expect(segments[0].transportation_mode).toBe('bicycle')
+    expect(segments[0].transportationMode).toBe('bicycle')
   })
 
   test('returns empty array for invalid path', () => {
@@ -204,8 +204,8 @@ describe('computeRouteSavings', () => {
   test('use segment data given path', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'Bus',
+      creatorId: 10,
+      transportationMode: 'Bus',
       distance: '10',
       path: {
         legs: [
@@ -235,8 +235,8 @@ describe('computeRouteSavings', () => {
 
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'Car',
+      creatorId: 10,
+      transportationMode: 'Car',
       distance: '15',
       path: {
         legs: [{ steps: [{ travelMode: 'DRIVING', distanceMeters: 15000 }] }],
@@ -249,8 +249,8 @@ describe('computeRouteSavings', () => {
   test('should return zero savings for routes with no distance', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'walk',
+      creatorId: 10,
+      transportationMode: 'walk',
       distance: '0',
       path: null,
     }
@@ -268,8 +268,8 @@ describe('computeRouteSavings', () => {
 
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'Car',
+      creatorId: 10,
+      transportationMode: 'Car',
       distance: '15',
       path: null,
     }
@@ -282,8 +282,8 @@ describe('toAnalyticsRecord', () => {
   test('record shape for a user (savedKgUser)', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'Bus',
+      creatorId: 10,
+      transportationMode: 'Bus',
       distance: '10',
       path: null,
     }
@@ -298,8 +298,8 @@ describe('toAnalyticsRecord', () => {
   test("individual's savings count towards savedKgSystem for admin", async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'walk',
+      creatorId: 10,
+      transportationMode: 'walk',
       distance: '5',
       path: null,
     }
@@ -307,11 +307,11 @@ describe('toAnalyticsRecord', () => {
     expect(record.savedKg).toBe(record.savings.savedKgSystem)
   })
 
-  test('maps transportation_mode to analytics category', async () => {
+  test('maps transportationMode to analytics category', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'Bicycle',
+      creatorId: 10,
+      transportationMode: 'Bicycle',
       distance: '8',
       path: null,
     }
@@ -324,8 +324,8 @@ describe('toAnalyticsContributions', () => {
   test('returns multiple contributions from path segments', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'Bus',
+      creatorId: 10,
+      transportationMode: 'Bus',
       distance: '10',
       path: {
         legs: [
@@ -349,8 +349,8 @@ describe('toAnalyticsContributions', () => {
   test('assigns tripCount=1 to the dominant mode segment', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'Bus',
+      creatorId: 10,
+      transportationMode: 'Bus',
       distance: '10',
       path: {
         legs: [
@@ -382,8 +382,8 @@ describe('toAnalyticsContributions', () => {
 
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'Car',
+      creatorId: 10,
+      transportationMode: 'Car',
       distance: '12',
       path: {
         legs: [
@@ -400,8 +400,8 @@ describe('toAnalyticsContributions', () => {
   test('uses savedKgSystem for admin, savedKgUser for user', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'walk',
+      creatorId: 10,
+      transportationMode: 'walk',
       distance: '5',
       path: null,
     }
@@ -444,7 +444,7 @@ describe('Leg with no steps array', () => {
     }
     const segments = extractRouteSegments(route)
     expect(segments).toHaveLength(1)
-    expect(segments[0].transportation_mode).toBe('walk')
+    expect(segments[0].transportationMode).toBe('walk')
   })
 })
 
@@ -452,8 +452,8 @@ describe('Null distance fallback', () => {
   test('defaults distanceKm to 0 when distance is null', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'walk',
+      creatorId: 10,
+      transportationMode: 'walk',
       distance: null,
       path: null,
     }
@@ -466,8 +466,8 @@ describe('Null distance in one transit mode fallback', () => {
   test('defaults distanceKm to 0 when distance is null', async () => {
     const route = {
       id: 1,
-      creator_id: 10,
-      transportation_mode: 'bus',
+      creatorId: 10,
+      transportationMode: 'bus',
       distance: null,
       path: null,
     }
