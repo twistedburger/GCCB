@@ -66,7 +66,7 @@ function Home() {
   const [searchAddress, setSearchAddress] = useState('')
   const locationSearchRef = useRef(null)
 
-  const { authorizeUser, authorization } = useAuth()
+  const { authorizeUser } = useAuth()
   authorizeUser()
 
   const handleSearch = (address, lat, lng) => {
@@ -261,7 +261,6 @@ function Home() {
                         <EventCard
                           key={item.id}
                           event={item}
-                          view={authorization}
                           onReport={data => {
                             setReportData(data)
                             setShowReport(true)
@@ -271,7 +270,6 @@ function Home() {
                         <RouteCard
                           key={item.id}
                           route={item}
-                          view={authorization}
                           individualView={true}
                           onSelect={handleRouteClick}
                         />

@@ -5,7 +5,6 @@ import OrganizerCard from '../../components/OrganizerCard'
 // Disable verification for now.
 // import GenericToggle from '../../components/GenericToggle'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../hooks/Authorization'
 import ModerationActions from '../../components/ModerationActions'
 import Alert from '../../components/Alert'
 
@@ -21,7 +20,6 @@ function Moderate() {
   // const [eventQueue, setEventQueue] = useState([])
   // const [viewingReports, setViewingReports] = useState(true)
   const [viewingReports] = useState(true)
-  const { authorization } = useAuth()
 
   const fetchReportQueue = async () => {
     const response = await fetch(`http://localhost:3000/api/reports`)
@@ -74,10 +72,7 @@ function Moderate() {
               {report.report_target == 'event' && (
                 <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
-                    <EventCard
-                      event={report.target_details}
-                      view={authorization}
-                    />
+                    <EventCard event={report.targetDetails} hideReport={true} />
                   </div>
                   <ModerationActions
                     information={report}
@@ -93,11 +88,11 @@ function Moderate() {
                 <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
                     <RouteCard
-                      route={report.target_details}
-                      view={authorization}
+                      route={report.targetDetails}
+                      hideReportJoin={true}
                       individualView={true}
                       onSelect={() => {
-                        navigate(`/event/${report.target_details.event_id}`)
+                        navigate(`/event/${report.targetDetails.event_id}`)
                       }}
                     />
                   </div>
@@ -114,7 +109,7 @@ function Moderate() {
               {report.report_target == 'user' && (
                 <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
                   <div className="*:shadow-white">
-                    <OrganizerCard user={report.target_details} />
+                    <OrganizerCard user={report.targetDetails} />
                   </div>
                   <ModerationActions
                     information={report}
@@ -135,7 +130,7 @@ function Moderate() {
           <div key={event.id}>
             <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
               <div className="*:shadow-white">
-                <EventCard event={event} view={authorization} />
+                <EventCard event={event} />
               </div>
               <div className="-mt-4">
                 <ModerationActions
