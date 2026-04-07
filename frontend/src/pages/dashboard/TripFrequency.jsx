@@ -15,7 +15,9 @@ import KpiGrid from '../../components/analytics/KpiGrid'
 import ChartCard from '../../components/analytics/ChartCard'
 import GenericButton from '../../components/GenericButton'
 import { formatKm, getMostUsedMode } from '../../utils/AnalyticsHelpers'
-import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
+import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
+
+const tripStrings = analyticsStrings.tripFrequency
 import {
   MODE_COLORS,
   MODE_LABELS,
@@ -181,29 +183,29 @@ function TripFrequency() {
   const kpis = isAdmin
     ? [
         {
-          label: 'Most Used Mode',
+          label: tripStrings.kpis.mostUsedMode,
           value: loading ? '...' : overallMetrics.mostUsedMode,
         },
         {
-          label: 'Community Trips',
+          label: tripStrings.kpis.communityTrips,
           value: loading ? '...' : `${overallMetrics.tripCount}`,
         },
         {
-          label: 'Community Distance',
+          label: tripStrings.kpis.communityDistance,
           value: loading ? '...' : formatKm(overallMetrics.totalDistanceKm),
         },
       ]
     : [
         {
-          label: 'Most Used Mode',
+          label: tripStrings.kpis.mostUsedMode,
           value: loading ? '...' : overallMetrics.mostUsedMode,
         },
         {
-          label: 'Total Trips',
+          label: tripStrings.kpis.totalTrips,
           value: loading ? '...' : `${overallMetrics.tripCount}`,
         },
         {
-          label: 'Total Distance',
+          label: tripStrings.kpis.totalDistance,
           value: loading ? '...' : formatKm(overallMetrics.totalDistanceKm),
         },
       ]
@@ -216,17 +218,17 @@ function TripFrequency() {
         unstyled
         customStyling="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
       >
-        {adminAnalyticsEn.common.back}
+        {analyticsStrings.common.back}
       </GenericButton>
 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">
-          {isAdmin ? 'Community Trip Frequency' : 'My Trip Frequency'}
+          {isAdmin ? tripStrings.pageTitle.admin : tripStrings.pageTitle.user}
         </h1>
         <p className="mt-1 text-sm text-zinc-600">
           {isAdmin
-            ? 'See how students across the community are travelling. Which modes they use most, how far they go, and where the biggest opportunities to shift away from solo car trips still exist.'
-            : "See how you're travelling; which modes you use most and how your choices compare across your completed trips."}
+            ? tripStrings.pageDescription.admin
+            : tripStrings.pageDescription.user}
         </p>
       </div>
 
@@ -238,33 +240,33 @@ function TripFrequency() {
 
       <div className="flex flex-col">
         <AnalyticsBlock
-          title="At a glance"
+          title={tripStrings.blocks.atAGlance.title}
           description={
             isAdmin
-              ? 'Aggregate trip totals across all completed community routes.'
-              : 'Your completed trip totals based on routes you participated in.'
+              ? tripStrings.blocks.atAGlance.descriptionAdmin
+              : tripStrings.blocks.atAGlance.descriptionUser
           }
         >
           <KpiGrid items={kpis} />
         </AnalyticsBlock>
 
         <AnalyticsBlock
-          title="Breakdown by mode"
-          description="Each completed trip is counted once and assigned to its dominant transportation mode. Multi-mode routes (for example a walk to the bus stop followed by a bus ride) are attributed to whichever mode covered the most distance."
+          title={tripStrings.blocks.byMode.title}
+          description={tripStrings.blocks.byMode.description}
         >
           {loading ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-              Loading charts...
+              {analyticsStrings.common.loadingCharts}
             </div>
           ) : chartData.length === 0 ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-              No chart data available yet.
+              {analyticsStrings.common.noData}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               <ChartCard
-                title="Trips by mode"
-                subtitle="Number of completed trips per transportation mode"
+                title={tripStrings.charts.byMode.title}
+                subtitle={tripStrings.charts.byMode.subtitle}
               >
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart
@@ -289,8 +291,8 @@ function TripFrequency() {
               </ChartCard>
 
               <ChartCard
-                title="Avg distance per trip by mode"
-                subtitle="km per trip on average; longer trips suggest further commutes"
+                title={tripStrings.charts.avgDistance.title}
+                subtitle={tripStrings.charts.avgDistance.subtitle}
               >
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart
@@ -324,18 +326,18 @@ function TripFrequency() {
         </AnalyticsBlock>
 
         <AnalyticsBlock
-          title="Why this matters"
-          description="Understanding how people travel is the first step to reducing emissions!"
+          title={tripStrings.blocks.whyItMatters.title}
+          description={tripStrings.blocks.whyItMatters.description}
         >
           <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-700 shadow-sm">
             <div className="space-y-3">
               <p>
                 {isAdmin
-                  ? "Every trip that shifts away from driving alone reduces the community's collective carbon footprint. High walk, bicycle, and transit numbers here indicate the platform is achieving its core goal."
-                  : 'Every trip you take by foot, bike, or transit instead of driving alone makes a real difference. As your most-used mode trends away from car, the greater your personal impact!'}
+                  ? tripStrings.blocks.whyItMatters.bodyAdmin
+                  : tripStrings.blocks.whyItMatters.bodyUser}
               </p>
               <p className="text-zinc-500">
-                Trips are counted for completed routes only.
+                {tripStrings.blocks.whyItMatters.footnote}
               </p>
             </div>
           </div>

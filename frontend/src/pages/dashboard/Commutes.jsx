@@ -1,4 +1,3 @@
-import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
@@ -6,9 +5,12 @@ import KpiGrid from '../../components/analytics/KpiGrid'
 import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
 import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
+import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
+
+const commuteStrings = analyticsStrings.commutes
 
 /**
- * Commutes Page
+ * Commutes History Page
  * @returns {JSX.Element}
  */
 function Commutes() {
@@ -50,6 +52,12 @@ function Commutes() {
     fetchHistory()
   }, [])
 
+  /**
+   * Normalizes a raw mode input into a predefined category.
+   * @param rawMode The raw input that represents a mode of transportation
+   * @returns A normalized mode string, which can be one of: "walk", "bicycle",
+   * "bus", "rail", "car", or "other".
+   */
   function normalizeMode(rawMode) {
     if (!rawMode) return 'other'
 
@@ -85,6 +93,13 @@ function Commutes() {
     return 'other'
   }
 
+  /**
+   * Checks if a departure time falls within a specified date range.
+   *
+   * @param {*} departTime The departure time as a date string or object
+   * @param {*} selectedRange The selected date range (all, 7d, or 30d)
+   * @returns true if the departure time is within the specified range; otherwise false.
+   */
   function isWithinDateRange(departTime, selectedRange) {
     if (selectedRange === 'all') return true
     if (!departTime) return false
@@ -116,9 +131,9 @@ function Commutes() {
 
     return routes.filter(route => {
       const matchesMode =
-        mode === 'all' || normalizeMode(route.transportationMode) === mode
+        mode === 'all' || normalizeMode(route.transportation_mode) === mode
 
-      const matchesDate = isWithinDateRange(route.departTime, dateRange)
+      const matchesDate = isWithinDateRange(route.depart_time, dateRange)
 
       return matchesMode && matchesDate
     })
@@ -138,21 +153,30 @@ function Commutes() {
   }, 0)
 
   const kpis = [
-    { label: 'Trips', value: loading ? '...' : `${tripCount}` },
     {
-      label: 'Total Distance',
+      label: commuteStrings.kpis.trips,
+      value: loading ? '...' : `${tripCount}`,
+    },
+    {
+      label: commuteStrings.kpis.totalDistance,
       value: loading ? '...' : formatKm(totalDistanceKm),
     },
     {
-      label: 'Avg Distance / Trip',
+      label: commuteStrings.kpis.avgDistance,
       value: loading ? '...' : formatKm(avgDistancePerRouteKm),
     },
     {
-      label: 'Personal CO₂e Saved',
+      label: commuteStrings.kpis.co2Saved,
       value: loading ? '...' : formatKg(totalCo2SavedKg),
     },
   ]
 
+  /**
+   * Formats a departure time value into a readable string.
+   *
+   * @param {*} value The departure time as a date string or object.
+   * @returns A formatted date string.
+   */
   function formatDepartTime(value) {
     if (!value) return 'No departure time'
 
@@ -165,6 +189,11 @@ function Commutes() {
     return date.toLocaleString()
   }
 
+  /**
+   * Formats a route mode value into a string.
+   * @param {*} value The raw route mode value
+   * @returns A string representing the route mode.
+   */
   function formatRouteMode(value) {
     const normalized = normalizeMode(value)
 
@@ -192,13 +221,13 @@ function Commutes() {
         unstyled
         customStyling="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
       >
-        {adminAnalyticsEn.common.back}
+        {analyticsStrings.common.back}
       </GenericButton>
 
       <div>
-        <h1 className="text-2xl font-semibold">My Commutes</h1>
+        <h1 className="text-2xl font-semibold">{commuteStrings.pageTitle}</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          Review the completed trips included in your commute metrics.
+          {commuteStrings.pageDescription}
         </p>
       </div>
 
@@ -209,11 +238,11 @@ function Commutes() {
       ) : null}
 
       <div className="flex flex-col">
-        <AnalyticsBlock title="Filters">
+        <AnalyticsBlock title={commuteStrings.blocks.filters.title}>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex flex-col">
               <label className="mb-1 text-sm font-semibold text-zinc-700">
-                Date range
+                {commuteStrings.blocks.filters.dateRangeLabel}
               </label>
               <Select
                 options={['all', '7d', '30d'].map(r => ({
@@ -227,7 +256,7 @@ function Commutes() {
 
             <div className="flex flex-col">
               <label className="mb-1 text-sm font-semibold text-zinc-700">
-                Transportation mode
+                {commuteStrings.blocks.filters.modeLabel}
               </label>
               <Select
                 options={[
@@ -262,18 +291,18 @@ function Commutes() {
           </div>
         </AnalyticsBlock>
 
-        <AnalyticsBlock title="Key metrics">
+        <AnalyticsBlock title={commuteStrings.blocks.keyMetrics.title}>
           <KpiGrid items={kpis} />
         </AnalyticsBlock>
 
-        <AnalyticsBlock title="Commute history">
+        <AnalyticsBlock title={commuteStrings.blocks.history.title}>
           {loading ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-              Loading commute history...
+              {commuteStrings.blocks.history.loading}
             </div>
           ) : filteredRoutes.length === 0 ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-              No completed trips match the selected filters.
+              {commuteStrings.blocks.history.empty}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -285,12 +314,15 @@ function Commutes() {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 flex-1">
                       <h3 className="text-base font-semibold text-zinc-900">
-                        {route.title || 'Untitled commute'}
+                        {route.title || commuteStrings.blocks.history.untitled}
                       </h3>
 
                       <p className="mt-1 text-sm text-zinc-600">
-                        {route.origin || 'Unknown origin'} →{' '}
-                        {route.destination || 'Unknown destination'}
+                        {route.origin ||
+                          commuteStrings.blocks.history.unknownOrigin}{' '}
+                        →{' '}
+                        {route.destination ||
+                          commuteStrings.blocks.history.unknownDestination}
                       </p>
 
                       {route.description ? (
@@ -307,17 +339,23 @@ function Commutes() {
 
                   <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-zinc-700 sm:grid-cols-3">
                     <div>
-                      <span className="font-medium">Mode:</span>{' '}
+                      <span className="font-medium">
+                        {commuteStrings.route.mode}:
+                      </span>{' '}
                       {formatRouteMode(route.transportation_mode)}
                     </div>
 
                     <div>
-                      <span className="font-medium">Distance:</span>{' '}
+                      <span className="font-medium">
+                        {commuteStrings.route.distance}:
+                      </span>{' '}
                       {formatKm(Number(route.distance ?? 0))}
                     </div>
 
                     <div>
-                      <span className="font-medium">CO₂e Saved:</span>{' '}
+                      <span className="font-medium">
+                        {commuteStrings.route.co2Saved}:
+                      </span>{' '}
                       {formatKg(Number(route.savedKgUser ?? 0))}
                     </div>
                   </div>

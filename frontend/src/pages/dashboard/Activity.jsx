@@ -22,6 +22,9 @@ import {
   GRID_STYLE,
   THEME_COLORS,
 } from '../../utils/ChartConfig'
+import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
+
+const activityStrings = analyticsStrings.activity
 
 const STATUS_COLORS = {
   upcoming: THEME_COLORS.blue,
@@ -196,24 +199,24 @@ function Activity() {
 
   const kpis = [
     {
-      label: 'Active Route Creators',
+      label: activityStrings.kpis.activeCreators7d,
       value: loading ? '...' : `${data?.kpis.activeCreators7d ?? 0}`,
-      subvalue: 'In the last 7 days',
+      subvalue: activityStrings.kpis.activeCreators7dSub,
     },
     {
-      label: 'Completion Rate',
+      label: activityStrings.kpis.completionRate30d,
       value: loading ? '...' : `${data?.kpis.completionRate30d ?? 0}%`,
-      subvalue: 'In the last 30 days',
+      subvalue: activityStrings.kpis.completionRate30dSub,
     },
     {
-      label: 'Rejected Routes',
+      label: activityStrings.kpis.rejectedRoutes30d,
       value: loading ? '...' : `${data?.kpis.rejectedRoutes30d ?? 0}`,
-      subvalue: 'In the last 30 days',
+      subvalue: activityStrings.kpis.rejectedRoutes30dSub,
     },
     {
-      label: 'Average Group Size',
+      label: activityStrings.kpis.avgGroupSize,
       value: loading ? '...' : `${data?.kpis.avgGroupSize ?? 0}`,
-      subvalue: 'Participants per completed route',
+      subvalue: activityStrings.kpis.avgGroupSizeSub,
     },
   ]
 
@@ -248,14 +251,13 @@ function Activity() {
         unstyled
         customStyling="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
       >
-        Back
+        {analyticsStrings.common.back}
       </GenericButton>
 
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Platform Activity</h1>
+        <h1 className="text-2xl font-semibold">{activityStrings.pageTitle}</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          Monitor platform-wide engagement; track how routes are being created,
-          completed, and rejected across the community.
+          {activityStrings.pageDescription}
         </p>
       </div>
 
@@ -267,25 +269,25 @@ function Activity() {
 
       <div className="flex flex-col">
         <AnalyticsBlock
-          title="At a glance"
-          description="Key platform activity metrics. Creator and rejection counts use a rolling 7 or 30 day window."
+          title={activityStrings.blocks.atAGlance.title}
+          description={activityStrings.blocks.atAGlance.description}
         >
           <KpiGrid items={kpis} />
         </AnalyticsBlock>
 
         <AnalyticsBlock
-          title="Route status breakdown"
-          description="All-time count of routes by current status."
+          title={activityStrings.blocks.statusBreakdown.title}
+          description={activityStrings.blocks.statusBreakdown.description}
         >
           {loading ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-              Loading charts...
+              {activityStrings.blocks.statusBreakdown.loading}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               <ChartCard
-                title="Upcoming vs completed vs rejected"
-                subtitle="Total route counts by status"
+                title={activityStrings.charts.statusBreakdown.title}
+                subtitle={activityStrings.charts.statusBreakdown.subtitle}
               >
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart
@@ -306,12 +308,12 @@ function Activity() {
               </ChartCard>
 
               <ChartCard
-                title="Rejection reasons"
-                subtitle="Route counts grouped by rejection reason"
+                title={activityStrings.charts.rejectionReasons.title}
+                subtitle={activityStrings.charts.rejectionReasons.subtitle}
               >
                 {rejectionChartData.length === 0 ? (
                   <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-                    No rejected routes on record.
+                    {activityStrings.charts.rejectionReasons.empty}
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={240}>
@@ -347,8 +349,8 @@ function Activity() {
         </AnalyticsBlock>
 
         <AnalyticsBlock
-          title="CO₂e over time"
-          description="Estimated baseline emissions vs actual emissions across completed routes. The gap between the two lines represents CO₂e saved by the community."
+          title={activityStrings.blocks.co2OverTime.title}
+          description={activityStrings.blocks.co2OverTime.description}
         >
           <div className="mb-4 flex gap-2">
             {GRANULARITIES.map(g => (
@@ -369,16 +371,16 @@ function Activity() {
           </div>
 
           <ChartCard
-            title="Baseline vs actual CO₂e emissions"
-            subtitle="kg CO₂e per period; baseline assumes every participant drove solo"
+            title={activityStrings.charts.timeseries.title}
+            subtitle={activityStrings.charts.timeseries.subtitle}
           >
             {timeseriesLoading ? (
               <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-                Loading chart...
+                {activityStrings.charts.timeseries.loading}
               </div>
             ) : activeTimeseriesData.length === 0 ? (
               <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-                No completed route data available for this view.
+                {activityStrings.charts.timeseries.empty}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>

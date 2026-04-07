@@ -16,7 +16,10 @@ import ChartCard from '../../components/analytics/ChartCard'
 import Modal from '../../components/Modal'
 import GenericButton from '../../components/GenericButton'
 import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
-import { adminAnalyticsEn } from '../../locales/adminAnalytics.en'
+import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
+
+const co2Strings = analyticsStrings.co2
+
 import {
   MODE_COLORS,
   MODE_LABELS,
@@ -146,37 +149,37 @@ function Co2Savings() {
   const kpis = isAdmin
     ? [
         {
-          label: 'Community CO₂e Saved',
+          label: co2Strings.kpis.communitySaved,
           value: loading ? '...' : formatKg(totalCo2SavedKg),
         },
         {
-          label: 'Avg CO₂e Saved / Trip',
+          label: co2Strings.kpis.avgPerTrip,
           value: loading ? '...' : formatKg(avgCo2PerTripKg),
         },
         {
-          label: 'Trips Included',
+          label: co2Strings.kpis.tripsIncluded,
           value: loading ? '...' : `${tripCount}`,
         },
         {
-          label: 'Distance Included',
+          label: co2Strings.kpis.distanceIncluded,
           value: loading ? '...' : formatKm(totalDistanceKm),
         },
       ]
     : [
         {
-          label: 'Personal CO₂e Saved',
+          label: co2Strings.kpis.personalSaved,
           value: loading ? '...' : formatKg(totalCo2SavedKg),
         },
         {
-          label: 'Avg CO₂e Saved / Trip',
+          label: co2Strings.kpis.avgPerTrip,
           value: loading ? '...' : formatKg(avgCo2PerTripKg),
         },
         {
-          label: 'Trips Included',
+          label: co2Strings.kpis.tripsIncluded,
           value: loading ? '...' : `${tripCount}`,
         },
         {
-          label: 'Distance Included',
+          label: co2Strings.kpis.distanceIncluded,
           value: loading ? '...' : formatKm(totalDistanceKm),
         },
       ]
@@ -212,29 +215,26 @@ function Co2Savings() {
         unstyled
         customStyling="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
       >
-        {adminAnalyticsEn.common.back}
+        {analyticsStrings.common.back}
       </GenericButton>
 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">
-          {isAdmin ? 'Community CO₂e Savings' : 'My CO₂e Savings'}
+          {isAdmin ? co2Strings.pageTitle.admin : co2Strings.pageTitle.user}
         </h1>
         <p className="mt-1 text-sm text-zinc-600">
           {isAdmin
-            ? 'Track estimated emissions avoided across all completed community trips. Use this to see which modes are contributing the most impact and where the community is making the biggest difference.'
-            : "Track the estimated emissions you've avoided across your completed trips. Every route you take by foot, bike, or transit instead of driving alone contributes to this total."}
+            ? co2Strings.pageDescription.admin
+            : co2Strings.pageDescription.user}
         </p>
         <div className="mt-3 flex items-center gap-3">
-          <p className="text-xs text-zinc-400">
-            All values are estimates for awareness and analytics purposes, not
-            exact real-world measurements.
-          </p>
+          <p className="text-xs text-zinc-400">{co2Strings.disclaimer}</p>
           <GenericButton
             onClick={() => setShowMethodology(true)}
             unstyled
             customStyling="shrink-0 text-xs font-medium text-blue-primary underline underline-offset-2 hover:opacity-70 transition-opacity"
           >
-            How is this calculated?
+            {co2Strings.howCalculated}
           </GenericButton>
         </div>
       </div>
@@ -242,81 +242,51 @@ function Co2Savings() {
       <Modal
         isOpen={showMethodology}
         onClose={() => setShowMethodology(false)}
-        title="How CO₂e savings are calculated"
+        title={co2Strings.modal.title}
       >
         <div className="text-sm text-zinc-700 space-y-5">
           <div>
-            <h4 className="font-semibold text-zinc-900 mb-2">Baseline</h4>
+            <h4 className="font-semibold text-zinc-900 mb-2">
+              {co2Strings.modal.baseline.heading}
+            </h4>
             <p className="text-zinc-600">
-              The baseline is a solo petrol car emitting{' '}
+              {co2Strings.modal.baseline.body}{' '}
               <span className="font-medium text-zinc-800">
-                170 g CO₂e per vehicle-km
+                {co2Strings.modal.baseline.factor}
               </span>
-              . Every saving is calculated as the difference between what a trip
-              would have emitted under this baseline and what it actually
-              emitted.
+              {co2Strings.modal.baseline.bodySuffix}
             </p>
           </div>
 
           <div>
             <h4 className="font-semibold text-zinc-900 mb-3">
-              Emission factors
+              {co2Strings.modal.emissionFactors.heading}
             </h4>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-200">
                     <th className="text-left py-2 pr-4 font-semibold text-zinc-700">
-                      Mode
+                      {co2Strings.modal.emissionFactors.columns.mode}
                     </th>
                     <th className="text-left py-2 pr-4 font-semibold text-zinc-700">
-                      Factor
+                      {co2Strings.modal.emissionFactors.columns.factor}
                     </th>
                     <th className="text-left py-2 font-semibold text-zinc-700">
-                      Basis
+                      {co2Strings.modal.emissionFactors.columns.basis}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
-                  <tr>
-                    <td className="py-2 pr-4 text-zinc-800">
-                      Petrol car (baseline)
-                    </td>
-                    <td className="py-2 pr-4 font-mono text-zinc-600">
-                      170 g / vehicle-km
-                    </td>
-                    <td className="py-2 text-zinc-500">Solo occupant</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4 text-zinc-800">Electric car</td>
-                    <td className="py-2 pr-4 font-mono text-zinc-600">
-                      47 g / vehicle-km
-                    </td>
-                    <td className="py-2 text-zinc-500">Solo occupant</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4 text-zinc-800">Bus / Transit</td>
-                    <td className="py-2 pr-4 font-mono text-zinc-600">
-                      97 g / passenger-km
-                    </td>
-                    <td className="py-2 text-zinc-500">Per passenger</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4 text-zinc-800">Rail</td>
-                    <td className="py-2 pr-4 font-mono text-zinc-600">
-                      35 g / passenger-km
-                    </td>
-                    <td className="py-2 text-zinc-500">Per passenger</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4 text-zinc-800">Walk / Bicycle</td>
-                    <td className="py-2 pr-4 font-mono text-zinc-600">
-                      0 g / km
-                    </td>
-                    <td className="py-2 text-zinc-500">
-                      Zero direct emissions
-                    </td>
-                  </tr>
+                  {co2Strings.modal.emissionFactors.rows.map(row => (
+                    <tr key={row.mode}>
+                      <td className="py-2 pr-4 text-zinc-800">{row.mode}</td>
+                      <td className="py-2 pr-4 font-mono text-zinc-600">
+                        {row.factor}
+                      </td>
+                      <td className="py-2 text-zinc-500">{row.basis}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -324,49 +294,50 @@ function Co2Savings() {
 
           <div>
             <h4 className="font-semibold text-zinc-900 mb-3">
-              Savings formula by mode
+              {co2Strings.modal.formulas.heading}
             </h4>
             <div className="space-y-3">
               <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
-                <p className="font-medium text-zinc-800 mb-1">Walk / Bicycle</p>
+                <p className="font-medium text-zinc-800 mb-1">
+                  {co2Strings.modal.formulas.walk.label}
+                </p>
                 <p className="font-mono text-xs text-zinc-500 mb-1">
-                  Savings = distance * 170 ÷ 1000
+                  {co2Strings.modal.formulas.walk.formula}
                 </p>
                 <p className="text-xs text-zinc-500">
-                  Full baseline avoided; zero emissions produced.
+                  {co2Strings.modal.formulas.walk.note}
                 </p>
               </div>
               <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
-                <p className="font-medium text-zinc-800 mb-1">Bus / Rail</p>
+                <p className="font-medium text-zinc-800 mb-1">
+                  {co2Strings.modal.formulas.transit.label}
+                </p>
                 <p className="font-mono text-xs text-zinc-500 mb-1">
-                  Savings = distance * (170 - transit_factor) ÷ 1000
+                  {co2Strings.modal.formulas.transit.formula}
                 </p>
                 <p className="text-xs text-zinc-500">
-                  Partial Saving; transit still emits, but far less than the
-                  solo-car baseline per passenger.
+                  {co2Strings.modal.formulas.transit.note}
                 </p>
               </div>
               <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
-                <p className="font-medium text-zinc-800 mb-1">Carpool</p>
-                <p className="font-mono text-xs text-zinc-500 mb-1">
-                  System Savings = distance * (passengers * 170 -
-                  vehicle_factor) ÷ 1000
+                <p className="font-medium text-zinc-800 mb-1">
+                  {co2Strings.modal.formulas.carpool.label}
                 </p>
                 <p className="font-mono text-xs text-zinc-500 mb-1">
-                  Your Individual Share = system savings ÷ passengers
+                  {co2Strings.modal.formulas.carpool.formulaSystem}
+                </p>
+                <p className="font-mono text-xs text-zinc-500 mb-1">
+                  {co2Strings.modal.formulas.carpool.formulaUser}
                 </p>
                 <p className="text-xs text-zinc-500">
-                  Savings scale with group size. An electric carpool saves
-                  significantly more than a petrol one.
+                  {co2Strings.modal.formulas.carpool.note}
                 </p>
               </div>
             </div>
           </div>
 
           <p className="text-xs text-zinc-400 pt-1 border-t border-zinc-100">
-            Emission factors sourced from Our World in Data / International
-            Council on Clean Transportation. Routes are calculated
-            segment-by-segment.
+            {co2Strings.modal.footnote}
           </p>
         </div>
       </Modal>
@@ -379,33 +350,33 @@ function Co2Savings() {
 
       <div className="flex flex-col">
         <AnalyticsBlock
-          title="Key metrics"
+          title={co2Strings.blocks.keyMetrics.title}
           description={
             isAdmin
-              ? 'Aggregate CO₂e totals across all completed community routes.'
-              : 'Your CO₂e totals based on routes you participated in.'
+              ? co2Strings.blocks.keyMetrics.descriptionAdmin
+              : co2Strings.blocks.keyMetrics.descriptionUser
           }
         >
           <KpiGrid items={kpis} />
         </AnalyticsBlock>
 
         <AnalyticsBlock
-          title="CO₂e savings overview"
-          description="Estimated savings across all completed trips, broken down by mode."
+          title={co2Strings.blocks.overview.title}
+          description={co2Strings.blocks.overview.description}
         >
           {loading ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-              Loading charts...
+              {analyticsStrings.common.loadingCharts}
             </div>
           ) : chartData.length === 0 ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-              No chart data available yet.
+              {analyticsStrings.common.noData}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               <ChartCard
-                title="CO₂e saved by mode"
-                subtitle="Total kg CO₂e saved per transportation mode"
+                title={co2Strings.charts.byMode.title}
+                subtitle={co2Strings.charts.byMode.subtitle}
               >
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart
@@ -430,8 +401,8 @@ function Co2Savings() {
               </ChartCard>
 
               <ChartCard
-                title="Savings efficiency by mode"
-                subtitle="kg CO₂e saved per km travelled; higher is better"
+                title={co2Strings.charts.efficiency.title}
+                subtitle={co2Strings.charts.efficiency.subtitle}
               >
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart
