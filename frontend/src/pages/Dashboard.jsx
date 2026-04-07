@@ -195,7 +195,6 @@ function Dashboard() {
           title: 'Badges',
           value: '0',
           subtitle: 'Coming soonTM',
-          onClick: () => console.log('Placeholder: Badges page later'),
         },
       ]
 
