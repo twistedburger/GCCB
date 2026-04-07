@@ -9,7 +9,7 @@ import TransitLegCard from '../../components/TransitLegCard'
 import { useAuth } from '../../hooks/Authorization'
 import { Drawer } from 'vaul'
 import Report from '../../components/Report'
-import { calculateTransitLegs } from '../../utils/routes'
+import { calculateTransitLegs } from '../../utils/RouteUtils'
 
 /**
  * Drawer for displaying a route once selected.
