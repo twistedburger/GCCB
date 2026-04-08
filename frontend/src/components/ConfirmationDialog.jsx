@@ -1,15 +1,16 @@
 import PropTypes from 'prop-types'
 import Modal from './Modal'
 import GenericButton from './GenericButton'
+import { confirmationDialogStrings } from '../locales/en/ComponentStrings/ConfirmationDialogStrings'
 
 export default function ConfirmationDialog({
   isOpen,
   onClose,
   onConfirm,
-  children = 'Please confirm that you would like to proceed with this action. This change may be permanent.',
-  title = 'Confirmation',
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  children = confirmationDialogStrings.defaultConfirm,
+  title = confirmationDialogStrings.defaultTitle,
+  confirmText = confirmationDialogStrings.confirm,
+  cancelText = confirmationDialogStrings.cancel,
   variant = 'primary',
 }) {
   // confirmation button is red if danger variant
@@ -37,7 +38,7 @@ export default function ConfirmationDialog({
               onClose()
             }}
             unstyled={false}
-            customStyling={`${confirmButtonStyles}`}
+            customStyling={confirmButtonStyles}
           >
             {confirmText}
           </GenericButton>
