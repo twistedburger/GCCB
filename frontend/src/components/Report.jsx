@@ -3,15 +3,14 @@ import TextBox from './TextBox'
 import Select from 'react-select'
 import { useState } from 'react'
 import PropTypes from 'prop-types'
+import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
 
 export default function Report({ type, targetId, onClose, setAlert }) {
-  const reasonMenu = [
-    'Spam or Misleading Information',
-    'Inappropriate Content',
-    'Dangerous Activity',
-    'Discrimination',
-    'Other',
-  ].map(r => ({ value: r, label: r, textvalue: r }))
+  const reasonMenu = reportStrings.reportReasonMenu.map(r => ({
+    value: r,
+    label: r,
+    textvalue: r,
+  }))
 
   const [reason, setReason] = useState(reasonMenu[0].value)
   const [explanation, setExplanation] = useState('')
@@ -19,7 +18,7 @@ export default function Report({ type, targetId, onClose, setAlert }) {
 
   const handleSubmit = async () => {
     if (!explanation.trim()) {
-      setExplanationError('Please provide an explanation.')
+      setExplanationError(reportStrings.provideExplanation)
       return
     }
 
@@ -33,10 +32,10 @@ export default function Report({ type, targetId, onClose, setAlert }) {
 
       if (response.ok) {
         onClose()
-        setAlert({ type: 'success', text: 'Report submitted successfully.' })
+        setAlert({ type: 'success', text: reportStrings.reportSuccess })
       }
     } catch {
-      setAlert({ type: 'error', text: 'Failed to send report.' })
+      setAlert({ type: 'error', text: reportStrings.reportFailed })
     }
   }
 
@@ -46,7 +45,7 @@ export default function Report({ type, targetId, onClose, setAlert }) {
         <div className=" *:mx-0 *:w-full">
           <Select
             instanceId="report-reason-select"
-            aria-label="Select a reason for reporting"
+            aria-label={reportStrings.selectReportReason}
             options={reasonMenu}
             value={{ value: reason, label: reason }}
             onChange={e => setReason(e.value)}
@@ -58,14 +57,16 @@ export default function Report({ type, targetId, onClose, setAlert }) {
             setExplanation(e.target.value)
             if (explanationError) setExplanationError('')
           }}
-          placeholder={'Please describe the issue...'}
-          aria-label="Description of the report"
+          placeholder={reportStrings.describeIssue}
+          aria-label={reportStrings.reportDesc}
           error={explanationError}
           multiline={true}
         />
       </div>
       <div className="flex justify-center place-content-end">
-        <GenericButton onClick={handleSubmit}>Submit</GenericButton>
+        <GenericButton onClick={handleSubmit}>
+          {reportStrings.submit}
+        </GenericButton>
       </div>
     </div>
   )
