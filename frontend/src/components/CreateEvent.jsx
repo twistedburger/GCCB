@@ -7,7 +7,7 @@ import CreateRoute from './CreateRoute'
 import LocationSearch from './LocationSearch'
 import RouteCard from './RouteCard'
 import ConfirmationDialog from './ConfirmationDialog'
-import ComponentStrings from '../locales/en/ComponentStrings'
+import { createEventStrings } from '../locales/en/ComponentStrings/CreateEventStrings'
 
 const CreateEvent = ({ initLoc, onSubmit }) => {
   const [addedRoutes, setAddedRoutes] = useState([])
@@ -46,11 +46,9 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const validate = () => {
     const newErrors = {}
     if (!eventName.trim())
-      newErrors.eventName = ComponentStrings.createEvent.eventNameRequired
-    if (!selectedPlace)
-      newErrors.location = ComponentStrings.createEvent.locationRequired
-    if (!datetime)
-      newErrors.datetime = ComponentStrings.createEvent.dateRequired
+      newErrors.eventName = createEventStrings.eventNameRequired
+    if (!selectedPlace) newErrors.location = createEventStrings.locationRequired
+    if (!datetime) newErrors.datetime = createEventStrings.dateRequired
     return newErrors
   }
 
@@ -65,13 +63,16 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Server Error: ${response.status}`)
+        throw new Error(
+          errorData.error ||
+            `${createEventStrings.serverError} ${response.status}`
+        )
       }
 
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('Error in createEvent helper:', error)
+      console.error(createEventStrings.eventHelperError, error)
       throw error
     }
   }
@@ -104,14 +105,14 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
       onSubmit({
         success: true,
-        message: ComponentStrings.createEvent.creationSuccess,
+        message: createEventStrings.creationSuccess,
         event_id: newevent_id,
       })
     } catch (error) {
-      console.error('Error creating event:', error)
+      console.error(createEventStrings.errorCreatingEvent, error)
       onSubmit({
         success: false,
-        message: error.message || ComponentStrings.createEvent.creationFailed,
+        message: error.message || createEventStrings.creationFailed,
       })
     }
   }
@@ -132,13 +133,14 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(
-          errorData.error || `Route Creation Failed: ${response.status}`
+          errorData.error ||
+            `${createEventStrings.routeCreationFailed} ${response.status}`
         )
       }
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('Error creating route:', error)
+      console.error(createEventStrings.errorCreatingRoute, error)
       throw error
     }
   }
@@ -158,15 +160,15 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">
-        {ComponentStrings.createEvent.createEventTitle}
+        {createEventStrings.createEventTitle}
       </h1>
       <ConfirmationDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onConfirm={handleConfirmSubmit}
-        title={ComponentStrings.createEvent.confirmCreationTitle}
+        title={createEventStrings.confirmCreationTitle}
       >
-        {ComponentStrings.createEvent.confirmCreationMessage(
+        {createEventStrings.confirmCreationMessage(
           eventName,
           addedRoutes.length
         )}
@@ -175,7 +177,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
       <form className="space-y-4" onSubmit={handleEventSubmit}>
         <div>
           <TextBox
-            label={ComponentStrings.createEvent.nameLabel}
+            label={createEventStrings.nameLabel}
             value={eventName}
             onChange={e => setEventName(e.target.value)}
             error={errors.eventName}
@@ -184,7 +186,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
         <div>
           <label className="text-sm font-semibold mb-1 block ml-1">
-            {ComponentStrings.createEvent.locationLabel}
+            {createEventStrings.locationLabel}
           </label>
           <LocationSearch
             className={`w-full flex justify-end rounded-xl bg-gray-50 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
@@ -196,7 +198,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
               setBanner(banner)
               setPlaceId(placeId)
             }}
-            placeHolder={ComponentStrings.createEvent.eventLocationPlaceholder}
+            placeHolder={createEventStrings.eventLocationPlaceholder}
             disabled={addRoute || addedRoutes.length > 0}
           />
           {errors.location && (
@@ -211,7 +213,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
             className="text-sm font-semibold text-text-primary ml-1 mb-1.5 block"
             htmlFor="event-datetime"
           >
-            {ComponentStrings.createEvent.dateLabel}
+            {createEventStrings.dateLabel}
           </label>
           <input
             id="event-datetime"
@@ -231,7 +233,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
         <div>
           <TextBox
-            label={ComponentStrings.createEvent.descriptionLabel}
+            label={createEventStrings.descriptionLabel}
             value={eventDesc}
             onChange={e => setEventDesc(e.target.value)}
             multiline
@@ -241,7 +243,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         {addedRoutes.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">
-              {ComponentStrings.createEvent.addedRoutesTitle}
+              {createEventStrings.addedRoutesTitle}
             </h2>
             {addedRoutes.map(route => (
               <div key={route.id} className="relative">
@@ -284,14 +286,14 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
             </div>
           ) : (
             <GenericButton type="button" onClick={() => setAddRoute(true)}>
-              {ComponentStrings.createEvent.addRoute}
+              {createEventStrings.addRoute}
             </GenericButton>
           )}
         </div>
 
         <div className="flex justify-end">
           <GenericButton type="submit">
-            {ComponentStrings.createEvent.createEvent}
+            {createEventStrings.createEvent}
           </GenericButton>
         </div>
       </form>

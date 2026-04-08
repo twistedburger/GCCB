@@ -1,10 +1,9 @@
 import PropTypes from 'prop-types'
-import ComponentStrings from '../locales/en/ComponentStrings'
+import { badgesBlockStrings } from '../locales/en/ComponentStrings/BadgesBlockStrings'
 
 const BadgesBlock = ({ user }) => {
   // TODO: fetch badges from badges table depending on userid and display accordingly. Currently displays text only.
   const badges = user?.badges || []
-  const { noBadges } = ComponentStrings.badgesBlock
 
   return (
     <div className="flex flex-col w-full gap-1.5 mb-4">
@@ -28,7 +27,7 @@ const BadgesBlock = ({ user }) => {
             ))}
           </div>
         ) : (
-          <span>{noBadges}</span>
+          <span>{badgesBlockStrings.noBadges}</span>
         )}
       </div>
     </div>
