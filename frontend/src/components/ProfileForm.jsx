@@ -3,6 +3,7 @@ import { useState } from 'react'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import { Person, ArrowBackIosNew } from '@mui/icons-material'
+import { profileFormStrings } from '../locales/en/ComponentStrings/ProfileFormStrings'
 
 const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,7 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
   const checkNickname = nickname => {
     const taken = ['justJam', 'dartFrog']
     if (taken.includes(nickname)) {
-      setNicknameError('Nickname is already taken.')
+      setNicknameError(profileFormStrings.nicknameTaken)
     } else {
       setNicknameError('')
     }
@@ -61,7 +62,7 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
           </div>
         )}
         <h1 className="w-full text-center text-lg font-bold text-gray-800">
-          {isNew ? 'Create Profile' : 'Edit Profile'}
+          {isNew ? profileFormStrings.create : profileFormStrings.edit}
         </h1>
       </div>
 
@@ -72,24 +73,34 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
             <Person className="text-gray-300" style={{ fontSize: 60 }} />
           </div>
           <GenericButton onClick={handleChangePhoto}>
-            Change Photo
+            {profileFormStrings.changePhoto}
           </GenericButton>
         </div>
 
         {/* Info Section (Read Only) */}
         <div className="space-y-3 opacity-80">
-          <TextBox label="Full Name" value={formData.name} disabled />
-          <TextBox label="Email Address" value={formData.email} disabled />
+          <TextBox
+            label={profileFormStrings.fullName}
+            value={formData.name}
+            disabled
+          />
+          <TextBox
+            label={profileFormStrings.email}
+            value={formData.email}
+            disabled
+          />
         </div>
 
         {/* Editable Section */}
         <div className="space-y-6">
-          <h3 className="text-gray-800 font-bold text-xl">About Me</h3>
+          <h3 className="text-gray-800 font-bold text-xl">
+            {profileFormStrings.aboutMe}
+          </h3>
 
           <TextBox
-            label="Nickname"
+            label={profileFormStrings.nickname}
             name="nickname"
-            placeholder="e.g. SpeedRacer"
+            placeholder={profileFormStrings.nicknamePlaceholder}
             error={nicknameError}
             value={formData.nickname}
             onBlur={e => checkNickname(e.target.value)}
@@ -97,9 +108,9 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
           />
 
           <TextBox
-            label="Description"
+            label={profileFormStrings.description}
             name="description"
-            placeholder="Tell us a little bit about yourself..."
+            placeholder={profileFormStrings.descriptionPlaceholder}
             value={formData.description}
             onChange={handleChange}
           />
@@ -119,7 +130,7 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
               }
             `}
           >
-            Save Changes
+            {profileFormStrings.saveChanges}
           </GenericButton>
         </div>
       </form>
