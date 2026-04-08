@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import CommuteIcon from './CommuteIcon'
+import { transportationModeSelectStrings } from '../locales/en/ComponentStrings/TransportationModeSelectStrings'
 
 export default function TransportationModeSelect({
   selectedModes,
@@ -32,7 +33,7 @@ export default function TransportationModeSelect({
   return (
     <div>
       <p className="pb-2 font-semibold">
-        Transportation Mode{multiple ? 's' : ''}
+        {transportationModeSelectStrings.label(multiple)}
       </p>
       <div className="flex flex-row gap-4">
         {modes.map(mode => (
