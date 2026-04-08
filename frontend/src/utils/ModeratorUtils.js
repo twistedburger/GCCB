@@ -1,4 +1,4 @@
-import { moderationStrings } from '../locales/en/moderation'
+import { moderationStrings } from '../locales/en/ComponentStrings/ModerationActionsStrings'
 
 /**
  * Handle report submitting.

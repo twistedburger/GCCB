@@ -25,4 +25,10 @@ export const moderationStrings = {
   submitReport: 'Report submitted successfully.',
   submitEvent: 'Event verified successfully.',
   submitError: 'Something went wrong. Please try again.',
+  approve: 'Approve',
+  selectReason: 'Select a reason...',
+  reasonInvalid: 'Please provide a reason for the invalid report...',
+  explanationInvalidRequired: 'Explanation for invalid report required.',
+  rejectionLabel: isReport =>
+    `Reason for invalid ${isReport ? 'report' : 'verification'}`,
 }

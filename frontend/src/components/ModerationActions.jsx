@@ -4,7 +4,7 @@ import { CheckOutlined, CloseOutlined } from '@mui/icons-material'
 import GenericButton from './GenericButton'
 import ConfirmationDialog from './ConfirmationDialog'
 import TextBox from './TextBox'
-import { moderationStrings } from '../locales/en/moderation'
+import { moderationStrings } from '../locales/en/ComponentStrings/ModerationActionsStrings'
 import Select from 'react-select'
 import { handleSubmit } from '../utils/ModeratorUtils'
 
@@ -114,7 +114,7 @@ export default function ModerationActions({
               onSuccess
             )
           }
-          title="Approve"
+          title={moderationStrings.approve}
           confirmText={moderationStrings.ok}
           cancelText={moderationStrings.cancel}
           variant="primary"
@@ -127,7 +127,7 @@ export default function ModerationActions({
       {confirmReport === 'decline' && (
         <div className="flex flex-col gap-2 py-2 px-2">
           <span className="text-xs font-semibold text-text-primary">
-            {`Reason for invalid ${isReport ? 'report' : 'verification'}`}
+            {moderationStrings.rejectionLabel(isReport ? 'report' : 'event')}
           </span>
 
           {/* Dropdown */}
@@ -143,7 +143,7 @@ export default function ModerationActions({
               setRejectionDetail('')
               setDetailError('')
             }}
-            placeholder="Select a reason..."
+            placeholder={moderationStrings.selectReason}
             menuPortalTarget={document.body}
             styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
           />
@@ -158,7 +158,7 @@ export default function ModerationActions({
                 if (detailError) setDetailError('')
               }}
               multiline
-              placeholder={'Please provide a reason for the invalid report...'}
+              placeholder={moderationStrings.reasonInvalid}
             />
           )}
 
@@ -167,7 +167,7 @@ export default function ModerationActions({
             <GenericButton
               onClick={() => {
                 if (rejectionReason === 'Other' && rejectionDetail === '') {
-                  setDetailError('Explanation for invalid report required.')
+                  setDetailError(moderationStrings.explanationInvalidRequired)
                   return
                 }
                 handleSubmit(
