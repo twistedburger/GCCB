@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types'
 import GenericButton from './GenericButton'
+import { displayFilterStrings } from '../locales/en/ComponentStrings/DisplayFiltersStrings'
 
 export default function DisplayFilters({ filters, setFilters, isArriving }) {
   const activeFilters = []
@@ -18,13 +19,13 @@ export default function DisplayFilters({ filters, setFilters, isArriving }) {
     })
   if (filters.verifiedEventsOnly)
     activeFilters.push({
-      label: 'Verified only',
+      label: displayFilterStrings.verifiedOnly,
       key: 'verifiedEventsOnly',
       default: false,
     })
   if (!filters.mainEventsOnly && isArriving) {
     activeFilters.push({
-      label: 'Display Individual Routes',
+      label: displayFilterStrings.displayIndividualRoutes,
       key: 'mainEventsOnly',
       default: true,
     })
