@@ -4,6 +4,7 @@ import { ExpandMoreRounded } from '@mui/icons-material'
 import { decode } from 'google-polyline'
 import GenericButton from './GenericButton'
 import MainMap from './MainMap'
+import { routeCardWrapperStrings } from '../locales/en/ComponentStrings/RouteCardWrapperStrings'
 
 export default function RouteCardWrapper({ children, route, mapsReady }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -39,7 +40,11 @@ export default function RouteCardWrapper({ children, route, mapsReady }) {
             customStyling="w-full flex items-center justify-center gap-1 py-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
             onClick={() => setIsExpanded(prev => !prev)}
           >
-            <span>{isExpanded ? 'Hide map' : 'Show map'}</span>
+            <span>
+              {isExpanded
+                ? routeCardWrapperStrings.hideMap
+                : routeCardWrapperStrings.showMap}
+            </span>
             <ExpandMoreRounded
               fontSize="small"
               className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
@@ -54,7 +59,7 @@ export default function RouteCardWrapper({ children, route, mapsReady }) {
             <div className="h-48 relative border-16 border-white border-t-">
               {!mapsReady ? (
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm bg-gray-50">
-                  Loading map...
+                  {routeCardWrapperStrings.loading}
                 </div>
               ) : (
                 <MainMap
