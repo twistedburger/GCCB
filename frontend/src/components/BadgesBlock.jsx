@@ -8,7 +8,7 @@ const BadgesBlock = ({ user }) => {
   return (
     <div className="flex flex-col w-full gap-1.5 mb-4">
       <label className="text-sm font-semibold text-text-primary ml-1">
-        Badges
+        {badgesBlockStrings.badges}
       </label>
       <div
         className="w-full rounded-xl shadow-xs 
