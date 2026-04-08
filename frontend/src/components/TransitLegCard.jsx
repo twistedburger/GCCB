@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import CommuteIcon from './CommuteIcon'
 import { TravelMode } from '../utils/RouteUtils'
+import { transitLegCardStrings } from '../locales/en/ComponentStrings/TransitLegCardStrings'
 
 function TransitLegCard({ name, type, distance, className }) {
   return (
@@ -23,7 +24,7 @@ function TransitLegCard({ name, type, distance, className }) {
           </div>
 
           <span className="text-xs text-text-secondary mt-1">
-            Distance: {distance} m
+            {transitLegCardStrings.distanceLabel(distance)}
           </span>
         </div>
       </div>
