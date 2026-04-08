@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import GenericButton from './GenericButton.jsx'
 import { AccountCircleOutlined } from '@mui/icons-material'
+import { organizerCardStrings } from '../locales/en/ComponentStrings/OrganizerCardStrings.js'
 
 function OrganizerCard({
   user,
@@ -54,7 +55,7 @@ function OrganizerCard({
           </div>
 
           <span className="text-xs text-text-secondary mt-1">
-            {description || 'No bio provided.'}
+            {description || organizerCardStrings.noBio}
           </span>
 
           {(primaryActionLabel || secondaryActionLabel) && (
