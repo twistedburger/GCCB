@@ -6,7 +6,7 @@ import {
   InfoOutlined,
 } from '@mui/icons-material'
 
-const configs = {
+const ALERT_CONFIGS = {
   error: {
     theme: 'bg-red-100 border-red-500 text-red-800',
     icon: <ErrorOutline className="text-red-500" fontSize="small" />,
@@ -35,7 +35,7 @@ const Alert = ({ message, type, duration = 3000, onTimeout }) => {
     return () => clearTimeout(exitTimer)
   }, [duration])
 
-  const style = configs[type] ?? configs.error
+  const style = ALERT_CONFIGS[type] ?? ALERT_CONFIGS.error
 
   return (
     <div
@@ -44,16 +44,15 @@ const Alert = ({ message, type, duration = 3000, onTimeout }) => {
         if (isExiting) onTimeoutRef.current?.()
       }}
       className={`
-        fixed top-6 z-[9999] w-max max-w-[calc(80%-55px)]
+        fixed top-6 z-9999 w-max max-w-[calc(80%-55px)]
         flex items-center gap-2 p-3 px-6
         rounded-full border-2 shadow-lg ${style.theme}
-        transition-all duration-500 ease-in-out
+        transition-all duration-500 ease-in-out ml-[27.5px]
         ${isExiting ? 'opacity-0 -translate-y-3 pointer-events-none' : 'opacity-100'}
         ${!entered && !isExiting ? 'animate-alert-in' : ''}
   `}
       style={{
         left: '50%',
-        marginLeft: '27.5px',
         transform: 'translateX(-50%)',
       }}
     >
