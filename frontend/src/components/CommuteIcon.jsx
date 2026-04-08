@@ -6,15 +6,15 @@ import {
   DirectionsWalk,
 } from '@mui/icons-material'
 
-const CommuteIcon = ({ type, clickable = false, isSelected, onClick }) => {
-  const icons = {
-    car: DirectionsCar,
-    bicycle: DirectionsBike,
-    transit: DirectionsBus,
-    walk: DirectionsWalk,
-  }
+const ICONS = {
+  car: DirectionsCar,
+  bicycle: DirectionsBike,
+  transit: DirectionsBus,
+  walk: DirectionsWalk,
+}
 
-  const SelectedIcon = icons[type]
+const CommuteIcon = ({ type, clickable = false, isSelected, onClick }) => {
+  const SelectedIcon = ICONS[type]
 
   return (
     <div
