@@ -21,30 +21,31 @@ import {
 } from '@mui/icons-material'
 import { authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
+import { sidebarStrings } from '../locales/en/ComponentStrings/SidebarStrings'
 
 const mainNavigation = [
   {
     id: 'Home',
     icon: <HomeOutlined />,
-    label: 'Home',
+    label: sidebarStrings.home,
     path: '/',
   },
   {
     id: 'My Trips',
     icon: <CommuteOutlined />,
-    label: 'My Trips',
+    label: sidebarStrings.myTrips,
     path: '/mytrip',
   },
   {
     id: 'Dashboard',
     icon: <PersonOutlineOutlined />,
-    label: 'Dashboard',
+    label: sidebarStrings.dashboard,
     path: '/dashboard',
   },
   {
     id: 'Moderate',
     icon: <AdminPanelSettingsOutlined />,
-    label: 'Moderate',
+    label: sidebarStrings.moderate,
     path: '/moderate',
   },
 ]
@@ -133,7 +134,7 @@ export default function Sidebar({ userRole }) {
                 }}
                 className="block py-2 text-xs text-gray-500"
               >
-                USER GUIDE
+                {sidebarStrings.userGuide}
               </button>
               <button
                 onClick={() =>
@@ -141,7 +142,7 @@ export default function Sidebar({ userRole }) {
                 }
                 className="block py-2 text-xs text-red-500 font-bold"
               >
-                LOGOUT
+                {sidebarStrings.logout}
               </button>
             </div>
           )}
