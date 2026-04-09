@@ -3,6 +3,8 @@ import { useState } from 'react'
 import CommuteIcon from './CommuteIcon'
 import { transportationModeSelectStrings } from '../locales/en/ComponentStrings/TransportationModeSelectStrings'
 
+const MODES = ['transit', 'bicycle', 'walk', 'car']
+
 export default function TransportationModeSelect({
   selectedModes,
   onChange,
@@ -13,8 +15,6 @@ export default function TransportationModeSelect({
       ? selectedModes
       : [selectedModes].filter(Boolean)
   )
-
-  const modes = ['transit', 'bicycle', 'walk', 'car']
 
   const handleToggle = mode => {
     let nextState
@@ -36,7 +36,7 @@ export default function TransportationModeSelect({
         {transportationModeSelectStrings.label(multiple)}
       </p>
       <div className="flex flex-row gap-4">
-        {modes.map(mode => (
+        {MODES.map(mode => (
           <CommuteIcon
             key={mode}
             type={mode}
