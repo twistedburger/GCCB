@@ -501,14 +501,14 @@ app.post('/api/createEvent', async (req, res) => {
 
     const {
       title,
-      event_time: eventTime,
+      eventTime,
       location,
-      need_approval: needApproval,
+      needApproval,
       description,
       longitude,
       latitude,
       banner,
-      place_id: placeID,
+      placeId,
     } = req.body
 
     const result = await db.query(
@@ -525,7 +525,7 @@ app.post('/api/createEvent', async (req, res) => {
         longitude,
         latitude,
         banner,
-        placeID,
+        placeId,
       ]
     )
 
