@@ -53,7 +53,7 @@ MainMap.propTypes = {
   }).isRequired,
   route: PropTypes.shape({
     path: PropTypes.object.isRequired,
-    transportation_mode: PropTypes.string.isRequired,
+    transportationMode: PropTypes.string.isRequired,
   }).isRequired,
   onLoad: PropTypes.func,
   onUnmount: PropTypes.func,
