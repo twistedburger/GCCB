@@ -41,7 +41,6 @@ export default function LocationSearch({
     const handleSelect = async event => {
       const placePrediction = event.placePrediction
       const place = placePrediction.toPlace()
-      // photos for banner url, id to re-fetch banner url later if the photo url is expired
       await place.fetchFields({
         fields: ['formattedAddress', 'location', 'photos', 'id'],
       })
@@ -49,7 +48,6 @@ export default function LocationSearch({
       const address = place.formattedAddress
       const latitude = place.location.lat()
       const longitude = place.location.lng()
-      // returns an array, just get the first one for the banner
       // save the url for event banner, save the place id to later update the url if it expires
       const banner = place.photos?.[0]?.getURI() || null
       const placeId = place.id
