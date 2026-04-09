@@ -508,7 +508,7 @@ app.post('/api/createEvent', async (req, res) => {
       longitude,
       latitude,
       banner,
-      placeId,
+      placeID,
     } = req.body
 
     const result = await db.query(
@@ -525,7 +525,7 @@ app.post('/api/createEvent', async (req, res) => {
         longitude,
         latitude,
         banner,
-        placeId,
+        placeID,
       ]
     )
 
@@ -550,15 +550,15 @@ app.post('/api/createRoute', async (req, res) => {
   }
 
   const {
-    event_id: eventID,
+    eventID,
     title,
-    transportation_mode: transportationMode,
+    transportationMode,
     origin,
-    origin_lat,
-    origin_lng,
+    originLat,
+    originLng,
     destination,
-    depart_time: departTime,
-    max_ppl: maxPpl,
+    departTime,
+    maxPpl,
     distance,
     path,
     completed,
@@ -583,8 +583,8 @@ app.post('/api/createRoute', async (req, res) => {
       user.id,
       transportationMode,
       origin,
-      origin_lng,
-      origin_lat,
+      originLng,
+      originLat,
       destination,
       departTime,
       maxPpl,

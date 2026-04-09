@@ -94,11 +94,11 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         needApproval: false,
       }
 
-      const { id: newEventId } = await createEvent(eventData)
+      const { id: newEventID } = await createEvent(eventData)
 
       if (addedRoutes.length > 0) {
         const routePromises = addedRoutes.map(route =>
-          createRoute(newEventId, route)
+          createRoute(newEventID, route)
         )
         await Promise.all(routePromises)
       }
@@ -106,7 +106,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
       onSubmit({
         success: true,
         message: createEventStrings.creationSuccess,
-        eventId: newEventId,
+        eventID: newEventID,
       })
     } catch (error) {
       console.error(createEventStrings.errorCreatingEvent, error)
@@ -117,14 +117,14 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
     }
   }
 
-  const createRoute = async (eventId, routeData, creatorId) => {
+  const createRoute = async (eventID, routeData, creatorId) => {
     try {
       const response = await fetch('http://localhost:3000/api/createRoute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          eventId,
+          eventID,
           ...routeData,
           creatorId,
         }),
