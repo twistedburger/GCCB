@@ -105,7 +105,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     if (!route) return { transitLegs: [] }
     return calculateTransitLegs({
       path: route,
-      transportationMode: transportationMode,
+      transportation_mode: transportationMode,
     })
   }, [route, transportationMode])
 
@@ -299,7 +299,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           defaultCenter={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
           route={
             route
-              ? { path: route, transportationMode: transportationMode }
+              ? { path: route, transportation_mode: transportationMode }
               : null
           }
           onLoad={setMap}
