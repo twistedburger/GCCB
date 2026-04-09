@@ -33,7 +33,7 @@ export default function ModerationActions({
     label: reason,
   }))
   const invalidVerifications = moderationStrings.invalidVerifications.map(
-    r => ({ value: r, label: r })
+    reason => ({ value: reason, label: reason })
   )
 
   function handleCancel() {
