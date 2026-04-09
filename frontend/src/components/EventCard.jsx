@@ -28,8 +28,8 @@ export default function EventCard({ event, view, onReport }) {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              place_id: event.place_id,
-              event_id: event.id,
+              placeID: event.place_id,
+              eventID: event.id,
             }),
           }
         )

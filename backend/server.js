@@ -396,7 +396,7 @@ app.post('/api/refresh-banner', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const { place_id: placeID, event_id: eventID } = req.body
+  const { placeID, eventID } = req.body
   const eventId = parseInt(eventID, 10)
 
   try {
