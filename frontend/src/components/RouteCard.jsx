@@ -26,7 +26,7 @@ export default function RouteCard({
   const [peopleGoing, setPeopleGoing] = useState(0)
   const [isJoined, setIsJoined] = useState(false)
   const isFull =
-    route.transportation_mode === 'car' && peopleGoing >= route.max_ppl
+    route.transportation_mode === 'Car' && peopleGoing >= route.max_ppl
   const activeJoinedState = isDraft ? route.isJoined : isJoined
 
   useEffect(() => {
@@ -133,7 +133,7 @@ export default function RouteCard({
               <GroupsOutlined className="mr-1 -ml-1" fontSize="small" />
               <p>
                 {routeCardStrings.peopleGoing(peopleGoing)}{' '}
-                {route.transportation_mode === 'car' &&
+                {route.transportation_mode === 'Car' &&
                   route.max_ppl &&
                   routeCardStrings.seatsLeft(route.max_ppl - peopleGoing)}
               </p>
