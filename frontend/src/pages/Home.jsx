@@ -2,7 +2,7 @@ import LocationSearch from '../components/LocationSearch'
 import GenericToggle from '../components/GenericToggle'
 import GenericButton from '../components/GenericButton'
 import { Add, PlaceOutlined, TuneOutlined } from '@mui/icons-material'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import EventCard from '../components/EventCard'
 import RouteCard from '../components/RouteCard'
 import RouteDetail from '../pages/home/RouteDetail'
@@ -36,6 +36,15 @@ console.warn = (...args) => {
 // Vancouver default if the user does not allow to use their location, change as per localization :)
 const DEFAULT_COORDINATES = { lat: 49.26, lng: -123.11 }
 
+const DEFAULT_FILTERS = {
+  location: null,
+  time: null,
+  transportationModes: [],
+  radius: 2000,
+  verifiedEventsOnly: false,
+  mainEventsOnly: true,
+}
+
 /**
  * Homepage
  *
@@ -49,14 +58,7 @@ function Home() {
   const [isArriving, setIsArriving] = useState(true)
   const [cardsToDisplay, setCardsToDisplay] = useState([])
   const [selectedRoute, setSelectedRoute] = useState(null)
-  const [filters, setFilters] = useState({
-    location: null,
-    time: null,
-    transportationModes: [],
-    radius: 2000,
-    verifiedEventsOnly: false,
-    mainEventsOnly: true,
-  })
+  const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const navigate = useNavigate()
   const [showCreateEvent, setShowCreateEvent] = useState(false)
   const [alert, setAlert] = useState(null)
@@ -78,14 +80,7 @@ function Home() {
     }
   }
 
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      locationSetSuccess(setUserLocation),
-      () => setUserLocation(DEFAULT_COORDINATES)
-    )
-  }, [])
-
-  useEffect(() => {
+  const fetchCards = useCallback(() => {
     if (!userLocation) return
     setLoading(true)
     const apiMainEvents = isArriving ? filters.mainEventsOnly : false
@@ -109,6 +104,22 @@ function Home() {
       })
   }, [filters, userLocation, isArriving])
 
+  const handleRouteClick = route => {
+    setSnapPoint(0.085)
+    setSelectedRoute(route)
+  }
+
+  useEffect(() => {
+    fetchCards()
+  }, [fetchCards])
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      locationSetSuccess(setUserLocation),
+      () => setUserLocation(DEFAULT_COORDINATES)
+    )
+  }, [])
+
   useEffect(() => {
     if (snapPoint !== 1) {
       setTimeout(() => {
@@ -117,10 +128,10 @@ function Home() {
     }
   }, [snapPoint])
 
-  const handleRouteClick = route => {
-    setSnapPoint(0.085)
-    setSelectedRoute(route)
-  }
+  useEffect(() => {
+    if (!userLocation) return
+    setFilters(DEFAULT_FILTERS)
+  }, [userLocation])
 
   return (
     <div
@@ -304,7 +315,11 @@ function Home() {
           >
             <CreateEvent
               onSubmit={result =>
-                handleFormResult(result, { setShowCreateEvent, setAlert })
+                handleFormResult(result, {
+                  setShowCreateEvent,
+                  setAlert,
+                  onSuccess: fetchCards,
+                })
               }
             />
           </Modal>,
