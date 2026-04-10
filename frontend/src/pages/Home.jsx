@@ -160,6 +160,7 @@ function Home() {
             className="rounded-xl absolute inset-x-0 top-0 m-12 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
             onSearch={handleSearch}
+            disabled={loading}
           />
         )}
         <Drawer.Root
