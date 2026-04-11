@@ -48,10 +48,6 @@ const analytics = createAnalyticsHelpers({
  * @returns {string} text response from google api
  */
 app.get('/maps/api/js', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
   try {
     const params = new URLSearchParams(req.query)
     params.set('key', process.env.GOOGLE_MAPS_API_KEY)
