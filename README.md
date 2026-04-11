@@ -145,3 +145,25 @@ Click the laptop/mobile button and select the layout as shown in the following i
 - Dylan Reimer
 - Jamie Kim
 - Claudia Le
+
+# Future Features
+- Badge/Gamification
+- Chat features
+- Notifications (upcoming trips)
+- Web Hosting
+- Set CO2 Savings Goals
+- Add ability to ban or blacklist other users once chat is implemented
+    - View list of blocked/blacklisted users to undo if needed
+- Add profile view to view details about another use, and display their badges
+- Add button, or other logic to confirm completion of route
+- Add logic to ensure state of newly created events/routes is valid (i.e. not in the past, routes are before the event date)
+- View all events without location (maybe a geotag for a specific SSO to get events within X radius of campus)
+- Show things on the map with markers (i.e. display events in the map as little boxes)
+- Display University Logo depending on the SSO partner that was used to login
+- Responsiveness (i.e. show grids instead of one column for routes/events)
+- Show some profile information in the sidebar
+- Delete or cancel an event our route
+- Auto generate route title based on event title (eg. bus to event)
+- Share a route via link so someone can immediatley join
+- Add user rating system
+
