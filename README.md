@@ -43,13 +43,13 @@ After Node.js has been installed, in the same terminal you had open, install the
 
 ## Step 3 - Download and Install PostgreSQL
 
-go to the postgreSQL download page and select your preferred operating system:
+Go to the postgreSQL download page and select your preferred operating system:
 
 > https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
 
-once the download is complete, run the installer
+Once the download is complete, run the installer
 
-Follow the instructions in the installer. be sure to select all components on the `Select Components` page. Once the installer completes, select yes to `Launch Stack Builder at exit`
+Follow the instructions in the installer. Be sure to select all components on the `Select Components` page. Once the installer completes, select yes to `Launch Stack Builder at exit`
 
 > Note: During installation, you may be asked to enter a password for your database. It is not recommended to use the same password as your computer, as you will need to store this password in plain text later. Since the database is hosted locally and will not be exposed to the internet, it is fine to leave the password blank.  
 > If you have forgotten your password, this stack overflow article can help reset it: https://stackoverflow.com/questions/10845998/i-forgot-the-password-i-entered-during-postgresql-installation
@@ -60,7 +60,7 @@ In the newly opened Stack Builder window, select the version of PostgreSQL that 
 
 ![alt text](image.png)
 
-Click next, and expand `Spatial Extensions` and check the `PostGIS` bundle. This is requried for saving geocoded information to the database.
+Click next, and expand `Spatial Extensions` and check the `PostGIS` bundle. This is required for saving geocoded information to the database.
 
 ![alt text](image-1.png)
 
@@ -111,7 +111,7 @@ Start in the same terminal or command line you had in step 2, and enter the foll
 
 Navigate to the backend folder in the new instance:
 
-`cd frontened`
+`cd frontend`
 
 Start the server with the following command:
 
