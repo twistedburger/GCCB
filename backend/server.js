@@ -839,10 +839,26 @@ app.post('/api/report', async (req, res) => {
     const user = await selectUser(req)
     const { type, targetId, reason, explanation } = req.body
 
-    await db.query(
-      'INSERT INTO report (reporter_id, reason, explanation, report_target, target_id) VALUES ($1, $2, $3, $4, $5)',
+    const reportResult = await db.query(
+      'INSERT INTO report (reporter_id, reason, explanation, report_target, target_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [user.id, reason, explanation, type, targetId]
     )
+
+    if (user.role === 'moderator') {
+      const report = reportResult.rows[0]
+      console.log(report)
+
+      await db.query('UPDATE report SET status = $1 WHERE id = $2', [
+        'approved',
+        report.id,
+      ])
+
+      const table = type === 'user' ? '"user"' : type
+      await db.query(
+        `UPDATE ${table} SET reported = reported + 1 WHERE id = $1`,
+        [targetId]
+      )
+    }
 
     res.json({ success: true })
   } catch (error) {
@@ -917,15 +933,15 @@ app.get('/api/commute-history', async (req, res) => {
       commuteHistory.push({
         id: route.id,
         title: route.title,
-        creatorId: route.creator_id,
+        creatorId: route.creatorId,
         transportationMode: dominantMode,
         distance: analytics.roundToTwoDecimals(totalDistanceKm),
 
         origin: route.origin,
         destination: route.destination,
-        departTime: route.depart_time,
+        departTime: route.departTime,
         completed: route.completed,
-        maxPpl: route.max_ppl,
+        maxPpl: route.maxPpl,
         description: route.description,
         path: route.path,
 
@@ -1574,7 +1590,7 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
         Math.max(0, baselineKg - savedKg)
       )
 
-      const key = getPeriodKey(route.depart_time)
+      const key = getPeriodKey(route.departTime)
 
       if (!periodMap[key]) {
         periodMap[key] = { period: key, baselineKg: 0, actualKg: 0, savedKg: 0 }
