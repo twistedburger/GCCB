@@ -839,10 +839,26 @@ app.post('/api/report', async (req, res) => {
     const user = await selectUser(req)
     const { type, targetId, reason, explanation } = req.body
 
-    await db.query(
-      'INSERT INTO report (reporter_id, reason, explanation, report_target, target_id) VALUES ($1, $2, $3, $4, $5)',
+    const reportResult = await db.query(
+      'INSERT INTO report (reporter_id, reason, explanation, report_target, target_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [user.id, reason, explanation, type, targetId]
     )
+
+    if (user.role === 'moderator') {
+      const report = reportResult.rows[0]
+      console.log(report)
+
+      await db.query('UPDATE report SET status = $1 WHERE id = $2', [
+        'approved',
+        report.id,
+      ])
+
+      const table = type === 'user' ? '"user"' : type
+      await db.query(
+        `UPDATE ${table} SET reported = reported + 1 WHERE id = $1`,
+        [targetId]
+      )
+    }
 
     res.json({ success: true })
   } catch (error) {

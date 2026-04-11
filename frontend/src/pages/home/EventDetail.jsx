@@ -12,7 +12,6 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Drawer } from 'vaul'
-import { useAuth } from '../../hooks/Authorization'
 import CreateRoute from '../../components/CreateRoute'
 import Modal from '../../components/Modal'
 import Alert from '../../components/Alert'
@@ -38,7 +37,6 @@ export default function EventDetail() {
   const [eventSnapPoint, setEventSnapPoint] = useState(1)
   const [addRoute, setAddRoute] = useState(false)
   const [alert, setAlert] = useState(null)
-  const { authorization } = useAuth()
 
   const [reportData, setReportData] = useState(null)
 
@@ -223,49 +221,47 @@ export default function EventDetail() {
                           className="shrink-0"
                         />
                         <p className="truncate flex-1">{event.location}</p>
-                        {authorization !== 'moderator' && (
-                          <>
-                            <IconButton
-                              size="small"
-                              onClick={e => setAnchorEl(e.currentTarget)}
+                        <>
+                          <IconButton
+                            size="small"
+                            onClick={e => setAnchorEl(e.currentTarget)}
+                          >
+                            <MoreVertIcon fontSize="small" />
+                          </IconButton>
+                          <Menu
+                            anchorEl={anchorEl}
+                            open={menuOpen}
+                            onClose={() => setAnchorEl(null)}
+                            disableAutoFocus
+                            disableEnforceFocus
+                            disableRestoreFocus
+                          >
+                            <MenuItem
+                              onClick={() => {
+                                setAnchorEl(null)
+                                setReportData({
+                                  type: 'event',
+                                  targetId: event.id,
+                                  title: event.title,
+                                })
+                              }}
                             >
-                              <MoreVertIcon fontSize="small" />
-                            </IconButton>
-                            <Menu
-                              anchorEl={anchorEl}
-                              open={menuOpen}
-                              onClose={() => setAnchorEl(null)}
-                              disableAutoFocus
-                              disableEnforceFocus
-                              disableRestoreFocus
+                              Report Event
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => {
+                                setAnchorEl(null)
+                                setReportData({
+                                  type: 'user',
+                                  targetId: event.creator_id,
+                                  title: event.creator_name,
+                                })
+                              }}
                             >
-                              <MenuItem
-                                onClick={() => {
-                                  setAnchorEl(null)
-                                  setReportData({
-                                    type: 'event',
-                                    targetId: event.id,
-                                    title: event.title,
-                                  })
-                                }}
-                              >
-                                Report Event
-                              </MenuItem>
-                              <MenuItem
-                                onClick={() => {
-                                  setAnchorEl(null)
-                                  setReportData({
-                                    type: 'user',
-                                    targetId: event.creator_id,
-                                    title: event.creator_name,
-                                  })
-                                }}
-                              >
-                                Report Organizer
-                              </MenuItem>
-                            </Menu>
-                          </>
-                        )}
+                              Report Organizer
+                            </MenuItem>
+                          </Menu>
+                        </>
                       </div>
                       <div className="flex flex-row items-center">
                         <h3 className="font-semibold text-lg text-text-primary mr-1">
@@ -302,7 +298,6 @@ export default function EventDetail() {
                             <RouteCard
                               key={route.id}
                               route={route}
-                              view={authorization}
                               onReport={data => setReportData(data)}
                               individualView={false}
                               onSelect={route => {

@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react'
 
 export default function RouteCard({
   route,
-  view,
+  hideReportJoin = false,
   isDraft = false,
   individualView,
   isCompleted = false,
@@ -155,7 +155,7 @@ export default function RouteCard({
           </div>
         </div>
 
-        {view !== 'moderator' && (
+        {!hideReportJoin && (
           <div className="flex flex-col gap-1">
             {((!isDraft && onToggleJoin) || !individualView) && (
               <GenericButton
@@ -206,7 +206,7 @@ export default function RouteCard({
 
 RouteCard.propTypes = {
   route: PropTypes.object.isRequired,
-  view: PropTypes.string,
+  hideReportJoin: PropTypes.string,
   isDraft: PropTypes.bool,
   individualView: PropTypes.bool,
   isCompleted: PropTypes.bool,
