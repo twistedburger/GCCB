@@ -157,8 +157,8 @@ describe('Calculating from segments', () => {
 
   test('should sum savings across multiple segments', () => {
     const segments = [
-      { transportation_mode: 'walk', distanceKm: 2 },
-      { transportation_mode: 'bus', distanceKm: 10 },
+      { transportationMode: 'walk', distanceKm: 2 },
+      { transportationMode: 'bus', distanceKm: 10 },
     ]
     const walk = calc.calculateSaved(2, 'walk')
     const bus = calc.calculateSaved(10, 'bus')
@@ -170,8 +170,8 @@ describe('Calculating from segments', () => {
 
   test('context should include correct segmentCount', () => {
     const segments = [
-      { transportation_mode: 'bicycle', distanceKm: 5 },
-      { transportation_mode: 'rail', distanceKm: 10 },
+      { transportationMode: 'bicycle', distanceKm: 5 },
+      { transportationMode: 'rail', distanceKm: 10 },
     ]
     const result = calc.calculateSavedFromSegments(segments)
     expect(result.context.segmentCount).toBe(2)
@@ -188,7 +188,7 @@ describe('Calculating from segments', () => {
     expect(() => calc.calculateSavedFromSegments(['bus'])).toThrow(TypeError)
   })
 
-  test('throws RangeError when a segment is missing transportation_mode', () => {
+  test('throws RangeError when a segment is missing transportationMode', () => {
     expect(() => calc.calculateSavedFromSegments([{ distanceKm: 5 }])).toThrow(
       RangeError
     )
@@ -197,13 +197,13 @@ describe('Calculating from segments', () => {
   test('throws when segment distanceKm is not a valid number', () => {
     expect(() =>
       calc.calculateSavedFromSegments([
-        { transportation_mode: 'walk', distanceKm: 'over there!' },
+        { transportationMode: 'walk', distanceKm: 'over there!' },
       ])
     ).toThrow()
   })
 
   test('does not throw error when optionsResolver is null', () => {
-    const segments = [{ transportation_mode: 'walk', distanceKm: 5 }]
+    const segments = [{ transportationMode: 'walk', distanceKm: 5 }]
     const result = calc.calculateSavedFromSegments(segments, () => null)
     expect(result.savedKgSystem).toBeGreaterThan(0)
   })

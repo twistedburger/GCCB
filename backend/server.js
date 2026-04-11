@@ -917,15 +917,15 @@ app.get('/api/commute-history', async (req, res) => {
       commuteHistory.push({
         id: route.id,
         title: route.title,
-        creatorId: route.creator_id,
+        creatorId: route.creatorId,
         transportationMode: dominantMode,
         distance: analytics.roundToTwoDecimals(totalDistanceKm),
 
         origin: route.origin,
         destination: route.destination,
-        departTime: route.depart_time,
+        departTime: route.departTime,
         completed: route.completed,
-        maxPpl: route.max_ppl,
+        maxPpl: route.maxPpl,
         description: route.description,
         path: route.path,
 
@@ -1574,7 +1574,7 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
         Math.max(0, baselineKg - savedKg)
       )
 
-      const key = getPeriodKey(route.depart_time)
+      const key = getPeriodKey(route.departTime)
 
       if (!periodMap[key]) {
         periodMap[key] = { period: key, baselineKg: 0, actualKg: 0, savedKg: 0 }

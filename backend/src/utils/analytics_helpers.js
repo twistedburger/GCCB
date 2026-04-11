@@ -136,7 +136,21 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
 
     if (isAdmin) {
       const res = await db.query(
-        `SELECT r.*
+        `SELECT
+           r.id,
+           r.title,
+           r.transportation_mode AS "transportationMode",
+           r.creator_id AS "creatorId",
+           r.origin,
+           r.destination,
+           r.distance,
+           r.depart_time AS "departTime",
+           r.max_ppl AS "maxPpl",
+           r.completed,
+           r.description,
+           r.rejection_reason AS "rejectionReason",
+           r.path,
+           r.created_at AS "createdAt"
          FROM route r
          WHERE r.completed = true${ordering}`
       )
@@ -144,7 +158,21 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     }
 
     const res = await db.query(
-      `SELECT r.*
+      `SELECT
+         r.id,
+         r.title,
+         r.transportation_mode AS "transportationMode",
+         r.creator_id AS "creatorId",
+         r.origin,
+         r.destination,
+         r.distance,
+         r.depart_time AS "departTime",
+         r.max_ppl AS "maxPpl",
+         r.completed,
+         r.description,
+         r.rejection_reason AS "rejectionReason",
+         r.path,
+         r.created_at AS "createdAt"
        FROM route r
        INNER JOIN user_route ur ON ur.route_id = r.id
        WHERE ur.user_id = $1
@@ -231,7 +259,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
    * Extracts normalized route segments from detailed route path data.
    *
    * @param {Object} routeRow Route row from DB.
-   * @returns {Array<{ transportation_mode: string, distanceKm: number }>}
+   * @returns {Array<{ transportationMode: string, distanceKm: number }>}
    */
   function extractRouteSegments(routeRow) {
     const pathObject = getRoutePathObject(routeRow)
@@ -251,7 +279,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
         }
 
         segments.push({
-          transportation_mode: rawMode,
+          transportationMode: rawMode,
           distanceKm,
         })
       }
@@ -268,10 +296,10 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
    * - vehicleFactor (derived from the creator's vehicle EV boolean flag)
    *
    * @param {Object} routeRow Route row from DB.
-   * @param {string} routeRow.transportation_mode Transportation mode string.
+   * @param {string} routeRow.transportationMode Transportation mode string.
    * @param {number|string} routeRow.distance Route distance in km.
    * @param {number} routeRow.id Route id.
-   * @param {number} routeRow.creator_id Route creator user id.
+   * @param {number} routeRow.creatorId Route creator user id.
    * @param {Object|string} [routeRow.path] Optional route details JSON/object.
    *
    * @returns {Promise<{ savedKgUser: number, savedKgSystem: number, context: Object }>}
@@ -283,38 +311,38 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
       let carpoolOptions = {}
 
       const hasCarSegment = segments.some(
-        segment => toAnalyticsMode(segment.transportation_mode) === 'car'
+        segment => toAnalyticsMode(segment.transportationMode) === 'car'
       )
 
       if (hasCarSegment) {
         const { passengers, vehicleFactor } = await getCarpoolContext(
           routeRow.id,
-          routeRow.creator_id
+          routeRow.creatorId
         )
         carpoolOptions = { passengers, vehicleFactor }
       }
 
       return co2Calculator.calculateSavedFromSegments(segments, segment => {
-        const analyticsMode = toAnalyticsMode(segment.transportation_mode)
+        const analyticsMode = toAnalyticsMode(segment.transportationMode)
         return analyticsMode === 'car' ? carpoolOptions : {}
       })
     }
 
-    const mode = normalizeMode(routeRow.transportation_mode)
+    const mode = normalizeMode(routeRow.transportationMode)
     const distanceKm = Number(routeRow.distance) || 0
 
     let options = {}
     if (toAnalyticsMode(mode) === 'car') {
       const { passengers, vehicleFactor } = await getCarpoolContext(
         routeRow.id,
-        routeRow.creator_id
+        routeRow.creatorId
       )
       options = { passengers, vehicleFactor }
     }
 
     return co2Calculator.calculateSaved(
       distanceKm,
-      toAnalyticsMode(routeRow.transportation_mode),
+      toAnalyticsMode(routeRow.transportationMode),
       options
     )
   }
@@ -334,7 +362,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
    */
   async function toAnalyticsRecord(routeRow, isAdmin) {
     const distanceKm = Number(routeRow.distance) || 0
-    const mode = toAnalyticsMode(routeRow.transportation_mode)
+    const mode = toAnalyticsMode(routeRow.transportationMode)
 
     const savings = await computeRouteSavings(routeRow)
     const savedKg = isAdmin ? savings.savedKgSystem : savings.savedKgUser
@@ -362,19 +390,19 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
       let carpoolOptions = {}
 
       const hasCarSegment = segments.some(
-        segment => toAnalyticsMode(segment.transportation_mode) === 'car'
+        segment => toAnalyticsMode(segment.transportationMode) === 'car'
       )
 
       if (hasCarSegment) {
         const { passengers, vehicleFactor } = await getCarpoolContext(
           routeRow.id,
-          routeRow.creator_id
+          routeRow.creatorId
         )
         carpoolOptions = { passengers, vehicleFactor }
       }
 
       const contributions = segments.map(segment => {
-        const mode = toAnalyticsMode(segment.transportation_mode)
+        const mode = toAnalyticsMode(segment.transportationMode)
         const distanceKm = segment.distanceKm
 
         const savings = co2Calculator.calculateSaved(
@@ -419,7 +447,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     }
 
     const distanceKm = Number(routeRow.distance) || 0
-    const mode = toAnalyticsMode(routeRow.transportation_mode)
+    const mode = toAnalyticsMode(routeRow.transportationMode)
     const savings = await computeRouteSavings(routeRow)
 
     return [
