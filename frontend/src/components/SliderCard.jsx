@@ -2,6 +2,14 @@ import { motion, useAnimation, useDragControls } from 'framer-motion'
 import PropTypes from 'prop-types'
 import { useEffect, useMemo } from 'react'
 
+/**
+ * A card component for displaying content that can be expanded or collapsed.
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - The child nodes to be displayed within the card.
+ * @param {boolean} props.isExpanded - Flag indicating if the card is expanded.
+ * @returns {JSX.Element}
+ */
+
 export default function SliderCard({ children, isExpanded }) {
   const controls = useAnimation()
   const dragControls = useDragControls()

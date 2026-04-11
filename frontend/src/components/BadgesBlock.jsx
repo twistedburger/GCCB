@@ -1,6 +1,14 @@
 import PropTypes from 'prop-types'
 import { badgesBlockStrings } from '../locales/en/ComponentStrings/BadgesBlockStrings'
 
+/**
+ * Component to display a list of earned user badges.
+ *
+ * @param {Object} user - The user object containing profile information.
+ * @param {string[]} [user.badges] - An optional array of badge names or IDs.
+ * @returns {JSX.Element}
+ */
+
 const BadgesBlock = ({ user }) => {
   // TODO: fetch badges from badges table depending on userid and display accordingly. Currently displays text only.
   const badges = user?.badges || []

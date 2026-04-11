@@ -1,5 +1,17 @@
 import PropTypes from 'prop-types'
 
+/**
+ * Component to display a generic button.
+ *
+ * @param {React.ReactNode} children - The content to display inside the button.
+ * @param {Function} onClick - The function to call when the button is clicked.
+ * @param {string} [customStyling=''] - Custom CSS classes to apply to the button.
+ * @param {boolean} [unstyled=false] - Whether to apply default styling.
+ * @param {boolean} [disabled=false] - Whether the button is disabled.
+ * @param {'button'|'submit'|'reset'} [type='button'] - The type of the button.
+ * @returns {JSX.Element}
+ */
+
 export default function GenericButton({
   children,
   onClick,

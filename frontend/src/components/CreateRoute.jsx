@@ -15,6 +15,14 @@ import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
 import { createRouteStrings } from '../locales/en/ComponentStrings/CreateRouteStrings'
 
+/**
+ * Component to create a new route.
+ *
+ * @param {Object} initLoc - The initial location for the route.
+ * @param {Function} onSubmit - The function to call when the route is submitted.
+ * @returns {JSX.Element}
+ */
+
 const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
   const [routeDesc, setRouteDesc] = useState('')

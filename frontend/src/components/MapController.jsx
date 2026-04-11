@@ -14,6 +14,14 @@ const createPin = (color, label) => {
   return pin
 }
 
+/**
+ * Component to control the map view and display route information.
+ *
+ * @param {Object} center - The center position for the map.
+ * @param {Object} route - The route information for the map.
+ * @returns {JSX.Element}
+ */
+
 export default function MapController({ center, route }) {
   const map = useMap()
   useEffect(() => {

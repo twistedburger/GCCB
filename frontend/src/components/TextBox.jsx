@@ -1,6 +1,17 @@
 import { forwardRef } from 'react'
 import PropTypes from 'prop-types'
 
+/**
+ * A text input component with optional label, error handling, and description.
+ * @param {Object} props
+ * @param {string} props.label - The label for the text input.
+ * @param {string} props.error - The error message for the text input validation.
+ * @param {string} props.description - The description for the text input.
+ * @param {boolean} props.multiline - Flag indicating if the input is multiline.
+ * @param {React.Ref} ref - The ref for the text input.
+ * @returns {JSX.Element}
+ */
+
 const TextBox = forwardRef(
   (
     { label = '', error = null, description = '', multiline = false, ...props },

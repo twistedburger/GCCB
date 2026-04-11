@@ -5,6 +5,17 @@ import { useState } from 'react'
 import PropTypes from 'prop-types'
 import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
 
+/**
+ * A reporting form component used to flag inappropriate content or users.
+ * Sends data to the moderator review queue and provides feedback via alerts.
+ *
+ * @param {string} type - The category of the entity being reported (e.g., 'user', 'event', 'route').
+ * @param {string|number} targetId - The unique database ID of the entity being reported.
+ * @param {Function} onClose - Callback function to close the reporting modal or view.
+ * @param {Function} setAlert - State setter to trigger a global success or error notification.
+ * @returns {JSX.Element}
+ */
+
 export default function Report({ type, targetId, onClose, setAlert }) {
   const reasonMenu = reportStrings.reportReasonMenu.map(report => ({
     value: report,
@@ -30,6 +41,7 @@ export default function Report({ type, targetId, onClose, setAlert }) {
         body: JSON.stringify({ type, targetId, reason, explanation }),
       })
 
+      // TODO: Use Alert component
       if (response.ok) {
         onClose()
         setAlert({ type: 'success', text: reportStrings.reportSuccess })

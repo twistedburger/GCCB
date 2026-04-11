@@ -3,6 +3,20 @@ import Modal from './Modal'
 import GenericButton from './GenericButton'
 import { confirmationDialogStrings } from '../locales/en/ComponentStrings/ConfirmationDialogStrings'
 
+/**
+ * Component to display a confirmation dialog.
+ *
+ * @param {boolean} isOpen - Whether the dialog is open.
+ * @param {Function} onClose - The function to call when the dialog is closed.
+ * @param {Function} onConfirm - The function to call when the confirmation is accepted.
+ * @param {React.ReactNode} [children=confirmationDialogStrings.defaultConfirm] - The content to display in the dialog.
+ * @param {string} [title=confirmationDialogStrings.defaultTitle] - The title of the dialog.
+ * @param {string} [confirmText=confirmationDialogStrings.confirm] - The text for the confirmation button.
+ * @param {string} [cancelText=confirmationDialogStrings.cancel] - The text for the cancel button.
+ * @param {'primary'|'danger'} [variant='primary'] - The variant of the dialog.
+ * @returns {JSX.Element}
+ */
+
 export default function ConfirmationDialog({
   isOpen,
   onClose,

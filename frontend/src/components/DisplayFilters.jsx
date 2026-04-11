@@ -4,6 +4,14 @@ import { displayFilterStrings } from '../locales/en/ComponentStrings/DisplayFilt
 
 const DEFAULT_RADIUS = 500
 
+/**
+ * Component to display active filters and allow users to remove them.
+ * @param {Object} filters - The current filter settings.
+ * @param {Function} setFilters - Function to update the filter settings.
+ * @param {boolean} isArriving - Whether the user is viewing arriving events (affects mainEventsOnly filter).
+ * @returns {JSX.Element|null}
+ */
+
 export default function DisplayFilters({ filters, setFilters, isArriving }) {
   const activeFilters = []
 

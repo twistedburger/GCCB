@@ -1,5 +1,14 @@
 import PropTypes from 'prop-types'
 
+/**
+ * Component to display a generic toggle switch.
+ *
+ * @param {boolean} value - The current value of the toggle.
+ * @param {Function} onChange - The function to call when the toggle value changes.
+ * @param {string[]} labels - The labels for the two states of the toggle.
+ * @returns {JSX.Element}
+ */
+
 export default function GenericToggle({ value, onChange, labels }) {
   const toggle = e => {
     e.stopPropagation()

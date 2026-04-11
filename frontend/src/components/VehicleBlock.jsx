@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 
+/**
+ * A block component for displaying vehicle information.
+ * @param {Object} props
+ * @param {number} props.userId - The ID of the user whose vehicles to display.
+ * @returns {JSX.Element}
+ */
+
 const VehicleBlock = ({ userId }) => {
   const [vehicles, setVehicles] = useState([])
 

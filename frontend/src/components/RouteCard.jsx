@@ -11,6 +11,15 @@ import {
 import { useState, useEffect } from 'react'
 import { routeCardStrings } from '../locales/en/ComponentStrings/RouteCardStrings.js'
 
+/**
+ * A card component for displaying route information and actions.
+ * @param {Object} route - The route data to display.
+ * @param {boolean} [hideReportJoin=false] - Flag to hide the report and join buttons.
+ * @param {boolean} [isDraft=false] - Flag indicating if the route is a draft from a form.
+ * @param {boolean} [individualView] - Flag indicating if the card is displayed in individual view mode.
+ * @returns {JSX.Element}
+ */
+
 export default function RouteCard({
   route,
   hideReportJoin = false,
