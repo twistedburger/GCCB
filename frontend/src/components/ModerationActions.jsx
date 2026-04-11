@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { CheckOutlined, CloseOutlined } from '@mui/icons-material'
 import GenericButton from './GenericButton'
 import ConfirmationDialog from './ConfirmationDialog'
 import TextBox from './TextBox'
@@ -46,23 +45,22 @@ export default function ModerationActions({
   const showActions = confirmReport === null
 
   return (
-    <div className="flex flex-col mb-2 ml-4 mr-2 gap-2">
+    <div className="flex flex-col ml-4 mr-2 gap-2">
       {/* Check and X buttons*/}
       {showActions && (
-        <div
-          className={`flex gap-1 ${isReport && information ? 'justify-between' : 'justify-end'}`}
-        >
+        <div className="flex flex-col">
+          {/* Report details */}
           {isReport && information && (
-            <div className="flex flex-col pt-2 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-text-primary">
+            <div className="flex flex-col pt-2 px-1 gap-1">
+              <div className="flex gap-2">
+                <span className="text-xs font-semibold text-text-primary shrink-0">
                   {moderationStrings.reportReason}
                 </span>
                 <span className="text-xs text-text-secondary">
                   {information.reason}
                 </span>
               </div>
-              <div className="flex items-start gap-2">
+              <div className="flex gap-2">
                 <span className="text-xs font-semibold text-text-primary shrink-0">
                   {moderationStrings.details}
                 </span>
@@ -73,16 +71,16 @@ export default function ModerationActions({
             </div>
           )}
 
-          <div className="flex flex-row justify-end">
+          <div className="flex flex-row justify-end gap-1 m-1 mt-2">
             <GenericButton
               onClick={e => {
                 e.stopPropagation()
                 setConfirmReport('approve')
               }}
               unstyled={true}
-              customStyling="text-text-secondary"
+              customStyling="bg-green-secondary border border-green-primary text-green-primary py-1 px-2 rounded-lg text-xs"
             >
-              <CheckOutlined fontSize="large" />
+              <span>Approve</span>
             </GenericButton>
             <GenericButton
               onClick={e => {
@@ -90,9 +88,9 @@ export default function ModerationActions({
                 setConfirmReport('decline')
               }}
               unstyled={true}
-              customStyling="text-text-secondary"
+              customStyling="bg-red-100 border border-red-500 text-red-500 py-1 px-2 rounded-lg text-xs"
             >
-              <CloseOutlined fontSize="large" />
+              <span>Reject</span>
             </GenericButton>
           </div>
         </div>

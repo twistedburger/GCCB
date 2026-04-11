@@ -116,7 +116,7 @@ class Co2Calculator {
    * @param {Object} segment Segment object.
    * @param {number} index Segment index
    *
-   * @returns {{ transportation_mode: string, distanceKm: number }}
+   * @returns {{ transportationMode: string, distanceKm: number }}
    */
   _validateSegment(segment, index) {
     if (!segment || typeof segment !== 'object') {
@@ -126,13 +126,13 @@ class Co2Calculator {
     const distanceKm = Number(segment.distanceKm)
     this._validateNumber(distanceKm, `segments[${index}].distanceKm`)
 
-    const transportationMode = this._normalizeMode(segment.transportation_mode)
+    const transportationMode = this._normalizeMode(segment.transportationMode)
     if (!transportationMode) {
-      throw new RangeError(`segments[${index}].transportation_mode is required`)
+      throw new RangeError(`segments[${index}].transportationMode is required`)
     }
 
     return {
-      transportation_mode: transportationMode,
+      transportationMode: transportationMode,
       distanceKm,
     }
   }
@@ -289,7 +289,7 @@ class Co2Calculator {
 
       const result = this.calculateSaved(
         segment.distanceKm,
-        segment.transportation_mode,
+        segment.transportationMode,
         options
       )
 

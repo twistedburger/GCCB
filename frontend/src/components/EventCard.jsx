@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { eventCardStrings } from '../locales/en/ComponentStrings/EventCardStrings'
 
-export default function EventCard({ event, view, onReport }) {
+export default function EventCard({ event, hideReport = false, onReport }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()
   const [bannerUrl, setBannerUrl] = useState(event.banner_url)
@@ -63,7 +63,7 @@ export default function EventCard({ event, view, onReport }) {
           src={bannerUrl || bcitCover}
           className="h-24 w-full object-cover rounded-t-xl"
         />
-        {view != 'moderator' && (
+        {!hideReport && (
           <ReportGmailerrorred
             className="absolute top-2 right-2"
             onClick={e => {
@@ -116,6 +116,6 @@ export default function EventCard({ event, view, onReport }) {
 
 EventCard.propTypes = {
   event: PropTypes.object.isRequired,
-  view: PropTypes.string,
+  hideReport: PropTypes.bool,
   onReport: PropTypes.func.isRequired,
 }

@@ -11,6 +11,9 @@ import {
   getMostUsedMode,
 } from '../utils/AnalyticsHelpers.js'
 import { useUser } from '../../context/UserContext.jsx'
+import { analyticsStrings } from '../locales/en/AnalyticsStrings'
+
+const dashboardStrings = analyticsStrings.dashboard
 
 /**
  * Component for the profile header.
@@ -192,7 +195,6 @@ function Dashboard() {
           title: 'Badges',
           value: '0',
           subtitle: 'Coming soonTM',
-          onClick: () => console.log('Placeholder: Badges page later'),
         },
       ]
 
@@ -209,9 +211,11 @@ function Dashboard() {
         <>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold">My Account</h1>
+              <h1 className="text-xl font-semibold">
+                {dashboardStrings.title}
+              </h1>
               <p className="mt-1 text-sm text-zinc-600">
-                Welcome to your dashboard!
+                {dashboardStrings.welcome}
               </p>
             </div>
 
@@ -220,7 +224,7 @@ function Dashboard() {
                 window.location.href = 'http://localhost:3000/logoutRoute'
               }}
             >
-              Logout
+              {dashboardStrings.logout}
             </GenericButton>
           </div>
 
@@ -231,7 +235,7 @@ function Dashboard() {
               </div>
             ) : loadingUser ? (
               <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
-                Loading profile...
+                {dashboardStrings.loadingProfile}
               </div>
             ) : (
               <ProfileHeader user={user} onEdit={() => setIsEditing(true)} />
@@ -242,6 +246,10 @@ function Dashboard() {
                 {summaryError}
               </div>
             ) : null}
+
+            <p className="text-sm text-zinc-500">
+              {dashboardStrings.metricCardsHint}
+            </p>
 
             <div
               className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${

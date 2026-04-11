@@ -6,10 +6,9 @@ import { Cancel } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState, useMemo } from 'react'
 import TransitLegCard from '../../components/TransitLegCard'
-import { useAuth } from '../../hooks/Authorization'
 import { Drawer } from 'vaul'
 import Report from '../../components/Report'
-import { calculateTransitLegs } from '../../utils/routes'
+import { calculateTransitLegs } from '../../utils/RouteUtils'
 
 /**
  * Drawer for displaying a route once selected.
@@ -22,7 +21,6 @@ import { calculateTransitLegs } from '../../utils/routes'
 export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
   const [snapPoint, setSnapPoint] = useState(0.25)
   const navigate = useNavigate()
-  const { authorization } = useAuth()
   const [showReport, setShowReport] = useState(false)
   const [reportData, setReportData] = useState(null)
 
@@ -101,7 +99,6 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                   </span>
                   <RouteCard
                     route={selectedRoute}
-                    view={authorization}
                     routeDetailView={true}
                     onReport={data => {
                       setReportData(data)
