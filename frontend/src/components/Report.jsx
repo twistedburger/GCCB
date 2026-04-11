@@ -6,10 +6,10 @@ import PropTypes from 'prop-types'
 import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
 
 export default function Report({ type, targetId, onClose, setAlert }) {
-  const reasonMenu = reportStrings.reportReasonMenu.map(r => ({
-    value: r,
-    label: r,
-    textvalue: r,
+  const reasonMenu = reportStrings.reportReasonMenu.map(report => ({
+    value: report,
+    label: report,
+    textvalue: report,
   }))
 
   const [reason, setReason] = useState(reasonMenu[0].value)
