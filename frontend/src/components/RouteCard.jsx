@@ -9,6 +9,7 @@ import {
   DateRangeRounded,
 } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
+import { routeCardStrings } from '../locales/en/ComponentStrings/RouteCardStrings.js'
 
 export default function RouteCard({
   route,
@@ -25,7 +26,7 @@ export default function RouteCard({
   const [peopleGoing, setPeopleGoing] = useState(0)
   const [isJoined, setIsJoined] = useState(false)
   const isFull =
-    route.transportation_mode === 'car' && peopleGoing >= route.max_ppl
+    route.transportation_mode === 'Car' && peopleGoing >= route.max_ppl
   const activeJoinedState = isDraft ? route.isJoined : isJoined
 
   useEffect(() => {
@@ -112,7 +113,7 @@ export default function RouteCard({
                 {!routeDetailView &&
                   route.depart_time &&
                   !isCompleted &&
-                  `@ ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+                  `${routeCardStrings.at} ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
               </p>
             </div>
             {(individualView || routeDetailView) && (
@@ -125,21 +126,21 @@ export default function RouteCard({
               (onToggleJoin && !isDraft && route.depart_time)) && (
               <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
                 <DateRangeRounded className="mr-1 -ml-1" fontSize="small" />
-                <p>{`${dateObj.toLocaleDateString('en-US', { month: 'long' })} ${dateObj.getDate()} @ ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}</p>
+                <p>{`${dateObj.toLocaleDateString('en-US', { month: 'long' })} ${dateObj.getDate()} ${routeCardStrings.at} ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}</p>
               </div>
             )}
             <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
               <GroupsOutlined className="mr-1 -ml-1" fontSize="small" />
               <p>
-                {peopleGoing} people going{' '}
-                {route.transportation_mode === 'car' &&
+                {routeCardStrings.peopleGoing(peopleGoing)}{' '}
+                {route.transportation_mode === 'Car' &&
                   route.max_ppl &&
-                  `(${route.max_ppl - peopleGoing} seats left)`}
+                  routeCardStrings.seatsLeft(route.max_ppl - peopleGoing)}
               </p>
             </div>
             {isCompleted && route.event_time && (
               <div className="flex flex-row text-text-secondary text-xs items-center leading-none -ml-1 pt-1">
-                <b>Completed:&nbsp;</b>
+                <b>{routeCardStrings.completed}&nbsp;</b>
                 {new Date(route.event_time).toLocaleDateString('en-US', {
                   month: 'long',
                   day: 'numeric',
@@ -172,7 +173,7 @@ export default function RouteCard({
                   }
                 }}
               >
-                <span>Report</span>
+                <span>{routeCardStrings.report}</span>
               </GenericButton>
             )}
             {!isCompleted &&
@@ -184,7 +185,7 @@ export default function RouteCard({
                 >
                   <div className="flex flex-row items-center gap-1">
                     <Logout fontSize="12px" />
-                    <span>Leave</span>
+                    <span>{routeCardStrings.leave}</span>
                   </div>
                 </GenericButton>
               ) : (
@@ -194,7 +195,7 @@ export default function RouteCard({
                   customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
                   onClick={handleJoin}
                 >
-                  Join
+                  {routeCardStrings.join}
                 </GenericButton>
               ))}
           </div>

@@ -13,6 +13,7 @@ import { decode } from 'google-polyline'
 import TransitLegCard from './TransitLegCard'
 import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
+import { createRouteStrings } from '../locales/en/ComponentStrings/CreateRouteStrings'
 
 const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
@@ -34,21 +35,22 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
 
   const validate = () => {
     const newErrors = {}
-    if (!routeName.trim()) newErrors.routeName = 'Route name is required'
+    if (!routeName.trim())
+      newErrors.routeName = createRouteStrings.routeNameRequired
     if (!transportationMode)
-      newErrors.transportationMode = 'Select a transportation mode'
+      newErrors.transportationMode = createRouteStrings.selectTransportMode
     if (
       transportationMode &&
       (maxPeople < 1 || maxPeople > 10 || !Number.isInteger(maxPeople))
     ) {
-      newErrors.maxPeople = 'Must be a whole number between 1 and 10'
+      newErrors.maxPeople = createRouteStrings.between1And10
     }
-    if (!startLoc) newErrors.startLoc = 'Starting location is required'
-    if (!endLoc) newErrors.endLoc = 'Destination is required'
-    if (!departTime) newErrors.departTime = 'Departure time is required'
+    if (!startLoc) newErrors.startLoc = createRouteStrings.startingLocRequired
+    if (!endLoc) newErrors.endLoc = createRouteStrings.destinationLocRequired
+    if (!departTime)
+      newErrors.departTime = createRouteStrings.departureTimeRequired
     if (transportationMode && startLoc && endLoc && departTime && !route) {
-      newErrors.route =
-        'Please click "Get Route" to calculate the path before confirming.'
+      newErrors.route = createRouteStrings.clickGetRoute
     }
     return newErrors
   }
@@ -146,7 +148,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   return (
     <div className="space-y-4">
       <TextBox
-        label="Route Name"
+        label={createRouteStrings.routeNameLabel}
         value={routeName}
         onChange={e => setRouteName(e.target.value)}
         error={errors.routeName}
@@ -170,7 +172,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       {/* When car is selected, show gas vs EV toggle and max people input */}
       {transportationMode === 'car' && (
         <GenericToggle
-          labels={['Gas', 'EV']}
+          labels={[createRouteStrings.gas, createRouteStrings.EV]}
           value={!isEV}
           onChange={newValue => {
             console.log('Selected Label:', newValue ? 'Gas' : 'EV')
@@ -182,7 +184,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       {transportationMode === 'car' && (
         <div>
           <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
-            Max Number of People
+            {createRouteStrings.maxPeople}
           </label>
           <input
             type="number"
@@ -210,7 +212,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           className="text-sm font-semibold text-text-primary ml-1 mb-1.5 block"
           htmlFor="depart-time"
         >
-          Departure Time
+          {createRouteStrings.departureTimeLabel}
         </label>
         <input
           id="depart-time"
@@ -230,10 +232,10 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
 
       <div>
         <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
-          Starting Location
+          {createRouteStrings.startingLocLabel}
         </label>
         <LocationSearch
-          placeHolder="Enter starting location"
+          placeHolder={createRouteStrings.startingLocPlaceholder}
           className={`w-full flex justify-end rounded-xl bg-gray-50 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             outline-none transition-all text-text-primary placeholder:text-secondary
             ${errors.startLoc ? 'border border-red-500' : 'focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100'}`}
@@ -250,11 +252,11 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       </div>
       <div>
         <label className="text-text-primary text-sm font-semibold mb-1 block ml-1">
-          Destination
+          {createRouteStrings.destinationLabel}
         </label>
         <LocationSearch
           defaultLocation={endLoc}
-          placeHolder="Enter destination"
+          placeHolder={createRouteStrings.destinationPlaceholder}
           className={`w-full flex justify-end rounded-xl bg-gray-50 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             outline-none transition-all text-text-primary placeholder:text-secondary
             ${errors.endLoc ? 'border border-red-500' : 'focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100'}`}
@@ -277,7 +279,9 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             disabled={isFetchingRoute}
             className="w-full bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
           >
-            {isFetchingRoute ? 'Calculating...' : 'Get Route'}
+            {isFetchingRoute
+              ? createRouteStrings.calculating
+              : createRouteStrings.getRoute}
           </GenericButton>
           {routeError && (
             <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
@@ -306,14 +310,14 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           {!route && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
               {transportationMode && departTime && startLoc && endLoc
-                ? "Click 'Get Route' to see the path."
-                : 'Select transportation mode, departure time, origin, and destination to get the route.'}
+                ? createRouteStrings.seePath
+                : createRouteStrings.selectModeTimeOriginDestination}
             </div>
           )}
         </MainMap>
       </div>
       <p className="font-semibold pt-4 pb-2 text-text-primary">
-        {transitLegs.length > 0 ? 'Transit Details' : ''}
+        {transitLegs.length > 0 ? createRouteStrings.transitDetails : ''}
       </p>
       <div className="flex flex-col gap-2">
         {transitLegs.map((leg, index) => (
@@ -326,7 +330,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         ))}
       </div>
       <TextBox
-        label="Route Description"
+        label={createRouteStrings.routeDescLabel}
         value={routeDesc}
         onChange={e => setRouteDesc(e.target.value)}
         multiline
@@ -334,7 +338,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
 
       <div className="flex justify-end">
         <GenericButton type="button" onClick={handleAddRoute}>
-          Confirm Route
+          {createRouteStrings.confirmRoute}
         </GenericButton>
       </div>
     </div>

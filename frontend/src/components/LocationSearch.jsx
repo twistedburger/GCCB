@@ -1,11 +1,12 @@
 import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
+import { locationSearchStrings } from '../locales/en/ComponentStrings/LocationSearchStrings'
 
 export default function LocationSearch({
   clearRef,
   onSearch,
   defaultLocation = '',
-  placeHolder = 'Search location...',
+  placeHolder = locationSearchStrings.searchPlaceholder,
   className = 'w-full flex flex-row justify-start focus-within:ring-4 focus-within:ring-blue-100 border border-transparent rounded-xl shadow-md shadow-light-grey transition-all',
   disabled = false,
 }) {

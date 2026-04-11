@@ -1,12 +1,14 @@
-export const handleFormResult = (result, { setShowCreateEvent, setAlert }) => {
+export const handleFormResult = (
+  result,
+  { setShowCreateEvent, setAlert, onSuccess }
+) => {
   if (result.success) {
     setShowCreateEvent(false)
+    setAlert({ type: 'success', text: 'Event created successfully.' })
+    onSuccess?.()
+  } else {
+    setAlert({ type: 'error', text: 'Failed to create event.' })
   }
-
-  setAlert({
-    type: result.success ? 'success' : 'error',
-    text: result.message,
-  })
 }
 
 export function locationSetSuccess(setUserLocation) {

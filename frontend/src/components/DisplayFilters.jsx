@@ -1,5 +1,8 @@
 import PropTypes from 'prop-types'
 import GenericButton from './GenericButton'
+import { displayFilterStrings } from '../locales/en/ComponentStrings/DisplayFiltersStrings'
+
+const DEFAULT_RADIUS = 500
 
 export default function DisplayFilters({ filters, setFilters, isArriving }) {
   const activeFilters = []
@@ -18,31 +21,31 @@ export default function DisplayFilters({ filters, setFilters, isArriving }) {
     })
   if (filters.verifiedEventsOnly)
     activeFilters.push({
-      label: 'Verified only',
+      label: displayFilterStrings.verifiedOnly,
       key: 'verifiedEventsOnly',
       default: false,
     })
   if (!filters.mainEventsOnly && isArriving) {
     activeFilters.push({
-      label: 'Display Individual Routes',
+      label: displayFilterStrings.displayIndividualRoutes,
       key: 'mainEventsOnly',
       default: true,
     })
   }
-  if (filters.radius !== 500)
+  if (filters.radius !== DEFAULT_RADIUS)
     activeFilters.push({
       label: `${filters.radius}m`,
       key: 'radius',
-      default: 500,
+      default: DEFAULT_RADIUS,
     })
 
   if (activeFilters.length === 0) return null
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-0.5 shrink-0">
-      {activeFilters.map(f => (
+      {activeFilters.map(filter => (
         <GenericButton
-          key={f.key}
+          key={filter.key}
           unstyled
           customStyling="flex items-center gap-1 whitespace-nowrap px-3 py-1 rounded-full border border-light-grey bg-white text-[14px] text-text-secondary shrink-0 capitalize"
           onClick={() => {
@@ -54,12 +57,12 @@ export default function DisplayFilters({ filters, setFilters, isArriving }) {
                 verifiedEventsOnly: prev.verifiedEventsOnly,
                 mainEventsOnly: prev.mainEventsOnly,
               }
-              updatedFilters[f.key] = f.default
+              updatedFilters[filter.key] = filter.default
               return updatedFilters
             })
           }}
         >
-          {f.label}
+          {filter.label}
           <span className="text-medium-grey text-xs">✕</span>
         </GenericButton>
       ))}

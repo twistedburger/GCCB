@@ -7,6 +7,7 @@ import {
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { eventCardStrings } from '../locales/en/ComponentStrings/EventCardStrings'
 
 export default function EventCard({ event, hideReport = false, onReport }) {
   const dateObj = new Date(event.event_time)
@@ -35,7 +36,7 @@ export default function EventCard({ event, hideReport = false, onReport }) {
         const data = await response.json()
         setBannerUrl(data.bannerUrl || bcitCover)
       } catch (err) {
-        console.error('Refresh failed', err)
+        console.error(eventCardStrings.refreshFailed, err)
         setBannerUrl(bcitCover)
       }
     }
