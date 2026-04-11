@@ -11,7 +11,13 @@ GC²B is a community-focused application designed to help students safely and ef
 
 Step by step instructions to clone this repo and setup the dev environment on a local machine.
 
-## Step 1 - Clone From Github
+## Step 1 - Download Git
+
+Download git from the git page for your operating system: https://git-scm.com/install/windows
+
+Once the download is complete, run the installer and follow the instructions
+
+## Step 2 - Clone From Github
 
 Navigate to the folder you would like to save the project in
 
@@ -29,7 +35,7 @@ and then move into the new directory
 
 Keep this command line or terminal open.
 
-## Step 2 - Download Node, NPM, and Install Packages
+## Step 3 - Download Node, NPM, and Install Packages
 
 Go to https://nodejs.org/en/download and download the prebuild Node.js for your operating system.
 
@@ -41,7 +47,7 @@ After Node.js has been installed, in the same terminal you had open, install the
 
 `npm run install`
 
-## Step 3 - Download and Install PostgreSQL
+## Step 4 - Download and Install PostgreSQL
 
 Go to the postgreSQL download page and select your preferred operating system:
 
@@ -54,7 +60,7 @@ Follow the instructions in the installer. Be sure to select all components on th
 > Note: During installation, you may be asked to enter a password for your database. It is not recommended to use the same password as your computer, as you will need to store this password in plain text later. Since the database is hosted locally and will not be exposed to the internet, it is fine to leave the password blank.  
 > If you have forgotten your password, this stack overflow article can help reset it: https://stackoverflow.com/questions/10845998/i-forgot-the-password-i-entered-during-postgresql-installation
 
-## Step 4 - Install PostGIS for Geocoding
+## Step 5 - Install PostGIS for Geocoding
 
 In the newly opened Stack Builder window, select the version of PostgreSQL that you installed, in the dropdown list:
 
@@ -66,7 +72,7 @@ Click next, and expand `Spatial Extensions` and check the `PostGIS` bundle. This
 
 Continue through the following pages, leaving everything as the default selections. When prompted to install, start the installation process. Once the installer completes, close the window and click `Finish` in the Stack Builder window.
 
-## Step 5 - Setup PostgreSQL Database
+## Step 6 - Setup PostgreSQL Database
 
 In the initial code package, you will also have been sent a .env file. Move this file into the `backend` directory found in the GCCB project folder. Once the .env has been added, ensure the `DB_PASSWORD` field matches the password you set in step 3. If you left the password blank, leave the .env password blank as well.
 
@@ -76,7 +82,7 @@ Run the database initialization command in the terminal you originally had open 
 
 > Note. During the installation of PostgreSQL, the pg Admin 4 application was also installed. This is a handy tool for managing the database. For more details on how to use pgAdmin 4, read this article: https://www.w3schools.com/postgresql/postgresql_pgadmin4.php 
 
-## Step 6 - Start the Server Locally
+## Step 7 - Start the Server Locally
 
 Open a new instance of the terminal or command line in the `GCCB/backend` directory. 
 
@@ -99,7 +105,7 @@ This window will now have the server running and ready to listen.
 >To stop the server, close the terminal or enter:
 `ctrl + c` or on Mac, enter `Control + c` to stop the server
 
-## Step 7 - Start the Frontend Locally
+## Step 8 - Start the Frontend Locally
 
 Open a new instance of the terminal or command line in the `GCCB/frontend` directory. 
 
@@ -122,7 +128,7 @@ This window will now have the frontend running locally.
 >To stop the frontend, close the terminal or enter:
 `ctrl + c` or on Mac, enter `Control + c` to stop the server
 
-## Step 8 - Ready to Use
+## Step 9 - Ready to Use
 
 Now the application is running, and it can be accessed by searching the following in any browser: 
 
@@ -166,4 +172,5 @@ Click the laptop/mobile button and select the layout as shown in the following i
 - Auto generate route title based on event title (eg. bus to event)
 - Share a route via link so someone can immediatley join
 - Add user rating system
+- View current users on the route
 
