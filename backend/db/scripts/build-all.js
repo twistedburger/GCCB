@@ -19,7 +19,7 @@ const config = {
     'add_report_columns.sql',
     // only need this script if you add manual verification
     // 'create_event_verification_table.sql',
-    'add_banner_url_to_event',
+    'add_banner_url_to_event.sql',
   ],
 }
 
