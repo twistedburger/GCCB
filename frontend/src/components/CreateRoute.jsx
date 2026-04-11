@@ -23,7 +23,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [departTime, setDepartTime] = useState('')
   const [startLoc, setStartLoc] = useState(null)
   const [endLoc, setEndLoc] = useState(initLoc)
-  const [LatLng, setLatLng] = useState(null)
+  const [latLng, setLatLng] = useState(null)
   const [distance, setDistance] = useState(null)
   const [route, setRoute] = useState(null)
   const [errors, setErrors] = useState({})
@@ -120,26 +120,26 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     setErrors({})
     const routeData = {
       title: routeName,
-      transportation_mode: transportationMode,
-      max_ppl: maxPeople,
+      transportationMode: transportationMode,
+      maxPpl: maxPeople,
       origin: startLoc,
-      origin_lat: route?.startLocation.latitude,
-      origin_lng: route?.startLocation.longitude,
+      originLat: route?.startLocation.latitude,
+      originLng: route?.startLocation.longitude,
       destination: endLoc || initLoc,
-      depart_time: departTime,
+      departTime: departTime,
       description: routeDesc,
       distance: distance,
       path: route,
       completed: false,
-      latitude: LatLng[0],
-      longitude: LatLng[1],
+      latitude: latLng[0],
+      longitude: latLng[1],
     }
     onSubmit(routeData)
   }
 
   useEffect(() => {
     if (map && pathCoordinates.length > 0) {
-      const bounds = new window.google.maps.LatLngBounds()
+      const bounds = new window.google.maps.latLngBounds()
       pathCoordinates.forEach(point => bounds.extend(point))
       map.fitBounds(bounds)
     }
@@ -175,7 +175,6 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           labels={[createRouteStrings.gas, createRouteStrings.EV]}
           value={!isEV}
           onChange={newValue => {
-            console.log('Selected Label:', newValue ? 'Gas' : 'EV')
             setIsEV(!newValue)
           }}
         />

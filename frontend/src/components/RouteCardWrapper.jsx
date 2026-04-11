@@ -56,7 +56,7 @@ export default function RouteCardWrapper({ children, route, mapsReady }) {
               isExpanded ? 'max-h-48' : 'max-h-0'
             }`}
           >
-            <div className="h-48 relative border-16 border-white border-t-">
+            <div className="h-48 relative border-16 border-white border-t-1">
               {!mapsReady ? (
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm bg-gray-50">
                   {routeCardWrapperStrings.loading}

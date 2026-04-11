@@ -1,7 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '../hooks/Authorization'
+import { useAuth, authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
-import { authLevel } from '../hooks/Authorization'
 
 export const CheckAuthorization = (authorization, requiredAuthorization) => {
   let authorizationLevel = 0

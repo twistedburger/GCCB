@@ -392,7 +392,7 @@ app.post('/api/refresh-banner', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const { place_id: placeID, event_id: eventID } = req.body
+  const { placeID, eventID } = req.body
   const eventId = parseInt(eventID, 10)
 
   try {
@@ -497,14 +497,14 @@ app.post('/api/createEvent', async (req, res) => {
 
     const {
       title,
-      event_time: eventTime,
+      eventTime,
       location,
-      need_approval: needApproval,
+      needApproval,
       description,
       longitude,
       latitude,
       banner,
-      place_id: placeID,
+      placeID,
     } = req.body
 
     const result = await db.query(
@@ -546,15 +546,15 @@ app.post('/api/createRoute', async (req, res) => {
   }
 
   const {
-    event_id: eventID,
+    eventID,
     title,
-    transportation_mode: transportationMode,
+    transportationMode,
     origin,
-    origin_lat,
-    origin_lng,
+    originLat,
+    originLng,
     destination,
-    depart_time: departTime,
-    max_ppl: maxPpl,
+    departTime,
+    maxPpl,
     distance,
     path,
     completed,
@@ -579,8 +579,8 @@ app.post('/api/createRoute', async (req, res) => {
       user.id,
       transportationMode,
       origin,
-      origin_lng,
-      origin_lat,
+      originLng,
+      originLat,
       destination,
       departTime,
       maxPpl,

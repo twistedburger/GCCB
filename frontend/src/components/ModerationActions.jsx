@@ -27,12 +27,12 @@ export default function ModerationActions({
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectionDetail, setRejectionDetail] = useState('')
   const [detailError, setDetailError] = useState('')
-  const invalidReports = moderationStrings.invalidReports.map(r => ({
-    value: r,
-    label: r,
+  const invalidReports = moderationStrings.invalidReports.map(reason => ({
+    value: reason,
+    label: reason,
   }))
   const invalidVerifications = moderationStrings.invalidVerifications.map(
-    r => ({ value: r, label: r })
+    reason => ({ value: reason, label: reason })
   )
 
   function handleCancel() {
