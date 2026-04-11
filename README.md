@@ -9,7 +9,7 @@ GC²B is a community-focused application designed to help students safely and ef
 
 # Installation Guide
 
-Step by step instructions to clone this repo and setup the dev enviroment on a local machine.
+Step by step instructions to clone this repo and setup the dev environment on a local machine.
 
 ## Step 1 - Clone From Github
 
@@ -68,7 +68,7 @@ Continue through the following pages, leaving everything as the default selectio
 
 ## Step 5 - Setup PostgreSQL Database
 
-In the inital code package, you will also have been sent a .env file. Move this file into the `backend` directory found in the GCCB project folder. Once the .env has been added, ensure the `DB_PASSWORD` field matches the password you set in step 3. If you left the password blank, leave the .env password blank as well.
+In the initial code package, you will also have been sent a .env file. Move this file into the `backend` directory found in the GCCB project folder. Once the .env has been added, ensure the `DB_PASSWORD` field matches the password you set in step 3. If you left the password blank, leave the .env password blank as well.
 
 Run the database initialization command in the terminal you originally had open where you installed the packages in step 2 using the following command:
 
@@ -130,15 +130,15 @@ Now the application is running, and it can be accessed by searching the followin
 
 To view the page in mobile view, open developer tools in your browser with `F12`. If this does not open the developer tools in your browser, do a quick search to find out how.
 
-> Note, in Mac Chrome/Firefox/Edge, use `Cmd + Option + I`
+> Note, in Mac Chrome/Firefox/Edge, use `Cmd (⌘) + Option + I`
 
-> Note, in Mac Safari, use `Cmd + Option + C`
+> Note, in Mac Safari, use `Cmd (⌘) + Option + C`
 
 Click the laptop/mobile button and select the layout as shown in the following image. 
 
 ![alt text](image-5.png)
 
-> Note, while any phone layout can be selected. Responsive allows the most felxibility when viewing
+> Note, while any phone layout can be selected. Responsive allows the most flexibility when viewing
 
 # Team Members
 - Aaron Tsang
