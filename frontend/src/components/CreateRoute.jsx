@@ -23,7 +23,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
   const [departTime, setDepartTime] = useState('')
   const [startLoc, setStartLoc] = useState(null)
   const [endLoc, setEndLoc] = useState(initLoc)
-  const [latLng, setlatLng] = useState(null)
+  const [latLng, setLatLng] = useState(null)
   const [distance, setDistance] = useState(null)
   const [route, setRoute] = useState(null)
   const [errors, setErrors] = useState({})
@@ -240,7 +240,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             ${errors.startLoc ? 'border border-red-500' : 'focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100'}`}
           onSearch={(location, latitude, longitude) => {
             setStartLoc(location)
-            setlatLng([latitude, longitude])
+            setLatLng([latitude, longitude])
           }}
         />
         {errors.startLoc && (
