@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 
 /**
  * A data display card for Key Performance Indicators (KPIs).
- * * @param {Object} props
+ * @param {Object} props
  * @param {string} props.label - The title or metric name.
  * @param {React.ReactNode} props.value - The primary metric value.
  * @param {string} [props.subvalue] - Optional secondary context.
@@ -33,7 +33,7 @@ KpiCard.propTypes = {
 
 /**
  * A responsive grid container for organizing multiple KpiCard components.
- * * @param {Object} props
+ * @param {Object} props
  * @param {Object[]} props.items - Array of objects containing label, value, and optional subvalue.
  * @returns {JSX.Element}
  */

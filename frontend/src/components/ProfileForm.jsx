@@ -7,7 +7,7 @@ import { profileFormStrings } from '../locales/en/ComponentStrings/ProfileFormSt
 
 /**
  * A form component for creating or editing a user profile.
- * * @param {Object} [user] - The existing user data to populate the form fields.
+ * @param {Object} [user] - The existing user data to populate the form fields.
  * @param {boolean} [isNew] - Flag to toggle between "Create" and "Edit" modes.
  * @param {Function} onSubmit - Callback function triggered when the form is successfully submitted.
  * @param {Function} [onCancel] - Optional callback triggered when the user exits without saving.
