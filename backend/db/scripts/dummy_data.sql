@@ -5,6 +5,7 @@ DECLARE
   adminUser    INT := 3;  -- aaron@gccb.com   (admin)
   modUser      INT := 4;  -- claudia@gccb.com (moderator)
   firstRouteId INT;
+  firstEventId INT := 1;
 BEGIN
 
 -- Update profiles
@@ -22,7 +23,7 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
 -- Events
   INSERT INTO "event" (title, creator_id, event_time, location, verified, need_approval, description, location_geog) VALUES
   ('BCIT Tech Mixer',
-   adminUser, '2026-06-10 17:30:00',
+   adminUser, '2026-04-10 17:30:00',
    '555 Seymour St, Vancouver, BC V6B 3H6',
    true, false,
    'Networking for computing students.',
@@ -165,4 +166,6 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   (userOne, firstRouteId + 9),
   (userTwo, firstRouteId + 9);
 
+  INSERT INTO "event_route" (event_id, route_id) VALUES
+  (firstEventId, firstRouteId + 1);
 END $$;
