@@ -44,17 +44,17 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
 
 
   -- Routes (7 completed routes, 3 rejected)
-  -- Modes: Bus, Walk, Bicycle, Car
+  -- Modes: Transit, Walk, Bicycle, Car
   SELECT COALESCE(MAX(id), 0) + 1 INTO firstRouteId FROM route;
 
   INSERT INTO "route" (title, creator_id, transportation_mode, origin, destination, distance, depart_time, max_ppl, completed, rejection_reason, path, origin_geog, created_at) VALUES
 
-  -- Oct 2025 — Bus (user1)
-  ('Morning Bus Commute',
-   userOne, 'Bus',
+  -- Oct 2025 — Transit (user1)
+  ('Morning Transit Commute',
+   userOne, 'Transit',
    'W 4th Ave & Yew St, Vancouver', 'BCIT Burnaby Campus',
    8.2, '2026-03-15 08:15:00', 5, true, NULL,
-   '{"legs":[{"steps":[{"distanceMeters":8200,"transitDetails":{"transitLine":{"vehicle":{"type":"BUS"}}},"travelMode":"TRANSIT"}]}]}',
+   '{"legs":[{"steps":[{"distanceMeters":8200,"transitDetails":{"transitLine":{"vehicle":{"type":"Transit"}}},"travelMode":"TRANSIT"}]}]}',
    ST_SetSRID(ST_MakePoint(-123.1545, 49.2681), 4326),
    '2026-03-15 07:50:00'),
 
@@ -130,18 +130,18 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
    ST_SetSRID(ST_MakePoint(-123.0017, 49.2505), 4326),
    '2026-04-07 16:35:00'),
 
-  -- Mar 2026 — Bus (user1)
-  ('Bus to Downtown',
-   userOne, 'Bus',
+  -- Mar 2026 — Transit (user1)
+  ('Transit to Downtown',
+   userOne, 'Transit',
    'Burnaby, BC', 'Downtown Vancouver',
    10.2, '2026-04-09 09:00:00', 5, true, NULL,
-   '{"legs":[{"steps":[{"distanceMeters":10200,"transitDetails":{"transitLine":{"vehicle":{"type":"BUS"}}},"travelMode":"TRANSIT"}]}]}',
+   '{"legs":[{"steps":[{"distanceMeters":10200,"transitDetails":{"transitLine":{"vehicle":{"type":"Transit"}}},"travelMode":"TRANSIT"}]}]}',
    ST_SetSRID(ST_MakePoint(-123.0200, 49.2488), 4326),
    '2026-04-09 08:35:00');
 
 -- Route Participation
   INSERT INTO "user_route" (user_id, route_id) VALUES
-  -- Bus commute: user1 creator + user2 joins
+  -- Transit commute: user1 creator + user2 joins
   (userOne, firstRouteId),
   (userTwo, firstRouteId),
   -- Carpool Nov: user2 driving, user1 passenger
@@ -161,7 +161,7 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   -- Carpool Feb: user2 driving, user1 passenger
   (userTwo, firstRouteId + 8),
   (userOne, firstRouteId + 8),
-  -- Bus Mar: user1 creator + user2 joins
+  -- Transit Mar: user1 creator + user2 joins
   (userOne, firstRouteId + 9),
   (userTwo, firstRouteId + 9);
 
