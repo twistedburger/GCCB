@@ -33,6 +33,7 @@ KpiCard.propTypes = {
 
 /**
  * A responsive grid container for organizing multiple KpiCard components.
+ *
  * @param {Object} props
  * @param {Object[]} props.items - Array of objects containing label, value, and optional subvalue.
  * @returns {JSX.Element}

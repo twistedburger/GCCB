@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 
 /**
  * A button component for submitting forms.
+ *
  * @param {Object} props
  * @param {boolean} props.disabled - Flag indicating if the button should be disabled.
  * @param {Function} props.onClick - The function to call when the button is clicked.

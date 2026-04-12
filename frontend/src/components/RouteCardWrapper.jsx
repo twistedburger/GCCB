@@ -8,6 +8,7 @@ import { routeCardWrapperStrings } from '../locales/en/ComponentStrings/RouteCar
 
 /**
  * A wrapper component for containing and managing the expanded state of a route map.
+ *
  * @param {Object} props
  * @param {React.ReactNode} props.children - The child nodes to be displayed within the wrapper.
  * @param {Object} props.route - The route data for which to display a map.

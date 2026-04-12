@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 
 /**
  * Utility to compare current user authorization against a required threshold.
+ *
  * @param {string} authorization - The label of the current user's role (e.g., 'user', 'admin').
  * @param {Object} requiredAuthorization - The required authorization object containing a numeric value.
  * @returns {boolean} True if the user's level is equal to or higher than the requirement.
@@ -24,6 +25,7 @@ export const CheckAuthorization = (authorization, requiredAuthorization) => {
 /**
  * A wrapper component that gates access to child routes based on authorization levels.
  * Redirects unauthorized users to the homepage while preserving their intended location.
+ *
  * @param {Object} props
  * @param {Object} [props.requiredAuthorization=authLevel.USER] - The minimum role required to access the route.
  * @returns {JSX.Element} Either an <Outlet /> for authorized users or a <Navigate /> redirect.

@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 
 /**
  * A card component for displaying content that can be expanded or collapsed.
+ *
  * @param {Object} props
  * @param {React.ReactNode} props.children - The child nodes to be displayed within the card.
  * @param {boolean} props.isExpanded - Flag indicating if the card is expanded.

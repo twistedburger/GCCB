@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 
 /**
  * A data display card for containing charts or visualizations.
+ *
  * @param {Object} props
  * @param {string} props.title - The title of the chart.
  * @param {string} [props.subtitle] - Optional subtitle for additional context.

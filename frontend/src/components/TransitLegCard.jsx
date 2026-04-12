@@ -5,6 +5,7 @@ import { transitLegCardStrings } from '../locales/en/ComponentStrings/TransitLeg
 
 /**
  * A card component for displaying transit leg information.
+ *
  * @param {Object} props
  * @param {string} props.name - The name of the transit leg.
  * @param {string} props.type - The type of the transit leg.

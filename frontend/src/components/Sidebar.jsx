@@ -25,6 +25,7 @@ import { sidebarStrings } from '../locales/en/ComponentStrings/SidebarStrings'
 
 /**
  * An array of navigation items for the main sidebar.
+ *
  * @type {Array<{id: string, icon: React.ReactNode, label: string, path: string}>}
  */
 
@@ -57,6 +58,7 @@ const mainNavigation = [
 
 /**
  * A sidebar component for navigation.
+ *
  * @param {Object} props
  * @param {string} props.userRole - The role of the current user.
  * @returns {JSX.Element}

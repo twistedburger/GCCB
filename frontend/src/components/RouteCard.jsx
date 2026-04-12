@@ -13,6 +13,7 @@ import { routeCardStrings } from '../locales/en/ComponentStrings/RouteCardString
 
 /**
  * A card component for displaying route information and actions.
+ *
  * @param {Object} route - The route data to display.
  * @param {boolean} [hideReportJoin=false] - Flag to hide the report and join buttons.
  * @param {boolean} [isDraft=false] - Flag indicating if the route is a draft from a form.
