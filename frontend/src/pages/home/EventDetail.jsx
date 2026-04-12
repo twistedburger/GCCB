@@ -13,10 +13,8 @@ import MenuItem from '@mui/material/MenuItem'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Drawer } from 'vaul'
 import CreateRoute from '../../components/CreateRoute'
-import Modal from '../../components/Modal'
 import Alert from '../../components/Alert'
 import Report from '../../components/Report'
-import { createPortal } from 'react-dom'
 
 /**
  * Displays the event detail drawer
@@ -122,20 +120,6 @@ export default function EventDetail() {
               Add a Route
             </GenericButton>
           </div>
-
-          {addRoute &&
-            createPortal(
-              <Modal isOpen={true} onClose={() => setAddRoute(false)}>
-                <CreateRoute
-                  initLoc={event.location}
-                  onSubmit={routeData => {
-                    handleAddRoute(routeData)
-                    setAddRoute(false)
-                  }}
-                />
-              </Modal>,
-              document.getElementById('app-container')
-            )}
         </>
       )}
       <Drawer.Root
@@ -152,7 +136,16 @@ export default function EventDetail() {
           <Drawer.Overlay style={{ pointerEvents: 'none' }} />
           <Drawer.Content
             onInteractOutside={e => {
-              if (addRoute) e.preventDefault()
+              if (addRoute) {
+                const isInsideNested =
+                  e.target.closest('[data-vaul-drawer]') ||
+                  e.target.closest('input')
+
+                if (isInsideNested) {
+                  return
+                }
+                e.preventDefault()
+              }
             }}
             onOpenAutoFocus={e => e.preventDefault()}
             onCloseAutoFocus={e => e.preventDefault()}
@@ -377,6 +370,45 @@ export default function EventDetail() {
                               />
                             </>
                           )}
+                        </div>
+                      </Drawer.Content>
+                    </Drawer.Portal>
+                  </Drawer.NestedRoot>
+                  <Drawer.NestedRoot open={addRoute} onOpenChange={setAddRoute}>
+                    <Drawer.Portal>
+                      <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
+                      <Drawer.Content
+                        className="fixed bottom-0 left-13.75 right-0 z-50 flex flex-col rounded-t-3xl bg-white"
+                        style={{ height: '90%' }}
+                        onPointerDownOutside={e => e.preventDefault()}
+                        onInteractOutside={e => e.preventDefault()}
+                      >
+                        <div
+                          className="p-4 overflow-y-auto"
+                          onPointerDown={e => e.stopPropagation()}
+                        >
+                          {/* Close Button */}
+                          <div className="flex justify-end mb-2">
+                            <GenericButton
+                              onClick={() => setAddRoute(false)}
+                              unstyled={true}
+                              customStyling="text-text-primary scale-110"
+                            >
+                              <Cancel />
+                            </GenericButton>
+                          </div>
+
+                          <Drawer.Title className="text-lg font-bold mb-4">
+                            Create a New Route
+                          </Drawer.Title>
+
+                          <CreateRoute
+                            initLoc={event.location}
+                            onSubmit={routeData => {
+                              handleAddRoute(routeData)
+                              setAddRoute(false)
+                            }}
+                          />
                         </div>
                       </Drawer.Content>
                     </Drawer.Portal>
