@@ -131,16 +131,14 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       transportationMode: transportationMode,
       maxPpl: maxPeople,
       origin: startLoc,
-      originLat: route?.startLocation.latitude,
-      originLng: route?.startLocation.longitude,
+      originLat: latLng[0],
+      originLng: latLng[1],
       destination: endLoc || initLoc,
       departTime: departTime,
       description: routeDesc,
       distance: distance,
       path: route,
       completed: false,
-      latitude: latLng[0],
-      longitude: latLng[1],
     }
     onSubmit(routeData)
   }
@@ -307,7 +305,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
           defaultCenter={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
           route={
             route
-              ? { path: route, transportation_mode: transportationMode }
+              ? { path: route, transportationMode: transportationMode }
               : null
           }
           onLoad={setMap}

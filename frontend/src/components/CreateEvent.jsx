@@ -125,7 +125,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
     }
   }
 
-  const createRoute = async (eventID, routeData, creatorId) => {
+  const createRoute = async (eventID, routeData) => {
     try {
       const response = await fetch('http://localhost:3000/api/createRoute', {
         method: 'POST',
@@ -134,7 +134,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         body: JSON.stringify({
           eventID,
           ...routeData,
-          creatorId,
         }),
       })
 

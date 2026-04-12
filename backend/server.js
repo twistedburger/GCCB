@@ -562,9 +562,8 @@ app.post('/api/createRoute', async (req, res) => {
     completed,
     description,
     isJoined,
-    latitude,
-    longitude,
   } = req.body
+
   const client = await pool.connect()
 
   try {
@@ -572,17 +571,20 @@ app.post('/api/createRoute', async (req, res) => {
     await client.query('BEGIN')
 
     const routeQuery = `
-      INSERT INTO route (title, creator_id, transportation_mode, origin, destination, depart_time, max_ppl, distance, path, completed, description, created_at, origin_geog)
+      INSERT INTO route (
+        title, creator_id, transportation_mode, origin, destination, 
+        depart_time, max_ppl, distance, path, completed, 
+        description, created_at, origin_geog
+      )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
       RETURNING id;
     `
+
     const routeResult = await client.query(routeQuery, [
       title,
       user.id,
       transportationMode,
       origin,
-      originLng,
-      originLat,
       destination,
       departTime,
       maxPpl,
@@ -591,9 +593,10 @@ app.post('/api/createRoute', async (req, res) => {
       completed,
       description,
       new Date(),
-      longitude,
-      latitude,
+      originLng,
+      originLat,
     ])
+
     const routeID = routeResult.rows[0].id
 
     const junctionQuery = `
@@ -761,9 +764,10 @@ app.get('/api/routes/:id/isJoined', async (req, res) => {
   }
   try {
     const user = await selectUser(req)
+    const { id } = req.params
     const result = await db.query(
       'SELECT * FROM user_route WHERE route_id = $1 AND user_id = $2',
-      [req.params.id, user.id]
+      [id, user.id]
     )
     res.json({ isJoined: result.rowCount > 0 })
   } catch (error) {
