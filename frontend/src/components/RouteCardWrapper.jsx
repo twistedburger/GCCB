@@ -6,6 +6,16 @@ import GenericButton from './GenericButton'
 import MainMap from './MainMap'
 import { routeCardWrapperStrings } from '../locales/en/ComponentStrings/RouteCardWrapperStrings'
 
+/**
+ * A wrapper component for containing and managing the expanded state of a route map.
+ *
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - The child nodes to be displayed within the wrapper.
+ * @param {Object} props.route - The route data for which to display a map.
+ * @param {boolean} props.mapsReady - Flag indicating if the map is ready for rendering.
+ * @returns {JSX.Element}
+ */
+
 export default function RouteCardWrapper({ children, route, mapsReady }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [map, setMap] = useState(null)

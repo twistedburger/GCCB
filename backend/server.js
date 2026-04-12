@@ -57,7 +57,9 @@ app.get('/maps/api/js', async (req, res) => {
     )
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: serverStrings.google })
+      return res
+        .status(response.status)
+        .json({ error: serverStrings.errors.google })
     }
 
     const script = await response.text()
@@ -409,7 +411,7 @@ app.post('/api/refresh-banner', async (req, res) => {
     // need the photo name to get the banner url
     const photoName = response.data.photos?.[0]?.name
     if (!photoName) {
-      return res.status(404).json({ error: 'No photos found for this place' })
+      return res.status(404).json({ error: serverStrings.errors.noPhotos })
     }
 
     const photoResponse = await axios.get(
@@ -528,7 +530,7 @@ app.post('/api/createEvent', async (req, res) => {
     res.status(201).json(result.rows[0])
   } catch (error) {
     console.error('Database Error:', error)
-    res.status(500).json({ error: 'Internal Server Error' })
+    res.status(500).json({ error: serverStrings.errors.eventCreationFailed })
   }
 })
 
@@ -560,9 +562,8 @@ app.post('/api/createRoute', async (req, res) => {
     completed,
     description,
     isJoined,
-    latitude,
-    longitude,
   } = req.body
+
   const client = await pool.connect()
 
   try {
@@ -570,17 +571,20 @@ app.post('/api/createRoute', async (req, res) => {
     await client.query('BEGIN')
 
     const routeQuery = `
-      INSERT INTO route (title, creator_id, transportation_mode, origin, destination, depart_time, max_ppl, distance, path, completed, description, created_at, origin_geog)
+      INSERT INTO route (
+        title, creator_id, transportation_mode, origin, destination, 
+        depart_time, max_ppl, distance, path, completed, 
+        description, created_at, origin_geog
+      )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
       RETURNING id;
     `
+
     const routeResult = await client.query(routeQuery, [
       title,
       user.id,
       transportationMode,
       origin,
-      originLng,
-      originLat,
       destination,
       departTime,
       maxPpl,
@@ -589,9 +593,10 @@ app.post('/api/createRoute', async (req, res) => {
       completed,
       description,
       new Date(),
-      longitude,
-      latitude,
+      originLng,
+      originLat,
     ])
+
     const routeID = routeResult.rows[0].id
 
     const junctionQuery = `
@@ -612,7 +617,7 @@ app.post('/api/createRoute', async (req, res) => {
   } catch (error) {
     console.error('Database Error Detail:', error)
     await client.query('ROLLBACK')
-    res.status(500).json({ error: 'Failed to create and link route' })
+    res.status(500).json({ error: serverStrings.errors.routeCreationFailed })
   } finally {
     client.release()
   }
@@ -739,7 +744,7 @@ app.get('/api/eventdetail/:id', async (req, res) => {
     res.status(200).json(event)
   } catch (error) {
     console.error('Error fetching event detail:', error)
-    res.status(500).json({ error: 'Failed to fetch event detail' })
+    res.status(500).json({ error: serverStrings.errors.eventFetchFailed })
   }
 })
 
@@ -759,14 +764,15 @@ app.get('/api/routes/:id/isJoined', async (req, res) => {
   }
   try {
     const user = await selectUser(req)
+    const { id } = req.params
     const result = await db.query(
       'SELECT * FROM user_route WHERE route_id = $1 AND user_id = $2',
-      [req.params.id, user.id]
+      [id, user.id]
     )
     res.json({ isJoined: result.rowCount > 0 })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Failed to check join status' })
+    res.status(500).json({ error: serverStrings.errors.joinStatusFailed })
   }
 })
 
@@ -780,7 +786,9 @@ app.get('/api/routes/:id/isJoined', async (req, res) => {
  */
 app.post('/api/routes/:id/join', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).json({ error: 'Not authenticated' })
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
   }
   try {
     const user = await selectUser(req)
@@ -791,12 +799,12 @@ app.post('/api/routes/:id/join', async (req, res) => {
     res.json({ success: true })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Failed to join route' })
+    res.status(500).json({ error: serverStrings.errors.joinFailed })
   }
 })
 
 /**
- * Removes a user to a route by removing a record to the user_route table.
+ * Removes a user from a route by removing a record from the user_route table.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -805,7 +813,9 @@ app.post('/api/routes/:id/join', async (req, res) => {
  */
 app.delete('/api/routes/:id/leave', async (req, res) => {
   if (!req.oidc.isAuthenticated())
-    return res.status(403).json({ error: 'Not authenticated' })
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
   try {
     const user = await selectUser(req)
     await db.query(
@@ -815,7 +825,7 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
     res.json({ success: true })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Failed to leave route' })
+    res.status(500).json({ error: serverStrings.errors.leaveFailed })
   }
 })
 
@@ -829,7 +839,9 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
  */
 app.post('/api/report', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    return res.status(403).json({ error: 'Not authenticated' })
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
   }
   try {
     const user = await selectUser(req)
@@ -859,7 +871,7 @@ app.post('/api/report', async (req, res) => {
     res.json({ success: true })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Failed to submit report' })
+    res.status(500).json({ error: serverStrings.errors.reportFailed })
   }
 })
 
@@ -886,7 +898,7 @@ app.get('/api/commute-history', async (req, res) => {
 
     if (user.role !== 'user') {
       return res.status(403).json({
-        error: 'Only regular users can access commute history.',
+        error: serverStrings.errors.analyticsUserOnly,
       })
     }
 
@@ -1311,7 +1323,7 @@ app.post('/api/moderateReport', async (req, res) => {
     res.status(200).json({ success: true })
   } catch (error) {
     console.error('Database Error:', error)
-    res.status(500).json({ error: 'Internal Server Error' })
+    res.status(500).json({ error: serverStrings.errors.internal })
   }
 })
 
@@ -1357,7 +1369,7 @@ app.post('/api/verifyEvent', async (req, res) => {
     res.status(200).json({ success: true })
   } catch (error) {
     console.error('Database Error:', error)
-    res.status(500).json({ error: 'Internal Server Error' })
+    res.status(500).json({ error: serverStrings.errors.internal })
   }
 })
 

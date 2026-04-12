@@ -52,7 +52,7 @@ export default function EventDetail() {
         credentials: 'include',
         body: JSON.stringify({
           ...routeData,
-          event_id: event.id,
+          eventID: event.id,
         }),
       })
 
@@ -67,8 +67,9 @@ export default function EventDetail() {
 
       if (response.ok) {
         const newRouteForState = {
-          id: result.route_id,
           ...routeData,
+          id: result.routeID,
+          transportation_mode: routeData.transportationMode,
           created_at: new Date(),
         }
         setEvent(prevEvent => ({
@@ -150,6 +151,9 @@ export default function EventDetail() {
         <Drawer.Portal>
           <Drawer.Overlay style={{ pointerEvents: 'none' }} />
           <Drawer.Content
+            onInteractOutside={e => {
+              if (addRoute) e.preventDefault()
+            }}
             onOpenAutoFocus={e => e.preventDefault()}
             onCloseAutoFocus={e => e.preventDefault()}
             style={{

@@ -9,6 +9,14 @@ import RouteCard from './RouteCard'
 import ConfirmationDialog from './ConfirmationDialog'
 import { createEventStrings } from '../locales/en/ComponentStrings/CreateEventStrings'
 
+/**
+ * Component to create a new event.
+ *
+ * @param {Object} initLoc - The initial location for the event.
+ * @param {Function} onSubmit - The function to call when the event is submitted.
+ * @returns {JSX.Element}
+ */
+
 const CreateEvent = ({ initLoc, onSubmit }) => {
   const [addedRoutes, setAddedRoutes] = useState([])
   const [selectedPlace, setSelectedPlace] = useState(null)
@@ -117,7 +125,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
     }
   }
 
-  const createRoute = async (eventID, routeData, creatorId) => {
+  const createRoute = async (eventID, routeData) => {
     try {
       const response = await fetch('http://localhost:3000/api/createRoute', {
         method: 'POST',
@@ -126,7 +134,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         body: JSON.stringify({
           eventID,
           ...routeData,
-          creatorId,
         }),
       })
 

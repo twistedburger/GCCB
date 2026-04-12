@@ -45,7 +45,7 @@ html {
   height: 30px;
 }
 
-.commute-icon[data-type='bus'] {
+.commute-icon[data-type='transit'] {
   background-color: var(--color-orange-secondary);
   color: var(--color-orange-primary);
 }
@@ -76,7 +76,7 @@ html {
     visibility 0.2s ease-in-out;
 }
 
-.commute-icon.selected[data-type='bus'] {
+.commute-icon.selected[data-type='transit'] {
   border: 2px solid var(--color-orange-primary);
 }
 

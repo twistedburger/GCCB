@@ -1,5 +1,14 @@
 import PropTypes from 'prop-types'
 
+/**
+ * A data display card for Key Performance Indicators (KPIs).
+ * @param {Object} props
+ * @param {string} props.label - The title or metric name.
+ * @param {React.ReactNode} props.value - The primary metric value.
+ * @param {string} [props.subvalue] - Optional secondary context.
+ * @returns {JSX.Element}
+ */
+
 function KpiCard({ label, value, subvalue }) {
   return (
     <div className="bg-gray-100 rounded-3xl p-5 shadow-sm border border-gray-400">
@@ -21,6 +30,14 @@ KpiCard.propTypes = {
   value: PropTypes.node.isRequired,
   subvalue: PropTypes.string,
 }
+
+/**
+ * A responsive grid container for organizing multiple KpiCard components.
+ *
+ * @param {Object} props
+ * @param {Object[]} props.items - Array of objects containing label, value, and optional subvalue.
+ * @returns {JSX.Element}
+ */
 
 function KpiGrid({ items }) {
   return (

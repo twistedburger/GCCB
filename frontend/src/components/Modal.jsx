@@ -3,6 +3,16 @@ import { useEffect, useState } from 'react'
 import { Close } from '@mui/icons-material'
 import GenericButton from './GenericButton'
 
+/**
+ * Component to display a modal dialog.
+ *
+ * @param {boolean} isOpen - Whether the modal is open.
+ * @param {Function} onClose - The function to call when the modal is closed.
+ * @param {React.ReactNode} children - The content to display inside the modal.
+ * @param {string} title - The title for the modal.
+ * @returns {JSX.Element}
+ */
+
 export default function Modal({ isOpen, onClose, children, title }) {
   const [animateIn, setAnimateIn] = useState(false)
 

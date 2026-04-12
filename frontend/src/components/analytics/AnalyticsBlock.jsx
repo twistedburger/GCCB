@@ -1,5 +1,15 @@
 import PropTypes from 'prop-types'
 
+/**
+ * A container component for organizing analytics content with a title and optional description.
+ *
+ * @param {Object} props
+ * @param {string} props.title - The title of the analytics block.
+ * @param {string} [props.description] - Optional description for additional context.
+ * @param {React.ReactNode} props.children - The analytics content to display.
+ * @returns {JSX.Element}
+ */
+
 function AnalyticsBlock({ title, description, children }) {
   return (
     <section className="mt-6">

@@ -7,6 +7,17 @@ import {
 } from '@vis.gl/react-google-maps'
 import MapController from './MapController'
 
+/**
+ * Component to display the main map.
+ *
+ * @param {React.ReactNode} children - The child nodes to render inside the map.
+ * @param {Object} defaultCenter - The default center position for the map.
+ * @param {Object} route - The route information for the map.
+ * @param {Function} onLoad - The function to call when the map is loaded.
+ * @param {Function} onUnmount - The function to call when the map is unmounted.
+ * @returns {JSX.Element}
+ */
+
 export default function MainMap({
   children,
   defaultCenter,

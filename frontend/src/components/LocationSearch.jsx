@@ -2,6 +2,16 @@ import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 import { locationSearchStrings } from '../locales/en/ComponentStrings/LocationSearchStrings'
 
+/**
+ * Component to display a location search input.
+ *
+ * @param {Object} clearRef - A ref to access the clear functionality.
+ * @param {Function} onSearch - The function to call when a location is searched.
+ * @param {string} defaultLocation - The default location for the search.
+ * @param {string} placeHolder - The placeholder text for the search input.
+ * @returns {JSX.Element}
+ */
+
 export default function LocationSearch({
   clearRef,
   onSearch,

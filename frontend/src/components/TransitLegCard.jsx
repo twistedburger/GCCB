@@ -3,6 +3,17 @@ import CommuteIcon from './CommuteIcon'
 import { TravelMode } from '../utils/RouteUtils'
 import { transitLegCardStrings } from '../locales/en/ComponentStrings/TransitLegCardStrings'
 
+/**
+ * A card component for displaying transit leg information.
+ *
+ * @param {Object} props
+ * @param {string} props.name - The name of the transit leg.
+ * @param {string} props.type - The type of the transit leg.
+ * @param {number} props.distance - The distance of the transit leg.
+ * @param {string} props.className - Additional CSS classes for the card.
+ * @returns {JSX.Element}
+ */
+
 function TransitLegCard({ name, type, distance, className }) {
   return (
     <div

@@ -21,6 +21,16 @@ const ALERT_CONFIGS = {
   },
 }
 
+/**
+ * A floating notification component with entry and exit animations.
+ *
+ * @param {string} message - The text content to display.
+ * @param {'error'|'success'|'info'} type - The alert category determining color and icon.
+ * @param {number} [duration=3000] - Time in milliseconds before the alert automatically closes.
+ * @param {Function} onTimeout - Callback function triggered after the exit transition completes.
+ * @returns {JSX.Element}
+ */
+
 const Alert = ({ message, type, duration = 3000, onTimeout }) => {
   const [entered, setEntered] = useState(false)
   const [isExiting, setIsExiting] = useState(false)

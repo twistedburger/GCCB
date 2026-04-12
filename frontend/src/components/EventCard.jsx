@@ -9,6 +9,15 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { eventCardStrings } from '../locales/en/ComponentStrings/EventCardStrings'
 
+/**
+ * Component to display an event card.
+ *
+ * @param {Object} event - The event data.
+ * @param {boolean} [hideReport=false] - Whether to hide the report button.
+ * @param {Function} [onReport] - The function to call when an event is reported.
+ * @returns {JSX.Element}
+ */
+
 export default function EventCard({ event, hideReport = false, onReport }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()

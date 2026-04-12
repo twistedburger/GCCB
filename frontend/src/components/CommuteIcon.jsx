@@ -13,6 +13,16 @@ const ICONS = {
   walk: DirectionsWalk,
 }
 
+/**
+ * Component to display a commute method icon.
+ *
+ * @param {string} type - The commute method type.
+ * @param {boolean} [clickable=false] - Whether the icon is clickable.
+ * @param {boolean} [isSelected=false] - Whether the icon is selected.
+ * @param {Function} [onClick] - The function to call when the icon is clicked.
+ * @returns {JSX.Element}
+ */
+
 const CommuteIcon = ({ type, clickable = false, isSelected, onClick }) => {
   const SelectedIcon = ICONS[type]
 

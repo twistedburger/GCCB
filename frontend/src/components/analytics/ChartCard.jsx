@@ -1,5 +1,15 @@
 import PropTypes from 'prop-types'
 
+/**
+ * A data display card for containing charts or visualizations.
+ *
+ * @param {Object} props
+ * @param {string} props.title - The title of the chart.
+ * @param {string} [props.subtitle] - Optional subtitle for additional context.
+ * @param {React.ReactNode} props.children - The chart or visualization content.
+ * @returns {JSX.Element}
+ */
+
 function ChartCard({ title, subtitle, children }) {
   return (
     <section className="w-full bg-gray-100 rounded-3xl p-5 shadow-sm border border-gray-400">

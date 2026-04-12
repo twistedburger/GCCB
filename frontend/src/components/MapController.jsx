@@ -14,6 +14,14 @@ const createPin = (color, label) => {
   return pin
 }
 
+/**
+ * Component to control the map view and display route information.
+ *
+ * @param {Object} center - The center position for the map.
+ * @param {Object} route - The route information for the map.
+ * @returns {JSX.Element}
+ */
+
 export default function MapController({ center, route }) {
   const map = useMap()
   useEffect(() => {
@@ -43,7 +51,10 @@ export default function MapController({ center, route }) {
       })
     )
 
-    if (route.transportation_mode.toUpperCase() === TravelMode.Transit) {
+    // TODO: Fix transportation mode inconsistency between backend and frontend
+    const mode = route?.transportation_mode || route?.transportationMode || ''
+
+    if (mode.toUpperCase() === TravelMode.Transit) {
       // overwrite the line if transit
       const routeLines = []
       const legColors = {

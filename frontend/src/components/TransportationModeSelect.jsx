@@ -5,6 +5,16 @@ import { transportationModeSelectStrings } from '../locales/en/ComponentStrings/
 
 const MODES = ['transit', 'bicycle', 'walk', 'car']
 
+/**
+ * A component for selecting transportation modes.
+ *
+ * @param {Object} props
+ * @param {string | string[]} props.selectedModes - The currently selected transportation modes.
+ * @param {Function} props.onChange - A function to be called when the selected modes change.
+ * @param {boolean} props.multiple - Flag indicating if multiple modes can be selected.
+ * @returns {JSX.Element}
+ */
+
 export default function TransportationModeSelect({
   selectedModes,
   onChange,

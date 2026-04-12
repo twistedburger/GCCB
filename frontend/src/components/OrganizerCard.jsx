@@ -3,6 +3,15 @@ import GenericButton from './GenericButton.jsx'
 import { AccountCircleOutlined } from '@mui/icons-material'
 import { organizerCardStrings } from '../locales/en/ComponentStrings/OrganizerCardStrings.js'
 
+/**
+ * Component to display an organizer card.
+ *
+ * @param {Object} user - The user information for the organizer.
+ * @param {string} primaryActionLabel - The label for the primary action button.
+ * @param {Function} onPrimaryAction - The function to call when the primary action is clicked.
+ * @param {string} secondaryActionLabel - The label for the secondary action button.
+ */
+
 function OrganizerCard({
   user,
   primaryActionLabel,
@@ -91,7 +100,7 @@ OrganizerCard.propTypes = {
     nickname: PropTypes.string.isRequired,
     description: PropTypes.string,
     active: PropTypes.bool.isRequired,
-    profile_pic: PropTypes.string.is,
+    profile_pic: PropTypes.string,
   }).isRequired,
 
   primaryActionLabel: PropTypes.string,
