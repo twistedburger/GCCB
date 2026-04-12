@@ -78,7 +78,7 @@ In the initial code package, you will also have been sent a .env file. Move this
 
 Run the database initialization command in the terminal you originally had open where you installed the packages in step 2 using the following command:
 
-`npm run db:init`
+`npm run db:init -- --seed`
 
 > Note. During the installation of PostgreSQL, the pg Admin 4 application was also installed. This is a handy tool for managing the database. For more details on how to use pgAdmin 4, read this article: https://www.w3schools.com/postgresql/postgresql_pgadmin4.php 
 
