@@ -5,22 +5,11 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') })
 const config = {
   db: 'gccb_db',
   user: 'postgres',
+  scripts: ['setup.sql'],
+}
 
-  // Add more scripts to this list as created
-  scripts: [
-    'initialize_db.sql',
-    'add_dummy_data.sql',
-    'update_db_sso.sql',
-    'add_user_last_login.sql',
-    'create_report_table.sql',
-    'add_created_at_column_event_and_route.sql',
-    'update_path_data_type.sql',
-    'add_geog_columns.sql',
-    'add_report_columns.sql',
-    // only need this script if you add manual verification
-    // 'create_event_verification_table.sql',
-    'add_banner_url_to_event',
-  ],
+if (process.argv.includes('--seed')) {
+  config.scripts.push('dummy_data.sql')
 }
 
 const execOptions = {
@@ -30,6 +19,10 @@ const execOptions = {
     PGPASSWORD: process.env.DB_PASSWORD,
   },
 }
+
+/**
+ * Creates the database if it does not already exist.
+ */
 function makeDatabase() {
   try {
     execSync(
@@ -47,15 +40,19 @@ function makeDatabase() {
   }
 }
 
+/**
+ * Runs all available scripts within db script directory.
+ */
 function runScripts() {
   makeDatabase()
   config.scripts.forEach(file => {
     try {
       console.log(`\nRunning: ${file}`)
-      execSync(
-        `psql -d ${config.db} -U ${config.user} -f ${path.join(__dirname, file)}`,
-        execOptions
-      )
+      const filePath = path.join(__dirname, file)
+      execSync(`psql -d ${config.db} -U ${config.user} -f "${filePath}"`, {
+        ...execOptions,
+        shell: true,
+      })
     } catch (err) {
       console.error(`Error in ${file}. Resolve before continuing.`, err.message)
       process.exit(1)
