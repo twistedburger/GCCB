@@ -8,10 +8,11 @@ DECLARE
 BEGIN
 
 -- Update profiles
-  UPDATE "user" SET name = 'Dylan Reimer', nickname = 'dartFrog'   WHERE email = 'dylan@gccb.com';
-  UPDATE "user" SET name = 'Jamie Kim',    nickname = 'justJam'    WHERE email = 'jamie@gccb.com';
-  UPDATE "user" SET name = 'Aaron Tsang',  nickname = 'masked_man' WHERE email = 'aaron@gccb.com';
-  UPDATE "user" SET name = 'Claudia Le',   nickname = 'cloudia'    WHERE email = 'claudia@gccb.com';
+INSERT INTO "user" (email, role, name, nickname, active) VALUES
+  ('dylan@gccb.com', 'user', 'Dylan Reimer', 'dartFrog', true),
+  ('jamie@gccb.com', 'user', 'Jamie Kim', 'justJam', true),
+  ('aaron@gccb.com', 'admin', 'Aaron Tsang', 'masked_man', true),
+  ('claudia@gccb.com', 'moderator', 'Claudia Le', 'cloudia', true);
 
   INSERT INTO "vehicle" (driver_id, insurance, license, model, make, number_seats, e_v) VALUES
   (adminUser, true,  'DRV-789',  'Civic',   'Honda', 4, false),
