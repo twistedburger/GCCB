@@ -128,7 +128,9 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     setErrors({})
     const routeData = {
       title: routeName,
-      transportationMode: transportationMode,
+      transportationMode:
+        transportationMode.charAt(0).toUpperCase() +
+        transportationMode.slice(1),
       maxPpl: maxPeople,
       origin: startLoc,
       originLat: latLng[0],
