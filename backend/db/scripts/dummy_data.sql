@@ -167,5 +167,15 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   (userTwo, firstRouteId + 9);
 
   INSERT INTO "event_route" (event_id, route_id) VALUES
-  (firstEventId, firstRouteId + 1);
+  (firstEventId, firstRouteId + 1),
+  (firstEventId, firstRouteId + 2),
+  (firstEventId + 1, firstRouteId),
+  (firstEventId + 1, firstRouteId + 3),
+  (firstEventId + 1, firstRouteId + 4),
+  (firstEventId + 1, firstRouteId + 5),
+  (firstEventId + 2, firstRouteId + 6),
+  (firstEventId + 2, firstRouteId + 7),
+  (firstEventId + 2, firstRouteId + 8),
+  (firstEventId + 2, firstRouteId + 9);
+  
 END $$;
