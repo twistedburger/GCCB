@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import GenericToggle from '../components/GenericToggle'
 import RouteCardWrapper from '../components/RouteCardWrapper'
+import Modal from '../components/Modal'
+import Report from '../components/Report'
 import RouteCard from '../components/RouteCard'
+import Alert from '../components/Alert'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 
 /**
@@ -15,6 +18,9 @@ export default function MyTrips() {
   const [viewingActive, setViewingActive] = useState(true)
   const [mapsReady, setMapsReady] = useState(!!window.google?.maps)
   const [confirmLeave, setConfirmLeave] = useState(null)
+  const [reportData, setReportData] = useState(null)
+  const [showReport, setShowReport] = useState(false)
+  const [alert, setAlert] = useState(null)
 
   useEffect(() => {
     if (window.google?.maps) {
@@ -75,6 +81,13 @@ export default function MyTrips() {
           Are you sure you want to leave this route?
         </ConfirmationDialog>
       </div>
+      {alert && (
+        <Alert
+          message={alert.text}
+          type={alert.type}
+          onTimeout={() => setAlert(null)}
+        />
+      )}
       <div className="px-6 pb-20 relative">
         <div className="flex justify-center mt-6 mb-6 *:w-full">
           <GenericToggle
@@ -93,12 +106,39 @@ export default function MyTrips() {
                   routeDetailView={true}
                   isCompleted={trip.completed}
                   onToggleJoin={() => setConfirmLeave(trip)}
+                  onReport={trip => {
+                    {
+                      setReportData(trip)
+                      setShowReport(true)
+                    }
+                  }}
                 />
               </div>
             </RouteCardWrapper>
           ))}
         </div>
       </div>
+      <Modal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title={'Report Route'}
+      >
+        <Report
+          type={'route'}
+          targetId={reportData?.id}
+          onClose={() => setShowReport(false)}
+          setAlert={reportAlert => {
+            if (!reportAlert?.type) return
+            setAlert({
+              type: reportAlert.type,
+              text:
+                reportAlert.type === 'success'
+                  ? 'Report submitted successfully.'
+                  : 'Failed to submit report.',
+            })
+          }}
+        />
+      </Modal>
     </div>
   )
 }
