@@ -1,0 +1,131 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-blue-primary: #6fa4ea;
+  --color-blue-secondary: #f0f6ff;
+  --color-orange-primary: #feac7a;
+  --color-orange-secondary: #ffe3d2;
+  --color-purple-primary: #7c3aed;
+  --color-purple-secondary: #f2efff;
+  --color-green-primary: #2e7d32;
+  --color-green-secondary: #e2f2e2;
+  --color-text-primary: #333333;
+  --color-text-secondary: #666666;
+  --color-background-off-white: #f5f5f5;
+  --color-dark-grey: #4f4f4f;
+  --color-medium-grey: #b3b3b3; /* for non-selected navigation bar component, unfocused icon, etc. */
+  --color-light-grey: #e2e2e2; /* for card shadows, unfocused text, etc. */
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+}
+
+.commute-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+
+.commute-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.commute-icon[data-type='transit'] {
+  background-color: var(--color-orange-secondary);
+  color: var(--color-orange-primary);
+}
+
+.commute-icon[data-type='walk'] {
+  background-color: var(--color-blue-secondary);
+  color: var(--color-blue-primary);
+}
+
+.commute-icon[data-type='bicycle'] {
+  background-color: var(--color-purple-secondary);
+  color: var(--color-purple-primary);
+}
+
+.commute-icon[data-type='car'] {
+  background-color: var(--color-green-secondary);
+  color: var(--color-green-primary);
+}
+
+.sidebar-paper-transition {
+  transition: width 0.2s ease-in-out !important;
+  overflow-x: hidden;
+}
+
+.sidebar-text-transition {
+  transition:
+    opacity 0.2s ease-in-out,
+    visibility 0.2s ease-in-out;
+}
+
+.commute-icon.selected[data-type='transit'] {
+  border: 2px solid var(--color-orange-primary);
+}
+
+.commute-icon.selected[data-type='walk'] {
+  border: 2px solid var(--color-blue-primary);
+}
+
+.commute-icon.selected[data-type='bicycle'] {
+  border: 2px solid var(--color-purple-primary);
+}
+
+.commute-icon.selected[data-type='car'] {
+  border: 2px solid var(--color-green-primary);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+.sheet-enter {
+  animation: slideUp 0.8s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+.sheet-exit {
+  animation: slideDown 0.8s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@keyframes alertIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.animate-alert-in {
+  animation: alertIn 0.4s ease-out forwards;
+}

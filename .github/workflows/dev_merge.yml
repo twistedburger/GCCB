@@ -1,0 +1,22 @@
+name: Source Branch Protection
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-branch:
+    name: Pull Request From Dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check source branch
+        run: |
+          # Define the allowed source branch(es) here
+          ALLOWED_BRANCH="dev"
+          CURRENT_BRANCH="${GITHUB_HEAD_REF}"
+
+          if [[ "${CURRENT_BRANCH}" != "${ALLOWED_BRANCH}" ]]; then
+            echo "Error: Pull request must come from '${ALLOWED_BRANCH}' branch"
+            exit 1
+          fi
