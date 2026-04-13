@@ -11,6 +11,8 @@ import {
 import { useState, useEffect } from 'react'
 import { routeCardStrings } from '../locales/en/ComponentStrings/RouteCardStrings.js'
 
+// TODO: standardize transportation mode naming
+
 /**
  * A card component for displaying route information and actions.
  *
