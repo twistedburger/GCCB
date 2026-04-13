@@ -36,7 +36,9 @@ export default function RouteCard({
   const [peopleGoing, setPeopleGoing] = useState(0)
   const [isJoined, setIsJoined] = useState(false)
   const isFull =
-    route.transportation_mode === 'Car' && peopleGoing >= route.max_ppl
+    (route.transportation_mode === 'Car' ||
+      route.transportationMode === 'Car') &&
+    peopleGoing >= route.max_ppl
   const activeJoinedState = isDraft ? route.isJoined : isJoined
 
   useEffect(() => {
@@ -108,7 +110,12 @@ export default function RouteCard({
       >
         <div className="flex flex-row">
           <span className="shrink-0 scale-115 flex items-center">
-            <CommuteIcon type={route.transportation_mode?.toLowerCase()} />
+            <CommuteIcon
+              type={
+                route.transportation_mode?.toLowerCase() ||
+                route.transportationMode?.toLowerCase()
+              }
+            />
           </span>
           <div className="flex flex-col ml-4 text-left">
             {individualView && (
@@ -143,7 +150,8 @@ export default function RouteCard({
               <GroupsOutlined className="mr-1 -ml-1" fontSize="small" />
               <p>
                 {routeCardStrings.peopleGoing(peopleGoing)}{' '}
-                {route.transportation_mode === 'Car' &&
+                {(route.transportation_mode === 'Car' ||
+                  route.transportationMode === 'Car') &&
                   route.max_ppl &&
                   routeCardStrings.seatsLeft(route.max_ppl - peopleGoing)}
               </p>
