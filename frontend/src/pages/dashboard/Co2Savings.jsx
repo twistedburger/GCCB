@@ -238,104 +238,110 @@ function Co2Savings() {
           </GenericButton>
         </div>
       </div>
+      {showMethodology && (
+        <div className="fixed inset-y-0 right-0 left-[55px] overflow-hidden z-50">
+          <Modal
+            isOpen={showMethodology}
+            onClose={() => setShowMethodology(false)}
+            title={co2Strings.modal.title}
+          >
+            <div className="text-sm text-zinc-700 space-y-5">
+              <div>
+                <h4 className="font-semibold text-zinc-900 mb-2">
+                  {co2Strings.modal.baseline.heading}
+                </h4>
+                <p className="text-zinc-600">
+                  {co2Strings.modal.baseline.body}
+                </p>
+              </div>
 
-      <Modal
-        isOpen={showMethodology}
-        onClose={() => setShowMethodology(false)}
-        title={co2Strings.modal.title}
-      >
-        <div className="text-sm text-zinc-700 space-y-5">
-          <div>
-            <h4 className="font-semibold text-zinc-900 mb-2">
-              {co2Strings.modal.baseline.heading}
-            </h4>
-            <p className="text-zinc-600">{co2Strings.modal.baseline.body}</p>
-          </div>
+              <div>
+                <h4 className="font-semibold text-zinc-900 mb-3">
+                  {co2Strings.modal.emissionFactors.heading}
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-200">
+                        <th className="text-left py-2 pr-4 font-semibold text-zinc-700">
+                          {co2Strings.modal.emissionFactors.columns.mode}
+                        </th>
+                        <th className="text-left py-2 pr-4 font-semibold text-zinc-700">
+                          {co2Strings.modal.emissionFactors.columns.factor}
+                        </th>
+                        <th className="text-left py-2 font-semibold text-zinc-700">
+                          {co2Strings.modal.emissionFactors.columns.basis}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100">
+                      {co2Strings.modal.emissionFactors.rows.map(row => (
+                        <tr key={row.mode}>
+                          <td className="py-2 pr-4 text-zinc-800">
+                            {row.mode}
+                          </td>
+                          <td className="py-2 pr-4 font-mono text-zinc-600">
+                            {row.factor}
+                          </td>
+                          <td className="py-2 text-zinc-500">{row.basis}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-          <div>
-            <h4 className="font-semibold text-zinc-900 mb-3">
-              {co2Strings.modal.emissionFactors.heading}
-            </h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-zinc-200">
-                    <th className="text-left py-2 pr-4 font-semibold text-zinc-700">
-                      {co2Strings.modal.emissionFactors.columns.mode}
-                    </th>
-                    <th className="text-left py-2 pr-4 font-semibold text-zinc-700">
-                      {co2Strings.modal.emissionFactors.columns.factor}
-                    </th>
-                    <th className="text-left py-2 font-semibold text-zinc-700">
-                      {co2Strings.modal.emissionFactors.columns.basis}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {co2Strings.modal.emissionFactors.rows.map(row => (
-                    <tr key={row.mode}>
-                      <td className="py-2 pr-4 text-zinc-800">{row.mode}</td>
-                      <td className="py-2 pr-4 font-mono text-zinc-600">
-                        {row.factor}
-                      </td>
-                      <td className="py-2 text-zinc-500">{row.basis}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div>
+                <h4 className="font-semibold text-zinc-900 mb-3">
+                  {co2Strings.modal.formulas.heading}
+                </h4>
+                <div className="space-y-3">
+                  <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
+                    <p className="font-medium text-zinc-800 mb-1">
+                      {co2Strings.modal.formulas.walk.label}
+                    </p>
+                    <p className="font-mono text-xs text-zinc-500 mb-1">
+                      {co2Strings.modal.formulas.walk.formula}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {co2Strings.modal.formulas.walk.note}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
+                    <p className="font-medium text-zinc-800 mb-1">
+                      {co2Strings.modal.formulas.transit.label}
+                    </p>
+                    <p className="font-mono text-xs text-zinc-500 mb-1">
+                      {co2Strings.modal.formulas.transit.formula}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {co2Strings.modal.formulas.transit.note}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
+                    <p className="font-medium text-zinc-800 mb-1">
+                      {co2Strings.modal.formulas.carpool.label}
+                    </p>
+                    <p className="font-mono text-xs text-zinc-500 mb-1">
+                      {co2Strings.modal.formulas.carpool.formulaSystem}
+                    </p>
+                    <p className="font-mono text-xs text-zinc-500 mb-1">
+                      {co2Strings.modal.formulas.carpool.formulaUser}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {co2Strings.modal.formulas.carpool.note}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-zinc-400 pt-1 border-t border-zinc-100">
+                {co2Strings.modal.footnote}
+              </p>
             </div>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-zinc-900 mb-3">
-              {co2Strings.modal.formulas.heading}
-            </h4>
-            <div className="space-y-3">
-              <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
-                <p className="font-medium text-zinc-800 mb-1">
-                  {co2Strings.modal.formulas.walk.label}
-                </p>
-                <p className="font-mono text-xs text-zinc-500 mb-1">
-                  {co2Strings.modal.formulas.walk.formula}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  {co2Strings.modal.formulas.walk.note}
-                </p>
-              </div>
-              <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
-                <p className="font-medium text-zinc-800 mb-1">
-                  {co2Strings.modal.formulas.transit.label}
-                </p>
-                <p className="font-mono text-xs text-zinc-500 mb-1">
-                  {co2Strings.modal.formulas.transit.formula}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  {co2Strings.modal.formulas.transit.note}
-                </p>
-              </div>
-              <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
-                <p className="font-medium text-zinc-800 mb-1">
-                  {co2Strings.modal.formulas.carpool.label}
-                </p>
-                <p className="font-mono text-xs text-zinc-500 mb-1">
-                  {co2Strings.modal.formulas.carpool.formulaSystem}
-                </p>
-                <p className="font-mono text-xs text-zinc-500 mb-1">
-                  {co2Strings.modal.formulas.carpool.formulaUser}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  {co2Strings.modal.formulas.carpool.note}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-xs text-zinc-400 pt-1 border-t border-zinc-100">
-            {co2Strings.modal.footnote}
-          </p>
+          </Modal>
         </div>
-      </Modal>
-
+      )}
       {error ? (
         <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
