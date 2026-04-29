@@ -16,6 +16,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Filter from './pages/home/Filter'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
+import BannedUsers from './pages/BannedUsers'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
@@ -104,6 +105,7 @@ function App() {
                   }
                 >
                   <Route path="/moderate" element={<Moderate />} />
+                  <Route path="/bannedusers" element={<BannedUsers />} />
                 </Route>
               </Routes>
             </main>
