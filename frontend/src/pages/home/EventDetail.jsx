@@ -357,13 +357,7 @@ export default function EventDetail() {
                                 type={reportData.type}
                                 targetId={reportData.targetId}
                                 onClose={() => setReportData(null)}
-                                setAlert={reportAlert => {
-                                  if (!reportAlert || !reportAlert.type) return
-                                  setAlert({
-                                    type: reportAlert.type,
-                                    message: reportAlert.text,
-                                  })
-                                }}
+                                setAlert={setAlert}
                               />
                             </>
                           )}

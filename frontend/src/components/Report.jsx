@@ -46,16 +46,16 @@ export default function Report({ type, targetId, onClose, setAlert }) {
       // TODO: Use Alert component
       if (response.ok) {
         onClose()
-        setAlert({ type: 'success', text: reportStrings.reportSuccess })
+        setAlert({ type: 'success', message: reportStrings.reportSuccess })
       } else {
         setAlert({
           type: 'error',
-          text: data.error || reportStrings.reportFailed,
+          message: data.error || reportStrings.reportFailed,
         })
         onClose()
       }
     } catch {
-      setAlert({ type: 'error', text: reportStrings.reportFailed })
+      setAlert({ type: 'error', message: reportStrings.reportFailed })
     }
   }
 
