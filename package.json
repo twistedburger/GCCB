@@ -19,7 +19,7 @@
     ]
   },
   "scripts": {
-    "prepare": "test -n \"$CI\" || husky install",
+    "prepare": "test \"$CI\" = \"true\" || husky install",
     "lint:frontend": "eslint frontend/**/*.{js,jsx} --config frontend/eslint.config.mjs",
     "lint:backend": "eslint backend/**/*.js --config backend/eslint.config.mjs",
     "lint": "npm run lint:frontend && npm run lint:backend",
