@@ -21,27 +21,30 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   (userTwo,   false, 'DART-456', '320i',    'BMW',   4, true);
 
 -- Events
-  INSERT INTO "event" (title, creator_id, event_time, location, verified, need_approval, description, location_geog) VALUES
+  INSERT INTO "event" (title, creator_id, event_time, location, verified, need_approval, description, location_geog, place_id) VALUES
   ('BCIT Tech Mixer',
    adminUser, '2026-04-10 17:30:00',
    '555 Seymour St, Vancouver, BC V6B 3H6',
    true, false,
    'Networking for computing students.',
-   ST_SetSRID(ST_MakePoint(-123.11528, 49.28341), 4326)),
+   ST_SetSRID(ST_MakePoint(-123.11528, 49.28341), 4326),
+   'ChIJuWkqyXhxhlQR1nJU9YqTQGs'),
 
   ('Earth Day Clean-up',
    modUser, '2026-06-22 09:00:00',
    'Science World, Vancouver',
    true, true,
    'Join us for a morning of eco-action!',
-   ST_SetSRID(ST_MakePoint(-123.10376, 49.27325), 4326)),
+   ST_SetSRID(ST_MakePoint(-123.10376, 49.27325), 4326),
+   'ChIJnZHwi2NxhlQRN3CYHzc3giE'),
 
   ('Late Night Hackathon',
    userOne, '2026-07-15 20:00:00',
    'BCIT Burnaby Campus',
    false, false,
    'Coding until the sun comes up.',
-   ST_SetSRID(ST_MakePoint(-123.0017, 49.2505), 4326));
+   ST_SetSRID(ST_MakePoint(-123.0017, 49.2505), 4326),
+   'ChIJ5f5T_SF3hlQRnRB6ZAeyWjU');
 
 
   -- Routes (7 completed routes, 3 rejected)

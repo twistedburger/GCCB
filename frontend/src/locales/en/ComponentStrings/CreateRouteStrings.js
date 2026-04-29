@@ -24,4 +24,5 @@ export const createRouteStrings = {
   routeDescLabel: 'Route Description',
   transitDetails: 'Transit Details',
   confirmRoute: 'Confirm Route',
+  departureAfterEvent: 'Departure time cannot be after the event time',
 }
