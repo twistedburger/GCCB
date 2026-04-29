@@ -360,11 +360,8 @@ export default function EventDetail() {
                                 setAlert={reportAlert => {
                                   if (!reportAlert || !reportAlert.type) return
                                   setAlert({
-                                    ...reportAlert,
-                                    message:
-                                      reportAlert.type === 'success'
-                                        ? 'Report submitted successfully.'
-                                        : 'Failed to submit report.',
+                                    type: reportAlert.type,
+                                    message: reportAlert.text,
                                   })
                                 }}
                               />

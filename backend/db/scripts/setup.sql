@@ -130,7 +130,8 @@ CREATE TABLE IF NOT EXISTS "report" (
     rejection_reason VARCHAR(50),
     rejection_detail VARCHAR(100),
     report_target   VARCHAR(10),
-    target_id       INTEGER
+    target_id       INTEGER,
+    CONSTRAINT unique_report UNIQUE (reporter_id, report_target, target_id)
 );
 
 -- 12. Event verification

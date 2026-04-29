@@ -870,6 +870,11 @@ app.post('/api/report', async (req, res) => {
 
     res.json({ success: true })
   } catch (error) {
+    if (error.code === '23505') {
+      return res
+        .status(400)
+        .json({ error: serverStrings.errors.duplicateReport })
+    }
     console.error(error)
     res.status(500).json({ error: serverStrings.errors.reportFailed })
   }

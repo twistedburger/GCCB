@@ -41,10 +41,18 @@ export default function Report({ type, targetId, onClose, setAlert }) {
         body: JSON.stringify({ type, targetId, reason, explanation }),
       })
 
+      const data = await response.json()
+
       // TODO: Use Alert component
       if (response.ok) {
         onClose()
         setAlert({ type: 'success', text: reportStrings.reportSuccess })
+      } else {
+        setAlert({
+          type: 'error',
+          text: data.error || reportStrings.reportFailed,
+        })
+        onClose()
       }
     } catch {
       setAlert({ type: 'error', text: reportStrings.reportFailed })
