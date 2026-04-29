@@ -118,27 +118,31 @@ export default function MyTrips() {
           ))}
         </div>
       </div>
-      <Modal
-        isOpen={showReport}
-        onClose={() => setShowReport(false)}
-        title={'Report Route'}
-      >
-        <Report
-          type={'route'}
-          targetId={reportData?.id}
+      <div className="*:ml-13.75">
+        <Modal
+          isOpen={showReport}
           onClose={() => setShowReport(false)}
-          setAlert={reportAlert => {
-            if (!reportAlert?.type) return
-            setAlert({
-              type: reportAlert.type,
-              text:
-                reportAlert.type === 'success'
-                  ? 'Report submitted successfully.'
-                  : 'Failed to submit report.',
-            })
-          }}
-        />
-      </Modal>
+          title={'Report Route'}
+        >
+          {reportData && (
+            <Report
+              type={'route'}
+              targetId={reportData?.targetId}
+              onClose={() => setShowReport(false)}
+              setAlert={reportAlert => {
+                if (!reportAlert?.type) return
+                setAlert({
+                  type: reportAlert.type,
+                  text:
+                    reportAlert.type === 'success'
+                      ? 'Report submitted successfully.'
+                      : 'Failed to submit report.',
+                })
+              }}
+            />
+          )}
+        </Modal>
+      </div>
     </div>
   )
 }
