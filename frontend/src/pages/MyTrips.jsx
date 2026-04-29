@@ -98,7 +98,15 @@ export default function MyTrips() {
         </div>
         <div className="flex flex-col gap-4">
           {tripsToDisplay.map(trip => (
-            <RouteCardWrapper key={trip.id} route={trip} mapsReady={mapsReady}>
+            <RouteCardWrapper
+              key={trip.id}
+              route={trip}
+              mapsReady={mapsReady}
+              onReport={trip => {
+                setReportData(trip)
+                setShowReport(true)
+              }}
+            >
               <div className="*:shadow-white">
                 <RouteCard
                   route={trip}
@@ -106,12 +114,13 @@ export default function MyTrips() {
                   routeDetailView={true}
                   isCompleted={trip.completed}
                   onToggleJoin={() => setConfirmLeave(trip)}
-                  onReport={trip => {
-                    {
-                      setReportData(trip)
-                      setShowReport(true)
-                    }
+                  onReport={data => {
+                    setReportData(data)
+                    setShowReport(true)
                   }}
+                  hideReportJoin={
+                    new Date(trip.depart_time) > Date.now() ? true : false
+                  }
                 />
               </div>
             </RouteCardWrapper>
