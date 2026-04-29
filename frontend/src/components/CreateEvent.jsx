@@ -285,6 +285,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
               </GenericButton>
               <CreateRoute
                 initLoc={selectedPlace ? selectedPlace : initLoc}
+                eventTime={datetime}
                 onSubmit={route => {
                   handleRouteSubmit(route)
                   setAddRoute(false)
