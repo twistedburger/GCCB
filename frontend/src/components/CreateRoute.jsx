@@ -14,7 +14,6 @@ import TransitLegCard from './TransitLegCard'
 import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
 import { createRouteStrings } from '../locales/en/ComponentStrings/CreateRouteStrings'
-import { getDepartureTimeError } from '../utils/CreateRouteUtils'
 
 /**
  * Component to create a new route.
@@ -24,7 +23,7 @@ import { getDepartureTimeError } from '../utils/CreateRouteUtils'
  * @returns {JSX.Element}
  */
 
-const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
+const CreateRoute = ({ initLoc, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
   const [routeDesc, setRouteDesc] = useState('')
   const [transportationMode, setTransportationMode] = useState('')
@@ -56,17 +55,8 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
     }
     if (!startLoc) newErrors.startLoc = createRouteStrings.startingLocRequired
     if (!endLoc) newErrors.endLoc = createRouteStrings.destinationLocRequired
-
-    const timeError = getDepartureTimeError(
-      departTime,
-      eventTime,
-      createRouteStrings.departureAfterEvent
-    )
-    if (!departTime) {
+    if (!departTime)
       newErrors.departTime = createRouteStrings.departureTimeRequired
-    } else if (timeError) {
-      newErrors.departTime = timeError
-    }
     if (transportationMode && startLoc && endLoc && departTime && !route) {
       newErrors.route = createRouteStrings.clickGetRoute
     }
@@ -162,24 +152,6 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
       map.fitBounds(bounds)
     }
   }, [map, pathCoordinates])
-
-  useEffect(() => {
-    const timeError = getDepartureTimeError(
-      departTime,
-      eventTime,
-      createRouteStrings.departureAfterEvent
-    )
-
-    setErrors(prev => {
-      const next = { ...prev }
-      if (timeError) {
-        next.departTime = timeError
-      } else {
-        delete next.departTime
-      }
-      return next
-    })
-  }, [departTime, eventTime])
 
   return (
     <div className="space-y-4">
@@ -384,6 +356,5 @@ export default CreateRoute
 
 CreateRoute.propTypes = {
   initLoc: PropTypes.string,
-  eventTime: PropTypes.string,
   onSubmit: PropTypes.func.isRequired,
 }

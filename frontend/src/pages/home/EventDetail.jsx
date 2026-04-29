@@ -404,7 +404,6 @@ export default function EventDetail() {
 
                           <CreateRoute
                             initLoc={event.location}
-                            eventTime={event.event_time}
                             onSubmit={routeData => {
                               handleAddRoute(routeData)
                               setAddRoute(false)
