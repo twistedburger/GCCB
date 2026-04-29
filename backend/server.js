@@ -734,7 +734,7 @@ app.get('/api/eventdetail/:id', async (req, res) => {
         (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
        FROM route r
        LEFT JOIN event_route er ON er.route_id = r.id
-       WHERE er.event_id = $1`,
+       WHERE er.event_id = $1 AND r.reported < 3 AND r.depart_time > NOW()`,
       [id]
     )
 
