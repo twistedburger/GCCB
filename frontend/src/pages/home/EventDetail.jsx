@@ -15,6 +15,8 @@ import { Drawer } from 'vaul'
 import CreateRoute from '../../components/CreateRoute'
 import Alert from '../../components/Alert'
 import Report from '../../components/Report'
+import { useUser } from '../../../context/UserContext'
+import ConfirmationDialog from '../../components/ConfirmationDialog'
 
 /**
  * Displays the event detail drawer
@@ -37,11 +39,19 @@ export default function EventDetail() {
   const [alert, setAlert] = useState(null)
 
   const [reportData, setReportData] = useState(null)
+  const { user } = useUser()
+  const [isRouteRemovalDialogOpen, setIsRouteRemovalDialogOpen] =
+    useState(false)
+  const [routeIdToRemove, setRouteIdToRemove] = useState(null)
+
+  const isAlreadyJoined =
+    event?.routes?.some(route => route.isJoined === true) || false
 
   const handleClose = () => {
     setOpen(false)
     setTimeout(() => navigate(-1), 300)
   }
+
   const handleAddRoute = async routeData => {
     try {
       const response = await fetch(`http://localhost:3000/api/createRoute`, {
@@ -69,6 +79,7 @@ export default function EventDetail() {
           id: result.routeID,
           transportation_mode: routeData.transportationMode,
           created_at: new Date(),
+          isJoined: true,
         }
         setEvent(prevEvent => ({
           ...prevEvent,
@@ -84,10 +95,65 @@ export default function EventDetail() {
     }
   }
 
+  const handleToggleJoin = async route => {
+    if (route.isJoined) {
+      handleRouteLeaveRequest(route)
+    } else {
+      updateLocalJoinStatus(route.id, true)
+    }
+  }
+
+  const handleRouteLeaveRequest = route => {
+    const isRouteCreator = user?.id === route.creator_id
+
+    if (isRouteCreator) {
+      setRouteIdToRemove(route.id)
+      setIsRouteRemovalDialogOpen(true)
+    } else {
+      updateLocalJoinStatus(route.id, false)
+    }
+  }
+
+  const updateLocalJoinStatus = (routeId, joined) => {
+    setEvent(prev => ({
+      ...prev,
+      routes: prev.routes.map(r =>
+        r.id === routeId ? { ...r, isJoined: joined } : r
+      ),
+    }))
+  }
+
+  const handleConfirmRouteRemoval = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/routes/${routeIdToRemove}/delete`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      )
+
+      if (response.ok) {
+        setEvent(prev => ({
+          ...prev,
+          routes: prev.routes.filter(r => r.id !== routeIdToRemove),
+        }))
+        setAlert({ type: 'success', message: 'Route deleted.' })
+      }
+    } catch (error) {
+      setAlert({ type: 'error', message: `Delete failed. ${error.message}` })
+    } finally {
+      setIsRouteRemovalDialogOpen(false)
+    }
+  }
+
   useEffect(() => {
     const fetchEvent = async () => {
       const response = await fetch(
-        `http://localhost:3000/api/eventdetail/${id}`
+        `http://localhost:3000/api/eventdetail/${id}`,
+        {
+          credentials: 'include',
+        }
       )
       const data = await response.json()
       setEvent(data)
@@ -97,6 +163,16 @@ export default function EventDetail() {
 
   return (
     <div>
+      <ConfirmationDialog
+        variant="danger"
+        isOpen={isRouteRemovalDialogOpen}
+        onClose={() => setIsRouteRemovalDialogOpen(false)}
+        onConfirm={handleConfirmRouteRemoval}
+        title="Delete Route?"
+      >
+        As the creator of this route, leaving will delete it for everyone
+        currently joined. Are you sure?
+      </ConfirmationDialog>
       {alert && (
         <Alert
           message={alert.message}
@@ -116,8 +192,15 @@ export default function EventDetail() {
               marginLeft: '27px',
             }}
           >
-            <GenericButton type="button" onClick={() => setAddRoute(true)}>
-              Add a Route
+            <GenericButton
+              type="button"
+              onClick={() => setAddRoute(true)}
+              disabled={isAlreadyJoined}
+              customStyling={
+                isAlreadyJoined ? 'opacity-50 cursor-not-allowed' : ''
+              }
+            >
+              {isAlreadyJoined ? 'Already Joined a Route' : 'Add a Route'}
             </GenericButton>
           </div>
         </>
@@ -295,6 +378,7 @@ export default function EventDetail() {
                             <RouteCard
                               key={route.id}
                               route={route}
+                              onToggleJoin={() => handleToggleJoin(route)}
                               onReport={data => setReportData(data)}
                               individualView={false}
                               onSelect={route => {
