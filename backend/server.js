@@ -97,6 +97,38 @@ app.get('/logoutRoute', (req, res) => {
 })
 
 /**
+ * Middleware to prevent users with more than 3 reports from accessing the app by automatically logging them out.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+const checkBannedStatus = async (req, res, next) => {
+  if (req.oidc.isAuthenticated()) {
+    try {
+      const userEmail = req.oidc.user.email
+      const result = await db.query(
+        'SELECT reported FROM "user" WHERE email = $1',
+        [userEmail]
+      )
+      const user = result.rows[0]
+
+      if (user && user.reported > 3) {
+        res.clearCookie('appSession')
+        return res.status(200).json({
+          isAuthenticated: false,
+          banned: true,
+        })
+      }
+    } catch (error) {
+      console.error(error)
+      return res.status(500).send(serverStrings.errors.generic)
+    }
+  }
+  next()
+}
+
+app.use(checkBannedStatus)
+
+/**
  * Authenticate user route checks if the authentication is valid and fetches the current user from the database
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
