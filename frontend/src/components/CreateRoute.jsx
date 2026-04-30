@@ -151,6 +151,7 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
       distance: distance,
       path: route,
       completed: false,
+      isJoined: true,
     }
     onSubmit(routeData)
   }
