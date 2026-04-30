@@ -10,11 +10,9 @@ const pool = db.pool
 const port = 3000
 
 const path = require('path')
-const envFile =
-  process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
 
 require('dotenv').config({
-  path: path.join(__dirname, envFile),
+  path: path.join(__dirname, `.env.${process.env.NODE_ENV}`),
 })
 
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')

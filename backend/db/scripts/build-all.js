@@ -67,9 +67,7 @@ function runScripts() {
       console.log(`\nRunning: ${file}`)
       const filePath = path.join(__dirname, file)
 
-      const command = getPsqlCommand(filePath)
-
-      execSync(command, {
+      execSync(getPsqlCommand(filePath), {
         ...execOptions,
         shell: true,
       })
