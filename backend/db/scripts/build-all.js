@@ -2,7 +2,7 @@ const { execSync } = require('child_process')
 const path = require('path')
 require('dotenv').config({ path: path.join(__dirname, '../../.env') })
 
-const isProduction = !!process.env.DATABASE_URL
+const isProduction = process.env.NODE_ENV === 'production'
 
 const config = {
   scripts: ['setup.sql'],
