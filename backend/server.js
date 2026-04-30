@@ -815,6 +815,41 @@ app.post('/api/routes/:id/join', async (req, res) => {
 })
 
 /**
+ * Deletes a route.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} {success: true}
+ */
+app.delete('/api/routes/:id/delete', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
+  const client = await pool.connect()
+
+  try {
+    const routeId = req.params.id
+
+    await client.query('BEGIN')
+    await client.query('DELETE FROM event_route WHERE route_id = $1', [routeId])
+    await client.query('DELETE FROM user_route WHERE route_id = $1', [routeId])
+    await client.query('DELETE FROM route WHERE id = $1', [routeId])
+    await client.query('COMMIT')
+    res.json({ success: true })
+  } catch (error) {
+    await client.query('ROLLBACK')
+    console.error('Route deletion error:', error)
+    res.status(500).json({ error: serverStrings.errors.routeDeletionFailed })
+  } finally {
+    client.release()
+  }
+})
+
+/**
  * Removes a user from a route by removing a record from the user_route table.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
