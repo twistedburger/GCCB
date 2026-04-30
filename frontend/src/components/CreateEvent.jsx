@@ -96,7 +96,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         latitude: selectedLatLng[0],
         longitude: selectedLatLng[1],
         banner: banner,
-        placeId: placeId,
+        placeID: placeId,
         description: eventDesc,
         verified: false,
         needApproval: false,

@@ -147,6 +147,15 @@ CREATE TABLE IF NOT EXISTS "event_verification" (
     CONSTRAINT fk_ev_verified_by FOREIGN KEY (verified_by) REFERENCES "user"(id)
 );
 
+-- 13. Blocked users
+CREATE TABLE IF NOT EXISTS "blocked_user" (
+    blocker_id  INT NOT NULL,
+    blocked_user_id INT NOT NULL,
+    PRIMARY KEY (blocker_id, blocked_user_id),
+    CONSTRAINT fk_bu_blocker         FOREIGN KEY (blocker_id)         REFERENCES "user"(id),
+    CONSTRAINT fk_bu_blocked_user    FOREIGN KEY (blocked_user_id)    REFERENCES "user"(id)
+);
+
 CREATE INDEX IF NOT EXISTS event_geog_idx ON "event" USING gist(location_geog);
 CREATE INDEX IF NOT EXISTS route_geog_idx ON "route" USING gist(origin_geog);
 
