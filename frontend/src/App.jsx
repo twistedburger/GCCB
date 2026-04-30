@@ -102,6 +102,7 @@ function App() {
                     element={<TripFrequency />}
                   />
                   <Route path="/user-guide" element={<UserGuide />} />
+                  <Route path="/bannedusers" element={<BannedUsers />} />
                 </Route>
                 <Route
                   element={
@@ -118,7 +119,6 @@ function App() {
                   }
                 >
                   <Route path="/moderate" element={<Moderate />} />
-                  <Route path="/bannedusers" element={<BannedUsers />} />
                 </Route>
               </Routes>
             </main>

@@ -28,6 +28,7 @@ function ProfileHeader({ user, onEdit }) {
   const displayRole = user?.role ?? 'user'
   const displayDescription =
     user?.description ?? 'No profile description added yet.'
+  const navigate = useNavigate()
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4">
@@ -47,13 +48,22 @@ function ProfileHeader({ user, onEdit }) {
           <div className="mt-3 text-sm text-zinc-700">{displayDescription}</div>
         </div>
 
-        <GenericButton
-          onClick={onEdit}
-          unstyled={true}
-          customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
-        >
-          Edit Profile
-        </GenericButton>
+        <div className="flex flex-col gap-1">
+          <GenericButton
+            onClick={onEdit}
+            unstyled={true}
+            customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+          >
+            Edit Profile
+          </GenericButton>
+          <GenericButton
+            onClick={() => navigate('/bannedusers')}
+            unstyled={true}
+            customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+          >
+            Blocked Users
+          </GenericButton>
+        </div>
       </div>
     </div>
   )

@@ -1,8 +1,9 @@
 import { bannedUsersStrings } from '../locales/en/BannedUsersStrings'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import OrganizerCard from '../components/OrganizerCard'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 import Alert from '../components/Alert'
+import { useAuth } from '../hooks/Authorization'
 
 /**
  * Creates the Banned Users page.
@@ -10,22 +11,27 @@ import Alert from '../components/Alert'
  * @returns {JSX.Element}
  */
 function BannedUsers() {
-  const [bannedUsers, setBannedUsers] = useState([])
+  const [users, setUsers] = useState([])
   const [selectedUser, setSelectedUser] = useState(null)
   const [openModal, setOpenModal] = useState(false)
   const [alert, setAlert] = useState(null)
+  const { authorization } = useAuth()
+  const strings =
+    authorization === 'moderator'
+      ? bannedUsersStrings.moderator
+      : bannedUsersStrings.user
 
-  const fetchedBannedUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:3000/api/bannedUsers`, {
         credentials: 'include',
       })
       const data = await response.json()
-      setBannedUsers(data)
+      setUsers(data)
     } catch (error) {
-      console.error(bannedUsersStrings.failedToFetch, error)
+      console.error(strings.failedToFetch, error)
     }
-  }
+  }, [strings.failedToFetch])
 
   const unbanUser = async userId => {
     try {
@@ -37,24 +43,24 @@ function BannedUsers() {
         }
       )
       if (response.ok) {
-        fetchedBannedUsers()
+        fetchUsers()
         setAlert({
-          message: bannedUsersStrings.unbannedSuccess,
+          message: strings.successMessage(selectedUser.name),
           type: 'success',
         })
       }
     } catch (error) {
-      console.error(bannedUsersStrings.unbannedError, error)
+      console.error(strings.errorMessage, error)
       setAlert({
-        message: bannedUsersStrings.unbannedError,
+        message: strings.errorMessage,
         type: 'error',
       })
     }
   }
 
   useEffect(() => {
-    fetchedBannedUsers()
-  }, [])
+    fetchUsers()
+  }, [fetchUsers])
 
   return (
     <div className="px-6 pt-6">
@@ -69,24 +75,24 @@ function BannedUsers() {
         <ConfirmationDialog
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
-          title={bannedUsersStrings.confirmTitle}
+          title={strings.confirmTitle}
           onConfirm={() => {
             unbanUser(selectedUser.id)
             setOpenModal(false)
           }}
           variant={'danger'}
         >
-          {bannedUsersStrings.areYouSure}
+          {strings.areYouSure}
         </ConfirmationDialog>
       </div>
       <p className="text-2xl text-text-primary font-medium pb-4">
-        {bannedUsersStrings.title}
+        {strings.title}
       </p>
-      {bannedUsers.map(user => (
+      {users.map(user => (
         <OrganizerCard
           key={user.id}
           user={user}
-          primaryActionLabel={bannedUsersStrings.unbanButton}
+          primaryActionLabel={strings.actionButton}
           onPrimaryAction={() => {
             setSelectedUser(user)
             setOpenModal(true)

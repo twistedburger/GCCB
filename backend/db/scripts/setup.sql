@@ -186,5 +186,6 @@ GRANT INSERT                 ON TABLE event_route        TO :app_role;
 GRANT SELECT, INSERT, UPDATE ON TABLE report             TO :app_role;
 GRANT SELECT, UPDATE         ON TABLE event_verification TO :app_role;
 GRANT SELECT                 ON TABLE sso                TO :app_role;
+GRANT SELECT, INSERT, DELETE ON TABLE blocked_user       TO :app_role;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO :app_role;
