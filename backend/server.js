@@ -663,7 +663,7 @@ app.post('/api/createRoute', async (req, res) => {
  *
  * @returns {[Object]} routes fetched from the db, or an empty array
  */
-app.get('/api/routes', (req, res) => {
+app.get('/api/routes', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -712,6 +712,32 @@ app.get('/api/routes', (req, res) => {
     }
   }
   conditions.push(`r.reported < 3`)
+
+  const user = await selectUser(req)
+  if (user) {
+    const blocked = await db.query(
+      `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
+      [user.id]
+    )
+    const blockedIds = blocked.rows.map(row =>
+      Number(row.blocker_id) === Number(user.id)
+        ? row.blocked_user_id
+        : row.blocker_id
+    )
+
+    if (blockedIds.length > 0) {
+      const offset = values.length + 1
+      conditions.push(
+        `NOT EXISTS (
+          SELECT 1 FROM user_route ur
+          WHERE ur.route_id = r.id
+          AND ur.user_id IN (${blockedIds.map((_, i) => `$${offset + i}`).join(',')})
+        )`
+      )
+      values.push(...blockedIds)
+    }
+  }
+
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   db.query(
@@ -747,6 +773,10 @@ app.get('/api/routes', (req, res) => {
  * @returns {Object} an event
  */
 app.get('/api/eventdetail/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.json({ isJoined: false })
+  }
+
   const { id } = req.params
   try {
     const eventResult = await db.query(
@@ -761,13 +791,34 @@ app.get('/api/eventdetail/:id', async (req, res) => {
       [id]
     )
 
+    const user = await selectUser(req)
+    const blocked = await db.query(
+      `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
+      [user.id]
+    )
+
+    const blockedIds = blocked.rows.map(row =>
+      Number(row.blocker_id) === Number(user.id)
+        ? row.blocked_user_id
+        : row.blocker_id
+    )
+
     const routesResult = await db.query(
       `SELECT r.*,
-        (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
-       FROM route r
-       LEFT JOIN event_route er ON er.route_id = r.id
-       WHERE er.event_id = $1`,
-      [id]
+      (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
+      FROM route r
+      LEFT JOIN event_route er ON er.route_id = r.id
+      WHERE er.event_id = $1
+      ${
+        blockedIds.length > 0
+          ? `AND NOT EXISTS (
+        SELECT 1 FROM user_route ur
+        WHERE ur.route_id = r.id
+        AND ur.user_id IN (${blockedIds.map((_, i) => `$${i + 2}`).join(',')})
+        )`
+          : ''
+      }`,
+      [id, ...blockedIds]
     )
 
     const event = eventResult.rows[0]

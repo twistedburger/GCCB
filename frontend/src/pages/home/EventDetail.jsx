@@ -87,7 +87,8 @@ export default function EventDetail() {
   useEffect(() => {
     const fetchEvent = async () => {
       const response = await fetch(
-        `http://localhost:3000/api/eventdetail/${id}`
+        `http://localhost:3000/api/eventdetail/${id}`,
+        { credentials: 'include' }
       )
       const data = await response.json()
       setEvent(data)
