@@ -30,14 +30,6 @@ export default function MyTrips() {
   const handleRouteLeaveRequest = route => {
     const isRouteCreator = user?.id === route.creator_id
 
-    console.log(
-      'Creator: ',
-      route.creator_id,
-      'User: ',
-      user?.id,
-      'Is Creator? ',
-      isRouteCreator
-    )
     if (isRouteCreator) {
       setRouteIdToRemove(route.id)
       setIsRouteRemovalDialogOpen(true)
