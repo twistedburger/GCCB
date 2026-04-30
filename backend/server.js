@@ -36,7 +36,17 @@ app.use(
     credentials: true,
   })
 )
-app.use(auth(config))
+app.use(
+  auth({
+    ...config,
+    session: {
+      cookie: {
+        sameSite: 'None',
+        secure: true,
+      },
+    },
+  })
+)
 app.use(express.json())
 
 const analytics = createAnalyticsHelpers({
