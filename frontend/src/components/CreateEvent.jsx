@@ -299,7 +299,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         </div>
 
         <div className="flex justify-end">
-          <GenericButton type="submit">
+          <GenericButton type="submit" disabled={addRoute}>
             {createEventStrings.createEvent}
           </GenericButton>
         </div>
