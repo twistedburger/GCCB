@@ -716,6 +716,13 @@ app.get('/api/routes', (req, res) => {
  */
 app.get('/api/eventdetail/:id', async (req, res) => {
   const { id } = req.params
+
+  let currentUserId = null
+  if (req.oidc.isAuthenticated()) {
+    const user = await selectUser(req)
+    currentUserId = user.id
+  }
+
   try {
     const eventResult = await db.query(
       `SELECT e.*, 
@@ -731,11 +738,15 @@ app.get('/api/eventdetail/:id', async (req, res) => {
 
     const routesResult = await db.query(
       `SELECT r.*,
-        (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
+        (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going,
+        EXISTS (
+          SELECT 1 FROM user_route ur 
+          WHERE ur.route_id = r.id AND ur.user_id = $2
+        ) as "isJoined"
        FROM route r
        LEFT JOIN event_route er ON er.route_id = r.id
        WHERE er.event_id = $1`,
-      [id]
+      [id, currentUserId]
     )
 
     const event = eventResult.rows[0]

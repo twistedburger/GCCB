@@ -38,6 +38,9 @@ export default function EventDetail() {
 
   const [reportData, setReportData] = useState(null)
 
+  const isAlreadyJoined =
+    event?.routes?.some(route => route.isJoined === true) || false
+
   const handleClose = () => {
     setOpen(false)
     setTimeout(() => navigate(-1), 300)
@@ -69,6 +72,7 @@ export default function EventDetail() {
           id: result.routeID,
           transportation_mode: routeData.transportationMode,
           created_at: new Date(),
+          isJoined: true,
         }
         setEvent(prevEvent => ({
           ...prevEvent,
@@ -87,7 +91,10 @@ export default function EventDetail() {
   useEffect(() => {
     const fetchEvent = async () => {
       const response = await fetch(
-        `http://localhost:3000/api/eventdetail/${id}`
+        `http://localhost:3000/api/eventdetail/${id}`,
+        {
+          credentials: 'include',
+        }
       )
       const data = await response.json()
       setEvent(data)
@@ -116,8 +123,15 @@ export default function EventDetail() {
               marginLeft: '27px',
             }}
           >
-            <GenericButton type="button" onClick={() => setAddRoute(true)}>
-              Add a Route
+            <GenericButton
+              type="button"
+              onClick={() => setAddRoute(true)}
+              disabled={isAlreadyJoined}
+              customStyling={
+                isAlreadyJoined ? 'opacity-50 cursor-not-allowed' : ''
+              }
+            >
+              {isAlreadyJoined ? 'Already Joined a Route' : 'Add a Route'}
             </GenericButton>
           </div>
         </>
