@@ -6,4 +6,5 @@ export const routeCardWrapperStrings = {
   completed: 'Completed',
   didntGo: "Didn't go",
   Report: 'Report',
+  completionFailed: 'Failed to mark route as complete',
 }

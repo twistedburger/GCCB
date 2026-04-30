@@ -21,6 +21,8 @@ export default function RouteCardWrapper({
   route,
   mapsReady,
   onReport,
+  onComplete,
+  onIncomplete,
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [map, setMap] = useState(null)
@@ -47,49 +49,50 @@ export default function RouteCardWrapper({
   return (
     <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
       {children}
-
-      {new Date(route.depart_time) > Date.now() && (
-        <div className="flex flex-col text-text-primary text-xs pb-2 gap-1 items-center justify-between font-medium">
-          <div className="flex items-center w-full">
-            <div className="grow border-t border-light-grey"></div>
-            <span className="shrink mx-4 text-text-secondary text-xs font-normal">
-              {routeCardWrapperStrings.howWasYourTrip}
-            </span>
-            <div className="grow border-t border-light-grey"></div>
+      {new Date(route.depart_time).getTime() < Date.now() &&
+        !route.completed && (
+          <div className="flex flex-col text-text-primary text-xs pb-2 gap-1 items-center justify-between font-medium">
+            <div className="flex items-center w-full">
+              <div className="grow border-t border-light-grey"></div>
+              <span className="shrink mx-4 text-text-secondary text-xs font-normal">
+                {routeCardWrapperStrings.howWasYourTrip}
+              </span>
+              <div className="grow border-t border-light-grey"></div>
+            </div>
+            <div className="flex flex-row gap-1">
+              <GenericButton
+                unstyled
+                customStyling="py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs"
+                onClick={onComplete}
+              >
+                {routeCardWrapperStrings.completed}
+              </GenericButton>
+              <GenericButton
+                unstyled
+                customStyling="py-1 px-4 rounded-lg font-medium bg-white border-medium-grey border text-text-secondary text-xs"
+                onClick={onIncomplete}
+              >
+                {routeCardWrapperStrings.didntGo}
+              </GenericButton>
+              <GenericButton
+                unstyled
+                customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs"
+                onClick={e => {
+                  e.stopPropagation()
+                  if (onReport) {
+                    onReport({
+                      type: 'route',
+                      targetId: route.id,
+                      title: route.title || route.route_name || '',
+                    })
+                  }
+                }}
+              >
+                {routeCardWrapperStrings.Report}
+              </GenericButton>
+            </div>
           </div>
-          <div className="flex flex-row gap-1">
-            <GenericButton
-              unstyled
-              customStyling="py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs"
-            >
-              {routeCardWrapperStrings.completed}
-            </GenericButton>
-            <GenericButton
-              unstyled
-              customStyling="py-1 px-4 rounded-lg font-medium bg-white border-medium-grey border text-text-secondary text-xs"
-            >
-              {routeCardWrapperStrings.didntGo}
-            </GenericButton>
-            <GenericButton
-              unstyled
-              customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs"
-              onClick={e => {
-                console.log('Report button clicked for route:', route)
-                e.stopPropagation()
-                if (onReport) {
-                  onReport({
-                    type: 'route',
-                    targetId: route.id,
-                    title: route.title || route.route_name || '',
-                  })
-                }
-              }}
-            >
-              {routeCardWrapperStrings.Report}
-            </GenericButton>
-          </div>
-        </div>
-      )}
+        )}
       {hasRoute && (
         <div className="border-t border-light-grey">
           <GenericButton
@@ -141,4 +144,6 @@ RouteCardWrapper.propTypes = {
   route: PropTypes.object.isRequired,
   mapsReady: PropTypes.bool,
   onReport: PropTypes.func,
+  onComplete: PropTypes.func,
+  onIncomplete: PropTypes.func,
 }
