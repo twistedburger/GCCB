@@ -21,7 +21,7 @@ describe('Test authorizeUser', () => {
 
     expect(result.current.authorization).toBe(authLevel.USER.label)
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.VITE_API_BASE_URL}/authorize`,
+      `${import.meta.env.VITE_API_BASE_URL}/authorize`,
       {
         credentials: 'include',
       }

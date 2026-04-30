@@ -99,6 +99,7 @@ function TripFrequency() {
   const [byMode, setByMode] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     async function fetchData() {
@@ -107,10 +108,10 @@ function TripFrequency() {
         setError('')
 
         const [summaryRes, byModeRes] = await Promise.all([
-          fetch(`${process.env.VITE_API_BASE_URL}/api/analytics/summary`, {
+          fetch(`${baseURL}/api/analytics/summary`, {
             credentials: 'include',
           }),
-          fetch(`${process.env.VITE_API_BASE_URL}/api/analytics/by-mode`, {
+          fetch(`${baseURL}/api/analytics/by-mode`, {
             credentials: 'include',
           }),
         ])
@@ -135,7 +136,7 @@ function TripFrequency() {
     }
 
     fetchData()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isAdmin = summary?.scope === 'system'
 

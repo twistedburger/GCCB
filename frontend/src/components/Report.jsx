@@ -35,7 +35,7 @@ export default function Report({ type, targetId, onClose, setAlert }) {
 
     try {
       const response = await fetch(
-        `${process.env.VITE_API_BASE_URL}/api/report`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/report`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

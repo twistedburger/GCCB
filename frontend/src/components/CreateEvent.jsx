@@ -30,6 +30,8 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [errors, setErrors] = useState({})
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
+  const baseURL = import.meta.env.VITE_API_BASE_URL
+
   const toggleRouteJoin = id => {
     setAddedRoutes(prev =>
       prev.map(route =>
@@ -62,15 +64,12 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
   const createEvent = async eventData => {
     try {
-      const response = await fetch(
-        `${process.env.VITE_API_BASE_URL}/api/createEvent`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(eventData),
-        }
-      )
+      const response = await fetch(`${baseURL}/api/createEvent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(eventData),
+      })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -130,18 +129,15 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
   const createRoute = async (eventID, routeData) => {
     try {
-      const response = await fetch(
-        `${process.env.VITE_API_BASE_URL}/api/createRoute`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            eventID,
-            ...routeData,
-          }),
-        }
-      )
+      const response = await fetch(`${baseURL}/api/createRoute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          eventID,
+          ...routeData,
+        }),
+      })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))

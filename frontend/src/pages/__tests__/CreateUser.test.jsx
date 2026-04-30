@@ -36,6 +36,7 @@ describe('Test CreateUser Page', () => {
 
   const getInsertUserCallback = () => ProfileForm.mock.calls[0][0].onSubmit
   const formData = { name: 'Jane Doe', email: 'JaneDoe@test.com' }
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   test('Callback calls onUserCreated after call to api', async () => {
     mockFetchResponse(true, mockUser)
@@ -47,15 +48,12 @@ describe('Test CreateUser Page', () => {
       await getInsertUserCallback()(formData)
     })
 
-    expect(fetch).toHaveBeenCalledWith(
-      `${process.env.VITE_API_BASE_URL}/createNewUser`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-        credentials: 'include',
-      }
-    )
+    expect(fetch).toHaveBeenCalledWith(`${baseURL}/createNewUser`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+      credentials: 'include',
+    })
     expect(mockOnUserCreated).toHaveBeenCalledWith(mockUser.user)
   })
 
@@ -69,15 +67,12 @@ describe('Test CreateUser Page', () => {
       await getInsertUserCallback()(formData)
     })
 
-    expect(fetch).toHaveBeenCalledWith(
-      `${process.env.VITE_API_BASE_URL}/createNewUser`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-        credentials: 'include',
-      }
-    )
+    expect(fetch).toHaveBeenCalledWith(`${baseURL}/createNewUser`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+      credentials: 'include',
+    })
     expect(mockOnUserCreated).not.toHaveBeenCalled()
   })
 })

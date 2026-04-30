@@ -39,7 +39,7 @@ function Login() {
             return
           }
           redirect(
-            `${process.env.VITE_API_BASE_URL}/loginRoute?connection=${selectedLogin}`
+            `${import.meta.env.VITE_API_BASE_URL}/loginRoute?connection=${selectedLogin}`
           )
         }}
       />

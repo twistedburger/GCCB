@@ -21,6 +21,7 @@ export default function MyTrips() {
   const [reportData, setReportData] = useState(null)
   const [showReport, setShowReport] = useState(false)
   const [alert, setAlert] = useState(null)
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     if (window.google?.maps) {
@@ -38,12 +39,9 @@ export default function MyTrips() {
 
   const fetchMyTrips = async () => {
     try {
-      const response = await fetch(
-        `${process.env.VITE_API_BASE_URL}/api/my-trips`,
-        {
-          credentials: 'include',
-        }
-      )
+      const response = await fetch(`${baseURL}/api/my-trips`, {
+        credentials: 'include',
+      })
       const data = await response.json()
       if (!Array.isArray(data)) return
 
@@ -56,18 +54,15 @@ export default function MyTrips() {
 
   useEffect(() => {
     fetchMyTrips()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
 
   const handleLeave = async () => {
-    await fetch(
-      `${process.env.VITE_API_BASE_URL}/api/routes/${confirmLeave.id}/leave`,
-      {
-        method: 'DELETE',
-        credentials: 'include',
-      }
-    )
+    await fetch(`${baseURL}/api/routes/${confirmLeave.id}/leave`, {
+      method: 'DELETE',
+      credentials: 'include',
+    })
     await fetchMyTrips()
     setConfirmLeave(null)
   }

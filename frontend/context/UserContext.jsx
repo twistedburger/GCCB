@@ -16,11 +16,12 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [userError, setUserError] = useState('')
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     setLoadingUser(true)
 
-    fetch(`${process.env.VITE_API_BASE_URL}/authenticateUser`, {
+    fetch(`${baseURL}/authenticateUser`, {
       credentials: 'include',
     })
       .then(res => {
@@ -38,7 +39,7 @@ export function UserProvider({ children }) {
       .finally(() => {
         setLoadingUser(false)
       })
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const value = useMemo(
     () => ({

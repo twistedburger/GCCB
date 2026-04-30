@@ -102,6 +102,7 @@ function Co2Savings() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showMethodology, setShowMethodology] = useState(false)
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     async function fetchData() {
@@ -110,10 +111,10 @@ function Co2Savings() {
         setError('')
 
         const [summaryRes, byModeRes] = await Promise.all([
-          fetch(`${process.env.VITE_API_BASE_URL}/api/analytics/summary`, {
+          fetch(`${baseURL}/api/analytics/summary`, {
             credentials: 'include',
           }),
-          fetch(`${process.env.VITE_API_BASE_URL}/api/analytics/by-mode`, {
+          fetch(`${baseURL}/api/analytics/by-mode`, {
             credentials: 'include',
           }),
         ])
@@ -138,7 +139,7 @@ function Co2Savings() {
     }
 
     fetchData()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isAdmin = summary?.scope === 'system'
   const tripCount = summary?.tripCount ?? 0
@@ -239,7 +240,7 @@ function Co2Savings() {
         </div>
       </div>
       {showMethodology && (
-        <div className="fixed inset-y-0 right-0 left-[55px] overflow-hidden z-50">
+        <div className="fixed inset-y-0 right-0 left-13.75 overflow-hidden z-50">
           <Modal
             isOpen={showMethodology}
             onClose={() => setShowMethodology(false)}

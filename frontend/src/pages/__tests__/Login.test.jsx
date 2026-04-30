@@ -68,7 +68,7 @@ describe('Test Login Page', () => {
     await userEvent.click(screen.getByRole('button'))
 
     expect(redirect).toHaveBeenCalledWith(
-      `${process.env.VITE_API_BASE_URL}/loginRoute?connection=UBC_Connection`
+      `${import.meta.env.VITE_API_BASE_URL}/loginRoute?connection=UBC_Connection`
     )
     expect(screen.queryByText(loginStrings.error)).not.toBeInTheDocument()
   })

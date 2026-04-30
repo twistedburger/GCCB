@@ -6,7 +6,7 @@
  */
 export const insertUser = async (formData, onUserCreated) => {
   const response = await fetch(
-    `${process.env.VITE_API_BASE_URL}/createNewUser`,
+    `${import.meta.env.VITE_API_BASE_URL}/createNewUser`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

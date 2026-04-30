@@ -84,6 +84,7 @@ function Dashboard() {
 
   const { user, loadingUser, userError, setUser } = useUser()
   const navigate = useNavigate()
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     async function fetchSummary() {
@@ -91,12 +92,9 @@ function Dashboard() {
         setLoadingSummary(true)
         setSummaryError('')
 
-        const response = await fetch(
-          `${process.env.VITE_API_BASE_URL}/api/analytics/summary`,
-          {
-            credentials: 'include',
-          }
-        )
+        const response = await fetch(`${baseURL}/api/analytics/summary`, {
+          credentials: 'include',
+        })
 
         if (!response.ok) {
           throw new Error(
@@ -115,20 +113,17 @@ function Dashboard() {
     }
 
     fetchSummary()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async formData => {
-    const result = await fetch(
-      `${process.env.VITE_API_BASE_URL}/updateProfile`,
-      {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      }
-    )
+    const result = await fetch(`${baseURL}/updateProfile`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
     const response = await result.json()
     setUser(response.user)
     setIsEditing(false)
@@ -224,7 +219,7 @@ function Dashboard() {
 
             <GenericButton
               onClick={() => {
-                window.location.href = `${process.env.VITE_API_BASE_URL}/logoutRoute`
+                window.location.href = `${import.meta.env.VITE_API_BASE_URL}/logoutRoute`
               }}
             >
               {dashboardStrings.logout}

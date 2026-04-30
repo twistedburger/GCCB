@@ -365,11 +365,11 @@ describe('Co2Savings', () => {
 
     // both endpoints should have been called on mount
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.VITE_API_BASE_URL}/api/analytics/summary`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/analytics/summary`,
       { credentials: 'include' }
     )
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.VITE_API_BASE_URL}/api/analytics/by-mode`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/analytics/by-mode`,
       { credentials: 'include' }
     )
   })

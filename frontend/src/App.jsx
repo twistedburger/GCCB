@@ -21,17 +21,17 @@ function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [ssoProfile, setSsoProfile] = useState(null)
+
+  const baseURL = import.meta.env.VITE_API_BASE_URL
+
   useEffect(() => {
     authenticateUser()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function authenticateUser() {
-    const response = await fetch(
-      `${process.env.VITE_API_BASE_URL}/authenticateUser`,
-      {
-        credentials: 'include',
-      }
-    )
+    const response = await fetch(`${baseURL}/authenticateUser`, {
+      credentials: 'include',
+    })
     if (!response.ok) {
       const errorText = await response.text()
       console.log(response.status + ' ' + errorText)

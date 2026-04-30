@@ -6,6 +6,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import { FlatCompat } from "@eslint/eslintrc";
 import path from "path";
 import { fileURLToPath } from "url";
+import { fixupPluginRules } from "@eslint/compat";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,27 +18,29 @@ export default [
   { ignores: ["dist", "node_modules", "vite.config.js"] },
   js.configs.recommended,
   pluginReact.configs.flat.recommended,
-  
+
   ...compat.extends("airbnb").map((config) => ({
     ...config,
     files: ["src/**/*.{js,jsx}"],
   })),
 
-    ...compat.config({
-    plugins: ["react-hooks"],
+  {
+    plugins: {
+      "react-hooks": fixupPluginRules(reactHooks),
+    },
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
     },
-  }),
+  },
 
-    ...compat.config({
+  ...compat.config({
     plugins: ["jest"],
     env: {
-      "jest/globals" : true
+      "jest/globals": true
     },
   }),
-  
+
   {
     files: ["**/*.{js,jsx}"],
 
@@ -69,6 +72,6 @@ export default [
       "import/no-extraneous-dependencies": "off",
     },
   },
-  
+
   eslintConfigPrettier,
 ];

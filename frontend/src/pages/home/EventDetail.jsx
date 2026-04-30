@@ -37,6 +37,7 @@ export default function EventDetail() {
   const [alert, setAlert] = useState(null)
 
   const [reportData, setReportData] = useState(null)
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   const handleClose = () => {
     setOpen(false)
@@ -44,18 +45,15 @@ export default function EventDetail() {
   }
   const handleAddRoute = async routeData => {
     try {
-      const response = await fetch(
-        `${process.env.VITE_API_BASE_URL}/api/createRoute`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            ...routeData,
-            eventID: event.id,
-          }),
-        }
-      )
+      const response = await fetch(`${baseURL}/api/createRoute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          ...routeData,
+          eventID: event.id,
+        }),
+      })
 
       const result = await response.json()
 
@@ -89,14 +87,12 @@ export default function EventDetail() {
 
   useEffect(() => {
     const fetchEvent = async () => {
-      const response = await fetch(
-        `${process.env.VITE_API_BASE_URL}/api/eventdetail/${id}`
-      )
+      const response = await fetch(`${baseURL}/api/eventdetail/${id}`)
       const data = await response.json()
       setEvent(data)
     }
     fetchEvent()
-  }, [id])
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>

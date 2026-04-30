@@ -147,18 +147,16 @@ function Activity() {
   })
   const [timeseriesLoading, setTimeseriesLoading] = useState(false)
   const [granularity, setGranularity] = useState('daily')
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true)
         setError('')
-        const res = await fetch(
-          `${process.env.VITE_API_BASE_URL}/api/activity/summary`,
-          {
-            credentials: 'include',
-          }
-        )
+        const res = await fetch(`${baseURL}/api/activity/summary`, {
+          credentials: 'include',
+        })
         if (!res.ok) throw new Error('Failed to fetch activity summary')
         setData(await res.json())
       } catch (err) {
@@ -177,10 +175,9 @@ function Activity() {
         setTimeseriesLoading(true)
         const [daily, monthly, quarterly] = await Promise.all(
           GRANULARITIES.map(g =>
-            fetch(
-              `${process.env.VITE_API_BASE_URL}/api/activity/co2-timeseries?granularity=${g}`,
-              { credentials: 'include' }
-            ).then(res => {
+            fetch(`${baseURL}/api/activity/co2-timeseries?granularity=${g}`, {
+              credentials: 'include',
+            }).then(res => {
               if (!res.ok) throw new Error(`Failed to fetch ${g} timeseries`)
               return res.json()
             })
@@ -198,7 +195,7 @@ function Activity() {
       }
     }
     fetchAllTimeseries()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const kpis = [
     {

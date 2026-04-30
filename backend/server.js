@@ -1,3 +1,9 @@
+const path = require('path')
+const dotenv = require('dotenv')
+
+const envFile =
+  process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
+dotenv.config({ path: path.join(__dirname, envFile) })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
@@ -8,12 +14,6 @@ const app = express()
 const db = require('./db')
 const pool = db.pool
 const port = 3000
-
-const path = require('path')
-
-require('dotenv').config({
-  path: path.join(__dirname, `.env.${process.env.NODE_ENV}`),
-})
 
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
@@ -34,17 +34,19 @@ app.use(
     credentials: true,
   })
 )
+
 app.use(
   auth({
     ...config,
     session: {
       cookie: {
-        sameSite: 'None',
-        secure: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        secure: process.env.NODE_ENV === 'production',
       },
     },
   })
 )
+
 app.use(express.json())
 
 const analytics = createAnalyticsHelpers({

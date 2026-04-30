@@ -22,7 +22,9 @@ function Moderate() {
   const [viewingReports] = useState(true)
 
   const fetchReportQueue = async () => {
-    const response = await fetch(`${process.env.VITE_API_BASE_URL}/api/reports`)
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/api/reports`
+    )
     const data = await response.json()
     setReportQueue(data)
   }
@@ -30,7 +32,7 @@ function Moderate() {
   // Disable verification for now.
   // const fetchPendingEvents = async () => {
   //   const response = await fetch(
-  //     `${process.env.VITE_API_BASE_URL}/api/pendingVerifications`
+  //     `${import.meta.env.VITE_API_BASE_URL}/api/pendingVerifications`
   //   )
   //   const data = await response.json()
   //   setEventQueue(data)

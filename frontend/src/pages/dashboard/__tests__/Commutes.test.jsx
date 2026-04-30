@@ -336,7 +336,7 @@ describe('Commutes', () => {
 
     // commute history endpoint should have been called
     expect(fetch).toHaveBeenCalledWith(
-      `${process.env.VITE_API_BASE_URL}/api/commute-history`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/commute-history`,
       { credentials: 'include' }
     )
   })

@@ -51,7 +51,7 @@ export async function calculateRoute(
 
   try {
     const response = await axios.post(
-      `${process.env.VITE_API_BASE_URL}/api/requestRoute`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/requestRoute`,
       routeBody,
       { withCredentials: true }
     )
