@@ -2,6 +2,7 @@ import { bannedUsersStrings } from '../locales/en/BannedUsersStrings'
 import { useEffect, useState } from 'react'
 import OrganizerCard from '../components/OrganizerCard'
 import ConfirmationDialog from '../components/ConfirmationDialog'
+import Alert from '../components/Alert'
 
 /**
  * Creates the Banned Users page.
@@ -12,6 +13,7 @@ function BannedUsers() {
   const [bannedUsers, setBannedUsers] = useState([])
   const [selectedUser, setSelectedUser] = useState(null)
   const [openModal, setOpenModal] = useState(false)
+  const [alert, setAlert] = useState(null)
 
   const fetchedBannedUsers = async () => {
     try {
@@ -21,7 +23,32 @@ function BannedUsers() {
       const data = await response.json()
       setBannedUsers(data)
     } catch (error) {
-      console.error('Failed to fetch banned users:', error)
+      console.error(bannedUsersStrings.failedToFetch, error)
+    }
+  }
+
+  const unbanUser = async userId => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/unbanUser/${userId}`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      )
+      if (response.ok) {
+        fetchedBannedUsers()
+        setAlert({
+          message: bannedUsersStrings.unbannedSuccess,
+          type: 'success',
+        })
+      }
+    } catch (error) {
+      console.error(bannedUsersStrings.unbannedError, error)
+      setAlert({
+        message: bannedUsersStrings.unbannedError,
+        type: 'error',
+      })
     }
   }
 
@@ -31,17 +58,21 @@ function BannedUsers() {
 
   return (
     <div className="px-6 pt-6">
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onTimeout={() => setAlert(null)}
+        />
+      )}
       <div className="*:ml-13.75">
         <ConfirmationDialog
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
           title={bannedUsersStrings.confirmTitle}
           onConfirm={() => {
-            console.log(
-              `Some call that allows ${selectedUser?.name} to log in again after being banned :P`
-            )
+            unbanUser(selectedUser.id)
             setOpenModal(false)
-            fetchedBannedUsers()
           }}
           variant={'danger'}
         >

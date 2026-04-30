@@ -1642,7 +1642,6 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
  */
 app.get('/api/bannedUsers', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
-    console.log('failed')
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
   try {
@@ -1660,6 +1659,38 @@ app.get('/api/bannedUsers', async (req, res) => {
     res.status(200).json(result.rows)
   } catch (error) {
     console.error('Error fetching banned users:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Unbans a user by resetting their reported count to 0.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+app.post('/api/unbanUser/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+  try {
+    const user = await selectUser(req)
+    if (!user || user.role !== 'moderator') {
+      return res.status(403).send(serverStrings.errors.accessDenied)
+    }
+
+    const result = await db.query(
+      `
+      UPDATE "user"
+      SET reported = 0
+      WHERE id = $1
+      RETURNING *
+    `,
+      [req.params.userId]
+    )
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error unbanning user:', error)
     res.status(500).send(serverStrings.errors.generic)
   }
 })
