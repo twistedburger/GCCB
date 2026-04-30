@@ -1633,4 +1633,35 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
   }
 })
 
+/**
+ * Returns banned users, those with 4 or more valid reports.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} banned users, or an empty array
+ */
+app.get('/api/bannedUsers', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    console.log('failed')
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+  try {
+    const user = await selectUser(req)
+    if (!user || user.role !== 'moderator') {
+      return res.status(403).send(serverStrings.errors.accessDenied)
+    }
+
+    const result = await db.query(`
+      SELECT * FROM "user"
+      WHERE reported > 3
+      ORDER BY name
+    `)
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error fetching banned users:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
 module.exports = app
