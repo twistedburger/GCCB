@@ -18,6 +18,7 @@ const serverStrings = {
     reportFailed: 'Failed to submit report',
     notAuthenticated: 'Not authenticated',
     analyticsUserOnly: 'Only regular users can access commute history.',
+    routeDeletionFailed: 'Failed to delete route',
   },
 }
 

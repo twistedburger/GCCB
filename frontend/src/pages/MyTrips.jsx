@@ -6,6 +6,7 @@ import Report from '../components/Report'
 import RouteCard from '../components/RouteCard'
 import Alert from '../components/Alert'
 import ConfirmationDialog from '../components/ConfirmationDialog'
+import { useUser } from '../../context/UserContext'
 
 /**
  * Display the MyTrips page
@@ -22,6 +23,43 @@ export default function MyTrips() {
   const [showReport, setShowReport] = useState(false)
   const [alert, setAlert] = useState(null)
   const baseURL = import.meta.env.VITE_API_BASE_URL
+  const { user } = useUser()
+  const [isRouteRemovalDialogOpen, setIsRouteRemovalDialogOpen] =
+    useState(false)
+  const [routeIdToRemove, setRouteIdToRemove] = useState(null)
+
+  const handleRouteLeaveRequest = route => {
+    const isRouteCreator = user?.id === route.creator_id
+
+    if (isRouteCreator) {
+      setRouteIdToRemove(route.id)
+      setIsRouteRemovalDialogOpen(true)
+    } else {
+      setConfirmLeave(route)
+    }
+  }
+
+  const handleConfirmRouteRemoval = async () => {
+    try {
+      const response = await fetch(
+        `${baseURL}/api/routes/${routeIdToRemove}/delete`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      )
+
+      if (response.ok) {
+        setActiveTrips(prev => prev.filter(trip => trip.id !== routeIdToRemove))
+        setAlert({ type: 'success', text: 'Route deleted.' })
+      }
+    } catch (error) {
+      setAlert({ type: 'error', text: `Delete failed. ${error.message}` })
+    } finally {
+      setIsRouteRemovalDialogOpen(false)
+      setRouteIdToRemove(null)
+    }
+  }
 
   useEffect(() => {
     if (window.google?.maps) {
@@ -52,10 +90,6 @@ export default function MyTrips() {
     }
   }
 
-  useEffect(() => {
-    fetchMyTrips()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
 
   const handleLeave = async () => {
@@ -67,20 +101,36 @@ export default function MyTrips() {
     setConfirmLeave(null)
   }
 
+  useEffect(() => {
+    fetchMyTrips()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div>
-      <div className="*:ml-13.75">
-        <ConfirmationDialog
-          isOpen={confirmLeave !== null}
-          onConfirm={handleLeave}
-          onClose={() => setConfirmLeave(null)}
-          title="Leave Route"
-          confirmText={'OK'}
-          cancelText={'Cancel'}
-          variant="primary"
-        >
-          Are you sure you want to leave this route?
-        </ConfirmationDialog>
+      <div className="fixed inset-y-0 right-0 left-[55px] z-50 pointer-events-none">
+        <div className="pointer-events-auto">
+          <ConfirmationDialog
+            variant="danger"
+            isOpen={isRouteRemovalDialogOpen}
+            onClose={() => setIsRouteRemovalDialogOpen(false)}
+            onConfirm={handleConfirmRouteRemoval}
+            title="Delete Route?"
+          >
+            As the creator of this route, leaving will delete it for everyone
+            currently joined. Are you sure?
+          </ConfirmationDialog>
+          <ConfirmationDialog
+            isOpen={confirmLeave !== null}
+            onConfirm={handleLeave}
+            onClose={() => setConfirmLeave(null)}
+            title="Leave Route"
+            confirmText={'OK'}
+            cancelText={'Cancel'}
+            variant="primary"
+          >
+            Are you sure you want to leave this route?
+          </ConfirmationDialog>
+        </div>
       </div>
       {alert && (
         <Alert
@@ -106,7 +156,7 @@ export default function MyTrips() {
                   individualView={true}
                   routeDetailView={true}
                   isCompleted={trip.completed}
-                  onToggleJoin={() => setConfirmLeave(trip)}
+                  onToggleJoin={() => handleRouteLeaveRequest(trip)}
                   onReport={trip => {
                     {
                       setReportData(trip)
@@ -119,27 +169,31 @@ export default function MyTrips() {
           ))}
         </div>
       </div>
-      <Modal
-        isOpen={showReport}
-        onClose={() => setShowReport(false)}
-        title={'Report Route'}
-      >
-        <Report
-          type={'route'}
-          targetId={reportData?.id}
+      <div className="*:ml-13.75">
+        <Modal
+          isOpen={showReport}
           onClose={() => setShowReport(false)}
-          setAlert={reportAlert => {
-            if (!reportAlert?.type) return
-            setAlert({
-              type: reportAlert.type,
-              text:
-                reportAlert.type === 'success'
-                  ? 'Report submitted successfully.'
-                  : 'Failed to submit report.',
-            })
-          }}
-        />
-      </Modal>
+          title={'Report Route'}
+        >
+          {reportData && (
+            <Report
+              type={'route'}
+              targetId={reportData?.targetId}
+              onClose={() => setShowReport(false)}
+              setAlert={reportAlert => {
+                if (!reportAlert?.type) return
+                setAlert({
+                  type: reportAlert.type,
+                  text:
+                    reportAlert.type === 'success'
+                      ? 'Report submitted successfully.'
+                      : 'Failed to submit report.',
+                })
+              }}
+            />
+          )}
+        </Modal>
+      </div>
     </div>
   )
 }

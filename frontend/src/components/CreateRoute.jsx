@@ -14,6 +14,7 @@ import TransitLegCard from './TransitLegCard'
 import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
 import { createRouteStrings } from '../locales/en/ComponentStrings/CreateRouteStrings'
+import { getDepartureTimeError } from '../utils/CreateRouteUtils'
 
 /**
  * Component to create a new route.
@@ -23,7 +24,7 @@ import { createRouteStrings } from '../locales/en/ComponentStrings/CreateRouteSt
  * @returns {JSX.Element}
  */
 
-const CreateRoute = ({ initLoc, onSubmit }) => {
+const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
   const [routeDesc, setRouteDesc] = useState('')
   const [transportationMode, setTransportationMode] = useState('')
@@ -55,8 +56,17 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     }
     if (!startLoc) newErrors.startLoc = createRouteStrings.startingLocRequired
     if (!endLoc) newErrors.endLoc = createRouteStrings.destinationLocRequired
-    if (!departTime)
+
+    const timeError = getDepartureTimeError(
+      departTime,
+      eventTime,
+      createRouteStrings.departureAfterEvent
+    )
+    if (!departTime) {
       newErrors.departTime = createRouteStrings.departureTimeRequired
+    } else if (timeError) {
+      newErrors.departTime = timeError
+    }
     if (transportationMode && startLoc && endLoc && departTime && !route) {
       newErrors.route = createRouteStrings.clickGetRoute
     }
@@ -141,6 +151,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       distance: distance,
       path: route,
       completed: false,
+      isJoined: true,
+      people_going: 1,
     }
     onSubmit(routeData)
   }
@@ -152,6 +164,24 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       map.fitBounds(bounds)
     }
   }, [map, pathCoordinates])
+
+  useEffect(() => {
+    const timeError = getDepartureTimeError(
+      departTime,
+      eventTime,
+      createRouteStrings.departureAfterEvent
+    )
+
+    setErrors(prev => {
+      const next = { ...prev }
+      if (timeError) {
+        next.departTime = timeError
+      } else {
+        delete next.departTime
+      }
+      return next
+    })
+  }, [departTime, eventTime])
 
   return (
     <div className="space-y-4">
@@ -356,5 +386,6 @@ export default CreateRoute
 
 CreateRoute.propTypes = {
   initLoc: PropTypes.string,
+  eventTime: PropTypes.string,
   onSubmit: PropTypes.func.isRequired,
 }

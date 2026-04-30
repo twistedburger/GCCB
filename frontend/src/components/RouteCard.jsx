@@ -96,7 +96,7 @@ export default function RouteCard({
   const handleClick = e => {
     e.stopPropagation()
     if (onToggleJoin && !isDraft) {
-      onToggleJoin()
+      onToggleJoin(route)
     } else {
       handleLeave(e)
     }

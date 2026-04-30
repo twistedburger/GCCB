@@ -18,7 +18,7 @@ import { createEventStrings } from '../locales/en/ComponentStrings/CreateEventSt
  */
 
 const CreateEvent = ({ initLoc, onSubmit }) => {
-  const [addedRoutes, setAddedRoutes] = useState([])
+  const [addedRoute, setAddedRoute] = useState(null)
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [selectedLatLng, setSelectedLatLng] = useState(null)
   const [banner, setBanner] = useState('')
@@ -31,26 +31,20 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const baseURL = import.meta.env.VITE_API_BASE_URL
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
 
-  const toggleRouteJoin = id => {
-    setAddedRoutes(prev =>
-      prev.map(route =>
-        route.id === id ? { ...route, isJoined: !route.isJoined } : route
-      )
-    )
+  const handleConfirmRemove = () => {
+    setAddedRoute(null)
+    setIsRemoveDialogOpen(false)
   }
 
   const handleRouteSubmit = route => {
     const routeWithId = {
       ...route,
       id: crypto.randomUUID(),
-      isJoined: false,
+      isJoined: true,
     }
-    setAddedRoutes([...addedRoutes, routeWithId])
-  }
-
-  const removeRoute = id => {
-    setAddedRoutes(addedRoutes.filter(route => route.id !== id))
+    setAddedRoute(routeWithId)
   }
 
   const validate = () => {
@@ -106,11 +100,8 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
       const { id: newEventID } = await createEvent(eventData)
 
-      if (addedRoutes.length > 0) {
-        const routePromises = addedRoutes.map(route =>
-          createRoute(newEventID, route)
-        )
-        await Promise.all(routePromises)
+      if (addedRoute) {
+        await createRoute(newEventID, addedRoute)
       }
 
       onSubmit({
@@ -179,8 +170,17 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
       >
         {createEventStrings.confirmCreationMessage(
           eventName,
-          addedRoutes.length
+          addedRoute?.title
         )}
+      </ConfirmationDialog>
+
+      <ConfirmationDialog
+        isOpen={isRemoveDialogOpen}
+        onClose={() => setIsRemoveDialogOpen(false)}
+        onConfirm={handleConfirmRemove}
+        title={createEventStrings.confirmRouteRemovalTitle}
+      >
+        {createEventStrings.confirmRouteRemovalMessage}
       </ConfirmationDialog>
 
       <form className="space-y-4" onSubmit={handleEventSubmit}>
@@ -208,7 +208,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
               setPlaceId(placeId)
             }}
             placeHolder={createEventStrings.eventLocationPlaceholder}
-            disabled={addRoute || addedRoutes.length > 0}
+            disabled={addRoute || !!addedRoute}
           />
           {errors.location && (
             <p className="flex justify-end text-red-500 text-xs ml-1 mt-1">
@@ -249,29 +249,26 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
           />
         </div>
 
-        {addedRoutes.length > 0 && (
+        {addedRoute && (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">
               {createEventStrings.addedRoutesTitle}
             </h2>
-            {addedRoutes.map(route => (
-              <div key={route.id} className="relative">
-                <GenericButton
-                  unstyled={true}
-                  customStyling="absolute top-2 right-2 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
-                  onClick={() => removeRoute(route.id)}
-                >
-                  <Close fontSize="small" />
-                </GenericButton>
-                <RouteCard
-                  key={route.id}
-                  route={route}
-                  isDraft={true}
-                  individualView={true}
-                  onToggleJoin={toggleRouteJoin}
-                />
-              </div>
-            ))}
+            <div className="relative">
+              <GenericButton
+                unstyled={true}
+                customStyling="absolute top-2 right-2 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                onClick={() => setIsRemoveDialogOpen(true)}
+              >
+                <Close fontSize="small" />
+              </GenericButton>
+              <RouteCard
+                route={addedRoute}
+                isDraft={true}
+                individualView={true}
+                onToggleJoin={() => setIsRemoveDialogOpen(true)}
+              />
+            </div>
           </div>
         )}
 
@@ -287,6 +284,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
               </GenericButton>
               <CreateRoute
                 initLoc={selectedPlace ? selectedPlace : initLoc}
+                eventTime={datetime}
                 onSubmit={route => {
                   handleRouteSubmit(route)
                   setAddRoute(false)
@@ -294,14 +292,19 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
               />
             </div>
           ) : (
-            <GenericButton type="button" onClick={() => setAddRoute(true)}>
-              {createEventStrings.addRoute}
-            </GenericButton>
+            !addedRoute &&
+            eventName.trim() &&
+            selectedPlace &&
+            datetime && (
+              <GenericButton type="button" onClick={() => setAddRoute(true)}>
+                {createEventStrings.addRoute}
+              </GenericButton>
+            )
           )}
         </div>
 
         <div className="flex justify-end">
-          <GenericButton type="submit">
+          <GenericButton type="submit" disabled={addRoute}>
             {createEventStrings.createEvent}
           </GenericButton>
         </div>

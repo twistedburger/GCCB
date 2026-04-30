@@ -163,3 +163,18 @@ INSERT INTO "sso" (school_name, school_nickname, sso_connection) VALUES
 ('University of British Columbia',           'UBC',  'Username-Password-Authentication'),
 ('Simon Fraser University',                  'SFU',  'Username-Password-Authentication')
 ON CONFLICT (school_name) DO NOTHING;
+
+CREATE ROLE main_user WITH LOGIN PASSWORD '';
+
+\set app_role main_user
+
+GRANT SELECT, INSERT, UPDATE ON TABLE "user"             TO :app_role;
+GRANT SELECT, INSERT, UPDATE ON TABLE event              TO :app_role;
+GRANT SELECT, INSERT, UPDATE ON TABLE route              TO :app_role;
+GRANT SELECT, INSERT, DELETE ON TABLE user_route         TO :app_role;
+GRANT INSERT                 ON TABLE event_route        TO :app_role;
+GRANT SELECT, INSERT, UPDATE ON TABLE report             TO :app_role;
+GRANT SELECT, UPDATE         ON TABLE event_verification TO :app_role;
+GRANT SELECT                 ON TABLE sso                TO :app_role;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO :app_role;
