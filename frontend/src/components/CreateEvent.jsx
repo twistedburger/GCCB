@@ -290,7 +290,10 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
               />
             </div>
           ) : (
-            !addedRoute && (
+            !addedRoute &&
+            eventName.trim() &&
+            selectedPlace &&
+            datetime && (
               <GenericButton type="button" onClick={() => setAddRoute(true)}>
                 {createEventStrings.addRoute}
               </GenericButton>
