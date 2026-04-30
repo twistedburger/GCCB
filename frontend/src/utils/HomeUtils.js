@@ -36,6 +36,6 @@ export function buildSearchURL(filters, userLocation, isArriving) {
   params.append('latitude', userLocation.lat)
 
   return filters.mainEventsOnly
-    ? `http://localhost:3000/api/events?${params}`
-    : `http://localhost:3000/api/routes?${params}`
+    ? `${process.env.VITE_API_BASE_URL}/api/events?${params}`
+    : `${process.env.VITE_API_BASE_URL}/api/routes?${params}`
 }

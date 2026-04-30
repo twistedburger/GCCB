@@ -38,9 +38,12 @@ export default function MyTrips() {
 
   const fetchMyTrips = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/my-trips`, {
-        credentials: 'include',
-      })
+      const response = await fetch(
+        `${process.env.VITE_API_BASE_URL}/api/my-trips`,
+        {
+          credentials: 'include',
+        }
+      )
       const data = await response.json()
       if (!Array.isArray(data)) return
 
@@ -58,10 +61,13 @@ export default function MyTrips() {
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
 
   const handleLeave = async () => {
-    await fetch(`http://localhost:3000/api/routes/${confirmLeave.id}/leave`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
+    await fetch(
+      `${process.env.VITE_API_BASE_URL}/api/routes/${confirmLeave.id}/leave`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+      }
+    )
     await fetchMyTrips()
     setConfirmLeave(null)
   }

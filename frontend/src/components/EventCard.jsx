@@ -31,7 +31,7 @@ export default function EventCard({ event, hideReport = false, onReport }) {
       }
       try {
         const response = await fetch(
-          'http://localhost:3000/api/refresh-banner',
+          `${process.env.VITE_API_BASE_URL}/api/refresh-banner`,
           {
             method: 'POST',
             credentials: 'include',

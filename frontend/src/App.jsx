@@ -26,9 +26,12 @@ function App() {
   }, [])
 
   async function authenticateUser() {
-    const response = await fetch('http://localhost:3000/authenticateUser', {
-      credentials: 'include',
-    })
+    const response = await fetch(
+      `${process.env.VITE_API_BASE_URL}/authenticateUser`,
+      {
+        credentials: 'include',
+      }
+    )
     if (!response.ok) {
       const errorText = await response.text()
       console.log(response.status + ' ' + errorText)

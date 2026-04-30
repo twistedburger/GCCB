@@ -153,9 +153,12 @@ function Activity() {
       try {
         setLoading(true)
         setError('')
-        const res = await fetch('http://localhost:3000/api/activity/summary', {
-          credentials: 'include',
-        })
+        const res = await fetch(
+          `${process.env.VITE_API_BASE_URL}/api/activity/summary`,
+          {
+            credentials: 'include',
+          }
+        )
         if (!res.ok) throw new Error('Failed to fetch activity summary')
         setData(await res.json())
       } catch (err) {
@@ -175,7 +178,7 @@ function Activity() {
         const [daily, monthly, quarterly] = await Promise.all(
           GRANULARITIES.map(g =>
             fetch(
-              `http://localhost:3000/api/activity/co2-timeseries?granularity=${g}`,
+              `${process.env.VITE_API_BASE_URL}/api/activity/co2-timeseries?granularity=${g}`,
               { credentials: 'include' }
             ).then(res => {
               if (!res.ok) throw new Error(`Failed to fetch ${g} timeseries`)

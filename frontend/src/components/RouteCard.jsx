@@ -52,7 +52,7 @@ export default function RouteCard({
 
     const checkJoined = async () => {
       const result = await fetch(
-        `http://localhost:3000/api/routes/${route.id}/isJoined`,
+        `${process.env.VITE_API_BASE_URL}/api/routes/${route.id}/isJoined`,
         { credentials: 'include' }
       )
       const data = await result.json()
@@ -69,10 +69,13 @@ export default function RouteCard({
       return
     }
 
-    await fetch(`http://localhost:3000/api/routes/${route.id}/join`, {
-      method: 'POST',
-      credentials: 'include',
-    })
+    await fetch(
+      `${process.env.VITE_API_BASE_URL}/api/routes/${route.id}/join`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      }
+    )
     setIsJoined(true)
     setPeopleGoing(prev => prev + 1)
   }
@@ -85,10 +88,13 @@ export default function RouteCard({
       return
     }
 
-    await fetch(`http://localhost:3000/api/routes/${route.id}/leave`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
+    await fetch(
+      `${process.env.VITE_API_BASE_URL}/api/routes/${route.id}/leave`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+      }
+    )
     setIsJoined(false)
     setPeopleGoing(prev => prev - 1)
   }

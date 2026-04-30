@@ -1,6 +1,6 @@
 export async function getSSOProviders(search) {
   const response = await fetch(
-    `http://localhost:3000/sso_list?search=${search}`
+    `${process.env.VITE_API_BASE_URL}/sso_list?search=${search}`
   )
   if (!response.ok) {
     const errorText = await response.text()

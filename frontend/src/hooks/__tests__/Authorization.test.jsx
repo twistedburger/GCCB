@@ -20,9 +20,12 @@ describe('Test authorizeUser', () => {
     })
 
     expect(result.current.authorization).toBe(authLevel.USER.label)
-    expect(fetch).toHaveBeenCalledWith('http://localhost:3000/authorize', {
-      credentials: 'include',
-    })
+    expect(fetch).toHaveBeenCalledWith(
+      `${process.env.VITE_API_BASE_URL}/authorize`,
+      {
+        credentials: 'include',
+      }
+    )
   })
 
   test.each([401, 403, 404, 500])(

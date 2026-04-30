@@ -39,7 +39,7 @@ function Login() {
             return
           }
           redirect(
-            `http://localhost:3000/loginRoute?connection=${selectedLogin}`
+            `${process.env.VITE_API_BASE_URL}/loginRoute?connection=${selectedLogin}`
           )
         }}
       />

@@ -20,7 +20,9 @@ export function UserProvider({ children }) {
   useEffect(() => {
     setLoadingUser(true)
 
-    fetch('http://localhost:3000/authenticateUser', { credentials: 'include' })
+    fetch(`${process.env.VITE_API_BASE_URL}/authenticateUser`, {
+      credentials: 'include',
+    })
       .then(res => {
         if (!res.ok) throw new Error('Failed to authenticate session')
         return res.json()

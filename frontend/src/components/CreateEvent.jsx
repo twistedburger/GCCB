@@ -62,12 +62,15 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
   const createEvent = async eventData => {
     try {
-      const response = await fetch('http://localhost:3000/api/createEvent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(eventData),
-      })
+      const response = await fetch(
+        `${process.env.VITE_API_BASE_URL}/api/createEvent`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(eventData),
+        }
+      )
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -127,15 +130,18 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
   const createRoute = async (eventID, routeData) => {
     try {
-      const response = await fetch('http://localhost:3000/api/createRoute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          eventID,
-          ...routeData,
-        }),
-      })
+      const response = await fetch(
+        `${process.env.VITE_API_BASE_URL}/api/createRoute`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            eventID,
+            ...routeData,
+          }),
+        }
+      )
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))

@@ -27,7 +27,7 @@ describe('Test getSSOProviders', () => {
       { value: 'SFU_Connection', label: 'SFU' },
     ])
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/sso_list?search=bc'
+      `${process.env.VITE_API_BASE_URL}/sso_list?search=bc`
     )
   })
 

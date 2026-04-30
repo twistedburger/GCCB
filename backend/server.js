@@ -32,7 +32,7 @@ const config = {
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 )
@@ -84,7 +84,7 @@ app.get('/maps/api/js', async (req, res) => {
  */
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  const returnTo = req.query.returnTo || process.env.FRONTEND_URL
   res.oidc.login({
     returnTo: returnTo,
     authorizationParams: {
@@ -97,7 +97,7 @@ app.get('/loginRoute', (req, res) => {
  * Logout route routes to Auth0 deauthentication. Returns to homepage once logout completed
  */
 app.get('/logoutRoute', (req, res) => {
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  const returnTo = req.query.returnTo || process.env.FRONTEND_URL
   res.oidc.logout({
     returnTo: returnTo,
   })

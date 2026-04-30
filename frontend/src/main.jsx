@@ -5,8 +5,7 @@ import { UserProvider } from '../context/UserContext'
 import './index.css'
 
 const script = document.createElement('script')
-script.src =
-  'http://localhost:3000/maps/api/js?libraries=places&callback=__mapsReady'
+script.src = `${process.env.VITE_API_BASE_URL}/maps/api/js?libraries=places&callback=__mapsReady`
 
 window.__mapsReady = () => {
   createRoot(document.getElementById('root')).render(

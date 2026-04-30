@@ -341,7 +341,7 @@ describe('Activity', () => {
 
     // confirm the summary endpoint was called
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/activity/summary',
+      `${process.env.VITE_API_BASE_URL}/api/activity/summary`,
       { credentials: 'include' }
     )
   })
@@ -352,15 +352,15 @@ describe('Activity', () => {
 
     // confirm all three granularity endpoints were called
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/activity/co2-timeseries?granularity=daily',
+      `${process.env.VITE_API_BASE_URL}/api/activity/co2-timeseries?granularity=daily`,
       { credentials: 'include' }
     )
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/activity/co2-timeseries?granularity=monthly',
+      `${process.env.VITE_API_BASE_URL}/api/activity/co2-timeseries?granularity=monthly`,
       { credentials: 'include' }
     )
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/activity/co2-timeseries?granularity=quarterly',
+      `${process.env.VITE_API_BASE_URL}/api/activity/co2-timeseries?granularity=quarterly`,
       { credentials: 'include' }
     )
   })

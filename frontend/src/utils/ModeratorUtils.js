@@ -9,12 +9,15 @@ import { moderationStrings } from '../locales/en/ComponentStrings/ModerationActi
  */
 export const submitReport = async data => {
   try {
-    const response = await fetch('http://localhost:3000/api/moderateReport', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    })
+    const response = await fetch(
+      `${process.env.VITE_API_BASE_URL}/api/moderateReport`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      }
+    )
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
@@ -37,12 +40,15 @@ export const submitReport = async data => {
  */
 export const submitVerification = async data => {
   try {
-    const response = await fetch('http://localhost:3000/api/verifyEvent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    })
+    const response = await fetch(
+      `${process.env.VITE_API_BASE_URL}/api/verifyEvent`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      }
+    )
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))

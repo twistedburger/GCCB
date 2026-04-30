@@ -51,7 +51,7 @@ describe('Test calculateRoute', () => {
     const result = await calculateRoute(startLocation, endLocation, travelMode)
     expect(result).toEqual({ polyline: 'MockPolyline' })
     expect(axios.post).toHaveBeenCalledWith(
-      'http://localhost:3000/api/requestRoute',
+      `${process.env.VITE_API_BASE_URL}/api/requestRoute`,
       routeBody,
       { withCredentials: true }
     )
@@ -84,7 +84,7 @@ describe('Test calculateRoute', () => {
     )
     expect(result).toEqual({ polyline: 'MockPolyline' })
     expect(axios.post).toHaveBeenCalledWith(
-      'http://localhost:3000/api/requestRoute',
+      `${process.env.VITE_API_BASE_URL}/api/requestRoute`,
       routeBody,
       { withCredentials: true }
     )
@@ -96,7 +96,7 @@ describe('Test calculateRoute', () => {
     const result = await calculateRoute(startLocation, endLocation, travelMode)
     expect(result).toEqual({ polyline: 'MockPolyline' })
     expect(axios.post).toHaveBeenCalledWith(
-      'http://localhost:3000/api/requestRoute',
+      `${process.env.VITE_API_BASE_URL}/api/requestRoute`,
       expect.not.objectContaining({
         arrivalTime: expect.anything(),
         departureTime: expect.anything(),
@@ -125,7 +125,7 @@ describe('Test calculateRoute', () => {
     )
     expect(result).toEqual({ polyline: 'MockPolyline' })
     expect(axios.post).toHaveBeenCalledWith(
-      'http://localhost:3000/api/requestRoute',
+      `${process.env.VITE_API_BASE_URL}/api/requestRoute`,
       routeBody,
       { withCredentials: true }
     )

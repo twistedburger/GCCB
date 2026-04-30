@@ -110,10 +110,10 @@ function Co2Savings() {
         setError('')
 
         const [summaryRes, byModeRes] = await Promise.all([
-          fetch('http://localhost:3000/api/analytics/summary', {
+          fetch(`${process.env.VITE_API_BASE_URL}/api/analytics/summary`, {
             credentials: 'include',
           }),
-          fetch('http://localhost:3000/api/analytics/by-mode', {
+          fetch(`${process.env.VITE_API_BASE_URL}/api/analytics/by-mode`, {
             credentials: 'include',
           }),
         ])

@@ -315,7 +315,7 @@ describe('Dashboard', () => {
     await act(async () => render(<Dashboard />))
 
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/analytics/summary',
+      `${process.env.VITE_API_BASE_URL}/api/analytics/summary`,
       { credentials: 'include' }
     )
   })

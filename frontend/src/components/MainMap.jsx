@@ -30,7 +30,7 @@ export default function MainMap({
   return (
     <APIProvider
       apiKey=""
-      scriptUrl="http://localhost:3000/maps/api/js"
+      scriptUrl={`${process.env.VITE_API_BASE_URL}/maps/api/js`}
       libraries={['geometry']}
     >
       <Map

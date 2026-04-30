@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [authorization, setAuthorization] = useState('')
 
   const authorizeUser = async () => {
-    const response = await fetch('http://localhost:3000/authorize', {
+    const response = await fetch(`${process.env.VITE_API_BASE_URL}/authorize`, {
       credentials: 'include',
     })
     if (response.status != 200) {

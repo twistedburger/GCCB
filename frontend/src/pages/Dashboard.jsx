@@ -92,7 +92,7 @@ function Dashboard() {
         setSummaryError('')
 
         const response = await fetch(
-          'http://localhost:3000/api/analytics/summary',
+          `${process.env.VITE_API_BASE_URL}/api/analytics/summary`,
           {
             credentials: 'include',
           }
@@ -118,14 +118,17 @@ function Dashboard() {
   }, [])
 
   const handleSubmit = async formData => {
-    const result = await fetch('http://localhost:3000/updateProfile', {
-      method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    })
+    const result = await fetch(
+      `${process.env.VITE_API_BASE_URL}/updateProfile`,
+      {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      }
+    )
     const response = await result.json()
     setUser(response.user)
     setIsEditing(false)
@@ -221,7 +224,7 @@ function Dashboard() {
 
             <GenericButton
               onClick={() => {
-                window.location.href = 'http://localhost:3000/logoutRoute'
+                window.location.href = `${process.env.VITE_API_BASE_URL}/logoutRoute`
               }}
             >
               {dashboardStrings.logout}

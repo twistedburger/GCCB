@@ -44,15 +44,18 @@ export default function EventDetail() {
   }
   const handleAddRoute = async routeData => {
     try {
-      const response = await fetch(`http://localhost:3000/api/createRoute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...routeData,
-          eventID: event.id,
-        }),
-      })
+      const response = await fetch(
+        `${process.env.VITE_API_BASE_URL}/api/createRoute`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            ...routeData,
+            eventID: event.id,
+          }),
+        }
+      )
 
       const result = await response.json()
 
@@ -87,7 +90,7 @@ export default function EventDetail() {
   useEffect(() => {
     const fetchEvent = async () => {
       const response = await fetch(
-        `http://localhost:3000/api/eventdetail/${id}`
+        `${process.env.VITE_API_BASE_URL}/api/eventdetail/${id}`
       )
       const data = await response.json()
       setEvent(data)

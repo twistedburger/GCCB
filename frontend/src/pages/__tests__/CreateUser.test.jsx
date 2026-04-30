@@ -47,12 +47,15 @@ describe('Test CreateUser Page', () => {
       await getInsertUserCallback()(formData)
     })
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:3000/createNewUser', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-      credentials: 'include',
-    })
+    expect(fetch).toHaveBeenCalledWith(
+      `${process.env.VITE_API_BASE_URL}/createNewUser`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+        credentials: 'include',
+      }
+    )
     expect(mockOnUserCreated).toHaveBeenCalledWith(mockUser.user)
   })
 
@@ -66,12 +69,15 @@ describe('Test CreateUser Page', () => {
       await getInsertUserCallback()(formData)
     })
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:3000/createNewUser', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-      credentials: 'include',
-    })
+    expect(fetch).toHaveBeenCalledWith(
+      `${process.env.VITE_API_BASE_URL}/createNewUser`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+        credentials: 'include',
+      }
+    )
     expect(mockOnUserCreated).not.toHaveBeenCalled()
   })
 })
