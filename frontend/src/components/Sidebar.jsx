@@ -18,6 +18,7 @@ import {
   CommuteOutlined,
   PersonOutlineOutlined,
   AdminPanelSettingsOutlined,
+  PersonOffOutlined,
 } from '@mui/icons-material'
 import { authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
@@ -54,6 +55,12 @@ const mainNavigation = [
     label: sidebarStrings.moderate,
     path: '/moderate',
   },
+  {
+    id: 'Banned Users',
+    icon: <PersonOffOutlined />,
+    label: sidebarStrings.bannedUsers,
+    path: '/bannedusers',
+  },
 ]
 
 /**
@@ -68,9 +75,12 @@ export default function Sidebar({ userRole }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
 
-  const navItems = mainNavigation.filter(
-    item => item.id !== 'Moderate' || userRole == authLevel.MODERATOR.label
-  )
+  const navItems = mainNavigation.filter(item => {
+    const isModeratorItem = item.id === 'Moderate' || item.id === 'Banned Users'
+    const isUserModerator = userRole === authLevel.MODERATOR.label
+
+    return !isModeratorItem || isUserModerator
+  })
 
   const handleClose = () => {
     if (open) setOpen(false)
