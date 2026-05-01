@@ -16,29 +16,43 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Filter from './pages/home/Filter'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
+import BannedUsers from './pages/BannedUsers'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [ssoProfile, setSsoProfile] = useState(null)
+  const [bannedError] = useState(
+    new URLSearchParams(window.location.search).get('error') === 'banned'
+  )
+
   useEffect(() => {
     authenticateUser()
   }, [])
 
   async function authenticateUser() {
-    const response = await fetch('http://localhost:3000/authenticateUser', {
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.log(response.status + ' ' + errorText)
-      return
-    }
-    const responseJSON = await response.json()
-    if (responseJSON) {
-      setUserAuthenticated(responseJSON.isAuthenticated)
-      setCurrentUser(responseJSON.user)
-      setSsoProfile(responseJSON.ssoProfile)
+    try {
+      const response = await fetch('http://localhost:3000/authenticateUser', {
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        console.log(response.status, await response.json())
+        return
+      }
+
+      const data = await response.json()
+      if (data.banned) {
+        window.location.href = `http://localhost:3000/logoutRoute?returnTo=${encodeURIComponent('http://localhost:5173/?error=banned')}`
+        return
+      }
+      if (data) {
+        setUserAuthenticated(data.isAuthenticated)
+        setCurrentUser(data.user)
+        setSsoProfile(data.ssoProfile)
+      }
+    } catch (err) {
+      console.error(err.message)
     }
   }
 
@@ -49,7 +63,7 @@ function App() {
           {/* pages */}
           <div className="relative w-full min-h-screen flex bg-background-off-white">
             {userAuthenticated && currentUser && (
-              <Sidebar userRole={currentUser.role} />
+              <Sidebar userData={currentUser} />
             )}{' '}
             <main className="flex-1 overflow-y-auto">
               <Routes>
@@ -57,7 +71,7 @@ function App() {
                   path="/"
                   element={
                     !userAuthenticated ? (
-                      <Login />
+                      <Login error={bannedError} />
                     ) : !currentUser ? (
                       <CreateUser
                         ssoUser={ssoProfile}
@@ -88,6 +102,7 @@ function App() {
                     element={<TripFrequency />}
                   />
                   <Route path="/user-guide" element={<UserGuide />} />
+                  <Route path="/bannedusers" element={<BannedUsers />} />
                 </Route>
                 <Route
                   element={

@@ -97,6 +97,38 @@ app.get('/logoutRoute', (req, res) => {
 })
 
 /**
+ * Middleware to prevent users with more than 3 reports from accessing the app by automatically logging them out.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+const checkBannedStatus = async (req, res, next) => {
+  if (req.oidc.isAuthenticated()) {
+    try {
+      const userEmail = req.oidc.user.email
+      const result = await db.query(
+        'SELECT reported FROM "user" WHERE email = $1',
+        [userEmail]
+      )
+      const user = result.rows[0]
+
+      if (user && user.reported > 3) {
+        res.clearCookie('appSession')
+        return res.status(200).json({
+          isAuthenticated: false,
+          banned: true,
+        })
+      }
+    } catch (error) {
+      console.error(error)
+      return res.status(500).send(serverStrings.errors.generic)
+    }
+  }
+  next()
+}
+
+app.use(checkBannedStatus)
+
+/**
  * Authenticate user route checks if the authentication is valid and fetches the current user from the database
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
@@ -481,7 +513,76 @@ app.post('/api/requestRoute', async (req, res) => {
 })
 
 /**
- * Adds an event to the database
+ * Inserts a new route into the database
+ *
+ * @param {client} pg client from the connection pool
+ * @param {eventID} eventID of the event the route is associated with
+ * @param {creatorID} userID of the route creator
+ * @param {routeData} object containing the route data
+ * @param {isJoined} boolean indicating whether the creator has joined the route
+ * @returns
+ */
+const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
+  const {
+    title,
+    transportationMode,
+    origin,
+    originLat,
+    originLng,
+    destination,
+    departTime,
+    maxPpl,
+    distance,
+    path,
+    completed,
+    description,
+  } = routeData
+
+  const routeResult = await client.query(
+    `INSERT INTO route (
+      title, creator_id, transportation_mode, origin, destination,
+      depart_time, max_ppl, distance, path, completed,
+      description, created_at, origin_geog
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
+    RETURNING id`,
+    [
+      title,
+      creatorID,
+      transportationMode,
+      origin,
+      destination,
+      departTime,
+      maxPpl,
+      distance,
+      path,
+      completed,
+      description,
+      new Date(),
+      originLng,
+      originLat,
+    ]
+  )
+
+  const routeID = routeResult.rows[0].id
+
+  await client.query(
+    'INSERT INTO event_route (event_id, route_id) VALUES ($1, $2)',
+    [eventID, routeID]
+  )
+
+  if (isJoined) {
+    await client.query(
+      'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
+      [creatorID, routeID]
+    )
+  }
+
+  return routeID
+}
+
+/**
+ * Adds an event and optional route to the database
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -493,9 +594,11 @@ app.post('/api/createEvent', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
+  const client = await pool.connect()
+
   try {
     const user = await selectUser(req)
-    const routeVerified = user.role === 'moderator'
+    const eventVerified = user.role === 'moderator'
 
     const {
       title,
@@ -507,16 +610,21 @@ app.post('/api/createEvent', async (req, res) => {
       latitude,
       banner,
       placeID,
+      route,
     } = req.body
 
-    const result = await db.query(
-      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11, $12) RETURNING *',
+    await client.query('BEGIN')
+
+    const eventResult = await client.query(
+      `INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url, place_id) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11, $12) 
+       RETURNING *`,
       [
         title,
         user.id,
         eventTime,
         location,
-        routeVerified,
+        eventVerified,
         needApproval,
         description,
         new Date(),
@@ -527,10 +635,20 @@ app.post('/api/createEvent', async (req, res) => {
       ]
     )
 
-    res.status(201).json(result.rows[0])
+    const newEvent = eventResult.rows[0]
+
+    if (route) {
+      await insertRoute(client, newEvent.id, user.id, route, route.isJoined)
+    }
+
+    await client.query('COMMIT')
+    res.status(201).json(newEvent)
   } catch (error) {
+    await client.query('ROLLBACK')
     console.error('Database Error:', error)
     res.status(500).json({ error: serverStrings.errors.eventCreationFailed })
+  } finally {
+    client.release()
   }
 })
 
@@ -547,76 +665,26 @@ app.post('/api/createRoute', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const {
-    eventID,
-    title,
-    transportationMode,
-    origin,
-    originLat,
-    originLng,
-    destination,
-    departTime,
-    maxPpl,
-    distance,
-    path,
-    completed,
-    description,
-    isJoined,
-  } = req.body
-
+  const { eventID, isJoined, ...routeData } = req.body
   const client = await pool.connect()
 
   try {
     const user = await selectUser(req)
     await client.query('BEGIN')
 
-    const routeQuery = `
-      INSERT INTO route (
-        title, creator_id, transportation_mode, origin, destination, 
-        depart_time, max_ppl, distance, path, completed, 
-        description, created_at, origin_geog
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
-      RETURNING id;
-    `
-
-    const routeResult = await client.query(routeQuery, [
-      title,
+    const routeID = await insertRoute(
+      client,
+      eventID,
       user.id,
-      transportationMode,
-      origin,
-      destination,
-      departTime,
-      maxPpl,
-      distance,
-      path,
-      completed,
-      description,
-      new Date(),
-      originLng,
-      originLat,
-    ])
-
-    const routeID = routeResult.rows[0].id
-
-    const junctionQuery = `
-      INSERT INTO event_route (event_id, route_id)
-      VALUES ($1, $2);
-    `
-    await client.query(junctionQuery, [eventID, routeID])
-
-    if (isJoined) {
-      await client.query(
-        'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-        [user.id, routeID]
-      )
-    }
+      routeData,
+      isJoined
+    )
 
     await client.query('COMMIT')
     res.status(201).json({ success: true, routeID })
   } catch (error) {
-    console.error('Database Error Detail:', error)
     await client.query('ROLLBACK')
+    console.error('Database Error Detail:', error)
     res.status(500).json({ error: serverStrings.errors.routeCreationFailed })
   } finally {
     client.release()
@@ -631,7 +699,7 @@ app.post('/api/createRoute', async (req, res) => {
  *
  * @returns {[Object]} routes fetched from the db, or an empty array
  */
-app.get('/api/routes', (req, res) => {
+app.get('/api/routes', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -680,6 +748,32 @@ app.get('/api/routes', (req, res) => {
     }
   }
   conditions.push(`r.reported < 3`)
+
+  const user = await selectUser(req)
+  if (user) {
+    const blocked = await db.query(
+      `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
+      [user.id]
+    )
+    const blockedIds = blocked.rows.map(row =>
+      Number(row.blocker_id) === Number(user.id)
+        ? row.blocked_user_id
+        : row.blocker_id
+    )
+
+    if (blockedIds.length > 0) {
+      const offset = values.length + 1
+      conditions.push(
+        `NOT EXISTS (
+          SELECT 1 FROM user_route ur
+          WHERE ur.route_id = r.id
+          AND ur.user_id IN (${blockedIds.map((_, i) => `$${offset + i}`).join(',')})
+        )`
+      )
+      values.push(...blockedIds)
+    }
+  }
+
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   db.query(
@@ -715,6 +809,10 @@ app.get('/api/routes', (req, res) => {
  * @returns {Object} an event
  */
 app.get('/api/eventdetail/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.json({ isJoined: false })
+  }
+
   const { id } = req.params
 
   let currentUserId = null
@@ -750,7 +848,7 @@ app.get('/api/eventdetail/:id', async (req, res) => {
 
     const routesResult = await db.query(
       `SELECT r.*,
-        (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going,
+      (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going,
         EXISTS (
           SELECT 1 FROM user_route ur 
           WHERE ur.route_id = r.id AND ur.user_id = $2
@@ -939,6 +1037,11 @@ app.post('/api/report', async (req, res) => {
 
     res.json({ success: true })
   } catch (error) {
+    if (error.code === '23505') {
+      return res
+        .status(400)
+        .json({ error: serverStrings.errors.duplicateReport })
+    }
     console.error(error)
     res.status(500).json({ error: serverStrings.errors.reportFailed })
   }
@@ -1313,7 +1416,7 @@ app.get('/api/reports', async (req, res) => {
  *
  * @returns {[Object]} an array of trips a user has joined (via user_route junction table), or an empty array
  */
-app.get('/api/my-trips', async (req, res) => {
+app.get('/api/myTrips', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -1323,15 +1426,11 @@ app.get('/api/my-trips', async (req, res) => {
     if (!user)
       return res.status(404).json({ error: serverStrings.errors.noUser })
 
-    // "completed" column in route table temporarily overridden by computing "completed" based on event's event_time
-    // while we decide how to compute if a route has been completed (button vs. automatic).
-    // TODO: decide on permanent approach: DB trigger or node-cron job to update the completed
-    // column automatically, or dedicated endpoint if the user needs to manually mark a trip complete.
     const query = `
       SELECT r.*, 
              e.event_time,
              (SELECT COUNT(*) FROM user_route ur2 WHERE ur2.route_id = r.id) as people_going,
-             (e.event_time < NOW()) AS completed
+             ur.completed
       FROM route r
       INNER JOIN user_route ur ON ur.route_id = r.id
       LEFT JOIN event_route er ON r.id = er.route_id
@@ -1339,7 +1438,6 @@ app.get('/api/my-trips', async (req, res) => {
       WHERE ur.user_id = $1
       ORDER BY r.depart_time DESC
     `
-
     const results = await db.query(query, [user.id])
     res.status(200).json(results.rows)
   } catch (error) {
@@ -1812,6 +1910,125 @@ app.get('/api/getParticipants/:routeId', async (req, res) => {
     res.status(200).json(result.rows)
   } catch (error) {
     console.error('Error fetching participants:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Sets completed column to true for a user_route row.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} {success: true}
+ */
+app.post('/api/completeRoute', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
+  const { routeID } = req.body
+
+  try {
+    const user = await selectUser(req)
+    await db.query(
+      'UPDATE user_route SET completed = true WHERE user_id = $1 AND route_id = $2',
+      [user.id, routeID]
+    )
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: serverStrings.errors.routeCompletionFailed })
+  }
+})
+
+/**
+ * Returns banned users or blocked users depending on user's role.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} banned users, or an empty array
+ */
+app.get('/api/bannedUsers', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    let result
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+
+    if (user.role === 'moderator') {
+      result = await db.query(`
+      SELECT * FROM "user"
+      WHERE reported > 3
+      ORDER BY name
+    `)
+    } else {
+      result = await db.query(
+        `
+        SELECT u.* FROM blocked_user bu
+        LEFT JOIN "user" u ON u.id = bu.blocked_user_id
+        WHERE bu.blocker_id = $1
+        ORDER BY u.name
+      `,
+        [user.id]
+      )
+    }
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Unbans or unblocks a user depending on their role.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+app.post('/api/unbanUser/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    let result
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+
+    if (user.role === 'moderator') {
+      result = await db.query(
+        `
+      UPDATE "user"
+      SET reported = 0
+      WHERE id = $1
+      RETURNING * 
+    `,
+        [req.params.userId]
+      )
+    } else {
+      result = await db.query(
+        `
+        DELETE FROM blocked_user
+        WHERE blocker_id = $1 AND blocked_user_id = $2
+        RETURNING *
+      `,
+        [user.id, req.params.userId]
+      )
+    }
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error unbanning user:', error)
     res.status(500).send(serverStrings.errors.generic)
   }
 })
