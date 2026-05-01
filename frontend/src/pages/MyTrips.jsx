@@ -133,7 +133,7 @@ export default function MyTrips() {
       </div>
       {alert && (
         <Alert
-          message={alert.text}
+          message={alert.message}
           type={alert.type}
           onTimeout={() => setAlert(null)}
         />
@@ -179,16 +179,7 @@ export default function MyTrips() {
               type={'route'}
               targetId={reportData?.targetId}
               onClose={() => setShowReport(false)}
-              setAlert={reportAlert => {
-                if (!reportAlert?.type) return
-                setAlert({
-                  type: reportAlert.type,
-                  text:
-                    reportAlert.type === 'success'
-                      ? 'Report submitted successfully.'
-                      : 'Failed to submit report.',
-                })
-              }}
+              setAlert={setAlert}
             />
           )}
         </Modal>

@@ -9,15 +9,20 @@ import { organizerCardStrings } from '../locales/en/ComponentStrings/OrganizerCa
  * @param {Object} user - The user information for the organizer.
  * @param {string} primaryActionLabel - The label for the primary action button.
  * @param {Function} onPrimaryAction - The function to call when the primary action is clicked.
+ * @param {string} primaryButtonStyling - Custom styling for the primary button.
  * @param {string} secondaryActionLabel - The label for the secondary action button.
+ * @param {Function} onSecondaryAction - The function to call when the secondary action is clicked.
+ * @param {string} secondaryButtonStyling - Custom styling for the secondary button.
  */
 
 function OrganizerCard({
   user,
   primaryActionLabel,
   onPrimaryAction,
+  primaryButtonStyling,
   secondaryActionLabel,
   onSecondaryAction,
+  secondaryButtonStyling,
   className,
 }) {
   const { name, nickname, role, description, profile_pic } = user
@@ -42,35 +47,38 @@ function OrganizerCard({
           )}
         </div>
 
-        <div className="border-r text-text-secondary -my-1"></div>
+        <div className="flex border-r text-text-secondary -my-1"></div>
 
-        <div className="flex flex-col flex-1 min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <h3 className="font-semibold text-lg text-text-primary truncate">
-              {name}
-            </h3>
-
-            {nickname && (
-              <span className="text-xs text-text-secondary truncate">
-                ({nickname})
-              </span>
-            )}
-
-            {role && (
-              <span className="ml-auto text-xs text-text-secondary whitespace-nowrap">
-                {role}
-              </span>
-            )}
+        <div className="flex flex-1 min-w-0 flex-row items-center">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-row items-center gap-1">
+              <h3 className="font-semibold text-lg text-text-primary truncate">
+                {name}
+              </h3>
+              {nickname && (
+                <span className="text-xs text-text-secondary truncate">
+                  ({nickname})
+                </span>
+              )}
+              {role && (
+                <span className="text-xs text-text-secondary whitespace-nowrap">
+                  • {role}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-text-secondary mt-1">
+              {description || organizerCardStrings.noBio}
+            </p>
           </div>
 
-          <span className="text-xs text-text-secondary mt-1">
-            {description || organizerCardStrings.noBio}
-          </span>
-
           {(primaryActionLabel || secondaryActionLabel) && (
-            <div className="flex gap-2 mt-3">
+            <div className="flex flex-col gap-2 ml-4 shrink-0">
               {primaryActionLabel && (
-                <GenericButton onClick={onPrimaryAction}>
+                <GenericButton
+                  onClick={onPrimaryAction}
+                  unstyled
+                  customStyling={primaryButtonStyling}
+                >
                   {primaryActionLabel}
                 </GenericButton>
               )}
@@ -78,7 +86,8 @@ function OrganizerCard({
               {secondaryActionLabel && (
                 <GenericButton
                   onClick={onSecondaryAction}
-                  className="bg-medium-grey text-text-primary"
+                  unstyled
+                  customStyling={secondaryButtonStyling}
                 >
                   {secondaryActionLabel}
                 </GenericButton>
@@ -109,6 +118,8 @@ OrganizerCard.propTypes = {
   onSecondaryAction: PropTypes.func,
 
   className: PropTypes.string,
+  primaryButtonStyling: PropTypes.string,
+  secondaryButtonStyling: PropTypes.string,
 }
 
 export default OrganizerCard

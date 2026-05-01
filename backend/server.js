@@ -97,6 +97,38 @@ app.get('/logoutRoute', (req, res) => {
 })
 
 /**
+ * Middleware to prevent users with more than 3 reports from accessing the app by automatically logging them out.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+const checkBannedStatus = async (req, res, next) => {
+  if (req.oidc.isAuthenticated()) {
+    try {
+      const userEmail = req.oidc.user.email
+      const result = await db.query(
+        'SELECT reported FROM "user" WHERE email = $1',
+        [userEmail]
+      )
+      const user = result.rows[0]
+
+      if (user && user.reported > 3) {
+        res.clearCookie('appSession')
+        return res.status(200).json({
+          isAuthenticated: false,
+          banned: true,
+        })
+      }
+    } catch (error) {
+      console.error(error)
+      return res.status(500).send(serverStrings.errors.generic)
+    }
+  }
+  next()
+}
+
+app.use(checkBannedStatus)
+
+/**
  * Authenticate user route checks if the authentication is valid and fetches the current user from the database
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
@@ -631,7 +663,7 @@ app.post('/api/createRoute', async (req, res) => {
  *
  * @returns {[Object]} routes fetched from the db, or an empty array
  */
-app.get('/api/routes', (req, res) => {
+app.get('/api/routes', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -680,6 +712,32 @@ app.get('/api/routes', (req, res) => {
     }
   }
   conditions.push(`r.reported < 3`)
+
+  const user = await selectUser(req)
+  if (user) {
+    const blocked = await db.query(
+      `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
+      [user.id]
+    )
+    const blockedIds = blocked.rows.map(row =>
+      Number(row.blocker_id) === Number(user.id)
+        ? row.blocked_user_id
+        : row.blocker_id
+    )
+
+    if (blockedIds.length > 0) {
+      const offset = values.length + 1
+      conditions.push(
+        `NOT EXISTS (
+          SELECT 1 FROM user_route ur
+          WHERE ur.route_id = r.id
+          AND ur.user_id IN (${blockedIds.map((_, i) => `$${offset + i}`).join(',')})
+        )`
+      )
+      values.push(...blockedIds)
+    }
+  }
+
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   db.query(
@@ -715,6 +773,10 @@ app.get('/api/routes', (req, res) => {
  * @returns {Object} an event
  */
 app.get('/api/eventdetail/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.json({ isJoined: false })
+  }
+
   const { id } = req.params
 
   let currentUserId = null
@@ -736,17 +798,38 @@ app.get('/api/eventdetail/:id', async (req, res) => {
       [id]
     )
 
+    const user = await selectUser(req)
+    const blocked = await db.query(
+      `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
+      [user.id]
+    )
+
+    const blockedIds = blocked.rows.map(row =>
+      Number(row.blocker_id) === Number(user.id)
+        ? row.blocked_user_id
+        : row.blocker_id
+    )
+
     const routesResult = await db.query(
       `SELECT r.*,
-        (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going,
+      (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going,
         EXISTS (
           SELECT 1 FROM user_route ur 
           WHERE ur.route_id = r.id AND ur.user_id = $2
         ) as "isJoined"
-       FROM route r
-       LEFT JOIN event_route er ON er.route_id = r.id
-       WHERE er.event_id = $1`,
-      [id, currentUserId]
+      FROM route r
+      LEFT JOIN event_route er ON er.route_id = r.id
+      WHERE er.event_id = $1
+      ${
+        blockedIds.length > 0
+          ? `AND NOT EXISTS (
+        SELECT 1 FROM user_route ur
+        WHERE ur.route_id = r.id
+        AND ur.user_id IN (${blockedIds.map((_, i) => `$${i + 2}`).join(',')})
+        )`
+          : ''
+      }`,
+      [id, currentUserId, ...blockedIds]
     )
 
     const event = eventResult.rows[0]
@@ -916,6 +999,11 @@ app.post('/api/report', async (req, res) => {
 
     res.json({ success: true })
   } catch (error) {
+    if (error.code === '23505') {
+      return res
+        .status(400)
+        .json({ error: serverStrings.errors.duplicateReport })
+    }
     console.error(error)
     res.status(500).json({ error: serverStrings.errors.reportFailed })
   }
@@ -1671,6 +1759,95 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
     return res.status(500).send(serverStrings.errors.generic)
   } finally {
     client.release()
+  }
+})
+
+/**
+ * Returns banned users or blocked users depending on user's role.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} banned users, or an empty array
+ */
+app.get('/api/bannedUsers', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    let result
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+
+    if (user.role === 'moderator') {
+      result = await db.query(`
+      SELECT * FROM "user"
+      WHERE reported > 3
+      ORDER BY name
+    `)
+    } else {
+      result = await db.query(
+        `
+        SELECT u.* FROM blocked_user bu
+        LEFT JOIN "user" u ON u.id = bu.blocked_user_id
+        WHERE bu.blocker_id = $1
+        ORDER BY u.name
+      `,
+        [user.id]
+      )
+    }
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Unbans or unblocks a user depending on their role.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+app.post('/api/unbanUser/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    let result
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+
+    if (user.role === 'moderator') {
+      result = await db.query(
+        `
+      UPDATE "user"
+      SET reported = 0
+      WHERE id = $1
+      RETURNING * 
+    `,
+        [req.params.userId]
+      )
+    } else {
+      result = await db.query(
+        `
+        DELETE FROM blocked_user
+        WHERE blocker_id = $1 AND blocked_user_id = $2
+        RETURNING *
+      `,
+        [user.id, req.params.userId]
+      )
+    }
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error unbanning user:', error)
+    res.status(500).send(serverStrings.errors.generic)
   }
 })
 

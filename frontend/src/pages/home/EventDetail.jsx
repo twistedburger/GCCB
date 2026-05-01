@@ -441,16 +441,7 @@ export default function EventDetail() {
                                 type={reportData.type}
                                 targetId={reportData.targetId}
                                 onClose={() => setReportData(null)}
-                                setAlert={reportAlert => {
-                                  if (!reportAlert || !reportAlert.type) return
-                                  setAlert({
-                                    ...reportAlert,
-                                    message:
-                                      reportAlert.type === 'success'
-                                        ? 'Report submitted successfully.'
-                                        : 'Failed to submit report.',
-                                  })
-                                }}
+                                setAlert={setAlert}
                               />
                             </>
                           )}
