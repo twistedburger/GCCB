@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import LocationSearch from './LocationSearch'
@@ -181,6 +181,42 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
     })
   }, [departTime, eventTime])
 
+  const handleMapLoad = useCallback(m => setMap(m), [])
+  const handleMapUnmount = useCallback(() => setMap(null), [])
+
+  const mapSection = useMemo(
+    () => (
+      <div className="rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 h-64 relative shadow-inner">
+        <MainMap
+          defaultCenter={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
+          route={route ? { path: route, transportationMode } : null}
+          onLoad={handleMapLoad}
+          onUnmount={handleMapUnmount}
+          mapKey={mapKey}
+        >
+          {!route && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
+              {transportationMode && departTime && startLoc && endLoc
+                ? createRouteStrings.seePath
+                : createRouteStrings.selectModeTimeOriginDestination}
+            </div>
+          )}
+        </MainMap>
+      </div>
+    ),
+    [
+      pathCoordinates,
+      route,
+      transportationMode,
+      mapKey,
+      departTime,
+      startLoc,
+      endLoc,
+      handleMapLoad,
+      handleMapUnmount,
+    ]
+  )
+
   return (
     <div className="space-y-4">
       <TextBox
@@ -330,27 +366,8 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
       )}
 
       {/* Mini Map */}
-      <div className="rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 h-64 relative shadow-inner">
-        <MainMap
-          defaultCenter={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
-          route={
-            route
-              ? { path: route, transportationMode: transportationMode }
-              : null
-          }
-          onLoad={setMap}
-          onUnmount={() => setMap(null)}
-          mapKey={mapKey}
-        >
-          {!route && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
-              {transportationMode && departTime && startLoc && endLoc
-                ? createRouteStrings.seePath
-                : createRouteStrings.selectModeTimeOriginDestination}
-            </div>
-          )}
-        </MainMap>
-      </div>
+      {mapSection}
+
       <p className="font-semibold pt-4 pb-2 text-text-primary">
         {transitLegs.length > 0 ? createRouteStrings.transitDetails : ''}
       </p>
