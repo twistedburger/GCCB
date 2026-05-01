@@ -161,7 +161,11 @@ export default function Sidebar({ userData }) {
                 <Typography
                   variant="caption"
                   component="div"
-                  sx={{ color: '#3B82F6', fontWeight: 600, mt: 0.5 }}
+                  sx={{
+                    color: 'var(--color-blue-primary)',
+                    fontWeight: 600,
+                    mt: 0.5,
+                  }}
                 >
                   {userRole}
                 </Typography>
