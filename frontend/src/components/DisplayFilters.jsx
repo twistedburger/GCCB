@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 import GenericButton from './GenericButton'
 import { displayFilterStrings } from '../locales/en/ComponentStrings/DisplayFiltersStrings'
 
-const DEFAULT_RADIUS = 500
+const DEFAULT_RADIUS = 2000
 
 /**
  * Component to display active filters and allow users to remove them.
@@ -18,7 +18,13 @@ export default function DisplayFilters({ filters, setFilters, isArriving }) {
 
   if (filters.time)
     activeFilters.push({
-      label: `${filters.time}`,
+      label: new Date(filters.time).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }),
       key: 'time',
       default: null,
     })
