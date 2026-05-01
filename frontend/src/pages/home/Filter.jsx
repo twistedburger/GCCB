@@ -10,6 +10,8 @@ import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import TransportationModeSelect from '../../components/TransportationModeSelect.jsx'
 
+const SHEET_ANIMATION_DURATION = 300
+
 /**
  * Displays the Filter page
  * @returns {JSX.Element}
@@ -35,7 +37,7 @@ export default function Filter() {
     setIsClosing(true)
     setTimeout(() => {
       navigate('/', { state: { filters: updatedFilters } })
-    }, 300)
+    }, SHEET_ANIMATION_DURATION)
   }
 
   const handleApply = () => {
@@ -55,94 +57,91 @@ export default function Filter() {
   }
 
   return (
-    <>
-      <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ml-13.75 ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
-        style={{ maxHeight: '100dvh', overflowY: 'auto' }}
-      >
-        <div className="px-6 py-4 flex flex-col justify-between items-center h-screen">
-          <div className="flex-1 w-full">
-            <div className="flex justify-between">
-              <p className="text-2xl font-medium pb-2">Filters</p>
-              <GenericButton
-                onClick={handleCancel}
-                unstyled={true}
-                customStyling="text-text-primary scale-110 pb-4"
-              >
-                <Cancel />
-              </GenericButton>
-            </div>
-            <TransportationModeSelect
-              selectedModes={transportationModes}
-              onChange={setTransportationModes}
-              multiple={true}
-            />
-            <p className="py-2 font-semibold">Time</p>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                value={time}
-                onChange={setTime}
-                views={['year', 'month', 'day', 'hours', 'minutes']}
-                slotProps={{
-                  textField: {
-                    sx: {
-                      width: '100%',
-                      '& fieldset': { borderRadius: '14px' },
-                    },
-                  },
-                }}
-              />
-            </LocalizationProvider>
-            <div className="flex flex-row items-center gap-1 pt-2">
-              <p className="font-semibold">Radius •</p>
-              <p className="text-sm text-text-secondary">{radius} m</p>
-            </div>
-            <div className="pr-2">
-              <Slider
-                value={radius}
-                onChange={(e, newValue) => setRadius(newValue)}
-                min={500}
-                max={2000}
-                shiftStep={250}
-                step={250}
-                marks
-              />
-            </div>
-            <p className="pb-2 font-semibold">More Filters</p>
-            <div>
-              <GenericButton
-                onClick={() => setVerifiedEventsOnly(!verifiedEventsOnly)}
-                unstyled={true}
-                customStyling="mb-4 bg-white py-1.5 px-4 text-sm font-medium rounded-xl shadow-light-grey shadow-sm"
-              >
-                {verifiedEventsOnly
-                  ? '✓ Show Verified Events Only'
-                  : 'Show Verified Events Only'}
-              </GenericButton>
-              <GenericToggle
-                value={mainEventsOnly}
-                onChange={setMainEventsOnly}
-                labels={['Display Main Events', 'Display Individual Routes']}
-              />
-            </div>
-          </div>
-          <div className="pb-2 pt-4 w-full">
+    <div
+      className={`fixed bottom-0 left-0 right-0 z-50 bg-background-off-white ml-13.75 max-h-[100dvh] overflow-y-auto ${isClosing ? 'sheet-exit' : 'sheet-enter'}`}
+    >
+      <div className="px-6 py-4 flex flex-col justify-between items-center h-screen">
+        <div className="flex-1 w-full">
+          <div className="flex justify-between">
+            <p className="text-2xl font-medium pb-2">Filters</p>
             <GenericButton
-              onClick={() => {
-                setTime(null)
-                setRadius(500)
-                setVerifiedEventsOnly(false)
-                setMainEventsOnly(true)
-                setTransportationModes([])
-              }}
-              customStyling="bg-white !text-blue-primary shadow-light-grey shadow-sm"
+              onClick={handleCancel}
+              unstyled={true}
+              customStyling="text-text-primary scale-110 pb-4"
             >
-              Clear Filters
+              <Cancel />
             </GenericButton>
-            <GenericButton onClick={handleApply}>Apply Filters</GenericButton>
+          </div>
+          <TransportationModeSelect
+            selectedModes={transportationModes}
+            onChange={setTransportationModes}
+            multiple={true}
+          />
+          <p className="py-2 font-semibold">Time</p>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimePicker
+              value={time}
+              onChange={setTime}
+              views={['year', 'month', 'day', 'hours', 'minutes']}
+              slotProps={{
+                textField: {
+                  sx: {
+                    width: '100%',
+                    '& fieldset': { borderRadius: '14px' },
+                  },
+                },
+              }}
+            />
+          </LocalizationProvider>
+          <div className="flex flex-row items-center gap-1 pt-2">
+            <p className="font-semibold">Radius •</p>
+            <p className="text-sm text-text-secondary">{radius} m</p>
+          </div>
+          <div className="pr-2">
+            <Slider
+              value={radius}
+              onChange={(event, nextRadius) => setRadius(nextRadius)}
+              min={500}
+              max={2000}
+              shiftStep={250}
+              step={250}
+              marks
+            />
+          </div>
+          <p className="pb-2 font-semibold">More Filters</p>
+          <div>
+            <GenericButton
+              onClick={() => setVerifiedEventsOnly(!verifiedEventsOnly)}
+              unstyled={true}
+              customStyling="mb-4 bg-white py-1.5 px-4 text-sm font-medium rounded-xl shadow-light-grey shadow-sm"
+            >
+              {verifiedEventsOnly
+                ? '✓ Show Verified Events Only'
+                : 'Show Verified Events Only'}
+            </GenericButton>
+            <GenericToggle
+              value={mainEventsOnly}
+              onChange={setMainEventsOnly}
+              labels={['Display Main Events', 'Display Individual Routes']}
+            />
           </div>
         </div>
+        <div className="pb-2 pt-4 w-full">
+          <GenericButton
+            onClick={() => {
+              setTime(null)
+              setRadius(500)
+              setVerifiedEventsOnly(false)
+              setMainEventsOnly(true)
+              setTransportationModes([])
+            }}
+            customStyling="bg-white !text-blue-primary shadow-light-grey shadow-sm"
+          >
+            Clear Filters
+          </GenericButton>
+          <GenericButton onClick={handleApply}>Apply Filters</GenericButton>
+        </div>
       </div>
-    </>
+    </div>
   )
 }

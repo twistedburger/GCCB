@@ -94,13 +94,10 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         description: eventDesc,
         verified: false,
         needApproval: false,
+        route: addedRoute ?? undefined,
       }
 
       const { id: newEventID } = await createEvent(eventData)
-
-      if (addedRoute) {
-        await createRoute(newEventID, addedRoute)
-      }
 
       onSubmit({
         success: true,
@@ -113,33 +110,6 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
         success: false,
         message: error.message || createEventStrings.creationFailed,
       })
-    }
-  }
-
-  const createRoute = async (eventID, routeData) => {
-    try {
-      const response = await fetch('http://localhost:3000/api/createRoute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          eventID,
-          ...routeData,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(
-          errorData.error ||
-            `${createEventStrings.routeCreationFailed} ${response.status}`
-        )
-      }
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error(createEventStrings.errorCreatingRoute, error)
-      throw error
     }
   }
 
