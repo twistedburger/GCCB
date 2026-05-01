@@ -12,6 +12,7 @@
   --color-text-primary: #333333;
   --color-text-secondary: #666666;
   --color-background-off-white: #f5f5f5;
+  --color-drawer-background: #f9f9f9;
   --color-dark-grey: #4f4f4f;
   --color-medium-grey: #b3b3b3; /* for non-selected navigation bar component, unfocused icon, etc. */
   --color-light-grey: #e2e2e2; /* for card shadows, unfocused text, etc. */

@@ -117,8 +117,10 @@ export default function EventDetail() {
   const updateLocalJoinStatus = (routeId, joined) => {
     setEvent(prev => ({
       ...prev,
-      routes: prev.routes.map(r =>
-        r.id === routeId ? { ...r, isJoined: joined } : r
+      routes: prev.routes.map(routeItem =>
+        routeItem.id === routeId
+          ? { ...routeItem, isJoined: joined }
+          : routeItem
       ),
     }))
   }
@@ -136,7 +138,9 @@ export default function EventDetail() {
       if (response.ok) {
         setEvent(prev => ({
           ...prev,
-          routes: prev.routes.filter(r => r.id !== routeIdToRemove),
+          routes: prev.routes.filter(
+            routeItem => routeItem.id !== routeIdToRemove
+          ),
         }))
         setAlert({ type: 'success', message: 'Route deleted.' })
       }
@@ -218,20 +222,20 @@ export default function EventDetail() {
         <Drawer.Portal>
           <Drawer.Overlay style={{ pointerEvents: 'none' }} />
           <Drawer.Content
-            onInteractOutside={e => {
+            onInteractOutside={event => {
               if (addRoute) {
                 const isInsideNested =
-                  e.target.closest('[data-vaul-drawer]') ||
-                  e.target.closest('input')
+                  event.target.closest('[data-vaul-drawer]') ||
+                  event.target.closest('input')
 
                 if (isInsideNested) {
                   return
                 }
-                e.preventDefault()
+                event.preventDefault()
               }
             }}
-            onOpenAutoFocus={e => e.preventDefault()}
-            onCloseAutoFocus={e => e.preventDefault()}
+            onOpenAutoFocus={event => event.preventDefault()}
+            onCloseAutoFocus={event => event.preventDefault()}
             style={{
               zIndex: 40,
               marginLeft: '55px',
