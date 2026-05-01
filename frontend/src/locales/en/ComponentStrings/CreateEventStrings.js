@@ -11,8 +11,11 @@ export const createEventStrings = {
   creationFailed: 'Failed to create event.',
   createEventTitle: 'Create a New Event',
   confirmCreationTitle: 'Confirm Event Creation',
-  confirmCreationMessage: (eventName, routeCount) =>
-    `Are you sure you want to create "${eventName}" with ${routeCount} route(s)?`,
+  confirmRouteRemovalTitle: 'Confirm Route Removal',
+  confirmRouteRemovalMessage:
+    'Leaving this route will remove it from the event. Are you sure you want to proceed?',
+  confirmCreationMessage: (eventName, routeName) =>
+    `Are you sure you want to create "${eventName}" with route "${routeName}"?`,
   nameLabel: 'Event Name',
   locationLabel: 'Location',
   eventLocationPlaceholder: 'Enter event location',

@@ -6,12 +6,16 @@ import Report from '../components/Report'
 import RouteCard from '../components/RouteCard'
 import Alert from '../components/Alert'
 import ConfirmationDialog from '../components/ConfirmationDialog'
+import { useUser } from '../../context/UserContext'
 import { myTripsStrings } from '../locales/en/MyTripsStrings'
 import {
   fetchMyTrips,
   confirmTripAction,
+  confirmRouteRemoval,
+  leaveRoute,
   getConfirmationTitle,
   getConfirmationBody,
+  shouldHideReportJoin,
 } from '../utils/myTripsUtils'
 
 /**
@@ -28,6 +32,11 @@ export default function MyTrips() {
   const [showReport, setShowReport] = useState(false)
   const [pendingAction, setPendingAction] = useState({ type: null, trip: null })
   const [alert, setAlert] = useState(null)
+  const [confirmLeave, setConfirmLeave] = useState(null)
+  const [isRouteRemovalDialogOpen, setIsRouteRemovalDialogOpen] =
+    useState(false)
+  const [routeIdToRemove, setRouteIdToRemove] = useState(null)
+  const { user } = useUser()
 
   useEffect(() => {
     if (window.google?.maps) {
@@ -49,6 +58,17 @@ export default function MyTrips() {
 
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
 
+  const handleRouteLeaveRequest = route => {
+    const isRouteCreator = user?.id === route.creator_id
+
+    if (isRouteCreator) {
+      setRouteIdToRemove(route.id)
+      setIsRouteRemovalDialogOpen(true)
+    } else {
+      setConfirmLeave(route)
+    }
+  }
+
   const handleConfirm = async () => {
     try {
       await confirmTripAction(
@@ -66,16 +86,51 @@ export default function MyTrips() {
 
   return (
     <div>
-      <div className="*:ml-13.75">
-        <ConfirmationDialog
-          isOpen={pendingAction.type !== null}
-          onConfirm={handleConfirm}
-          onClose={() => setPendingAction({ type: null, trip: null })}
-          title={getConfirmationTitle(pendingAction.type)}
-          variant="primary"
-        >
-          {getConfirmationBody(pendingAction.type)}
-        </ConfirmationDialog>
+      <div className="fixed inset-y-0 right-0 left-13.75 z-50 pointer-events-none">
+        <div className="pointer-events-auto">
+          <ConfirmationDialog
+            variant="danger"
+            isOpen={isRouteRemovalDialogOpen}
+            onClose={() => setIsRouteRemovalDialogOpen(false)}
+            onConfirm={() =>
+              confirmRouteRemoval(
+                routeIdToRemove,
+                setActiveTrips,
+                setAlert,
+                setIsRouteRemovalDialogOpen,
+                setRouteIdToRemove
+              )
+            }
+            title={myTripsStrings.deleteRoute}
+          >
+            {myTripsStrings.creatorLeave}
+          </ConfirmationDialog>
+          <ConfirmationDialog
+            isOpen={confirmLeave !== null}
+            onConfirm={() =>
+              leaveRoute(
+                confirmLeave,
+                setActiveTrips,
+                setCompletedTrips,
+                setConfirmLeave
+              )
+            }
+            onClose={() => setConfirmLeave(null)}
+            title={myTripsStrings.leaveRoute}
+            variant="primary"
+          >
+            {myTripsStrings.confirmationLeave}
+          </ConfirmationDialog>
+          <ConfirmationDialog
+            isOpen={pendingAction.type !== null}
+            onConfirm={handleConfirm}
+            onClose={() => setPendingAction({ type: null, trip: null })}
+            title={getConfirmationTitle(pendingAction.type)}
+            variant="primary"
+          >
+            {getConfirmationBody(pendingAction.type)}
+          </ConfirmationDialog>
+        </div>
       </div>
       {alert && (
         <Alert
@@ -113,14 +168,12 @@ export default function MyTrips() {
                   individualView={true}
                   routeDetailView={true}
                   isCompleted={trip.completed}
-                  onToggleJoin={() => setPendingAction({ type: 'leave', trip })}
+                  onToggleJoin={() => handleRouteLeaveRequest(trip)}
                   onReport={data => {
                     setReportData(data)
                     setShowReport(true)
                   }}
-                  hideReportJoin={
-                    new Date(trip.depart_time).getTime() < Date.now()
-                  }
+                  hideReportJoin={shouldHideReportJoin(trip.depart_time)}
                 />
               </div>
             </RouteCardWrapper>

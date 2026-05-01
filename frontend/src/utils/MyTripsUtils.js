@@ -24,7 +24,7 @@ export async function fetchMyTrips(setActiveTrips, setCompletedTrips) {
  * @param {Function} setAlert Sets the error or success alert
  * @param {Function} setActiveTrips Sets a user's active and to be completed trips
  * @param {Function} setCompletedTrips Sets a user's completed trips
- * @param {Function} setPendingAction - Clears the pending action after it resolves
+ * @param {Function} setPendingAction Clears the pending action after it resolves
  */
 export async function confirmTripAction(
   pendingAction,
@@ -68,6 +68,65 @@ export async function confirmTripAction(
 }
 
 /**
+ * Delete a route the current user created and remove it from local state.
+ *
+ * @param {number} routeIdToRemove The ID of the route to delete
+ * @param {Function} setActiveTrips Sets a user's active and to be completed trips
+ * @param {Function} setAlert Sets the error or success alert
+ * @param {Function} setIsRouteRemovalDialogOpen Opens or closes the route removal confirmation dialog
+ * @param {Function} setRouteIdToRemove Clears the route ID staged for removal
+ */
+export async function confirmRouteRemoval(
+  routeIdToRemove,
+  setActiveTrips,
+  setAlert,
+  setIsRouteRemovalDialogOpen,
+  setRouteIdToRemove
+) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/routes/${routeIdToRemove}/delete`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+      }
+    )
+
+    if (response.ok) {
+      setActiveTrips(prev => prev.filter(trip => trip.id !== routeIdToRemove))
+      setAlert({ type: 'success', message: 'Route deleted.' })
+    }
+  } catch (error) {
+    setAlert({ type: 'error', message: `Delete failed. ${error.message}` })
+  } finally {
+    setIsRouteRemovalDialogOpen(false)
+    setRouteIdToRemove(null)
+  }
+}
+
+/**
+ * Leave a route as a non-creator member and refresh the trips list.
+ *
+ * @param {object} confirmLeave The route the user is leaving
+ * @param {Function} setActiveTrips Sets a user's active and to be completed trips
+ * @param {Function} setCompletedTrips Sets a user's completed trips
+ * @param {Function} setConfirmLeave Clears the route staged for leaving
+ */
+export async function leaveRoute(
+  confirmLeave,
+  setActiveTrips,
+  setCompletedTrips,
+  setConfirmLeave
+) {
+  await fetch(`http://localhost:3000/api/routes/${confirmLeave.id}/leave`, {
+    method: 'DELETE',
+    credentials: 'include',
+  })
+  await fetchMyTrips(setActiveTrips, setCompletedTrips)
+  setConfirmLeave(null)
+}
+
+/**
  * Return the confirmation dialog title for the given action type.
  *
  * @param {string} type An action type: leave, incomplete, or complete
@@ -89,4 +148,15 @@ export function getConfirmationBody(type) {
   if (type === 'leave') return myTripsStrings.confirmationLeave
   if (type === 'incomplete') return myTripsStrings.confirmationDidntGo
   return myTripsStrings.confirmationComplete
+}
+
+/**
+ * Returns true if the report/join controls should be hidden
+ * (i.e. departure time is in the past).
+ *
+ * @param {string|Date} departTime The trip's departure time to compare against the current time
+ * @returns {boolean}
+ */
+export function shouldHideReportJoin(departTime) {
+  return new Date(departTime).getTime() < Date.now()
 }
