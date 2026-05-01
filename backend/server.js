@@ -482,20 +482,15 @@ app.post('/api/requestRoute', async (req, res) => {
 
 /**
  * Inserts a new route into the database
- * @param {*} client
- * @param {*} eventID
- * @param {*} creatorID
- * @param {*} routeData
- * @param {*} joinCreator
+ *
+ * @param {client} pg client from the connection pool
+ * @param {eventID} eventID of the event the route is associated with
+ * @param {creatorID} userID of the route creator
+ * @param {routeData} object containing the route data
+ * @param {isJoined} boolean indicating whether the creator has joined the route
  * @returns
  */
-const insertRoute = async (
-  client,
-  eventID,
-  creatorID,
-  routeData,
-  joinCreator = false
-) => {
+const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
   const {
     title,
     transportationMode,
@@ -544,7 +539,7 @@ const insertRoute = async (
     [eventID, routeID]
   )
 
-  if (joinCreator) {
+  if (isJoined) {
     await client.query(
       'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
       [creatorID, routeID]
@@ -555,7 +550,7 @@ const insertRoute = async (
 }
 
 /**
- * Adds an event to the database
+ * Adds an event and optional route to the database
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -583,7 +578,7 @@ app.post('/api/createEvent', async (req, res) => {
       latitude,
       banner,
       placeID,
-      routes,
+      route,
     } = req.body
 
     await client.query('BEGIN')
@@ -610,10 +605,8 @@ app.post('/api/createEvent', async (req, res) => {
 
     const newEvent = eventResult.rows[0]
 
-    if (routes && routes.length > 0) {
-      for (const route of routes) {
-        await insertRoute(client, newEvent.id, user.id, route)
-      }
+    if (route) {
+      await insertRoute(client, newEvent.id, user.id, route, route.isJoined)
     }
 
     await client.query('COMMIT')
