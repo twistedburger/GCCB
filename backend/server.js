@@ -736,18 +736,17 @@ app.get('/api/eventdetail/:id', async (req, res) => {
       [id]
     )
 
-    let blockedIds = []
-    if (currentUserId) {
-      const blocked = await db.query(
-        `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
-        [currentUserId]
-      )
-      blockedIds = blocked.rows.map(row =>
-        Number(row.blocker_id) === Number(currentUserId)
-          ? row.blocked_user_id
-          : row.blocker_id
-      )
-    }
+    const user = await selectUser(req)
+    const blocked = await db.query(
+      `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
+      [user.id]
+    )
+
+    const blockedIds = blocked.rows.map(row =>
+      Number(row.blocker_id) === Number(user.id)
+        ? row.blocked_user_id
+        : row.blocker_id
+    )
 
     const routesResult = await db.query(
       `SELECT r.*,
