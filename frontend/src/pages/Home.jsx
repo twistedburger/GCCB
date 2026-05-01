@@ -149,7 +149,11 @@ function Home() {
 
       <div>
         <MainMap
-          key={userLocation ? 'location-found' : 'loading-location'}
+          key={
+            userLocation
+              ? `${userLocation.lat}-${userLocation.lng}`
+              : 'loading-location'
+          }
           defaultCenter={userLocation || DEFAULT_COORDINATES}
           route={selectedRoute}
           defaultPin={!selectedRoute && !!userLocation}
