@@ -819,7 +819,7 @@ app.get('/api/eventdetail/:id', async (req, res) => {
         ) as "isJoined"
       FROM route r
       LEFT JOIN event_route er ON er.route_id = r.id
-      WHERE er.event_id = $1
+      WHERE er.event_id = $1 AND r.reported < 3 AND r.depart_time > NOW()
       ${
         blockedIds.length > 0
           ? `AND NOT EXISTS (
@@ -1378,7 +1378,7 @@ app.get('/api/reports', async (req, res) => {
  *
  * @returns {[Object]} an array of trips a user has joined (via user_route junction table), or an empty array
  */
-app.get('/api/my-trips', async (req, res) => {
+app.get('/api/myTrips', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -1388,15 +1388,11 @@ app.get('/api/my-trips', async (req, res) => {
     if (!user)
       return res.status(404).json({ error: serverStrings.errors.noUser })
 
-    // "completed" column in route table temporarily overridden by computing "completed" based on event's event_time
-    // while we decide how to compute if a route has been completed (button vs. automatic).
-    // TODO: decide on permanent approach: DB trigger or node-cron job to update the completed
-    // column automatically, or dedicated endpoint if the user needs to manually mark a trip complete.
     const query = `
       SELECT r.*, 
              e.event_time,
              (SELECT COUNT(*) FROM user_route ur2 WHERE ur2.route_id = r.id) as people_going,
-             (e.event_time < NOW()) AS completed
+             ur.completed
       FROM route r
       INNER JOIN user_route ur ON ur.route_id = r.id
       LEFT JOIN event_route er ON r.id = er.route_id
@@ -1404,7 +1400,6 @@ app.get('/api/my-trips', async (req, res) => {
       WHERE ur.user_id = $1
       ORDER BY r.depart_time DESC
     `
-
     const results = await db.query(query, [user.id])
     res.status(200).json(results.rows)
   } catch (error) {
@@ -1759,6 +1754,36 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
     return res.status(500).send(serverStrings.errors.generic)
   } finally {
     client.release()
+  }
+})
+
+/**
+ * Sets completed column to true for a user_route row.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} {success: true}
+ */
+app.post('/api/completeRoute', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
+  const { routeID } = req.body
+
+  try {
+    const user = await selectUser(req)
+    await db.query(
+      'UPDATE user_route SET completed = true WHERE user_id = $1 AND route_id = $2',
+      [user.id, routeID]
+    )
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: serverStrings.errors.routeCompletionFailed })
   }
 })
 
