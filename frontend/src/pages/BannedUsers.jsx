@@ -16,32 +16,33 @@ function BannedUsers() {
   const [openModal, setOpenModal] = useState(false)
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
-  const strings =
-    authorization === 'moderator'
-      ? bannedUsersStrings.moderator
-      : bannedUsersStrings.user
+  const isModerator = authorization === 'moderator'
+  const strings = isModerator
+    ? bannedUsersStrings.moderator
+    : bannedUsersStrings.user
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/bannedUsers`, {
-        credentials: 'include',
-      })
+      const endpoint = isModerator
+        ? 'http://localhost:3000/api/bannedUsers'
+        : 'http://localhost:3000/api/blockedUsers'
+      const response = await fetch(endpoint, { credentials: 'include' })
       const data = await response.json()
       setUsers(data)
     } catch (error) {
       console.error(strings.failedToFetch, error)
     }
-  }, [strings.failedToFetch])
+  }, [isModerator, strings.failedToFetch])
 
-  const unbanUser = async userId => {
+  const removeUser = async userId => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/unbanUser/${userId}`,
-        {
-          method: 'POST',
-          credentials: 'include',
-        }
-      )
+      const endpoint = isModerator
+        ? `http://localhost:3000/api/unbanUser/${userId}`
+        : `http://localhost:3000/api/unblockUser/${userId}`
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'include',
+      })
       if (response.ok) {
         fetchUsers()
         setAlert({
@@ -77,7 +78,7 @@ function BannedUsers() {
           onClose={() => setOpenModal(false)}
           title={strings.confirmTitle}
           onConfirm={() => {
-            unbanUser(selectedUser.id)
+            removeUser(selectedUser.id)
             setOpenModal(false)
           }}
           variant={'danger'}
