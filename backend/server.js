@@ -513,7 +513,76 @@ app.post('/api/requestRoute', async (req, res) => {
 })
 
 /**
- * Adds an event to the database
+ * Inserts a new route into the database
+ *
+ * @param {client} pg client from the connection pool
+ * @param {eventID} eventID of the event the route is associated with
+ * @param {creatorID} userID of the route creator
+ * @param {routeData} object containing the route data
+ * @param {isJoined} boolean indicating whether the creator has joined the route
+ * @returns
+ */
+const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
+  const {
+    title,
+    transportationMode,
+    origin,
+    originLat,
+    originLng,
+    destination,
+    departTime,
+    maxPpl,
+    distance,
+    path,
+    completed,
+    description,
+  } = routeData
+
+  const routeResult = await client.query(
+    `INSERT INTO route (
+      title, creator_id, transportation_mode, origin, destination,
+      depart_time, max_ppl, distance, path, completed,
+      description, created_at, origin_geog
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
+    RETURNING id`,
+    [
+      title,
+      creatorID,
+      transportationMode,
+      origin,
+      destination,
+      departTime,
+      maxPpl,
+      distance,
+      path,
+      completed,
+      description,
+      new Date(),
+      originLng,
+      originLat,
+    ]
+  )
+
+  const routeID = routeResult.rows[0].id
+
+  await client.query(
+    'INSERT INTO event_route (event_id, route_id) VALUES ($1, $2)',
+    [eventID, routeID]
+  )
+
+  if (isJoined) {
+    await client.query(
+      'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
+      [creatorID, routeID]
+    )
+  }
+
+  return routeID
+}
+
+/**
+ * Adds an event and optional route to the database
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -525,9 +594,11 @@ app.post('/api/createEvent', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
+  const client = await pool.connect()
+
   try {
     const user = await selectUser(req)
-    const routeVerified = user.role === 'moderator'
+    const eventVerified = user.role === 'moderator'
 
     const {
       title,
@@ -539,16 +610,21 @@ app.post('/api/createEvent', async (req, res) => {
       latitude,
       banner,
       placeID,
+      route,
     } = req.body
 
-    const result = await db.query(
-      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11, $12) RETURNING *',
+    await client.query('BEGIN')
+
+    const eventResult = await client.query(
+      `INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url, place_id) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11, $12) 
+       RETURNING *`,
       [
         title,
         user.id,
         eventTime,
         location,
-        routeVerified,
+        eventVerified,
         needApproval,
         description,
         new Date(),
@@ -559,10 +635,20 @@ app.post('/api/createEvent', async (req, res) => {
       ]
     )
 
-    res.status(201).json(result.rows[0])
+    const newEvent = eventResult.rows[0]
+
+    if (route) {
+      await insertRoute(client, newEvent.id, user.id, route, route.isJoined)
+    }
+
+    await client.query('COMMIT')
+    res.status(201).json(newEvent)
   } catch (error) {
+    await client.query('ROLLBACK')
     console.error('Database Error:', error)
     res.status(500).json({ error: serverStrings.errors.eventCreationFailed })
+  } finally {
+    client.release()
   }
 })
 
@@ -579,76 +665,26 @@ app.post('/api/createRoute', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const {
-    eventID,
-    title,
-    transportationMode,
-    origin,
-    originLat,
-    originLng,
-    destination,
-    departTime,
-    maxPpl,
-    distance,
-    path,
-    completed,
-    description,
-    isJoined,
-  } = req.body
-
+  const { eventID, isJoined, ...routeData } = req.body
   const client = await pool.connect()
 
   try {
     const user = await selectUser(req)
     await client.query('BEGIN')
 
-    const routeQuery = `
-      INSERT INTO route (
-        title, creator_id, transportation_mode, origin, destination, 
-        depart_time, max_ppl, distance, path, completed, 
-        description, created_at, origin_geog
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
-      RETURNING id;
-    `
-
-    const routeResult = await client.query(routeQuery, [
-      title,
+    const routeID = await insertRoute(
+      client,
+      eventID,
       user.id,
-      transportationMode,
-      origin,
-      destination,
-      departTime,
-      maxPpl,
-      distance,
-      path,
-      completed,
-      description,
-      new Date(),
-      originLng,
-      originLat,
-    ])
-
-    const routeID = routeResult.rows[0].id
-
-    const junctionQuery = `
-      INSERT INTO event_route (event_id, route_id)
-      VALUES ($1, $2);
-    `
-    await client.query(junctionQuery, [eventID, routeID])
-
-    if (isJoined) {
-      await client.query(
-        'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-        [user.id, routeID]
-      )
-    }
+      routeData,
+      isJoined
+    )
 
     await client.query('COMMIT')
     res.status(201).json({ success: true, routeID })
   } catch (error) {
-    console.error('Database Error Detail:', error)
     await client.query('ROLLBACK')
+    console.error('Database Error Detail:', error)
     res.status(500).json({ error: serverStrings.errors.routeCreationFailed })
   } finally {
     client.release()
