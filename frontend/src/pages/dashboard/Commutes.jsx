@@ -174,13 +174,13 @@ function Commutes() {
   /**
    * Formats a departure time value into a readable string.
    *
-   * @param {string} value The departure time as a date string or object.
+   * @param {string} dateValue The departure time as a date string or object.
    * @returns {string} A formatted date string.
    */
-  function formatDepartTime(value) {
-    if (!value) return 'No departure time'
+  function formatDepartTime(dateValue) {
+    if (!dateValue) return 'No departure time'
 
-    const date = new Date(value)
+    const date = new Date(dateValue)
 
     if (Number.isNaN(date.getTime())) {
       return 'Invalid date'
@@ -191,11 +191,11 @@ function Commutes() {
 
   /**
    * Formats a route mode value into a string.
-   * @param {string} value The raw route mode value
+   * @param {string} modeValue The raw route mode value
    * @returns {string} A string representing the route mode.
    */
-  function formatRouteMode(value) {
-    const normalized = normalizeMode(value)
+  function formatRouteMode(modeValue) {
+    const normalized = normalizeMode(modeValue)
 
     switch (normalized) {
       case 'walk':
@@ -245,9 +245,9 @@ function Commutes() {
                 {commuteStrings.blocks.filters.dateRangeLabel}
               </label>
               <Select
-                options={['all', '7d', '30d'].map(r => ({
-                  value: r,
-                  label: r,
+                options={['all', '7d', '30d'].map(rangeOption => ({
+                  value: rangeOption,
+                  label: rangeOption,
                 }))}
                 value={{ value: dateRange, label: dateRange }}
                 onChange={e => setDateRange(e.value)}
@@ -267,20 +267,20 @@ function Commutes() {
                   'rail',
                   'car',
                   'other',
-                ].map(r => ({
-                  value: r,
+                ].map(modeOption => ({
+                  value: modeOption,
                   label:
-                    r === 'all'
+                    modeOption === 'all'
                       ? 'All'
-                      : r === 'walk'
+                      : modeOption === 'walk'
                         ? 'Walk'
-                        : r === 'bicycle'
+                        : modeOption === 'bicycle'
                           ? 'Bicycle'
-                          : r === 'bus'
+                          : modeOption === 'bus'
                             ? 'Bus'
-                            : r === 'rail'
+                            : modeOption === 'rail'
                               ? 'Rail'
-                              : r === 'car'
+                              : modeOption === 'car'
                                 ? 'Car / Carpool'
                                 : 'Other',
                 }))}

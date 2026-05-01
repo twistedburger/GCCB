@@ -158,8 +158,8 @@ function Activity() {
         })
         if (!res.ok) throw new Error('Failed to fetch activity summary')
         setData(await res.json())
-      } catch (err) {
-        console.error('Failed to load activity summary', err)
+      } catch (fetchError) {
+        console.error('Failed to load activity summary', fetchError)
         setError('Failed to load activity data.')
       } finally {
         setLoading(false)
@@ -188,8 +188,8 @@ function Activity() {
           monthly: monthly.data ?? [],
           quarterly: quarterly.data ?? [],
         })
-      } catch (err) {
-        console.error('Failed to load time-series data', err)
+      } catch (fetchError) {
+        console.error('Failed to load time-series data', fetchError)
       } finally {
         setTimeseriesLoading(false)
       }
@@ -353,19 +353,19 @@ function Activity() {
           description={activityStrings.blocks.co2OverTime.description}
         >
           <div className="mb-4 flex gap-2">
-            {GRANULARITIES.map(g => (
+            {GRANULARITIES.map(granularityType => (
               <button
-                key={g}
+                key={granularityType}
                 type="button"
-                onClick={() => setGranularity(g)}
+                onClick={() => setGranularity(granularityType)}
                 className={`rounded-xl px-3 py-1.5 text-xs font-medium capitalize transition-colors
                   ${
-                    granularity === g
+                    granularity === granularityType
                       ? 'bg-blue-primary text-white'
                       : 'border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50'
                   }`}
               >
-                {g}
+                {granularityType}
               </button>
             ))}
           </div>
@@ -393,7 +393,7 @@ function Activity() {
                   <YAxis
                     tick={AXIS_TICK_STYLE}
                     width={60}
-                    tickFormatter={v => `${v} kg`}
+                    tickFormatter={value => `${value} kg`}
                   />
                   <Tooltip content={<TimeseriesTooltip />} />
                   <Legend />

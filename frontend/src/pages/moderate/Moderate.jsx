@@ -23,8 +23,8 @@ function Moderate() {
 
   const fetchReportQueue = async () => {
     const response = await fetch(`http://localhost:3000/api/reports`)
-    const data = await response.json()
-    setReportQueue(data)
+    const reports = await response.json()
+    setReportQueue(reports)
   }
 
   // Disable verification for now.

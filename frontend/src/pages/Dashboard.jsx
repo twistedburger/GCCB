@@ -114,8 +114,8 @@ function Dashboard() {
           )
         }
 
-        const data = await response.json()
-        setSummary(data)
+        const analyticsSummary = await response.json()
+        setSummary(analyticsSummary)
       } catch (error) {
         console.error('Failed to load analytics summary', error)
         setSummaryError('Failed to load analytics summary.')
@@ -128,7 +128,7 @@ function Dashboard() {
   }, [])
 
   const handleSubmit = async formData => {
-    const result = await fetch('http://localhost:3000/updateProfile', {
+    const updateResponse = await fetch('http://localhost:3000/updateProfile', {
       method: 'PUT',
       credentials: 'include',
       headers: {
@@ -136,8 +136,8 @@ function Dashboard() {
       },
       body: JSON.stringify(formData),
     })
-    const response = await result.json()
-    setUser(response.user)
+    const updatedUserData = await updateResponse.json()
+    setUser(updatedUserData.user)
     setIsEditing(false)
   }
 

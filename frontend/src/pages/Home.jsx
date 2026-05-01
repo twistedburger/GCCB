@@ -90,9 +90,9 @@ function Home() {
       isArriving
     )
     fetch(url, { credentials: 'include' })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error: ${res.status}`)
-        return res.json()
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
+        return response.json()
       })
       .then(data => {
         setCardsToDisplay(data)
@@ -177,12 +177,12 @@ function Home() {
         >
           <Drawer.Portal>
             <Drawer.Content
-              onOpenAutoFocus={e => e.preventDefault()}
-              onFocusOutside={e => e.preventDefault()}
-              onFocus={e => {
-                if (e.target === e.currentTarget) {
-                  e.preventDefault()
-                  e.stopPropagation()
+              onOpenAutoFocus={event => event.preventDefault()}
+              onFocusOutside={event => event.preventDefault()}
+              onFocus={event => {
+                if (event.target === event.currentTarget) {
+                  event.preventDefault()
+                  event.stopPropagation()
                 }
               }}
               style={{

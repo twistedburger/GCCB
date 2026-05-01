@@ -26,8 +26,8 @@ function BannedUsers() {
       const response = await fetch(`http://localhost:3000/api/bannedUsers`, {
         credentials: 'include',
       })
-      const data = await response.json()
-      setUsers(data)
+      const bannedUsers = await response.json()
+      setUsers(bannedUsers)
     } catch (error) {
       console.error(strings.failedToFetch, error)
     }
