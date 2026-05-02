@@ -48,7 +48,10 @@ export default function RouteCardWrapper({
   const hasRoute = pathCoordinates.length > 0
 
   return (
-    <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
+    <div
+      data-testid={`route-card-wrapper-${route.id}`}
+      className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden"
+    >
       {children}
       {new Date(route.depart_time).getTime() < Date.now() &&
         !route.completed && (
@@ -113,6 +116,7 @@ export default function RouteCardWrapper({
           </GenericButton>
 
           <div
+            data-testid={`mini-map-${route.id}`}
             className={`transition-all duration-300 ease-in-out overflow-hidden ${
               isExpanded ? 'max-h-48' : 'max-h-0'
             }`}

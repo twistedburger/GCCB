@@ -104,7 +104,10 @@ export default function RouteCard({
   }
 
   return (
-    <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
+    <div
+      data-testid={`route-card-${route.id}`}
+      className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden"
+    >
       <div
         className={`flex flex-row items-center p-4 justify-between ${individualView ? 'py-2' : 'py-4'} ${onSelect ? 'cursor-pointer' : ''}`}
         onClick={() => {
