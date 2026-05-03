@@ -6,6 +6,12 @@ const BLUE = '#4285F4'
 const YELLOW = '#FBBC04'
 const RED = '#EA4335'
 
+/**
+ * Creates a map pin to add to a route
+ * @param {String} color of the pin
+ * @param {String} label label on the pin
+ * @returns {Object} pin object for google maps
+ */
 const createPin = (color, label) => {
   const pin = new google.maps.marker.PinElement({
     background: color,
@@ -17,6 +23,13 @@ const createPin = (color, label) => {
   return pin
 }
 
+/**
+ * Draw a route to the map.
+ *
+ * @param {Object} map google map object to draw the route on
+ * @param {Object} route route from database
+ * @returns {Function} render cleanup function
+ */
 export const DrawRoute = (map, route) => {
   if (!map || !route) {
     return
@@ -39,6 +52,14 @@ export const DrawRoute = (map, route) => {
   }
 }
 
+/**
+ * Draw a transit route to the map.
+ *
+ * @param {Object} map google map object to draw the route on
+ * @param {Array<Object>} routeSteps list of route steps from route
+ * @param {Object} decodedPath decoded route path
+ * @returns {Function} render cleanup function
+ */
 const DrawTransitRoute = (map, routeSteps, decodedPath) => {
   const routeLines = []
   const legColors = {
@@ -105,6 +126,13 @@ const DrawTransitRoute = (map, routeSteps, decodedPath) => {
   }
 }
 
+/**
+ * Draw a non-transit route to the map.
+ *
+ * @param {Object} map google map object to draw the route on
+ * @param {Object} decodedPath decoded route path
+ * @returns {Function} render cleanup function
+ */
 const DrawBasicRoute = (map, decodedPath) => {
   const mapPins = []
   mapPins.push(
