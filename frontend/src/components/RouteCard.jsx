@@ -9,7 +9,7 @@ import {
   DateRangeRounded,
 } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
-import { routeCardStrings } from '../locales/en/ComponentStrings/RouteCardStrings.js'
+import { routeCardStrings as routeStrings } from '../locales/en/ComponentStrings/RouteCardStrings.js'
 
 // TODO: standardize transportation mode naming
 
@@ -34,6 +34,7 @@ export default function RouteCard({
   onToggleJoin,
   onReport,
 }) {
+  const routeCardStrings = routeStrings.routeCard
   const dateObj = new Date(route.depart_time)
   const [peopleGoing, setPeopleGoing] = useState(0)
   const [isJoined, setIsJoined] = useState(false)
@@ -103,7 +104,10 @@ export default function RouteCard({
   }
 
   return (
-    <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
+    <div
+      data-testid={`route-card-${route.id}`}
+      className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden"
+    >
       <div
         className={`flex flex-row items-center p-4 justify-between ${individualView ? 'py-2' : 'py-4'} ${onSelect ? 'cursor-pointer' : ''}`}
         onClick={() => {
@@ -193,7 +197,7 @@ export default function RouteCard({
                   }
                 }}
               >
-                <span>{routeCardStrings.report}</span>
+                <span>{routeStrings.common.report}</span>
               </GenericButton>
             )}
             {!isCompleted &&
