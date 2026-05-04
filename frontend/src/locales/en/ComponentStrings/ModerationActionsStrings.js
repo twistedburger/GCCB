@@ -1,4 +1,5 @@
 export const moderationStrings = {
+  pageTitle: 'Pending Reports',
   reportReason: 'Report Reason:',
   details: 'Report Details:',
   confirmApprove: report_target =>
@@ -26,6 +27,7 @@ export const moderationStrings = {
   submitEvent: 'Event verified successfully.',
   submitError: 'Something went wrong. Please try again.',
   approve: 'Approve',
+  reject: 'Reject',
   selectReason: 'Select a reason...',
   reasonInvalid: 'Please provide a reason for the invalid report...',
   explanationInvalidRequired: 'Explanation for invalid report required.',
