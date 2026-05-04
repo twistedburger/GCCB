@@ -85,8 +85,9 @@ CREATE TABLE IF NOT EXISTS "event_route" (
 
 -- 7. Junction: user_route
 CREATE TABLE IF NOT EXISTS "user_route" (
-    user_id  INT NOT NULL,
-    route_id INT NOT NULL,
+    user_id   INT NOT NULL,
+    route_id  INT NOT NULL,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (user_id, route_id),
     CONSTRAINT fk_ur_user  FOREIGN KEY (user_id)  REFERENCES "user"(id),
     CONSTRAINT fk_ur_route FOREIGN KEY (route_id) REFERENCES "route"(id)
@@ -130,7 +131,8 @@ CREATE TABLE IF NOT EXISTS "report" (
     rejection_reason VARCHAR(50),
     rejection_detail VARCHAR(100),
     report_target   VARCHAR(10),
-    target_id       INTEGER
+    target_id       INTEGER,
+    CONSTRAINT unique_report UNIQUE (reporter_id, report_target, target_id)
 );
 
 -- 12. Event verification
@@ -144,6 +146,15 @@ CREATE TABLE IF NOT EXISTS "event_verification" (
     verified_at      TIMESTAMP DEFAULT NOW(),
     CONSTRAINT fk_ev_event       FOREIGN KEY (event_id)    REFERENCES "event"(id),
     CONSTRAINT fk_ev_verified_by FOREIGN KEY (verified_by) REFERENCES "user"(id)
+);
+
+-- 13. Blocked users
+CREATE TABLE IF NOT EXISTS "blocked_user" (
+    blocker_id  INT NOT NULL,
+    blocked_user_id INT NOT NULL,
+    PRIMARY KEY (blocker_id, blocked_user_id),
+    CONSTRAINT fk_bu_blocker         FOREIGN KEY (blocker_id)         REFERENCES "user"(id),
+    CONSTRAINT fk_bu_blocked_user    FOREIGN KEY (blocked_user_id)    REFERENCES "user"(id)
 );
 
 CREATE INDEX IF NOT EXISTS event_geog_idx ON "event" USING gist(location_geog);
@@ -168,13 +179,14 @@ CREATE ROLE main_user WITH LOGIN PASSWORD '';
 
 \set app_role main_user
 
-GRANT SELECT, INSERT, UPDATE ON TABLE "user"             TO :app_role;
-GRANT SELECT, INSERT, UPDATE ON TABLE event              TO :app_role;
-GRANT SELECT, INSERT, UPDATE ON TABLE route              TO :app_role;
-GRANT SELECT, INSERT, DELETE ON TABLE user_route         TO :app_role;
-GRANT INSERT                 ON TABLE event_route        TO :app_role;
-GRANT SELECT, INSERT, UPDATE ON TABLE report             TO :app_role;
-GRANT SELECT, UPDATE         ON TABLE event_verification TO :app_role;
-GRANT SELECT                 ON TABLE sso                TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE "user"             TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE event              TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE route              TO :app_role;
+GRANT SELECT, INSERT, DELETE, UPDATE ON TABLE user_route         TO :app_role;
+GRANT INSERT                         ON TABLE event_route        TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE report             TO :app_role;
+GRANT SELECT, UPDATE                 ON TABLE event_verification TO :app_role;
+GRANT SELECT                         ON TABLE sso                TO :app_role;
+GRANT SELECT, INSERT, DELETE ON TABLE blocked_user       TO :app_role;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO :app_role;

@@ -10,6 +10,9 @@ import {
   IconButton,
   Divider,
   ClickAwayListener,
+  Avatar,
+  Typography,
+  Box,
 } from '@mui/material'
 import {
   Menu as MenuIcon,
@@ -18,6 +21,7 @@ import {
   CommuteOutlined,
   PersonOutlineOutlined,
   AdminPanelSettingsOutlined,
+  PersonOffOutlined,
 } from '@mui/icons-material'
 import { authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
@@ -54,6 +58,12 @@ const mainNavigation = [
     label: sidebarStrings.moderate,
     path: '/moderate',
   },
+  {
+    id: 'Banned Users',
+    icon: <PersonOffOutlined />,
+    label: sidebarStrings.bannedUsers,
+    path: '/bannedusers',
+  },
 ]
 
 /**
@@ -61,16 +71,22 @@ const mainNavigation = [
  *
  * @param {Object} props
  * @param {string} props.userRole - The role of the current user.
+ * @param {Object} props.userData - The data of the current user.
  * @returns {JSX.Element}
  */
 
-export default function Sidebar({ userRole }) {
+export default function Sidebar({ userData }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
 
-  const navItems = mainNavigation.filter(
-    item => item.id !== 'Moderate' || userRole == authLevel.MODERATOR.label
-  )
+  const userRole = userData?.role || 'USER'
+
+  const navItems = mainNavigation.filter(item => {
+    const isModeratorItem = item.id === 'Moderate' || item.id === 'Banned Users'
+    const isUserModerator = userRole === authLevel.MODERATOR.label
+
+    return !isModeratorItem || isUserModerator
+  })
 
   const handleClose = () => {
     if (open) setOpen(false)
@@ -104,6 +120,58 @@ export default function Sidebar({ userRole }) {
               {open ? <ChevronLeftIcon /> : <MenuIcon />}
             </IconButton>
           </div>
+
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: open ? 'row' : 'column',
+              alignItems: 'center',
+              px: open ? 2 : 0,
+              pb: 2,
+              transition: 'all 0.2s',
+            }}
+          >
+            <Avatar
+              src={userData?.profile_pic}
+              alt={userData?.name}
+              sx={{
+                width: open ? 45 : 32,
+                height: open ? 45 : 32,
+                transition: 'all 0.2s',
+                border: '2px solid #E5E7EB',
+              }}
+            />
+            {open && (
+              <Box sx={{ ml: 1.5, overflow: 'hidden' }}>
+                <Typography
+                  variant="subtitle2"
+                  noWrap
+                  sx={{ fontWeight: 'bold', color: '#111827' }}
+                >
+                  {userData?.name}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  noWrap
+                  component="div"
+                  sx={{ color: '#6B7280', lineHeight: 1 }}
+                >
+                  @{userData?.nickname}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  component="div"
+                  sx={{
+                    color: 'var(--color-blue-primary)',
+                    fontWeight: 600,
+                    mt: 0.5,
+                  }}
+                >
+                  {userRole}
+                </Typography>
+              </Box>
+            )}
+          </Box>
 
           <Divider />
 
@@ -166,4 +234,4 @@ export default function Sidebar({ userRole }) {
   )
 }
 
-Sidebar.propTypes = { userRole: PropTypes.string }
+Sidebar.propTypes = { userData: PropTypes.object }

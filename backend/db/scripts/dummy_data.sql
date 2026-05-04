@@ -4,6 +4,7 @@ DECLARE
   userTwo      INT := 2;  -- jamie@gccb.com   (user)
   adminUser    INT := 3;  -- aaron@gccb.com   (admin)
   modUser      INT := 4;  -- claudia@gccb.com (moderator)
+  blockedUser  INT := 5;  -- blocked@gccb.com (test user to block)
   firstRouteId INT;
   firstEventId INT := 1;
 BEGIN
@@ -13,7 +14,8 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   ('dylan@gccb.com', 'user', 'Dylan Reimer', 'dartFrog', true),
   ('jamie@gccb.com', 'user', 'Jamie Kim', 'justJam', true),
   ('aaron@gccb.com', 'admin', 'Aaron Tsang', 'masked_man', true),
-  ('claudia@gccb.com', 'moderator', 'Claudia Le', 'cloudia', true);
+  ('claudia@gccb.com', 'moderator', 'Claudia Le', 'cloudia', true),
+  ('blocked@gccb.com', 'user', 'Blocked User', 'block to test!', true);
 
   INSERT INTO "vehicle" (driver_id, insurance, license, model, make, number_seats, e_v) VALUES
   (adminUser, true,  'DRV-789',  'Civic',   'Honda', 4, false),
@@ -180,5 +182,12 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   (firstEventId + 2, firstRouteId + 7),
   (firstEventId + 2, firstRouteId + 8),
   (firstEventId + 2, firstRouteId + 9);
+
+-- Blocked user 
+INSERT INTO "blocked_user" (blocker_id, blocked_user_id) VALUES
+  (userOne, blockedUser),
+  (userTwo, blockedUser),
+  (adminUser, blockedUser),
+  (modUser, blockedUser);
   
 END $$;

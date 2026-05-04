@@ -25,8 +25,8 @@ function Moderate() {
     const response = await fetch(
       `${import.meta.env.VITE_API_BASE_URL}/api/reports`
     )
-    const data = await response.json()
-    setReportQueue(data)
+    const reports = await response.json()
+    setReportQueue(reports)
   }
 
   // Disable verification for now.

@@ -15,10 +15,12 @@ const serverStrings = {
     joinStatusFailed: 'Failed to check join status',
     joinFailed: 'Failed to join route',
     leaveFailed: 'Failed to leave route',
+    duplicateReport: 'You have already reported this content.',
     reportFailed: 'Failed to submit report',
     notAuthenticated: 'Not authenticated',
     analyticsUserOnly: 'Only regular users can access commute history.',
     routeDeletionFailed: 'Failed to delete route',
+    routeCompletionFailed: 'Failed to mark route as complete',
   },
 }
 

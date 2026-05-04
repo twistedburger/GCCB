@@ -56,20 +56,7 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
               e.stopPropagation()
             }
           }}
-          style={{
-            zIndex: 50,
-            marginLeft: '55px',
-            width: 'calc(100% - 55px)',
-            borderRadius: '24px 24px 0 0',
-            height: '96%',
-            position: 'fixed',
-            bottom: 0,
-            background: '#F9F9F9',
-            display: 'flex',
-            flexDirection: 'column',
-            overflowY: 'hidden',
-            pointerEvents: 'auto',
-          }}
+          className="z-50 ml-13.75 w-[calc(100%-55px)] rounded-t-3xl h-[96%] fixed bottom-0 bg-drawer-background flex flex-col overflow-hidden pointer-events-auto"
         >
           <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
           <Drawer.Description className="sr-only">
@@ -146,9 +133,9 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
             <Drawer.Portal>
               <Drawer.Overlay className="fixed inset-0 z-60 bg-black/40" />
               <Drawer.Content
-                onOpenAutoFocus={e => {
+                onOpenAutoFocus={event => {
                   const focusable =
-                    e.currentTarget.querySelector('button, input')
+                    event.currentTarget.querySelector('button, input')
                   if (focusable) focusable.focus()
                 }}
                 onPointerDownOutside={() => setShowReport(false)}

@@ -7,6 +7,16 @@ import RouteCard from '../components/RouteCard'
 import Alert from '../components/Alert'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 import { useUser } from '../../context/UserContext'
+import { myTripsStrings } from '../locales/en/MyTripsStrings'
+import {
+  fetchMyTrips,
+  confirmTripAction,
+  confirmRouteRemoval,
+  leaveRoute,
+  getConfirmationTitle,
+  getConfirmationBody,
+  shouldHideReportJoin,
+} from '../utils/myTripsUtils'
 
 /**
  * Display the MyTrips page
@@ -18,48 +28,15 @@ export default function MyTrips() {
   const [completedTrips, setCompletedTrips] = useState([])
   const [viewingActive, setViewingActive] = useState(true)
   const [mapsReady, setMapsReady] = useState(!!window.google?.maps)
-  const [confirmLeave, setConfirmLeave] = useState(null)
   const [reportData, setReportData] = useState(null)
   const [showReport, setShowReport] = useState(false)
+  const [pendingAction, setPendingAction] = useState({ type: null, trip: null })
   const [alert, setAlert] = useState(null)
-  const baseURL = import.meta.env.VITE_API_BASE_URL
-  const { user } = useUser()
+  const [confirmLeave, setConfirmLeave] = useState(null)
   const [isRouteRemovalDialogOpen, setIsRouteRemovalDialogOpen] =
     useState(false)
   const [routeIdToRemove, setRouteIdToRemove] = useState(null)
-
-  const handleRouteLeaveRequest = route => {
-    const isRouteCreator = user?.id === route.creator_id
-
-    if (isRouteCreator) {
-      setRouteIdToRemove(route.id)
-      setIsRouteRemovalDialogOpen(true)
-    } else {
-      setConfirmLeave(route)
-    }
-  }
-
-  const handleConfirmRouteRemoval = async () => {
-    try {
-      const response = await fetch(
-        `${baseURL}/api/routes/${routeIdToRemove}/delete`,
-        {
-          method: 'DELETE',
-          credentials: 'include',
-        }
-      )
-
-      if (response.ok) {
-        setActiveTrips(prev => prev.filter(trip => trip.id !== routeIdToRemove))
-        setAlert({ type: 'success', text: 'Route deleted.' })
-      }
-    } catch (error) {
-      setAlert({ type: 'error', text: `Delete failed. ${error.message}` })
-    } finally {
-      setIsRouteRemovalDialogOpen(false)
-      setRouteIdToRemove(null)
-    }
-  }
+  const { user } = useUser()
 
   useEffect(() => {
     if (window.google?.maps) {
@@ -75,66 +52,89 @@ export default function MyTrips() {
     return () => clearInterval(interval)
   }, [])
 
-  const fetchMyTrips = async () => {
-    try {
-      const response = await fetch(`${baseURL}/api/my-trips`, {
-        credentials: 'include',
-      })
-      const data = await response.json()
-      if (!Array.isArray(data)) return
-
-      setActiveTrips(data.filter(trip => !trip.completed))
-      setCompletedTrips(data.filter(trip => trip.completed))
-    } catch (err) {
-      console.error('Fetch error:', err)
-    }
-  }
+  useEffect(() => {
+    fetchMyTrips(setActiveTrips, setCompletedTrips).catch(console.error)
+  }, [])
 
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
 
-  const handleLeave = async () => {
-    await fetch(`${baseURL}/api/routes/${confirmLeave.id}/leave`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
-    await fetchMyTrips()
-    setConfirmLeave(null)
+  const handleRouteLeaveRequest = route => {
+    const isRouteCreator = user?.id === route.creator_id
+
+    if (isRouteCreator) {
+      setRouteIdToRemove(route.id)
+      setIsRouteRemovalDialogOpen(true)
+    } else {
+      setConfirmLeave(route)
+    }
   }
 
-  useEffect(() => {
-    fetchMyTrips()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const handleConfirm = async () => {
+    try {
+      await confirmTripAction(
+        pendingAction,
+        setAlert,
+        setActiveTrips,
+        setCompletedTrips,
+        setPendingAction
+      )
+    } catch (error) {
+      console.error(error)
+      setAlert({ message: myTripsStrings.actionError, type: 'error' })
+    }
+  }
 
   return (
     <div>
-      <div className="fixed inset-y-0 right-0 left-[55px] z-50 pointer-events-none">
+      <div className="fixed inset-y-0 right-0 left-13.75 z-50 pointer-events-none">
         <div className="pointer-events-auto">
           <ConfirmationDialog
             variant="danger"
             isOpen={isRouteRemovalDialogOpen}
             onClose={() => setIsRouteRemovalDialogOpen(false)}
-            onConfirm={handleConfirmRouteRemoval}
-            title="Delete Route?"
+            onConfirm={() =>
+              confirmRouteRemoval(
+                routeIdToRemove,
+                setActiveTrips,
+                setAlert,
+                setIsRouteRemovalDialogOpen,
+                setRouteIdToRemove
+              )
+            }
+            title={myTripsStrings.deleteRoute}
           >
-            As the creator of this route, leaving will delete it for everyone
-            currently joined. Are you sure?
+            {myTripsStrings.creatorLeave}
           </ConfirmationDialog>
           <ConfirmationDialog
             isOpen={confirmLeave !== null}
-            onConfirm={handleLeave}
+            onConfirm={() =>
+              leaveRoute(
+                confirmLeave,
+                setActiveTrips,
+                setCompletedTrips,
+                setConfirmLeave
+              )
+            }
             onClose={() => setConfirmLeave(null)}
-            title="Leave Route"
-            confirmText={'OK'}
-            cancelText={'Cancel'}
+            title={myTripsStrings.leaveRoute}
             variant="primary"
           >
-            Are you sure you want to leave this route?
+            {myTripsStrings.confirmationLeave}
+          </ConfirmationDialog>
+          <ConfirmationDialog
+            isOpen={pendingAction.type !== null}
+            onConfirm={handleConfirm}
+            onClose={() => setPendingAction({ type: null, trip: null })}
+            title={getConfirmationTitle(pendingAction.type)}
+            variant="primary"
+          >
+            {getConfirmationBody(pendingAction.type)}
           </ConfirmationDialog>
         </div>
       </div>
       {alert && (
         <Alert
-          message={alert.text}
+          message={alert.message}
           type={alert.type}
           onTimeout={() => setAlert(null)}
         />
@@ -144,12 +144,24 @@ export default function MyTrips() {
           <GenericToggle
             value={viewingActive}
             onChange={setViewingActive}
-            labels={['Active Trips', 'Completed Trips']}
+            labels={[myTripsStrings.activeTrips, myTripsStrings.completedTrips]}
           />
         </div>
         <div className="flex flex-col gap-4">
           {tripsToDisplay.map(trip => (
-            <RouteCardWrapper key={trip.id} route={trip} mapsReady={mapsReady}>
+            <RouteCardWrapper
+              key={trip.id}
+              route={trip}
+              mapsReady={mapsReady}
+              onReport={trip => {
+                setReportData(trip)
+                setShowReport(true)
+              }}
+              onComplete={() => setPendingAction({ type: 'complete', trip })}
+              onIncomplete={() =>
+                setPendingAction({ type: 'incomplete', trip })
+              }
+            >
               <div className="*:shadow-white">
                 <RouteCard
                   route={trip}
@@ -157,12 +169,11 @@ export default function MyTrips() {
                   routeDetailView={true}
                   isCompleted={trip.completed}
                   onToggleJoin={() => handleRouteLeaveRequest(trip)}
-                  onReport={trip => {
-                    {
-                      setReportData(trip)
-                      setShowReport(true)
-                    }
+                  onReport={data => {
+                    setReportData(data)
+                    setShowReport(true)
                   }}
+                  hideReportJoin={shouldHideReportJoin(trip.depart_time)}
                 />
               </div>
             </RouteCardWrapper>
@@ -173,23 +184,14 @@ export default function MyTrips() {
         <Modal
           isOpen={showReport}
           onClose={() => setShowReport(false)}
-          title={'Report Route'}
+          title={myTripsStrings.reportTitle}
         >
           {reportData && (
             <Report
               type={'route'}
               targetId={reportData?.targetId}
               onClose={() => setShowReport(false)}
-              setAlert={reportAlert => {
-                if (!reportAlert?.type) return
-                setAlert({
-                  type: reportAlert.type,
-                  text:
-                    reportAlert.type === 'success'
-                      ? 'Report submitted successfully.'
-                      : 'Failed to submit report.',
-                })
-              }}
+              setAlert={setAlert}
             />
           )}
         </Modal>

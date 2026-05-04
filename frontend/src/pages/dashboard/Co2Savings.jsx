@@ -202,10 +202,12 @@ function Co2Savings() {
       .map(row => ({
         ...row,
         label: MODE_LABELS[row.mode] ?? row.mode,
-        fill: MODE_COLORS[row.mode] ?? '#b3b3b3',
+        fill: MODE_COLORS[row.mode] ?? 'var(--color-medium-grey)',
         co2PerKm: row.totalCo2SavedKg / row.totalDistanceKm,
       }))
-      .sort((a, b) => b.co2PerKm - a.co2PerKm)
+      .sort(
+        (firstEntry, secondEntry) => secondEntry.co2PerKm - firstEntry.co2PerKm
+      )
   }, [byMode?.data])
 
   return (
@@ -389,7 +391,7 @@ function Co2Savings() {
                     <YAxis
                       tick={AXIS_TICK_STYLE}
                       width={56}
-                      tickFormatter={v => `${v} kg`}
+                      tickFormatter={value => `${value} kg`}
                     />
                     <Tooltip content={<Co2BarTooltip />} />
                     <Bar
@@ -415,7 +417,7 @@ function Co2Savings() {
                     <XAxis
                       type="number"
                       tick={AXIS_TICK_STYLE}
-                      tickFormatter={v => `${v.toFixed(2)}`}
+                      tickFormatter={value => `${value.toFixed(2)}`}
                     />
                     <YAxis
                       type="category"
