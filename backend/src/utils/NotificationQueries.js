@@ -31,7 +31,7 @@ export const NotificationTypes = Object.freeze({
  */
 export async function insertNotification(notification) {
   const notificationType = notification.type
-  if (!notificationType)
+  if (!notificationType?.idType)
     throw new Error(`Unknown notification type: ${notification.type}`)
 
   const result = await db.query(
@@ -39,10 +39,7 @@ export async function insertNotification(notification) {
          VALUES ($1, $2, $3) RETURNING *`,
     [notificationType.type, notification.id, notification.metadata]
   )
-  const notificationId = result.rows[0].notification_id
-
-  if (!notificationType.getUsersQuery)
-    throw new Error(`No notification type query: ${notificationType.type}`)
+  const notificationID = result.rows[0].notification_id
 
   const userQuery = await db.query(notificationType.getUsersQuery, [
     notification.id,
@@ -52,7 +49,7 @@ export async function insertNotification(notification) {
     const values = userQuery.rows
       .map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`)
       .join(', ')
-    const params = userQuery.rows.flatMap(row => [row.user_id, notificationId])
+    const params = userQuery.rows.flatMap(row => [row.user_id, notificationID])
     await db.query(
       `INSERT INTO "user_notification" (user_id, notification_id) VALUES ${values}`,
       params
