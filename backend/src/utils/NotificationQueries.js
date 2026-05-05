@@ -1,3 +1,5 @@
+import { serverStrings } from '../../locales/en/serverLocales'
+
 const db = require('../../db')
 
 export const NotificationTypes = Object.freeze({
@@ -32,7 +34,9 @@ export const NotificationTypes = Object.freeze({
 export async function insertNotification(notification) {
   const notificationType = notification.type
   if (!notificationType?.idType)
-    throw new Error(`Unknown notification type: ${notification.type}`)
+    throw new Error(
+      `${serverStrings.errors.notificationError} ${notification.type}`
+    )
 
   const result = await db.query(
     `INSERT INTO "notification" (notification_type, ${notificationType.idType}, metadata) 
