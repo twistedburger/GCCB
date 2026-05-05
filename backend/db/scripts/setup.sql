@@ -161,7 +161,8 @@ CREATE TABLE IF NOT EXISTS "blocked_user" (
 CREATE TYPE notification_type_enum AS ENUM (
   'route',
   'event',
-  'badge'
+  'badge',
+  'message'
 );
 
 CREATE TABLE IF NOT EXISTS "notification" (
