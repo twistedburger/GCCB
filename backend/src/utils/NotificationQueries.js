@@ -1,8 +1,8 @@
-import { serverStrings } from '../../locales/en/serverLocales'
+const { serverStrings } = require('../../locales/en/serverLocales')
 
 const db = require('../../db')
 
-export const NotificationTypes = Object.freeze({
+const NotificationTypes = Object.freeze({
   Event: {
     idType: 'event_id',
     type: 'event',
@@ -31,7 +31,7 @@ export const NotificationTypes = Object.freeze({
  * @param {Object} notification object to insert into database. Ensure the type is of NotificationTypes
  * @throws {Error} if notification type is not a known notification type
  */
-export async function insertNotification(notification) {
+async function insertNotification(notification) {
   const notificationType = notification.type
   if (!notificationType?.idType)
     throw new Error(
@@ -67,7 +67,7 @@ export async function insertNotification(notification) {
  * @param {String} userID user's id
  * @param {String} notificationID notification id
  */
-export async function viewUserNotification(userID, notificationID) {
+async function viewUserNotification(userID, notificationID) {
   await db.query(
     `UPDATE "user_notification" SET read_at = NOW() 
          WHERE user_id = $1 AND notification_id = $2 AND read_at IS NULL`,
@@ -80,7 +80,7 @@ export async function viewUserNotification(userID, notificationID) {
  *
  * @param {String} userID user's id
  */
-export async function viewAllUserNotifications(userID) {
+async function viewAllUserNotifications(userID) {
   await db.query(
     `UPDATE "user_notification" SET read_at = NOW() 
          WHERE user_id = $1 AND read_at IS NULL`,
@@ -94,7 +94,7 @@ export async function viewAllUserNotifications(userID) {
  * @param {String} userID user id string
  * @returns {Array} the notifications for a user
  */
-export async function getUserNotifications(userID) {
+async function getUserNotifications(userID) {
   const result = await db.query(
     `SELECT notification.* FROM "notification"
          JOIN "user_notification" ON notification.notification_id = user_notification.notification_id
@@ -103,4 +103,12 @@ export async function getUserNotifications(userID) {
     [userID]
   )
   return result.rows
+}
+
+module.exports = {
+  NotificationTypes,
+  insertNotification,
+  viewUserNotification,
+  viewAllUserNotifications,
+  getUserNotifications,
 }
