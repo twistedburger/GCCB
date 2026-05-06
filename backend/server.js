@@ -2018,4 +2018,4 @@ app.post('/api/unblockUser/:userId', async (req, res) => {
   }
 })
 
-module.exports = app
+module.exports = { app, selectUser }
