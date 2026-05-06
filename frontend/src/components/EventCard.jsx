@@ -56,7 +56,7 @@ export default function EventCard({ event, hideReport = false, onReport }) {
     const img = new Image()
     img.src = event.banner_url
     img.onerror = () => refreshBanner()
-  }, [event.id, event.banner_url, event.place_id])
+  }, [event.id, event.banner_url, event.place_id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div
