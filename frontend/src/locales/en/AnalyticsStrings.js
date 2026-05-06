@@ -27,6 +27,7 @@ export const analyticsStrings = {
       noDescription: 'No profile description added yet.',
       noImage: 'No Image',
       editProfile: 'Edit Profile',
+      blockedUsers: 'Blocked Users',
     },
 
     metrics: {

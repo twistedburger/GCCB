@@ -11,6 +11,7 @@ import {
 } from '../utils/AnalyticsHelpers.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { analyticsStrings } from '../locales/en/AnalyticsStrings'
+import EditIcon from '@mui/icons-material/Edit'
 
 const dashboardStrings = analyticsStrings.dashboard
 
@@ -21,20 +22,42 @@ const dashboardStrings = analyticsStrings.dashboard
  * @param {func} onEdit Callback function for when edit button is clicked
  * @returns {JSX.Element}
  */
-function ProfileHeader({ user, onEdit }) {
+function ProfileHeader({ user, onEdit, onImageClick }) {
   const displayName = user?.name ?? dashboardStrings.profile.unknownName
   const displayNickname =
     user?.nickname ?? dashboardStrings.profile.unknownNickname
   const displayRole = user?.role ?? 'user'
   const displayDescription =
     user?.description ?? dashboardStrings.profile.noDescription
+  const avatarUrl = 'kek'
   const navigate = useNavigate()
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4">
       <div className="flex items-start gap-4">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-sm text-zinc-500">
-          {dashboardStrings.profile.noImage}
+        <div className="relative h-24 w-24">
+          <GenericButton
+            onClick={onImageClick}
+            unstyled={true}
+            customStyling="relative h-full w-full rounded-full border border-light-grey bg-light-grey transition active:scale-95"
+          >
+            <div className="h-full w-full overflow-hidden rounded-full">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xs text-light-grey text-center p-2">
+                  {dashboardStrings.profile.noImage}
+                </div>
+              )}
+            </div>
+            <div className="absolute bottom-0 right-0 flex items-center justify-center h-7 w-7 rounded-full bg-white border border-light-grey shadow-sm text-text-primary">
+              <EditIcon sx={{ fontSize: 16 }} />
+            </div>
+          </GenericButton>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -61,7 +84,7 @@ function ProfileHeader({ user, onEdit }) {
             unstyled={true}
             customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
           >
-            Blocked Users
+            {dashboardStrings.profile.blockedUsers}
           </GenericButton>
         </div>
       </div>
@@ -78,6 +101,7 @@ ProfileHeader.propTypes = {
     description: PropTypes.string,
   }),
   onEdit: PropTypes.func.isRequired,
+  onImageClick: PropTypes.func.isRequired,
 }
 
 /**
@@ -212,6 +236,18 @@ function Dashboard() {
         },
       ]
 
+  const handleFileInput = () => {
+    const fileInput = document.getElementById('avatar-upload')
+    if (fileInput) {
+      fileInput.value = ''
+      fileInput.click()
+    }
+  }
+
+  const handleImageUpload = () => {
+    console.log('handleImageUpload')
+  }
+
   return (
     <div className="mx-auto w-full max-w-5xl p-4">
       {isEditing ? (
@@ -252,7 +288,11 @@ function Dashboard() {
                 {dashboardStrings.loadingProfile}
               </div>
             ) : (
-              <ProfileHeader user={user} onEdit={() => setIsEditing(true)} />
+              <ProfileHeader
+                user={user}
+                onEdit={() => setIsEditing(true)}
+                onImageClick={handleFileInput}
+              />
             )}
 
             {summaryError ? (
@@ -280,6 +320,15 @@ function Dashboard() {
                 />
               ))}
             </div>
+          </div>
+          <div>
+            <input
+              id="avatar-upload"
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageUpload}
+            />
           </div>
         </>
       )}
