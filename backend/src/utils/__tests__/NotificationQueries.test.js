@@ -2,6 +2,9 @@ const { serverStrings } = require('../../../locales/en/serverLocales')
 const {
   insertNotification,
   NotificationType,
+  viewUserNotification,
+  viewAllUserNotifications,
+  getUserNotifications,
 } = require('../NotificationQueries')
 
 jest.mock('../../../db', () => ({
@@ -177,5 +180,66 @@ describe('Test insertNotification database query', () => {
     })
 
     expect(db.query).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('Test viewUserNotification database query', () => {
+  beforeEach(() => {
+    db.query.mockClear()
+  })
+
+  test('Throws error on database error', async () => {
+    db.query.mockRejectedValueOnce(new Error('Database error'))
+    await expect(viewUserNotification(1, 1)).rejects.toThrow(`Database error`)
+  })
+
+  test('Query calls with expected query string', async () => {
+    db.query.mockResolvedValue({ rows: [] })
+    await viewUserNotification(1, 1)
+    // Note that this is due to formatting to make the query readable
+    const expectedQuery =
+      'UPDATE "user_notification" SET read_at = NOW()\n         WHERE user_id = $1 AND notification_id = $2 AND read_at IS NULL'
+    expect(db.query).toHaveBeenCalledWith(expectedQuery, [1, 1])
+  })
+})
+
+describe('Test viewAllUserNotification database query', () => {
+  beforeEach(() => {
+    db.query.mockClear()
+  })
+
+  test('Throws error on database error', async () => {
+    db.query.mockRejectedValueOnce(new Error('Database error'))
+    await expect(viewAllUserNotifications(1)).rejects.toThrow(`Database error`)
+  })
+
+  test('Query calls with expected query string', async () => {
+    db.query.mockResolvedValue({ rows: [] })
+    await viewAllUserNotifications(1)
+    // Note that this is due to formatting to make the query readable
+    const expectedQuery =
+      'UPDATE "user_notification" SET read_at = NOW()\n         WHERE user_id = $1 AND read_at IS NULL'
+    expect(db.query).toHaveBeenCalledWith(expectedQuery, [1])
+  })
+})
+
+describe('Test getUserNotifications database query', () => {
+  beforeEach(() => {
+    db.query.mockClear()
+  })
+
+  test('Throws error on database error', async () => {
+    db.query.mockRejectedValueOnce(new Error('Database error'))
+    await expect(getUserNotifications(1)).rejects.toThrow(`Database error`)
+  })
+
+  test('Query calls with expected query string', async () => {
+    db.query.mockResolvedValue({ rows: [{ type: 'route' }, { type: 'event' }] })
+    const results = await getUserNotifications(1)
+    // Note that this is due to formatting to make the query readable
+    const expectedQuery =
+      'SELECT notification.* FROM "notification"\n         JOIN "user_notification" ON notification.notification_id = user_notification.notification_id\n         WHERE user_notification.user_id = $1 AND user_notification.read_at IS NULL\n         ORDER BY notification.created_at DESC'
+    expect(db.query).toHaveBeenCalledWith(expectedQuery, [1])
+    expect(results).toEqual([{ type: 'route' }, { type: 'event' }])
   })
 })

@@ -66,7 +66,7 @@ async function insertNotification(notification) {
  */
 async function viewUserNotification(userID, notificationID) {
   await db.query(
-    `UPDATE "user_notification" SET read_at = NOW() 
+    `UPDATE "user_notification" SET read_at = NOW()
          WHERE user_id = $1 AND notification_id = $2 AND read_at IS NULL`,
     [userID, notificationID]
   )
@@ -79,7 +79,7 @@ async function viewUserNotification(userID, notificationID) {
  */
 async function viewAllUserNotifications(userID) {
   await db.query(
-    `UPDATE "user_notification" SET read_at = NOW() 
+    `UPDATE "user_notification" SET read_at = NOW()
          WHERE user_id = $1 AND read_at IS NULL`,
     [userID]
   )
