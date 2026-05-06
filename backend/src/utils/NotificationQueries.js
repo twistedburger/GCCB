@@ -2,7 +2,7 @@ const { serverStrings } = require('../../locales/en/serverLocales')
 
 const db = require('../../db')
 
-const NotificationTypes = Object.freeze({
+const NotificationType = Object.freeze({
   Event: {
     idType: 'event_id',
     type: 'event',
@@ -28,14 +28,14 @@ const NotificationTypes = Object.freeze({
 /**
  * Add a notification to the notification table, and collects all approrpriate user id's and updates the user_notification table.
  *
- * @param {Object} notification object to insert into database. Ensure the type is of NotificationTypes
- * @throws {Error} if notification type is not a known notification type
+ * @param {Object} notification object to insert into database. Ensure the type is of NotificationType
+ * @throws {Error} if notification type is not a NotificationType object
  */
 async function insertNotification(notification) {
   const notificationType = notification.type
   if (!notificationType?.idType)
     throw new Error(
-      `${serverStrings.errors.notificationError} ${notification.type}`
+      `${serverStrings.errors.notificationError} ${typeof notification.type}`
     )
 
   const result = await db.query(
@@ -50,10 +50,8 @@ async function insertNotification(notification) {
   ])
 
   if (userQuery.rows.length > 0) {
-    const values = userQuery.rows
-      .map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`)
-      .join(', ')
-    const params = userQuery.rows.flatMap(row => [row.user_id, notificationID])
+    const values = userQuery.rows.map((_, i) => `($${i + 2}, $1)`).join(', ')
+    const params = [notificationID, ...userQuery.rows.map(row => row.user_id)]
     await db.query(
       `INSERT INTO "user_notification" (user_id, notification_id) VALUES ${values}`,
       params
@@ -106,7 +104,7 @@ async function getUserNotifications(userID) {
 }
 
 module.exports = {
-  NotificationTypes,
+  NotificationType,
   insertNotification,
   viewUserNotification,
   viewAllUserNotifications,
