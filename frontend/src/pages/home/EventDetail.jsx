@@ -17,6 +17,8 @@ import Alert from '../../components/Alert'
 import Report from '../../components/Report'
 import { useUser } from '../../../context/UserContext'
 import ConfirmationDialog from '../../components/ConfirmationDialog'
+import { createEventStrings } from '../../locales/en/ComponentStrings/CreateEventStrings'
+import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
 
 /**
  * Displays the event detail drawer
@@ -69,8 +71,8 @@ export default function EventDetail() {
       setAlert({
         type: response.ok ? 'success' : 'error',
         message: response.ok
-          ? 'Route created successfully!'
-          : 'Error creating route. Please try again.',
+          ? createEventStrings.routeCreationSuccess
+          : createEventStrings.routeCreationError,
       })
 
       if (response.ok) {
@@ -204,7 +206,9 @@ export default function EventDetail() {
                 isAlreadyJoined ? 'opacity-50 cursor-not-allowed' : ''
               }
             >
-              {isAlreadyJoined ? 'Already Joined a Route' : 'Add a Route'}
+              {isAlreadyJoined
+                ? createEventStrings.alreadyJoinedRoute
+                : createEventStrings.addRoute}
             </GenericButton>
           </div>
         </>
@@ -248,9 +252,11 @@ export default function EventDetail() {
               flexDirection: 'column',
             }}
           >
-            <Drawer.Title className="sr-only">Event Detail</Drawer.Title>
+            <Drawer.Title className="sr-only">
+              {createEventStrings.a11y.drawerTitle}
+            </Drawer.Title>
             <Drawer.Description className="sr-only">
-              Event details
+              {createEventStrings.a11y.drawerDescription}
             </Drawer.Description>
             <div
               style={{
@@ -330,7 +336,7 @@ export default function EventDetail() {
                                 })
                               }}
                             >
-                              Report Event
+                              {reportStrings.reportEvent}
                             </MenuItem>
                             <MenuItem
                               onClick={() => {
@@ -342,7 +348,7 @@ export default function EventDetail() {
                                 })
                               }}
                             >
-                              Report Organizer
+                              {reportStrings.reportOrganizer}
                             </MenuItem>
                           </Menu>
                         </>
@@ -374,7 +380,7 @@ export default function EventDetail() {
                     />
                     <div>
                       <p className="font-semibold pt-4 pb-2 text-text-primary">
-                        Travel Options
+                        {createEventStrings.travelOptions}
                       </p>
                       <div className="flex flex-col gap-2">
                         {event.routes && event.routes.length > 0 ? (
@@ -403,7 +409,7 @@ export default function EventDetail() {
                           ))
                         ) : (
                           <p className="text-text-secondary text-sm text-center py-4">
-                            No travel options available for this event.
+                            {createEventStrings.noRoutes}
                           </p>
                         )}
                       </div>
@@ -436,10 +442,10 @@ export default function EventDetail() {
                           {reportData && (
                             <>
                               <Drawer.Title className="text-lg font-bold mb-4">
-                                Report {reportData.title}
+                                {reportStrings.reportTitle(reportData.title)}
                               </Drawer.Title>
                               <Drawer.Description className="sr-only">
-                                Report Page
+                                {reportStrings.a11y.reportPage}
                               </Drawer.Description>
                               <Report
                                 type={reportData.type}
@@ -478,7 +484,7 @@ export default function EventDetail() {
                           </div>
 
                           <Drawer.Title className="text-lg font-bold mb-4">
-                            Create a New Route
+                            {createEventStrings.createNewRoute}
                           </Drawer.Title>
 
                           <CreateRoute
@@ -513,8 +519,8 @@ export default function EventDetail() {
             ...reportAlert,
             message:
               reportAlert.type === 'success'
-                ? 'Report submitted successfully.'
-                : 'Failed to submit report.',
+                ? reportStrings.reportSuccess
+                : reportStrings.reportFailed,
           })
         }}
       />

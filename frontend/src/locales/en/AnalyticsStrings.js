@@ -16,6 +16,53 @@ export const analyticsStrings = {
     metricCardsHint: 'Click a card below to see more details.',
     logout: 'Logout',
     loadingProfile: 'Loading profile...',
+
+    error: {
+      summary: 'Failed to load analytics summary.',
+    },
+
+    profile: {
+      unknownName: 'Unknown User',
+      unknownNickname: 'No nickname',
+      noDescription: 'No profile description added yet.',
+      noImage: 'No Image',
+      editProfile: 'Edit Profile',
+    },
+
+    metrics: {
+      admin: {
+        totalTrips: {
+          title: 'Total User Trips',
+          subtitle: km => `${km} across completed routes`,
+        },
+        co2: {
+          title: 'Total CO₂e Saved',
+          subtitle: 'Estimated from completed trips',
+        },
+        activity: {
+          title: 'Platform Activity',
+          value: 'View',
+          subtitle: 'Route status, creators, rejections',
+        },
+      },
+      user: {
+        totalTrips: {
+          title: 'Total Trips',
+          subtitle: km => `${km} traveled`,
+        },
+        co2: {
+          title: 'Personal CO₂ Saved',
+          subtitle: 'From completed trips',
+        },
+        mode: {
+          title: 'Most Used Mode',
+          subtitle: count => `Across ${count} trips`,
+        },
+        badges: {
+          title: 'Badges',
+        },
+      },
+    },
   },
 
   co2: {
@@ -215,6 +262,8 @@ export const analyticsStrings = {
         untitled: 'Untitled commute',
         unknownOrigin: 'Unknown origin',
         unknownDestination: 'Unknown destination',
+        noDepartTime: 'No departure time',
+        invalidDate: 'Invalid date',
       },
     },
 
@@ -222,6 +271,16 @@ export const analyticsStrings = {
       mode: 'Mode',
       distance: 'Distance',
       co2Saved: 'CO₂e Saved',
+
+      modes: {
+        all: 'All',
+        walk: 'Walk',
+        bicycle: 'Bicycle',
+        bus: 'Bus',
+        rail: 'Rail',
+        car: 'Car / Carpool',
+        other: 'Other',
+      },
     },
   },
 
@@ -265,6 +324,9 @@ export const analyticsStrings = {
       statusBreakdown: {
         title: 'Upcoming vs completed vs rejected',
         subtitle: 'Total route counts by status',
+        upcoming: 'Upcoming',
+        completed: 'Completed',
+        rejected: 'Rejected',
       },
       rejectionReasons: {
         title: 'Rejection reasons',
@@ -277,6 +339,8 @@ export const analyticsStrings = {
           'kg CO₂e per period; baseline assumes every participant drove solo',
         loading: 'Loading chart...',
         empty: 'No completed route data available for this view.',
+        baseline: 'Baseline',
+        actual: 'Actual',
       },
     },
   },
