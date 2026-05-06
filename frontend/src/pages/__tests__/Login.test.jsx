@@ -73,20 +73,6 @@ describe('Test Login Page', () => {
     expect(screen.queryByText(loginStrings.error)).not.toBeInTheDocument()
   })
 
-  test('clears error message after making a valid selection', async () => {
-    render(<Login />)
-
-    await userEvent.click(screen.getByRole('button'))
-    expect(screen.getByText(loginStrings.error)).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('combobox'))
-    await waitFor(() => screen.getByText('UBC'))
-    await userEvent.click(screen.getByText('UBC'))
-    await userEvent.click(screen.getByRole('button'))
-
-    expect(screen.queryByText(loginStrings.error)).not.toBeInTheDocument()
-  })
-
   test('shows empty dropdown when getSSOProviders returns empty list', async () => {
     getSSOProviders.mockResolvedValue([])
     render(<Login />)

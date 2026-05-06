@@ -7,6 +7,7 @@ import OrganizerCard from '../../components/OrganizerCard'
 import { useNavigate } from 'react-router-dom'
 import ModerationActions from '../../components/ModerationActions'
 import Alert from '../../components/Alert'
+import { moderationStrings } from '../../locales/en/ComponentStrings/ModerationActionsStrings'
 
 /**
  * Creates the Moderator page.
@@ -54,7 +55,7 @@ function Moderate() {
         />
       )}
       <p className="text-[23px] text-text-primary font-medium">
-        Pending Reports
+        {moderationStrings.pageTitle}
       </p>
       {/* Disable verification for now */}
       {/* <div className="flex justify-center mt-6 mb-4 *:w-full">

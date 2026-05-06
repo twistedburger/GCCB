@@ -223,17 +223,17 @@ function Activity() {
   const statusChartData = data
     ? [
         {
-          label: 'Upcoming',
+          label: activityStrings.charts.statusBreakdown.upcoming,
           count: data.statusBreakdown.upcoming,
           fill: STATUS_COLORS.upcoming,
         },
         {
-          label: 'Completed',
+          label: activityStrings.charts.statusBreakdown.completed,
           count: data.statusBreakdown.completed,
           fill: STATUS_COLORS.completed,
         },
         {
-          label: 'Rejected',
+          label: activityStrings.charts.statusBreakdown.rejected,
           count: data.statusBreakdown.rejected,
           fill: STATUS_COLORS.rejected,
         },
@@ -400,7 +400,7 @@ function Activity() {
                   <Line
                     type="monotone"
                     dataKey="baselineKg"
-                    name="Baseline"
+                    name={activityStrings.charts.timeseries.baseline}
                     stroke={THEME_COLORS.orange}
                     strokeWidth={2}
                     dot={false}
@@ -409,7 +409,7 @@ function Activity() {
                   <Line
                     type="monotone"
                     dataKey="actualKg"
-                    name="Actual"
+                    name={activityStrings.charts.timeseries.actual}
                     stroke={THEME_COLORS.blue}
                     strokeWidth={2}
                     dot={false}

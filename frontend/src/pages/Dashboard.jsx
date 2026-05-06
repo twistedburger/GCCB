@@ -1,4 +1,3 @@
-// TODO: Things to include -- Settings, maybe user guide
 import GenericButton from '../components/GenericButton'
 import PropTypes from 'prop-types'
 import ProfileForm from '../components/ProfileForm'
@@ -23,18 +22,19 @@ const dashboardStrings = analyticsStrings.dashboard
  * @returns {JSX.Element}
  */
 function ProfileHeader({ user, onEdit }) {
-  const displayName = user?.name ?? 'Unknown User'
-  const displayNickname = user?.nickname ?? 'No nickname'
+  const displayName = user?.name ?? dashboardStrings.profile.unknownName
+  const displayNickname =
+    user?.nickname ?? dashboardStrings.profile.unknownNickname
   const displayRole = user?.role ?? 'user'
   const displayDescription =
-    user?.description ?? 'No profile description added yet.'
+    user?.description ?? dashboardStrings.profile.noDescription
   const navigate = useNavigate()
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4">
       <div className="flex items-start gap-4">
         <div className="flex h-24 w-24 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-sm text-zinc-500">
-          No Image
+          {dashboardStrings.profile.noImage}
         </div>
 
         <div className="min-w-0 flex-1">
@@ -54,7 +54,7 @@ function ProfileHeader({ user, onEdit }) {
             unstyled={true}
             customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
           >
-            Edit Profile
+            {dashboardStrings.profile.editProfile}
           </GenericButton>
           <GenericButton
             onClick={() => navigate('/bannedusers')}
@@ -116,7 +116,7 @@ function Dashboard() {
         setSummary(analyticsSummary)
       } catch (error) {
         console.error('Failed to load analytics summary', error)
-        setSummaryError('Failed to load analytics summary.')
+        setSummaryError(dashboardStrings.error.summary)
       } finally {
         setLoadingSummary(false)
       }
@@ -144,10 +144,14 @@ function Dashboard() {
   const totalTripsValue = loadingSummary ? '...' : `${summary?.tripCount ?? 0}`
 
   const totalTripsSubtitle = loadingSummary
-    ? 'Loading...'
+    ? analyticsStrings.common.loading
     : isAdmin
-      ? `${formatKm(summary?.totalDistanceKm)} across completed routes`
-      : `${formatKm(summary?.totalDistanceKm)} traveled`
+      ? dashboardStrings.metrics.admin.totalTrips.subtitle(
+          formatKm(summary?.totalDistanceKm)
+        )
+      : dashboardStrings.metrics.user.totalTrips.subtitle(
+          formatKm(summary?.totalDistanceKm)
+        )
 
   const co2Value = loadingSummary ? '...' : formatKg(summary?.totalCo2SavedKg)
 
@@ -156,51 +160,51 @@ function Dashboard() {
     : getMostUsedMode(summary?.tripFrequenciesByMode)
 
   const mostUsedModeSubtitle = loadingSummary
-    ? 'Loading...'
-    : `Across ${summary?.tripCount ?? 0} trips`
+    ? analyticsStrings.common.loading
+    : dashboardStrings.metrics.user.mode.subtitle(summary?.tripCount ?? 0)
 
   const metricCards = isAdmin
     ? [
         {
-          title: 'Total User Trips',
+          title: dashboardStrings.metrics.admin.totalTrips.title,
           value: totalTripsValue,
           subtitle: totalTripsSubtitle,
           onClick: () => navigate('/dashboard/trip-frequency'),
         },
         {
-          title: 'Total CO₂e Saved',
+          title: dashboardStrings.metrics.admin.co2.title,
           value: co2Value,
-          subtitle: 'Estimated from completed trips',
+          subtitle: dashboardStrings.metrics.admin.co2.subtitle,
           onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
-          title: 'Platform Activity',
-          value: 'View',
-          subtitle: 'Route status, creators, rejections',
+          title: dashboardStrings.metrics.admin.activity.title,
+          value: dashboardStrings.metrics.admin.activity.value,
+          subtitle: dashboardStrings.metrics.admin.activity.subtitle,
           onClick: () => navigate('/dashboard/activity'),
         },
       ]
     : [
         {
-          title: 'Total Trips',
+          title: dashboardStrings.metrics.user.totalTrips.title,
           value: totalTripsValue,
           subtitle: totalTripsSubtitle,
           onClick: () => navigate('/dashboard/commutes'),
         },
         {
-          title: 'Personal CO₂ Saved',
+          title: dashboardStrings.metrics.user.co2.title,
           value: co2Value,
-          subtitle: 'From completed trips',
+          subtitle: dashboardStrings.metrics.user.co2.subtitle,
           onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
-          title: 'Most Used Mode',
+          title: dashboardStrings.metrics.user.mode.title,
           value: mostUsedModeValue,
           subtitle: mostUsedModeSubtitle,
           onClick: () => navigate('/dashboard/trip-frequency'),
         },
         {
-          title: 'Badges',
+          title: dashboardStrings.metrics.user.badges.title,
           value: '0',
           subtitle: 'Coming soonTM',
         },

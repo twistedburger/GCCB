@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 import { useEffect, useState } from 'react'
 import { Close } from '@mui/icons-material'
 import GenericButton from './GenericButton'
+import { modalStrings } from '../locales/en/ComponentStrings/ModalStrings'
 
 /**
  * Component to display a modal dialog.
@@ -48,7 +49,7 @@ export default function Modal({ isOpen, onClose, children, title }) {
           onClick={onClose}
           unstyled={true}
           customStyling="absolute top-4 right-4 z-50 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
-          aria-label="Close modal"
+          aria-label={modalStrings.a11y.close}
         >
           <Close fontSize="large" />
         </GenericButton>
