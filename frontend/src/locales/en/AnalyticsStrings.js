@@ -30,6 +30,7 @@ export const analyticsStrings = {
     },
 
     metrics: {
+      viewDetails: 'View details →',
       admin: {
         totalTrips: {
           title: 'Total User Trips',
