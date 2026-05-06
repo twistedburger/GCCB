@@ -39,8 +39,7 @@ async function insertNotification(notification) {
     )
 
   const result = await db.query(
-    `INSERT INTO "notification" (notification_type, ${notificationType.idType}, metadata) 
-         VALUES ($1, $2, $3) RETURNING *`,
+    `INSERT INTO "notification" (notification_type, ${notificationType.idType}, metadata) VALUES ($1, $2, $3) RETURNING *`,
     [notificationType.type, notification.id, notification.metadata]
   )
   const notificationID = result.rows[0].notification_id
