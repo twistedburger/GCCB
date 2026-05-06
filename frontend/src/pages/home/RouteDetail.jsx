@@ -9,6 +9,9 @@ import TransitLegCard from '../../components/TransitLegCard'
 import { Drawer } from 'vaul'
 import Report from '../../components/Report'
 import { calculateTransitLegs } from '../../utils/RouteUtils'
+import { transitLegCardStrings } from '../../locales/en/ComponentStrings/TransitLegCardStrings'
+import { organizerCardStrings } from '../../locales/en/ComponentStrings/OrganizerCardStrings'
+import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
 import { routeDetailStrings } from '../../locales/en/RouteDetailStrings'
 
 /**
@@ -59,26 +62,13 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
               e.stopPropagation()
             }
           }}
-          style={{
-            zIndex: 50,
-            marginLeft: '55px',
-            width: 'calc(100% - 55px)',
-            borderRadius: '24px 24px 0 0',
-            height: '96%',
-            position: 'fixed',
-            bottom: 0,
-            background: '#F9F9F9',
-            display: 'flex',
-            flexDirection: 'column',
-            overflowY: 'hidden',
-            pointerEvents: 'auto',
-          }}
+          className="z-50 ml-13.75 w-[calc(100%-55px)] rounded-t-3xl h-[96%] fixed bottom-0 bg-drawer-background flex flex-col overflow-hidden pointer-events-auto"
         >
           <Drawer.Title className="sr-only">
-            {routeDetailStrings.title}
+            {transitLegCardStrings.a11y.drawerTitle}
           </Drawer.Title>
           <Drawer.Description className="sr-only">
-            {routeDetailStrings.description}
+            {transitLegCardStrings.a11y.drawerDescription}
           </Drawer.Description>
           {selectedRoute && (
             <div className="flex flex-col max-h-full rounded-t-3xl">
@@ -129,7 +119,9 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                   />
                 </div>
                 <p className="font-semibold pt-4 pb-2 text-text-primary">
-                  {transitLegs.length > 0 ? 'Transit Details' : ''}
+                  {transitLegs.length > 0
+                    ? transitLegCardStrings.transitDetails
+                    : ''}
                 </p>
                 <div className="flex flex-col gap-2">
                   {transitLegs.map((leg, index) => (
@@ -183,7 +175,7 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                 </div>
                 <div className="flex flex-col overflow-y-auto pb-8 px-6 gap-2">
                   <p className="font-semibold pb-2 text-text-primary shrink-0">
-                    {routeDetailStrings.organizer}
+                    {organizerCardStrings.organizer}
                   </p>
                   <OrganizerCard
                     user={{
@@ -218,9 +210,9 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
             <Drawer.Portal>
               <Drawer.Overlay className="fixed inset-0 z-60 bg-black/40" />
               <Drawer.Content
-                onOpenAutoFocus={e => {
+                onOpenAutoFocus={event => {
                   const focusable =
-                    e.currentTarget.querySelector('button, input')
+                    event.currentTarget.querySelector('button, input')
                   if (focusable) focusable.focus()
                 }}
                 onPointerDownOutside={() => setShowReport(false)}
@@ -239,10 +231,10 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                   {reportData && (
                     <>
                       <Drawer.Title className="text-lg font-bold mb-4">
-                        {routeDetailStrings.reportTitle}
+                        {reportStrings.reportTitle(reportData.title)}
                       </Drawer.Title>
                       <Drawer.Description className="sr-only">
-                        {routeDetailStrings.reportPage}
+                        {reportStrings.a11y.reportPage}
                       </Drawer.Description>
                       <Report
                         type={reportData.type}

@@ -4,7 +4,7 @@ import { ExpandMoreRounded } from '@mui/icons-material'
 import { decode } from 'google-polyline'
 import GenericButton from './GenericButton'
 import MainMap from './MainMap'
-import { routeCardWrapperStrings } from '../locales/en/ComponentStrings/RouteCardWrapperStrings'
+import { routeCardStrings } from '../locales/en/ComponentStrings/RouteCardStrings'
 
 /**
  * A wrapper component for containing and managing the expanded state of a route map.
@@ -24,6 +24,7 @@ export default function RouteCardWrapper({
   onComplete,
   onIncomplete,
 }) {
+  const routeCardWrapperStrings = routeCardStrings.routeCardWrapper
   const [isExpanded, setIsExpanded] = useState(false)
   const [map, setMap] = useState(null)
 
@@ -47,7 +48,10 @@ export default function RouteCardWrapper({
   const hasRoute = pathCoordinates.length > 0
 
   return (
-    <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
+    <div
+      data-testid={`route-card-wrapper-${route.id}`}
+      className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden"
+    >
       {children}
       {new Date(route.depart_time).getTime() < Date.now() &&
         !route.completed && (
@@ -88,7 +92,7 @@ export default function RouteCardWrapper({
                   }
                 }}
               >
-                {routeCardWrapperStrings.Report}
+                {routeCardStrings.common.report}
               </GenericButton>
             </div>
           </div>
@@ -112,6 +116,7 @@ export default function RouteCardWrapper({
           </GenericButton>
 
           <div
+            data-testid={`mini-map-${route.id}`}
             className={`transition-all duration-300 ease-in-out overflow-hidden ${
               isExpanded ? 'max-h-48' : 'max-h-0'
             }`}

@@ -1,0 +1,22 @@
+export const homeStrings = {
+  toggle: {
+    arriving: 'Arriving Near',
+    departing: 'Departing Near',
+  },
+
+  location: {
+    current: 'Current Location',
+  },
+
+  emptyState: 'No results found. Try adjusting your filters.',
+
+  report: {
+    modalTitle: 'Report',
+    modalTitleWithName: title => `Report ${title}`,
+  },
+
+  a11y: {
+    drawerTitle: 'Search Results',
+    drawerDescription: 'Search results near your location',
+  },
+}

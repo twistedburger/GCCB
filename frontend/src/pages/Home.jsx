@@ -23,6 +23,8 @@ import DisplayFilters from '../components/DisplayFilters'
 import MainMap from '../components/MainMap'
 import { createPortal } from 'react-dom'
 import { CircularProgress } from '@mui/material'
+import { homeStrings } from '../locales/en/HomeStrings'
+import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -90,9 +92,9 @@ function Home() {
       isArriving
     )
     fetch(url, { credentials: 'include' })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error: ${res.status}`)
-        return res.json()
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
+        return response.json()
       })
       .then(data => {
         setCardsToDisplay(data)
@@ -149,7 +151,11 @@ function Home() {
 
       <div>
         <MainMap
-          key={userLocation ? 'location-found' : 'loading-location'}
+          key={
+            userLocation
+              ? `${userLocation.lat}-${userLocation.lng}`
+              : 'loading-location'
+          }
           defaultCenter={userLocation || DEFAULT_COORDINATES}
           route={selectedRoute}
           defaultPin={!selectedRoute && !!userLocation}
@@ -177,12 +183,12 @@ function Home() {
         >
           <Drawer.Portal>
             <Drawer.Content
-              onOpenAutoFocus={e => e.preventDefault()}
-              onFocusOutside={e => e.preventDefault()}
-              onFocus={e => {
-                if (e.target === e.currentTarget) {
-                  e.preventDefault()
-                  e.stopPropagation()
+              onOpenAutoFocus={event => event.preventDefault()}
+              onFocusOutside={event => event.preventDefault()}
+              onFocus={event => {
+                if (event.target === event.currentTarget) {
+                  event.preventDefault()
+                  event.stopPropagation()
                 }
               }}
               style={{
@@ -199,9 +205,11 @@ function Home() {
                 pointerEvents: 'auto',
               }}
             >
-              <Drawer.Title className="sr-only">Search Results</Drawer.Title>
+              <Drawer.Title className="sr-only">
+                {homeStrings.a11y.drawerTitle}
+              </Drawer.Title>
               <Drawer.Description className="sr-only">
-                Search results near your location
+                {homeStrings.a11y.drawerDescription}
               </Drawer.Description>
               <div
                 className="flex justify-center p-6"
@@ -222,7 +230,10 @@ function Home() {
                     <GenericToggle
                       value={isArriving}
                       onChange={() => setIsArriving(!isArriving)}
-                      labels={['Arriving Near', 'Departing Near']}
+                      labels={[
+                        homeStrings.toggle.arriving,
+                        homeStrings.toggle.departing,
+                      ]}
                       className="shrink-0"
                     />
                     <GenericButton
@@ -246,8 +257,8 @@ function Home() {
                       {searchAddress ||
                         (userLocation?.lat === DEFAULT_COORDINATES.lat &&
                         userLocation?.lng === DEFAULT_COORDINATES.lng
-                          ? 'Vancouver, BC'
-                          : 'Current Location')}
+                          ? 'Vancouver, BC' // still a hard coded string, but only used as a fallback during development
+                          : homeStrings.location.current)}
                     </GenericButton>
                     <div
                       className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
@@ -266,7 +277,7 @@ function Home() {
                     </div>
                   ) : cardsToDisplay.length === 0 ? (
                     <p className="text-text-secondary text-sm text-center py-4">
-                      No results found. Try adjusting your filters.
+                      {homeStrings.emptyState}
                     </p>
                   ) : (
                     cardsToDisplay.map(item =>
@@ -332,7 +343,11 @@ function Home() {
           <Modal
             isOpen={showReport}
             onClose={() => setShowReport(false)}
-            title={reportData ? `Report ${reportData.title}` : 'Report'}
+            title={
+              reportData
+                ? homeStrings.report.modalTitleWithName(reportData.title)
+                : homeStrings.report.modalTitle
+            }
           >
             {reportData && (
               <Report
@@ -345,8 +360,8 @@ function Home() {
                     type: reportAlert.type,
                     text:
                       reportAlert.type === 'success'
-                        ? 'Report submitted successfully.'
-                        : 'Failed to submit report.',
+                        ? reportStrings.reportSuccess
+                        : reportStrings.reportFailed,
                   })
                 }}
               />

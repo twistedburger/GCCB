@@ -142,24 +142,29 @@ function TripFrequency() {
   const chartData = useMemo(() => {
     return (byMode?.data ?? [])
       .filter(row => row.tripCount > 0)
-      .map(row => ({
-        ...row,
-        label: MODE_LABELS[row.mode] ?? row.mode,
-        fill: MODE_COLORS[row.mode] ?? '#b3b3b3',
+      .map(modeItem => ({
+        ...modeItem,
+        label: MODE_LABELS[modeItem.mode] ?? modeItem.mode,
+        fill: MODE_COLORS[modeItem.mode] ?? 'var(--color-medium-grey)',
       }))
   }, [byMode?.data])
 
   // Avg distance per trip: modes with at least one trip, sorted longest to shortest
   const avgDistanceChartData = useMemo(() => {
     return (byMode?.data ?? [])
-      .filter(row => row.tripCount > 0 && row.totalDistanceKm > 0)
-      .map(row => ({
-        ...row,
-        label: MODE_LABELS[row.mode] ?? row.mode,
-        fill: MODE_COLORS[row.mode] ?? '#b3b3b3',
-        avgDistancePerTrip: row.totalDistanceKm / row.tripCount,
+      .filter(
+        modeItem => modeItem.tripCount > 0 && modeItem.totalDistanceKm > 0
+      )
+      .map(modeItem => ({
+        ...modeItem,
+        label: MODE_LABELS[modeItem.mode] ?? modeItem.mode,
+        fill: MODE_COLORS[modeItem.mode] ?? 'var(--color-medium-grey)',
+        avgDistancePerTrip: modeItem.totalDistanceKm / modeItem.tripCount,
       }))
-      .sort((a, b) => b.avgDistancePerTrip - a.avgDistancePerTrip)
+      .sort(
+        (firstMode, secondMode) =>
+          secondMode.avgDistancePerTrip - firstMode.avgDistancePerTrip
+      )
   }, [byMode?.data])
 
   const overallMetrics = useMemo(() => {
@@ -304,7 +309,7 @@ function TripFrequency() {
                     <XAxis
                       type="number"
                       tick={AXIS_TICK_STYLE}
-                      tickFormatter={v => `${v.toFixed(1)} km`}
+                      tickFormatter={value => `${value.toFixed(1)} km`}
                     />
                     <YAxis
                       type="category"

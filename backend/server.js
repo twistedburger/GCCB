@@ -997,7 +997,7 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
 })
 
 /**
- * Adds a report and corresponding report junction to report_user, report_event, or report_route.
+ * Creates a report.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.

@@ -7,6 +7,7 @@ import OrganizerCard from '../../components/OrganizerCard'
 import { useNavigate } from 'react-router-dom'
 import ModerationActions from '../../components/ModerationActions'
 import Alert from '../../components/Alert'
+import { moderationStrings } from '../../locales/en/ComponentStrings/ModerationActionsStrings'
 
 /**
  * Creates the Moderator page.
@@ -23,8 +24,8 @@ function Moderate() {
 
   const fetchReportQueue = async () => {
     const response = await fetch(`http://localhost:3000/api/reports`)
-    const data = await response.json()
-    setReportQueue(data)
+    const reports = await response.json()
+    setReportQueue(reports)
   }
 
   // Disable verification for now.
@@ -52,7 +53,7 @@ function Moderate() {
         />
       )}
       <p className="text-[23px] text-text-primary font-medium">
-        Pending Reports
+        {moderationStrings.pageTitle}
       </p>
       {/* Disable verification for now */}
       {/* <div className="flex justify-center mt-6 mb-4 *:w-full">

@@ -174,16 +174,16 @@ function Commutes() {
   /**
    * Formats a departure time value into a readable string.
    *
-   * @param {string} value The departure time as a date string or object.
+   * @param {string} dateValue The departure time as a date string or object.
    * @returns {string} A formatted date string.
    */
-  function formatDepartTime(value) {
-    if (!value) return 'No departure time'
+  function formatDepartTime(dateValue) {
+    if (!dateValue) return commuteStrings.history.noDepartTime
 
-    const date = new Date(value)
+    const date = new Date(dateValue)
 
     if (Number.isNaN(date.getTime())) {
-      return 'Invalid date'
+      return commuteStrings.history.invalidDate
     }
 
     return date.toLocaleString()
@@ -191,25 +191,25 @@ function Commutes() {
 
   /**
    * Formats a route mode value into a string.
-   * @param {string} value The raw route mode value
+   * @param {string} modeValue The raw route mode value
    * @returns {string} A string representing the route mode.
    */
-  function formatRouteMode(value) {
-    const normalized = normalizeMode(value)
+  function formatRouteMode(modeValue) {
+    const normalized = normalizeMode(modeValue)
 
     switch (normalized) {
       case 'walk':
-        return 'Walk'
+        return commuteStrings.route.modes.walk
       case 'bicycle':
-        return 'Bicycle'
+        return commuteStrings.route.modes.bicycle
       case 'bus':
-        return 'Bus'
+        return commuteStrings.route.modes.bus
       case 'rail':
-        return 'Rail'
+        return commuteStrings.route.modes.rail
       case 'car':
-        return 'Car / Carpool'
+        return commuteStrings.route.modes.car
       default:
-        return 'Other'
+        return commuteStrings.route.modes.other
     }
   }
 
@@ -245,9 +245,9 @@ function Commutes() {
                 {commuteStrings.blocks.filters.dateRangeLabel}
               </label>
               <Select
-                options={['all', '7d', '30d'].map(r => ({
-                  value: r,
-                  label: r,
+                options={['all', '7d', '30d'].map(rangeOption => ({
+                  value: rangeOption,
+                  label: rangeOption,
                 }))}
                 value={{ value: dateRange, label: dateRange }}
                 onChange={e => setDateRange(e.value)}
@@ -267,22 +267,22 @@ function Commutes() {
                   'rail',
                   'car',
                   'other',
-                ].map(r => ({
-                  value: r,
+                ].map(modeOption => ({
+                  value: modeOption,
                   label:
-                    r === 'all'
-                      ? 'All'
-                      : r === 'walk'
-                        ? 'Walk'
-                        : r === 'bicycle'
-                          ? 'Bicycle'
-                          : r === 'bus'
-                            ? 'Bus'
-                            : r === 'rail'
-                              ? 'Rail'
-                              : r === 'car'
-                                ? 'Car / Carpool'
-                                : 'Other',
+                    modeOption === 'all'
+                      ? commuteStrings.route.modes.all
+                      : modeOption === 'walk'
+                        ? commuteStrings.route.modes.walk
+                        : modeOption === 'bicycle'
+                          ? commuteStrings.route.modes.bicycle
+                          : modeOption === 'bus'
+                            ? commuteStrings.route.modes.bus
+                            : modeOption === 'rail'
+                              ? commuteStrings.route.modes.rail
+                              : modeOption === 'car'
+                                ? commuteStrings.route.modes.car
+                                : commuteStrings.route.modes.other,
                 }))}
                 value={{ value: mode, label: mode }}
                 onChange={e => setMode(e.value)}

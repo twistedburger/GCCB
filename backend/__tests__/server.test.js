@@ -4,6 +4,7 @@ const db = require('../db')
 global.fetch = jest.fn()
 
 let mockIsAuthenticated = jest.fn().mockReturnValue(true)
+
 jest.mock('express-openid-connect', () => ({
   auth: jest.fn(() => (req, res, next) => {
     req.oidc = {
@@ -22,7 +23,7 @@ const expectedAuthorizedUser = {
 }
 
 jest.mock('../db', () => ({
-  query: jest.fn(),
+  query: jest.fn().mockResolvedValue({ rows: [{ reported: 0 }], rowCount: 0 }), // mocks unbanned user, reported < 3
   pool: {
     connect: jest.fn(),
   },
@@ -634,16 +635,27 @@ describe('POST /api/createEvent', () => {
 
 // Tests for POST /api/report — report submission for events, users, and routes
 describe('POST /api/report', () => {
-  const mockUser = [{ id: 1, name: 'John Doe', role: 'user' }] // create mock user table
+  const mockUser = { id: 1, name: 'John Doe', role: 'user' } // create mock user table
 
   beforeEach(() => {
-    db.query.mockClear()
+    mockIsAuthenticated.mockReturnValue(true)
+    db.query.mockReset()
   })
 
-  test('should insert into report table and report_event junction table', async () => {
-    db.query.mockResolvedValueOnce({ rows: mockUser, rowCount: 1 }) // mocks selectUser to define who is submitting a report
-    db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] }) // mocks insert into report table, returns report_id to insert into report junction table
-    db.query.mockResolvedValueOnce({ rows: [] }) // mocks insert into report junction table, doesn't return anything
+  test('should return 403 when user is not authenticated', async () => {
+    mockIsAuthenticated.mockReturnValue(false)
+    const response = await request(app).post('/api/report').send({
+      type: 'event',
+      targetId: 1,
+      reason: 'Spam or Misleading Information',
+      explanation: 'This is spam',
+    })
+    expect(response.status).toBe(403)
+  })
+
+  test('should insert into report table for an event', async () => {
+    db.query.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 }) // mocks selectUser to define who is submitting a report
+    db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] }) // mocks insert into report table, returns report_id
 
     const response = await request(app).post('/api/report').send({
       type: 'event',
@@ -655,15 +667,20 @@ describe('POST /api/report', () => {
     expect(response.status).toBe(200)
     expect(response.body).toEqual({ success: true })
     expect(db.query).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT INTO report_event'), // verifies junction table was inserted into
-      expect.arrayContaining([99, 1]) // verifies that report_event is getting passed [report_id, target_id]
+      expect.stringContaining('INSERT INTO report'), // verifies report table was inserted into
+      expect.arrayContaining([
+        99,
+        'Spam or Misleading Information',
+        'This is spam',
+        'event',
+        1,
+      ]) // verifies correct information is being inserted into report table
     )
   })
 
-  test('should insert into report table and report_user junction table', async () => {
-    db.query.mockResolvedValueOnce({ rows: mockUser, rowCount: 1 })
+  test('should insert into report table for a user', async () => {
+    db.query.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 })
     db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
-    db.query.mockResolvedValueOnce({ rows: [] })
 
     const response = await request(app).post('/api/report').send({
       type: 'user',
@@ -675,15 +692,14 @@ describe('POST /api/report', () => {
     expect(response.status).toBe(200)
     expect(response.body).toEqual({ success: true })
     expect(db.query).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT INTO report_user'),
-      expect.arrayContaining([99, 2])
+      expect.stringContaining('INSERT INTO report'),
+      expect.arrayContaining([99, 'Other', 'Rude behavior', 'user', 2])
     )
   })
 
-  test('should insert into report table and report_route junction table', async () => {
-    db.query.mockResolvedValueOnce({ rows: mockUser, rowCount: 1 })
+  test('should insert into report table for a route', async () => {
+    db.query.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 })
     db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
-    db.query.mockResolvedValueOnce({ rows: [] })
 
     const response = await request(app).post('/api/report').send({
       type: 'route',
@@ -695,15 +711,20 @@ describe('POST /api/report', () => {
     expect(response.status).toBe(200)
     expect(response.body).toEqual({ success: true })
     expect(db.query).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT INTO report_route'),
-      expect.arrayContaining([99, 3])
+      expect.stringContaining('INSERT INTO report'),
+      expect.arrayContaining([
+        99,
+        'Dangerous Activity',
+        'Dangerous route',
+        'route',
+        3,
+      ])
     )
   })
 
   test('should store the correct reason and explanation', async () => {
-    db.query.mockResolvedValueOnce({ rows: mockUser, rowCount: 1 })
+    db.query.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 })
     db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
-    db.query.mockResolvedValueOnce({ rows: [] })
 
     await request(app).post('/api/report').send({
       type: 'event',
@@ -718,8 +739,24 @@ describe('POST /api/report', () => {
     )
   })
 
+  test('should return 400 on duplicate report', async () => {
+    db.query.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 })
+    const duplicateError = new Error('duplicate')
+    duplicateError.code = '23505'
+    db.query.mockRejectedValueOnce(duplicateError)
+
+    const response = await request(app).post('/api/report').send({
+      type: 'event',
+      targetId: 1,
+      reason: 'Spam or Misleading Information',
+      explanation: 'This is spam',
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test('should return 500 when inserting report fails', async () => {
-    db.query.mockResolvedValueOnce({ rows: mockUser, rowCount: 1 })
+    db.query.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 })
     db.query.mockRejectedValueOnce(new Error('Database error'))
 
     const response = await request(app).post('/api/report').send({
@@ -732,18 +769,29 @@ describe('POST /api/report', () => {
     expect(response.status).toBe(500)
   })
 
-  test('should return 500 when inserting junction table fails', async () => {
-    db.query.mockResolvedValueOnce({ rows: mockUser, rowCount: 1 })
-    db.query.mockResolvedValueOnce({ rows: [{ id: 99 }] })
-    db.query.mockRejectedValueOnce(new Error('Database error'))
+  test('should auto-approve report and increment reported count when submitted by a moderator', async () => {
+    const mockModerator = { id: 1, name: 'Mod', role: 'moderator' }
+    db.query.mockResolvedValueOnce({ rows: [{ reported: 0 }] })
+    db.query.mockResolvedValueOnce({ rows: [mockModerator], rowCount: 1 })
+    db.query.mockResolvedValueOnce({ rows: [{ id: 99, target_id: 1 }] })
+    db.query.mockResolvedValueOnce({ rows: [] })
+    db.query.mockResolvedValueOnce({ rows: [] })
 
     const response = await request(app).post('/api/report').send({
       type: 'event',
       targetId: 1,
-      reason: 'Spam or Misleading Information',
-      explanation: 'This is spam',
+      reason: 'Inappropriate Content',
+      explanation: 'Bad content',
     })
 
-    expect(response.status).toBe(500)
+    expect(response.status).toBe(200)
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE report SET status'),
+      expect.arrayContaining(['approved', 99])
+    )
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringContaining('reported = reported + 1'),
+      expect.arrayContaining([1])
+    )
   })
 })

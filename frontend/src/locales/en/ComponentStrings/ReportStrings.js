@@ -13,4 +13,13 @@ export const reportStrings = {
   describeIssue: 'Please describe the issue...',
   reportDesc: 'Description of the report',
   submit: 'Submit',
+
+  reportTitle: title => `Report ${title}`,
+  reportRoute: 'Report Route',
+  reportEvent: 'Report Event',
+  reportOrganizer: 'Report Organizer',
+
+  a11y: {
+    reportPage: 'Report Page',
+  },
 }
