@@ -11,7 +11,7 @@ import {
 } from '../utils/AnalyticsHelpers.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { analyticsStrings } from '../locales/en/AnalyticsStrings'
-import EditIcon from '@mui/icons-material/Edit'
+import ProfilePicture from '../components/ProfilePicture'
 
 const dashboardStrings = analyticsStrings.dashboard
 
@@ -29,35 +29,17 @@ function ProfileHeader({ user, onEdit, onImageClick }) {
   const displayRole = user?.role ?? 'user'
   const displayDescription =
     user?.description ?? dashboardStrings.profile.noDescription
-  const avatarUrl = 'kek'
+  const avatarUrl = user?.profile_image_url ?? ''
   const navigate = useNavigate()
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4">
       <div className="flex items-start gap-4">
         <div className="relative h-24 w-24">
-          <GenericButton
-            onClick={onImageClick}
-            unstyled={true}
-            customStyling="relative h-full w-full rounded-full border border-light-grey bg-light-grey transition active:scale-95"
-          >
-            <div className="h-full w-full overflow-hidden rounded-full">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="Profile"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-light-grey text-center p-2">
-                  {dashboardStrings.profile.noImage}
-                </div>
-              )}
-            </div>
-            <div className="absolute bottom-0 right-0 flex items-center justify-center h-7 w-7 rounded-full bg-white border border-light-grey shadow-sm text-text-primary">
-              <EditIcon sx={{ fontSize: 16 }} />
-            </div>
-          </GenericButton>
+          <ProfilePicture
+            onImageClick={onImageClick}
+            avatarUrl={avatarUrl}
+          ></ProfilePicture>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -99,6 +81,7 @@ ProfileHeader.propTypes = {
     nickname: PropTypes.string,
     role: PropTypes.string,
     description: PropTypes.string,
+    profile_image_url: PropTypes.string,
   }),
   onEdit: PropTypes.func.isRequired,
   onImageClick: PropTypes.func.isRequired,

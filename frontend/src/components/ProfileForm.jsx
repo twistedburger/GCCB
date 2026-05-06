@@ -2,8 +2,9 @@ import { PropTypes } from 'prop-types'
 import { useState } from 'react'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
-import { Person, ArrowBackIosNew } from '@mui/icons-material'
+import { ArrowBackIosNew } from '@mui/icons-material'
 import { profileFormStrings } from '../locales/en/ComponentStrings/ProfileFormStrings'
+import ProfilePicture from './ProfilePicture'
 
 /**
  * A form component for creating or editing a user profile.
@@ -21,6 +22,7 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
     email: user?.email || '',
     nickname: user?.nickname || '',
     description: user?.description || '',
+    imageUrl: user?.profile_image_url || '',
   })
 
   const [nicknameError, setNicknameError] = useState('')
@@ -35,8 +37,16 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
     onCancel()
   }
 
-  const handleChangePhoto = () => {
-    console.log('Change photo')
+  const handleFileInput = () => {
+    const fileInput = document.getElementById('avatar-upload')
+    if (fileInput) {
+      fileInput.value = ''
+      fileInput.click()
+    }
+  }
+
+  const handleImageUpload = () => {
+    console.log('handleImageUpload')
   }
 
   const handleChange = e => {
@@ -62,6 +72,13 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
 
   return (
     <div className="relative max-w-md mx-auto bg-background-off-white min-h-screen mb-20">
+      <input
+        id="avatar-upload"
+        type="file"
+        className="hidden"
+        accept="image/*"
+        onChange={handleImageUpload}
+      />
       {/* Header */}
       <div className="bg-background-off-white relative flex items-center w-full p-4 border-b border-gray-100 h-16">
         {!isNew && (
@@ -78,13 +95,11 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
 
       <form onSubmit={handleSubmit} className="p-6 space-y-8">
         {/* Profile Picture */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-28 h-28 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-sm">
-            <Person className="text-gray-300" style={{ fontSize: 60 }} />
-          </div>
-          <GenericButton onClick={handleChangePhoto}>
-            {profileFormStrings.changePhoto}
-          </GenericButton>
+        <div className="relative h-24 w-24 m-auto">
+          <ProfilePicture
+            onImageClick={handleFileInput}
+            avatarUrl={formData.imageUrl}
+          ></ProfilePicture>
         </div>
 
         {/* Info Section (Read Only) */}
