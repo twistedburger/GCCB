@@ -6,7 +6,6 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import { FlatCompat } from "@eslint/eslintrc";
 import path from "path";
 import { fileURLToPath } from "url";
-import { fixupPluginRules } from "@eslint/compat";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,9 +24,7 @@ export default [
   })),
 
   {
-    plugins: {
-      "react-hooks": fixupPluginRules(reactHooks),
-    },
+    plugins: ["react-hooks"],
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
