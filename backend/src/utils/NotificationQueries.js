@@ -61,8 +61,8 @@ async function insertNotification(notification) {
 /**
  * Set the user's notification read_at time to now.
  *
- * @param {String} userID user's id
- * @param {String} notificationID notification id
+ * @param {int} userID user's id
+ * @param {int} notificationID notification id
  */
 async function viewUserNotification(userID, notificationID) {
   await db.query(
@@ -75,7 +75,7 @@ async function viewUserNotification(userID, notificationID) {
 /**
  * Set all user's notifications read_at time to now.
  *
- * @param {String} userID user's id
+ * @param {int} userID user's id
  */
 async function viewAllUserNotifications(userID) {
   await db.query(
@@ -88,7 +88,7 @@ async function viewAllUserNotifications(userID) {
 /**
  * Get all the unread notifications for a user
  *
- * @param {String} userID user id string
+ * @param {int} userID user id string
  * @returns {Array} the notifications for a user
  */
 async function getUserNotifications(userID) {
