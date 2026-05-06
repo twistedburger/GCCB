@@ -6,7 +6,7 @@ const NotificationType = Object.freeze({
   Event: {
     idType: 'event_id',
     type: 'event',
-    getUsersQuery: `SELECT ur.user_id FROM "user_route" ur JOIN "event_route" er ON ur.route_id = er.route_id WHERE er.event_id = $1`,
+    getUsersQuery: `SELECT user_route.user_id FROM "user_route" JOIN "event_route" ON user_route.route_id = event_route.route_id WHERE event_route.event_id = $1`,
   },
   Route: {
     idType: 'route_id',
