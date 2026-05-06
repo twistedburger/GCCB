@@ -47,10 +47,12 @@ async function insertNotification(notification) {
   const userQuery = await db.query(notificationType.getUsersQuery, [
     notification.id,
   ])
-
-  if (userQuery.rows.length > 0) {
-    const values = userQuery.rows.map((_, i) => `($${i + 2}, $1)`).join(', ')
-    const params = [notificationID, ...userQuery.rows.map(row => row.user_id)]
+  const filteredUsers = userQuery.rows.filter(
+    row => row.user_id !== notification.userID
+  )
+  if (filteredUsers.length > 0) {
+    const values = filteredUsers.map((_, i) => `($${i + 2}, $1)`).join(', ')
+    const params = [notificationID, ...filteredUsers.map(row => row.user_id)]
     await db.query(
       `INSERT INTO "user_notification" (user_id, notification_id) VALUES ${values}`,
       params

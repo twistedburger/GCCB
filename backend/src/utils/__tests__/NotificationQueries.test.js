@@ -44,6 +44,7 @@ describe('Test insertNotification database query', () => {
       type: NotificationType.Event,
       id: 10,
       metadata: { message: 'test' },
+      userID: 4,
     })
 
     const insertNotificationQuery =
@@ -78,6 +79,7 @@ describe('Test insertNotification database query', () => {
       type: NotificationType.Route,
       id: 10,
       metadata: { message: 'test' },
+      userID: 4,
     })
 
     const insertNotificationQuery =
@@ -112,6 +114,7 @@ describe('Test insertNotification database query', () => {
       type: NotificationType.Badge,
       id: 10,
       metadata: { message: 'test' },
+      userID: 4,
     })
 
     const insertNotificationQuery =
@@ -146,6 +149,7 @@ describe('Test insertNotification database query', () => {
       type: NotificationType.Message,
       id: 10,
       metadata: { message: 'test' },
+      userID: 4,
     })
 
     const insertNotificationQuery =
@@ -177,9 +181,62 @@ describe('Test insertNotification database query', () => {
       type: NotificationType.Message,
       id: 10,
       metadata: { message: 'test' },
+      userID: 4,
     })
 
     expect(db.query).toHaveBeenCalledTimes(2)
+  })
+
+  test('Insert to user_notification not called with user who sent notification', async () => {
+    db.query
+      .mockResolvedValueOnce({ rows: [{ notification_id: 1 }] })
+      .mockResolvedValueOnce({
+        rows: [{ user_id: 1 }],
+      })
+
+    await insertNotification({
+      type: NotificationType.Message,
+      id: 10,
+      metadata: { message: 'test' },
+      userID: 1,
+    })
+
+    expect(db.query).toHaveBeenCalledTimes(2)
+  })
+
+  test('Insert to user_notification not called if only user is filtered out', async () => {
+    db.query
+      .mockResolvedValueOnce({ rows: [{ notification_id: 1 }] })
+      .mockResolvedValueOnce({
+        rows: [{ user_id: 1 }, { user_id: 2 }, { user_id: 3 }],
+      })
+      .mockResolvedValueOnce({ rows: [] })
+
+    await insertNotification({
+      type: NotificationType.Message,
+      id: 10,
+      metadata: { message: 'test' },
+      userID: 1,
+    })
+
+    const insertNotificationQuery =
+      'INSERT INTO "notification" (notification_type, message_id, metadata) VALUES ($1, $2, $3) RETURNING *'
+    const fetchUsersQuery =
+      'SELECT user_id FROM "user_message" WHERE message_id = $1'
+    const insertUserNotificationQuery =
+      'INSERT INTO "user_notification" (user_id, notification_id) VALUES ($2, $1), ($3, $1)'
+    expect(db.query).toHaveBeenCalledTimes(3)
+    expect(db.query).toHaveBeenNthCalledWith(1, insertNotificationQuery, [
+      NotificationType.Message.type,
+      10,
+      { message: 'test' },
+    ])
+    expect(db.query).toHaveBeenNthCalledWith(2, fetchUsersQuery, [10])
+    expect(db.query).toHaveBeenNthCalledWith(
+      3,
+      insertUserNotificationQuery,
+      [1, 2, 3]
+    )
   })
 })
 
