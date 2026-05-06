@@ -5,6 +5,7 @@ const serverStrings = {
     userExists: 'User already exists',
     noUser: 'No logged in user',
     notificationError: 'Unknown notification type:',
+    notificationSendError: 'Notification failed to send',
     inactiveUser:
       'Your account has been inactive for a while. Please contact support to reactivate your account.',
     google: 'Could not fetch from google maps api',
