@@ -10,6 +10,8 @@ const {
 const { selectUser } = require('../../server')
 const { EventEmitter } = require('events')
 
+const notificationEmitter = new EventEmitter()
+
 /**
  * Creates a notification to add to the database, and adds a reference to all users relevant to the notification
  *
@@ -27,9 +29,11 @@ router.post('/notify', async (req, res) => {
   notification.userID = user.id
 
   try {
-    await insertNotification(notification)
+    const notifications = await insertNotification(notification)
+
+    notificationEmitter.emit('notification', notifications)
+
     return res.status(200).json({ success: true })
-    // send notifications
   } catch (error) {
     console.log(error)
     const message = error.message.includes(
@@ -70,8 +74,6 @@ router.patch('/clearNotifications', async (req, res) => {
   }
 })
 
-const notificationEmitter = new EventEmitter()
-
 /**
  * fetches all notifications for the logged in user. This route writes the current notifications whenever a new notification is sent
  *
@@ -80,7 +82,7 @@ const notificationEmitter = new EventEmitter()
  *
  * @returns {Object} {notifications: [notification]}
  */
-router.get('/listForNotifications', async (req, res) => {
+router.get('/listenForNotifications', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).json({ error: serverStrings.errors.accessDenied })
   }
@@ -88,7 +90,10 @@ router.get('/listForNotifications', async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
 
-  const handleNotifications = async ({ usersToNotify }) => {
+  const handleNotifications = async ({ notifications }) => {
+    const usersToNotify = notifications.map(
+      notification => notification.user_id
+    )
     try {
       const user = await selectUser(req)
       if (usersToNotify.includes(user.id)) {
