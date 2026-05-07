@@ -11,6 +11,7 @@ import {
 } from '../utils/AnalyticsHelpers.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { analyticsStrings } from '../locales/en/AnalyticsStrings'
+import ProfileInfo from '../components/ProfileInfo'
 
 const dashboardStrings = analyticsStrings.dashboard
 
@@ -22,48 +23,32 @@ const dashboardStrings = analyticsStrings.dashboard
  * @returns {JSX.Element}
  */
 function ProfileHeader({ user, onEdit }) {
-  const displayName = user?.name ?? dashboardStrings.profile.unknownName
-  const displayNickname =
-    user?.nickname ?? dashboardStrings.profile.unknownNickname
-  const displayRole = user?.role ?? 'user'
-  const displayDescription =
-    user?.description ?? dashboardStrings.profile.noDescription
   const navigate = useNavigate()
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4">
       <div className="flex items-start gap-4">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-sm text-zinc-500">
-          {dashboardStrings.profile.noImage}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <div className="text-xl font-semibold">{displayName}</div>
-            <div className="text-sm text-zinc-600">({displayNickname})</div>
-          </div>
-
-          <div className="mt-1 text-base text-zinc-600">{displayRole}</div>
-
-          <div className="mt-3 text-sm text-zinc-700">{displayDescription}</div>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <GenericButton
-            onClick={onEdit}
-            unstyled={true}
-            customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
-          >
-            {dashboardStrings.profile.editProfile}
-          </GenericButton>
-          <GenericButton
-            onClick={() => navigate('/bannedusers')}
-            unstyled={true}
-            customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
-          >
-            Blocked Users
-          </GenericButton>
-        </div>
+        <ProfileInfo
+          user={user}
+          actions={
+            <div className="flex flex-col gap-1">
+              <GenericButton
+                onClick={onEdit}
+                unstyled={true}
+                customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+              >
+                {dashboardStrings.profile.editProfile}
+              </GenericButton>
+              <GenericButton
+                onClick={() => navigate('/bannedusers')}
+                unstyled={true}
+                customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+              >
+                {dashboardStrings.profile.blockedUsers}
+              </GenericButton>
+            </div>
+          }
+        ></ProfileInfo>
       </div>
     </div>
   )
