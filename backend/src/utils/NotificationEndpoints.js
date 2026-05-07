@@ -8,6 +8,7 @@ const {
   getUserNotifications,
 } = require('./NotificationQueries')
 const { selectUser } = require('../../server')
+const { EventEmitter } = require('events')
 
 /**
  * Creates a notification to add to the database, and adds a reference to all users relevant to the notification
@@ -67,6 +68,45 @@ router.patch('/clearNotifications', async (req, res) => {
   } catch {
     return res.status(500).json({ error: serverStrings.errors.generic })
   }
+})
+
+const notificationEmitter = new EventEmitter()
+
+/**
+ * fetches all notifications for the logged in user. This route writes the current notifications whenever a new notification is sent
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} {notifications: [notification]}
+ */
+router.get('/listForNotifications', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).json({ error: serverStrings.errors.accessDenied })
+  }
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+
+  const handleNotifications = async ({ usersToNotify }) => {
+    try {
+      const user = await selectUser(req)
+      if (usersToNotify.includes(user.id)) {
+        const notifications = await getUserNotifications(user.id)
+        res.write(`data: ${JSON.stringify({ notifications })}\n\n`)
+      }
+    } catch {
+      res.write(
+        `data: ${JSON.stringify({ error: serverStrings.errors.generic })}\n\n`
+      )
+    }
+  }
+
+  notificationEmitter.on('notification', handleNotifications)
+
+  req.on('close', () =>
+    notificationEmitter.off('notification', handleNotifications)
+  )
 })
 
 /**
