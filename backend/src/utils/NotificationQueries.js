@@ -1,26 +1,25 @@
 const { serverStrings } = require('../../locales/en/serverLocales')
 
 const db = require('../../db')
+const {
+  NotificationType: BaseType,
+} = require('../../../shared/NotificationTypes')
 
 const NotificationType = Object.freeze({
   Event: {
-    idType: 'event_id',
-    type: 'event',
+    ...BaseType.Event,
     getUsersQuery: `SELECT user_route.user_id FROM "user_route" JOIN "event_route" ON user_route.route_id = event_route.route_id WHERE event_route.event_id = $1`,
   },
   Route: {
-    idType: 'route_id',
-    type: 'route',
+    ...BaseType.Route,
     getUsersQuery: `SELECT user_id FROM "user_route" WHERE route_id = $1`,
   },
   Badge: {
-    idType: 'badge_id',
-    type: 'badge',
+    ...BaseType.Badge,
     getUsersQuery: `SELECT user_id FROM "user_badge" WHERE badge_id = $1`,
   },
   Message: {
-    idType: 'message_id',
-    type: 'message',
+    ...BaseType.Message,
     getUsersQuery: `SELECT user_id FROM "user_message" WHERE message_id = $1`,
   },
 })
