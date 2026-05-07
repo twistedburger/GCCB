@@ -17,6 +17,7 @@ import Filter from './pages/home/Filter'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
 import BannedUsers from './pages/BannedUsers'
+import { useUser } from '../context/UserContext'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
@@ -25,6 +26,7 @@ function App() {
   const [bannedError] = useState(
     new URLSearchParams(window.location.search).get('error') === 'banned'
   )
+  const { setUser } = useUser()
 
   useEffect(() => {
     authenticateUser()
@@ -75,7 +77,10 @@ function App() {
                     ) : !currentUser ? (
                       <CreateUser
                         ssoUser={ssoProfile}
-                        onUserCreated={setCurrentUser}
+                        onUserCreated={newUser => {
+                          setCurrentUser(newUser)
+                          setUser(newUser)
+                        }}
                       />
                     ) : (
                       <Home />

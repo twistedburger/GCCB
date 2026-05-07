@@ -3,6 +3,9 @@ const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
 const axios = require('axios')
+const cloudinary = require('cloudinary').v2
+const { CloudinaryStorage } = require('multer-storage-cloudinary')
+const multer = require('multer')
 const { serverStrings } = require('./locales/en/serverLocales')
 
 const app = express()
@@ -22,6 +25,24 @@ const config = {
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_DOMAIN,
 }
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+})
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'gccb_profile_pics',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+    transformation: [{ width: 500, height: 500, crop: 'limit' }],
+  },
+})
+
+const upload = multer({ storage: storage })
 
 app.use(
   cors({
@@ -240,7 +261,7 @@ app.get('/sso_list', async (req, res) => {
  *
  * @returns {Object} a json user objet
  */
-app.post('/createNewUser', async (req, res) => {
+app.post('/createNewUser', upload.single('file'), async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -253,7 +274,8 @@ app.post('/createNewUser', async (req, res) => {
     const newUser = await insertUserFromForm(
       req.oidc.user.name,
       req.oidc.user.email,
-      req.body
+      req.body,
+      req.file
     )
     res.json({ user: newUser })
   } catch (error) {
@@ -271,7 +293,7 @@ app.post('/createNewUser', async (req, res) => {
  * @returns {Object} a json user object of the updated user
 
  */
-app.put('/updateProfile', async (req, res) => {
+app.put('/updateProfile', upload.single('file'), async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -279,9 +301,15 @@ app.put('/updateProfile', async (req, res) => {
   try {
     const currentUser = await selectUser(req)
     const { name, nickname, description } = req.body
+    let imageUrl = req.body.imageUrl
+
+    if (req.file) {
+      imageUrl = req.file.path
+    }
+
     const result = await db.query(
-      'UPDATE "user" SET name = $1, nickname = $2, description = $3 WHERE id = $4 RETURNING *',
-      [name, nickname, description, currentUser.id]
+      'UPDATE "user" SET name = $1, nickname = $2, description = $3, profile_pic = $4 WHERE id = $5 RETURNING *',
+      [name, nickname, description, imageUrl, currentUser.id]
     )
     res.json({ user: result.rows[0] })
   } catch (error) {
@@ -298,11 +326,13 @@ app.put('/updateProfile', async (req, res) => {
  * @param {Object} formData an object with nickname and description strings
  * @returns {Object} the newly inserted user
  */
-async function insertUserFromForm(name, email, formData) {
+async function insertUserFromForm(name, email, formData, file) {
   const { nickname, description } = formData
+  const imageUrl = file ? file.path : null
+
   const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname, description, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [email, 'user', name, nickname, description, new Date()]
+    'INSERT INTO "user" (email, role, name, nickname, description, profile_pic, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [email, 'user', name, nickname, description, imageUrl, new Date()]
   )
   return results.rows[0]
 }
