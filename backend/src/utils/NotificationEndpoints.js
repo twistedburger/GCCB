@@ -1,5 +1,5 @@
 const express = require('express')
-const router = express.Router()
+const notificationRouter = express.Router()
 const { serverStrings } = require('../../locales/en/serverLocales')
 const {
   insertNotification,
@@ -20,7 +20,7 @@ const notificationEmitter = new EventEmitter()
  *
  * @returns {Object} {success: true}
  */
-router.post('/notify', async (req, res) => {
+notificationRouter.post('/notify', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).json({ error: serverStrings.errors.accessDenied })
   }
@@ -54,7 +54,7 @@ router.post('/notify', async (req, res) => {
  *
  * @returns {Object} {success: true}
  */
-router.patch('/clearNotifications', async (req, res) => {
+notificationRouter.patch('/clearNotifications', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).json({ error: serverStrings.errors.accessDenied })
   }
@@ -82,7 +82,7 @@ router.patch('/clearNotifications', async (req, res) => {
  *
  * @returns {Object} {notifications: [notification]}
  */
-router.get('/listenForNotifications', async (req, res) => {
+notificationRouter.get('/listenForNotifications', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).json({ error: serverStrings.errors.accessDenied })
   }
@@ -122,7 +122,7 @@ router.get('/listenForNotifications', async (req, res) => {
  *
  * @returns {Object} {notifications: [notification]}
  */
-router.get('/getNotifications', async (req, res) => {
+notificationRouter.get('/getNotifications', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).json({ error: serverStrings.errors.accessDenied })
   }
@@ -135,4 +135,4 @@ router.get('/getNotifications', async (req, res) => {
   }
 })
 
-module.exports = router
+module.exports = notificationRouter

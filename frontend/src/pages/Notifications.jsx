@@ -5,7 +5,7 @@ import { NotificationType } from '../../../shared/NotificationTypes'
 export default function Notifications() {
   useEffect(() => {
     const stream = new EventSource(
-      'http://localhost:3000/listenForNotifications',
+      'http://localhost:3000/notifications/listenForNotifications',
       { withCredentials: true }
     )
 
@@ -32,12 +32,15 @@ export default function Notifications() {
             id: 2,
             metadata: { message: 'hello' },
           }
-          const response = await fetch('http://localhost:3000/notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(notification),
-            credentials: 'include',
-          })
+          const response = await fetch(
+            'http://localhost:3000/notifications/notify',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(notification),
+              credentials: 'include',
+            }
+          )
           console.log(response)
         }}
       >

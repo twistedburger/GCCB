@@ -18,6 +18,7 @@ const port = 3000
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
 const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
+const notificationRouter = require('./src/utils/NotificationEndpoints')
 
 const config = {
   authRequired: false,
@@ -63,6 +64,8 @@ setInterval(async () => {
     AND depart_time < NOW()
   `)
 }, 60 * 1000)
+
+app.use('/notifications', notificationRouter)
 
 /**
  * Proxy server route to fetch map from google maps api
