@@ -2,6 +2,17 @@ import PropTypes from 'prop-types'
 import GenericButton from './GenericButton'
 import { Person, Edit } from '@mui/icons-material'
 
+/**
+ * A circular profile picture component with an edit overlay button.
+ *
+ * Displays the user's avatar if a URL is provided, or a default person icon
+ * as a placeholder. An edit icon is always shown in the bottom-right corner
+ * to indicate the image is clickable/changeable.
+ *
+ * @param {Function} [onImageClick] - Callback triggered when the user clicks the profile picture.
+ * @param {string} [props.avatarUrl] - URL of the user's current profile image.
+ * @returns {JSX.Element}
+ */
 function ProfilePicture({ onImageClick, avatarUrl }) {
   return (
     <GenericButton
