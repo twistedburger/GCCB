@@ -1938,6 +1938,8 @@ app.get('/api/getParticipants/:routeId', async (req, res) => {
 
 /**
  * Sets completed column to true for a user_route row.
+ * Evaluates badge progress (once route marked completed) for the user
+ * and awards any newly earned badges; upserts progress for the rest.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -1959,6 +1961,12 @@ app.post('/api/completeRoute', async (req, res) => {
       'UPDATE user_route SET completed = true WHERE user_id = $1 AND route_id = $2',
       [user.id, routeID]
     )
+
+    const summary = await analytics.fetchSummaryForUser(user.id)
+    badgeEvaluator
+      .evaluateBadges(user.id, summary)
+      .catch(err => console.error('Badge evaluation failed:', err))
+
     res.json({ success: true })
   } catch (error) {
     console.error(error)
@@ -1967,7 +1975,7 @@ app.post('/api/completeRoute', async (req, res) => {
 })
 
 /**
- * Returns all badges for the authenticated user with their progress.
+ * Returns all badges for the authenticated user with earned status and progress.
  *
  * @returns {{ badges: Object[] }}
  */
