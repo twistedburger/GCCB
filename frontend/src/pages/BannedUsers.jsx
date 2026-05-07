@@ -1,9 +1,12 @@
 import { bannedUsersStrings } from '../locales/en/BannedUsersStrings'
 import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import OrganizerCard from '../components/OrganizerCard'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 import Alert from '../components/Alert'
+import GenericButton from '../components/GenericButton'
 import { useAuth } from '../hooks/Authorization'
+import { ArrowBackIosNew } from '@mui/icons-material'
 
 /**
  * Creates the Banned Users page.
@@ -16,6 +19,7 @@ function BannedUsers() {
   const [openModal, setOpenModal] = useState(false)
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
+  const navigate = useNavigate()
   const strings =
     authorization === 'moderator'
       ? bannedUsersStrings.moderator
@@ -85,9 +89,19 @@ function BannedUsers() {
           {strings.areYouSure}
         </ConfirmationDialog>
       </div>
-      <p className="text-2xl text-text-primary font-medium pb-4">
-        {strings.title}
-      </p>
+      <div className="flex flex-row items-center pb-4 gap-2">
+        <GenericButton
+          unstyled
+          onClick={() => {
+            navigate(-1)
+          }}
+        >
+          <ArrowBackIosNew />
+        </GenericButton>
+        <p className="text-2xl text-text-primary font-medium">
+          {strings.title}
+        </p>
+      </div>
       {users.map(user => (
         <OrganizerCard
           key={user.id}
