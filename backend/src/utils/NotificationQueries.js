@@ -30,6 +30,7 @@ const NotificationType = Object.freeze({
  *
  * @param {Object} notification object to insert into database. Ensure the type is of NotificationType
  * @throws {Error} if notification type is not a NotificationType object
+ * @returns {Array<Object>} the users who recieved the notificaion, with the notification id
  */
 async function insertNotification(notification) {
   const notificationType = notification.type
@@ -53,11 +54,13 @@ async function insertNotification(notification) {
   if (filteredUsers.length > 0) {
     const values = filteredUsers.map((_, i) => `($${i + 2}, $1)`).join(', ')
     const params = [notificationID, ...filteredUsers.map(row => row.user_id)]
-    await db.query(
-      `INSERT INTO "user_notification" (user_id, notification_id) VALUES ${values}`,
+    const insertedRows = await db.query(
+      `INSERT INTO "user_notification" (user_id, notification_id) VALUES ${values} RETURNING *`,
       params
     )
+    return insertedRows.rows
   }
+  return []
 }
 
 /**
