@@ -11,7 +11,7 @@ import {
 } from '../utils/AnalyticsHelpers.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { analyticsStrings } from '../locales/en/AnalyticsStrings'
-import ProfilePicture from '../components/ProfilePicture'
+import { Avatar } from '@mui/material'
 
 const dashboardStrings = analyticsStrings.dashboard
 
@@ -36,10 +36,13 @@ function ProfileHeader({ user, onEdit, onImageClick }) {
     <div className="rounded-2xl border border-zinc-200 bg-white p-4">
       <div className="flex items-start gap-4">
         <div className="relative h-24 w-24">
-          <ProfilePicture
-            onImageClick={onImageClick}
-            avatarUrl={avatarUrl}
-          ></ProfilePicture>
+          <Avatar
+            src={avatarUrl}
+            sx={{
+              width: 100,
+              height: 100,
+            }}
+          />
         </div>
 
         <div className="min-w-0 flex-1">
