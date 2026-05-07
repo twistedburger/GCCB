@@ -5,6 +5,8 @@ import ConfirmationDialog from '../components/ConfirmationDialog'
 import Alert from '../components/Alert'
 import { useAuth } from '../hooks/Authorization'
 
+const baseUrl = import.meta.env.VITE_API_BASE_URL
+
 /**
  * Creates the Banned Users page.
  *
@@ -23,7 +25,7 @@ function BannedUsers() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/bannedUsers`, {
+      const response = await fetch(`${baseUrl}/api/bannedUsers`, {
         credentials: 'include',
       })
       const bannedUsers = await response.json()
@@ -35,13 +37,10 @@ function BannedUsers() {
 
   const unbanUser = async userId => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/unbanUser/${userId}`,
-        {
-          method: 'POST',
-          credentials: 'include',
-        }
-      )
+      const response = await fetch(`${baseUrl}/api/unbanUser/${userId}`, {
+        method: 'POST',
+        credentials: 'include',
+      })
       if (response.ok) {
         fetchUsers()
         setAlert({

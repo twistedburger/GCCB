@@ -102,6 +102,7 @@ function Co2Savings() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showMethodology, setShowMethodology] = useState(false)
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     async function fetchData() {
@@ -110,10 +111,10 @@ function Co2Savings() {
         setError('')
 
         const [summaryRes, byModeRes] = await Promise.all([
-          fetch('http://localhost:3000/api/analytics/summary', {
+          fetch(`${baseURL}/api/analytics/summary`, {
             credentials: 'include',
           }),
-          fetch('http://localhost:3000/api/analytics/by-mode', {
+          fetch(`${baseURL}/api/analytics/by-mode`, {
             credentials: 'include',
           }),
         ])
@@ -138,7 +139,7 @@ function Co2Savings() {
     }
 
     fetchData()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isAdmin = summary?.scope === 'system'
   const tripCount = summary?.tripCount ?? 0

@@ -34,12 +34,15 @@ export default function Report({ type, targetId, onClose, setAlert }) {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ type, targetId, reason, explanation }),
-      })
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/report`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ type, targetId, reason, explanation }),
+        }
+      )
 
       const data = await response.json()
 

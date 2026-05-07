@@ -29,6 +29,8 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
   const [eventDesc, setEventDesc] = useState('')
   const [errors, setErrors] = useState({})
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const baseURL = import.meta.env.VITE_API_BASE_URL
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
 
   const handleConfirmRemove = () => {
@@ -56,7 +58,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
 
   const createEvent = async eventData => {
     try {
-      const response = await fetch('http://localhost:3000/api/createEvent', {
+      const response = await fetch(`${baseURL}/api/createEvent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

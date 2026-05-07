@@ -94,6 +94,7 @@ function Dashboard() {
 
   const { user, loadingUser, userError, setUser } = useUser()
   const navigate = useNavigate()
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     async function fetchSummary() {
@@ -101,12 +102,9 @@ function Dashboard() {
         setLoadingSummary(true)
         setSummaryError('')
 
-        const response = await fetch(
-          'http://localhost:3000/api/analytics/summary',
-          {
-            credentials: 'include',
-          }
-        )
+        const response = await fetch(`${baseURL}/api/analytics/summary`, {
+          credentials: 'include',
+        })
 
         if (!response.ok) {
           throw new Error(
@@ -125,10 +123,10 @@ function Dashboard() {
     }
 
     fetchSummary()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async formData => {
-    const updateResponse = await fetch('http://localhost:3000/updateProfile', {
+    const updateResponse = await fetch(`${baseURL}/updateProfile`, {
       method: 'PUT',
       credentials: 'include',
       headers: {
@@ -235,7 +233,7 @@ function Dashboard() {
 
             <GenericButton
               onClick={() => {
-                window.location.href = 'http://localhost:3000/logoutRoute'
+                window.location.href = `${import.meta.env.VITE_API_BASE_URL}/logoutRoute`
               }}
             >
               {dashboardStrings.logout}
