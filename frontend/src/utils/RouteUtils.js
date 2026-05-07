@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { routeStrings } from '../locales/en/routestrings'
+import { routeStrings } from '../locales/en/RouteStrings'
 
 export const TravelMode = Object.freeze({
   Transit: 'TRANSIT',
