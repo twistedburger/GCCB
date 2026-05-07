@@ -1,7 +1,7 @@
 import { bannedUsersStrings } from '../locales/en/BannedUsersStrings'
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import OrganizerCard from '../components/OrganizerCard'
+import UserCard from '../components/UserCard'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 import Alert from '../components/Alert'
 import GenericButton from '../components/GenericButton'
@@ -103,7 +103,7 @@ function BannedUsers() {
         </p>
       </div>
       {users.map(user => (
-        <OrganizerCard
+        <UserCard
           key={user.id}
           user={user}
           primaryActionLabel={strings.actionButton}

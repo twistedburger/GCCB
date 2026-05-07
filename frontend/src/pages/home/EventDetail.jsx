@@ -1,5 +1,5 @@
 import GenericButton from '../../components/GenericButton'
-import OrganizerCard from '../../components/OrganizerCard'
+import UserCard from '../../components/UserCard'
 import RouteCard from '../../components/RouteCard'
 import RouteDetail from './RouteDetail'
 import { Cancel } from '@mui/icons-material'
@@ -367,7 +367,7 @@ export default function EventDetail() {
                     </div>
                   </div>
                   <div className="px-6">
-                    <OrganizerCard
+                    <UserCard
                       user={{
                         id: event.creator_id,
                         name: event.creator_name,

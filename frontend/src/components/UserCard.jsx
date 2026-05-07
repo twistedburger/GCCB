@@ -1,12 +1,12 @@
 import PropTypes from 'prop-types'
 import GenericButton from './GenericButton.jsx'
 import { AccountCircleOutlined } from '@mui/icons-material'
-import { organizerCardStrings } from '../locales/en/ComponentStrings/OrganizerCardStrings.js'
+import { userCardStrings } from '../locales/en/ComponentStrings/UserCardStrings.js'
 
 /**
- * Component to display an organizer card.
+ * Component to display a user card.
  *
- * @param {Object} user - The user information for the organizer.
+ * @param {Object} user - The user information.
  * @param {string} primaryActionLabel - The label for the primary action button.
  * @param {Function} onPrimaryAction - The function to call when the primary action is clicked.
  * @param {string} primaryButtonStyling - Custom styling for the primary button.
@@ -15,7 +15,7 @@ import { organizerCardStrings } from '../locales/en/ComponentStrings/OrganizerCa
  * @param {string} secondaryButtonStyling - Custom styling for the secondary button.
  */
 
-function OrganizerCard({
+function UserCard({
   user,
   primaryActionLabel,
   onPrimaryAction,
@@ -67,7 +67,7 @@ function OrganizerCard({
               )}
             </div>
             <p className="text-xs text-text-secondary mt-1">
-              {description || organizerCardStrings.noBio}
+              {description || userCardStrings.noBio}
             </p>
           </div>
 
@@ -100,7 +100,7 @@ function OrganizerCard({
   )
 }
 
-OrganizerCard.propTypes = {
+UserCard.propTypes = {
   user: PropTypes.shape({
     id: PropTypes.number.isRequired,
     email: PropTypes.string,
@@ -122,4 +122,4 @@ OrganizerCard.propTypes = {
   secondaryButtonStyling: PropTypes.string,
 }
 
-export default OrganizerCard
+export default UserCard
