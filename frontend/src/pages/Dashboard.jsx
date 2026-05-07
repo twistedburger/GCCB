@@ -22,14 +22,14 @@ const dashboardStrings = analyticsStrings.dashboard
  * @param {func} onEdit Callback function for when edit button is clicked
  * @returns {JSX.Element}
  */
-function ProfileHeader({ user, onEdit, onImageClick }) {
+function ProfileHeader({ user, onEdit }) {
   const displayName = user?.name ?? dashboardStrings.profile.unknownName
   const displayNickname =
     user?.nickname ?? dashboardStrings.profile.unknownNickname
   const displayRole = user?.role ?? 'user'
   const displayDescription =
     user?.description ?? dashboardStrings.profile.noDescription
-  const avatarUrl = user?.profile_image_url ?? ''
+  const avatarUrl = user?.profile_pic ?? ''
   const navigate = useNavigate()
 
   return (
@@ -84,10 +84,9 @@ ProfileHeader.propTypes = {
     nickname: PropTypes.string,
     role: PropTypes.string,
     description: PropTypes.string,
-    profile_image_url: PropTypes.string,
+    profile_pic: PropTypes.string,
   }),
   onEdit: PropTypes.func.isRequired,
-  onImageClick: PropTypes.func.isRequired,
 }
 
 /**
@@ -138,13 +137,21 @@ function Dashboard() {
   }, [])
 
   const handleSubmit = async formData => {
+    const data = new FormData()
+
+    data.append('name', formData.name)
+    data.append('email', formData.email)
+    data.append('nickname', formData.nickname)
+    data.append('description', formData.description)
+
+    if (formData.file) {
+      data.append('file', formData.file)
+    }
+
     const updateResponse = await fetch('http://localhost:3000/updateProfile', {
       method: 'PUT',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
+      body: data,
     })
     const updatedUserData = await updateResponse.json()
     setUser(updatedUserData.user)
@@ -222,18 +229,6 @@ function Dashboard() {
         },
       ]
 
-  const handleFileInput = () => {
-    const fileInput = document.getElementById('avatar-upload')
-    if (fileInput) {
-      fileInput.value = ''
-      fileInput.click()
-    }
-  }
-
-  const handleImageUpload = () => {
-    console.log('handleImageUpload')
-  }
-
   return (
     <div className="mx-auto w-full max-w-5xl p-4">
       {isEditing ? (
@@ -274,11 +269,7 @@ function Dashboard() {
                 {dashboardStrings.loadingProfile}
               </div>
             ) : (
-              <ProfileHeader
-                user={user}
-                onEdit={() => setIsEditing(true)}
-                onImageClick={handleFileInput}
-              />
+              <ProfileHeader user={user} onEdit={() => setIsEditing(true)} />
             )}
 
             {summaryError ? (
@@ -306,15 +297,6 @@ function Dashboard() {
                 />
               ))}
             </div>
-          </div>
-          <div>
-            <input
-              id="avatar-upload"
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={handleImageUpload}
-            />
           </div>
         </>
       )}

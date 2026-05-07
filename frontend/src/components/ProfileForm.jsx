@@ -22,7 +22,8 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
     email: user?.email || '',
     nickname: user?.nickname || '',
     description: user?.description || '',
-    imageUrl: user?.profile_image_url || '',
+    imageUrl: user?.profile_pic || '',
+    file: null,
   })
 
   const [nicknameError, setNicknameError] = useState('')
@@ -45,8 +46,15 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
     }
   }
 
-  const handleImageUpload = () => {
-    console.log('handleImageUpload')
+  const handleImageUpload = e => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    setFormData(prev => ({
+      ...prev,
+      file: file,
+      imageUrl: URL.createObjectURL(file),
+    }))
   }
 
   const handleChange = e => {

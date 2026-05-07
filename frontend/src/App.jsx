@@ -17,6 +17,7 @@ import Filter from './pages/home/Filter'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
 import BannedUsers from './pages/BannedUsers'
+import { useUser } from '../context/UserContext.jsx'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
