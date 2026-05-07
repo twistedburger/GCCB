@@ -443,72 +443,6 @@ app.get('/api/events', (req, res) => {
 })
 
 /**
- * Updates the banner_url column in the events table for the given event.
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, or the api call has an error, a 500 status code is sent with an error json {error: string}.
- * If no photo is found, a 404 page not found error is sent with an error json {error: string}.
- *
- * @returns {Object} the new banner_url fetched from the google maps API.
- */
-app.post('/api/refresh-banner', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  const { placeID, eventID } = req.body
-  const eventId = parseInt(eventID, 10)
-
-  try {
-    const response = await axios.get(
-      `https://places.googleapis.com/v1/places/${placeID}`,
-      {
-        headers: {
-          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
-          'X-Goog-FieldMask': 'photos',
-        },
-      }
-    )
-
-    // need the photo name to get the banner url
-    const photoName = response.data.photos?.[0]?.name
-    if (!photoName) {
-      return res.status(404).json({ error: serverStrings.errors.noPhotos })
-    }
-
-    const photoResponse = await axios.get(
-      `https://places.googleapis.com/v1/${photoName}/media`,
-      {
-        params: {
-          maxWidthPx: 800,
-          skipHttpRedirect: true,
-        },
-        headers: {
-          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
-        },
-      }
-    )
-    const newUrl = photoResponse.data.photoUri
-
-    db.query(
-      `UPDATE event SET banner_url = $1 WHERE id = $2;`,
-      [newUrl, eventId],
-      error => {
-        if (error) {
-          console.error('Error updating DB:', error)
-          return res.status(500).send(serverStrings.errors.generic)
-        }
-        res.status(200).json({ bannerUrl: newUrl })
-      }
-    )
-  } catch (err) {
-    const status = err.response?.status ?? 500
-    const message = err.response?.data?.error?.message ?? err.message
-    res.status(status).json({ error: message })
-  }
-})
-
-/**
  * Requests a route from the google maps api.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
@@ -643,6 +577,20 @@ app.post('/api/createEvent', async (req, res) => {
       route,
     } = req.body
 
+    let bannerUrl = null
+    if (banner) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(banner, {
+          folder: 'gccb_event_banners',
+          allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+          transformation: [{ width: 1200, height: 400, crop: 'fill' }],
+        })
+        bannerUrl = uploadResult.secure_url
+      } catch (uploadError) {
+        console.error(serverStrings.errors.cloudinaryFailed, uploadError)
+      }
+    }
+
     await client.query('BEGIN')
 
     const eventResult = await client.query(
@@ -660,7 +608,7 @@ app.post('/api/createEvent', async (req, res) => {
         new Date(),
         longitude,
         latitude,
-        banner,
+        bannerUrl,
         placeID,
       ]
     )

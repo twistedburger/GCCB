@@ -6,8 +6,6 @@ import {
   ReportGmailerrorred,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { eventCardStrings } from '../locales/en/ComponentStrings/EventCardStrings'
 
 /**
  * Component to display an event card.
@@ -21,44 +19,6 @@ import { eventCardStrings } from '../locales/en/ComponentStrings/EventCardString
 export default function EventCard({ event, hideReport = false, onReport }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()
-  const [bannerUrl, setBannerUrl] = useState(event.banner_url)
-
-  useEffect(() => {
-    const refreshBanner = async () => {
-      if (!event.place_id) {
-        setBannerUrl(bcitCover)
-        return
-      }
-      try {
-        const response = await fetch(
-          'http://localhost:3000/api/refresh-banner',
-          {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              placeID: event.place_id,
-              eventID: event.id,
-            }),
-          }
-        )
-        const data = await response.json()
-        setBannerUrl(data.bannerUrl || bcitCover)
-      } catch (err) {
-        console.error(eventCardStrings.refreshFailed, err)
-        setBannerUrl(bcitCover)
-      }
-    }
-
-    if (!event.banner_url) {
-      refreshBanner()
-      return
-    }
-
-    const img = new Image()
-    img.src = event.banner_url
-    img.onerror = () => refreshBanner()
-  }, [event.id, event.banner_url, event.place_id])
 
   return (
     <div
@@ -69,7 +29,7 @@ export default function EventCard({ event, hideReport = false, onReport }) {
     >
       <div className="relative">
         <img
-          src={bannerUrl || bcitCover}
+          src={event.banner_url || bcitCover}
           className="h-24 w-full object-cover rounded-t-xl"
         />
         {!hideReport && (
