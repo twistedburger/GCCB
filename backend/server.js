@@ -18,6 +18,8 @@ const port = 3000
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
 const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
+const { BadgeQueries } = require('./src/utils/BadgeQueries')
+const { BadgeEvaluator } = require('./src/utils/BadgeEvaluator')
 
 const config = {
   authRequired: false,
@@ -54,6 +56,9 @@ const analytics = createAnalyticsHelpers({
   co2Calculator: defaultCo2Calculator,
   emissions: { EMISSIONS_G_PER_KM },
 })
+
+const badgeQueries = new BadgeQueries({ db })
+const badgeEvaluator = new BadgeEvaluator({ badgeQueries })
 
 /**
  * Proxy server route to fetch map from google maps api
@@ -1958,6 +1963,27 @@ app.post('/api/completeRoute', async (req, res) => {
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: serverStrings.errors.routeCompletionFailed })
+  }
+})
+
+/**
+ * Returns all badges for the authenticated user with their progress.
+ *
+ * @returns {{ badges: Object[] }}
+ */
+app.get('/api/badges', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
+  }
+  try {
+    const user = await selectUser(req)
+    const badges = await badgeEvaluator.getBadgesForUser(user.id)
+    res.json({ badges })
+  } catch (error) {
+    console.error('Error fetching badges:', error)
+    res.status(500).json({ error: serverStrings.errors.generic })
   }
 })
 
