@@ -24,10 +24,11 @@ notificationRouter.post('/notify', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).json({ error: serverStrings.errors.accessDenied })
   }
-  const user = await selectUser(req)
-  const notification = req.body
-  notification.userID = user.id
+
   try {
+    const user = await selectUser(req)
+    const notification = req.body
+    notification.userID = user.id
     const notifications = await insertNotification(notification)
     notificationEmitter.emit('notification', notifications)
 
@@ -133,4 +134,4 @@ notificationRouter.get('/getNotifications', async (req, res) => {
   }
 })
 
-module.exports = notificationRouter
+module.exports = { notificationRouter, notificationEmitter }
