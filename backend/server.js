@@ -48,6 +48,7 @@ app.use(
 )
 
 app.use(express.json())
+app.use('/api/chat', require('./routes/chat.routes'))
 
 const analytics = createAnalyticsHelpers({
   db,
@@ -653,11 +654,27 @@ app.post('/api/createEvent', async (req, res) => {
     )
 
     const newEvent = eventResult.rows[0]
-
     if (route) {
-      await insertRoute(client, newEvent.id, user.id, route, route.isJoined)
-    }
+      const routeID = await insertRoute(
+        client,
+        newEvent.id,
+        user.id,
+        route,
+        route.isJoined
+      )
 
+      // create chatroom and add creator as first member
+      const { rows: chatroomRows } = await client.query(
+        `INSERT INTO chatroom (route_id, created_by) VALUES ($1, $2) RETURNING id`,
+        [routeID, user.id]
+      )
+      const chatroomID = chatroomRows[0].id
+
+      await client.query(
+        `INSERT INTO chatroom_member (chatroom_id, user_id) VALUES ($1, $2)`,
+        [chatroomID, user.id]
+      )
+    }
     await client.query('COMMIT')
     res.status(201).json(newEvent)
   } catch (error) {
@@ -695,6 +712,16 @@ app.post('/api/createRoute', async (req, res) => {
       user.id,
       routeData,
       isJoined
+    )
+
+    // create chatroom and add creator as first member
+    const { rows } = await client.query(
+      `INSERT INTO chatroom (route_id, created_by) VALUES ($1, $2) RETURNING id`,
+      [routeID, user.id]
+    )
+    await client.query(
+      `INSERT INTO chatroom_member (chatroom_id, user_id) VALUES ($1, $2)`,
+      [rows[0].id, user.id]
     )
 
     await client.query('COMMIT')
@@ -941,10 +968,20 @@ app.post('/api/routes/:id/join', async (req, res) => {
   }
   try {
     const user = await selectUser(req)
+    const routeId = req.params.id
+
     await db.query(
       'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-      [user.id, req.params.id]
+      [user.id, routeId]
     )
+
+    await db.query(
+      `INSERT INTO chatroom_member (chatroom_id, user_id)
+       SELECT id, $2 FROM chatroom WHERE route_id = $1
+       ON CONFLICT DO NOTHING`,
+      [routeId, user.id]
+    )
+
     res.json({ success: true })
   } catch (error) {
     console.error(error)
