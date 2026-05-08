@@ -1,27 +1,10 @@
-import { useEffect, useState } from 'react'
 import GenericButton from '../components/GenericButton'
 import { NotificationType } from '../../../shared/NotificationTypes'
 import TransitLegCard from '../components/TransitLegCard'
+import { useNotifications } from '../../context/NotificationContext'
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState([])
-  useEffect(() => {
-    const stream = new EventSource(
-      'http://localhost:3000/notifications/listenForNotifications',
-      { withCredentials: true }
-    )
-
-    stream.onmessage = event => {
-      const notificationsResponse = JSON.parse(event.data)
-      setNotifications(notificationsResponse.notifications)
-    }
-
-    stream.onerror = () => {
-      stream.close()
-    }
-
-    return () => stream.close()
-  }, [])
+  const { notifications } = useNotifications()
 
   return (
     <div>
