@@ -43,16 +43,19 @@ const TIER_CONFIG = {
     label: 'Bronze',
     pillStyle: 'bg-amber-100 text-amber-800',
     iconColor: 'text-amber-700',
+    barColor: 'bg-orange-primary',
   },
   2: {
     label: 'Silver',
     pillStyle: 'bg-zinc-100 text-zinc-600',
     iconColor: 'text-zinc-500',
+    barColor: 'bg-blue-primary',
   },
   3: {
     label: 'Gold',
     pillStyle: 'bg-yellow-100 text-yellow-700',
     iconColor: 'text-yellow-600',
+    barColor: 'bg-purple-primary',
   },
 }
 
@@ -67,10 +70,18 @@ export default function BadgeCard({ badge, showLocked = false }) {
   const tierConfig = TIER_CONFIG[tier] ?? TIER_CONFIG[1]
   const IconComp = BADGE_ICONS[iconKey] ?? Star
 
+  const iconStyle = earned
+    ? tierConfig.iconColor
+    : isInProgress
+      ? 'text-text-secondary'
+      : 'text-medium-grey'
+
+  const cardExtra = isLocked ? 'opacity-60' : ''
+
   return (
-    <GenericCard customStyling="p-4 flex flex-col gap-2">
+    <GenericCard customStyling={`p-4 flex flex-col gap-2 ${cardExtra}`}>
       <div className="flex items-start justify-between">
-        <div className={tierConfig.iconColor}>
+        <div className={iconStyle}>
           <IconComp fontSize="large" />
         </div>
         <span
@@ -80,7 +91,9 @@ export default function BadgeCard({ badge, showLocked = false }) {
         </span>
       </div>
       <div>
-        <p className="font-semibold text-sm text-text-primary leading-tight">
+        <p
+          className={`font-semibold text-sm leading-tight ${isLocked ? 'text-text-secondary' : 'text-text-primary'}`}
+        >
           {title}
         </p>
         <p className="text-[11px] text-text-secondary capitalize mt-0.5">
