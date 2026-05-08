@@ -3,6 +3,7 @@ import '@testing-library/jest-dom'
 import Activity from '../Activity'
 import { analyticsStrings } from '../../../locales/en/AnalyticsStrings'
 
+const baseURL = import.meta.env.VITE_API_BASE_URL
 const activityStrings = analyticsStrings.activity
 
 // mock useNavigate
@@ -340,10 +341,9 @@ describe('Activity', () => {
     await act(async () => render(<Activity />))
 
     // confirm the summary endpoint was called
-    expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/activity/summary',
-      { credentials: 'include' }
-    )
+    expect(fetch).toHaveBeenCalledWith(`${baseURL}/api/activity/summary`, {
+      credentials: 'include',
+    })
   })
 
   test('fetches all three timeseries granularities on mount', async () => {
@@ -352,15 +352,15 @@ describe('Activity', () => {
 
     // confirm all three granularity endpoints were called
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/activity/co2-timeseries?granularity=daily',
+      `${baseURL}/api/activity/co2-timeseries?granularity=daily`,
       { credentials: 'include' }
     )
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/activity/co2-timeseries?granularity=monthly',
+      `${baseURL}/api/activity/co2-timeseries?granularity=monthly`,
       { credentials: 'include' }
     )
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/activity/co2-timeseries?granularity=quarterly',
+      `${baseURL}/api/activity/co2-timeseries?granularity=quarterly`,
       { credentials: 'include' }
     )
   })

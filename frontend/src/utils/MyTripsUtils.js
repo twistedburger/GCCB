@@ -1,5 +1,6 @@
 import { myTripsStrings } from '../locales/en/MyTripsStrings'
 
+const baseUrl = import.meta.env.VITE_API_BASE_URL
 /**
  * Fetch all trips for the current user and split into active/completed.
  *
@@ -7,9 +8,14 @@ import { myTripsStrings } from '../locales/en/MyTripsStrings'
  * @param {Function} setCompletedTrips Sets a user's completed trips
  */
 export async function fetchMyTrips(setActiveTrips, setCompletedTrips) {
-  const response = await fetch(`http://localhost:3000/api/myTrips`, {
+  const response = await fetch(`${baseUrl}/api/myTrips`, {
     credentials: 'include',
   })
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Failed to fetch trips. ${errorText}`)
+  }
+
   const data = await response.json()
   if (!Array.isArray(data)) return
 
@@ -37,7 +43,7 @@ export async function confirmTripAction(
   if (!trip) return
 
   if (type === 'leave' || type === 'incomplete') {
-    await fetch(`http://localhost:3000/api/routes/${trip.id}/leave`, {
+    await fetch(`${baseUrl}/api/routes/${trip.id}/leave`, {
       method: 'DELETE',
       credentials: 'include',
     })
@@ -50,7 +56,7 @@ export async function confirmTripAction(
       type: 'success',
     })
   } else if (type === 'complete') {
-    await fetch('http://localhost:3000/api/completeRoute', {
+    await fetch(`${baseUrl}/api/completeRoute`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -85,7 +91,7 @@ export async function confirmRouteRemoval(
 ) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/routes/${routeIdToRemove}/delete`,
+      `${baseUrl}/api/routes/${routeIdToRemove}/delete`,
       {
         method: 'DELETE',
         credentials: 'include',
@@ -118,7 +124,7 @@ export async function leaveRoute(
   setCompletedTrips,
   setConfirmLeave
 ) {
-  await fetch(`http://localhost:3000/api/routes/${confirmLeave.id}/leave`, {
+  await fetch(`${baseUrl}/api/routes/${confirmLeave.id}/leave`, {
     method: 'DELETE',
     credentials: 'include',
   })

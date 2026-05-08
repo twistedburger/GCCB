@@ -17,27 +17,29 @@ export default [
   { ignores: ["dist", "node_modules", "vite.config.js"] },
   js.configs.recommended,
   pluginReact.configs.flat.recommended,
-  
+
   ...compat.extends("airbnb").map((config) => ({
     ...config,
     files: ["src/**/*.{js,jsx}"],
   })),
 
-    ...compat.config({
-    plugins: ["react-hooks"],
+  {
+    plugins: {
+      'react-hooks': reactHooks
+    },
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
     },
-  }),
+  },
 
-    ...compat.config({
+  ...compat.config({
     plugins: ["jest"],
     env: {
-      "jest/globals" : true
+      "jest/globals": true
     },
   }),
-  
+
   {
     files: ["**/*.{js,jsx}"],
 
@@ -69,6 +71,6 @@ export default [
       "import/no-extraneous-dependencies": "off",
     },
   },
-  
+
   eslintConfigPrettier,
 ];
