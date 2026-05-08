@@ -377,6 +377,7 @@ export default function EventDetail() {
                         profile_pic: event.profile_pic,
                         active: true,
                       }}
+                      setAlert={setAlert}
                     />
                     <div>
                       <p className="font-semibold pt-4 pb-2 text-text-primary">

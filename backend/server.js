@@ -2035,4 +2035,60 @@ app.post('/api/unbanUser/:userId', async (req, res) => {
   }
 })
 
+/**
+ * Blocks a specific user.
+ *
+ * @param {number} req.body.blocked_user_id - The ID of the user to block.
+ */
+app.post('/api/blockUser', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const { blocked_user_id } = req.body
+  const currentUser = await selectUser(req)
+  const blocker_id = currentUser.id
+
+  try {
+    await db.query(
+      `INSERT INTO "blocked_user" (blocker_id, blocked_user_id) 
+       VALUES ($1, $2)
+       ON CONFLICT (blocker_id, blocked_user_id) DO NOTHING`,
+      [blocker_id, blocked_user_id]
+    )
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error blocking user:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Checks if a specific user is blocked by the current user.
+ *
+ * @param {number} req.params.id - The ID of the user to check.
+ * @returns {{ isBlocked: boolean }}
+ */
+app.get('/api/blockStatus/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const blocked_user_id = req.params.id
+  const currentUser = await selectUser(req)
+
+  try {
+    const result = await db.query(
+      `SELECT 1 FROM blocked_user WHERE blocker_id = $1 AND blocked_user_id = $2`,
+      [currentUser.id, blocked_user_id]
+    )
+
+    res.json({ isBlocked: result.rows.length > 0 })
+  } catch (error) {
+    console.error('Error checking block status:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
 module.exports = app

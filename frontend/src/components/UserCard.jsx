@@ -3,6 +3,8 @@ import GenericButton from './GenericButton.jsx'
 import Modal from './Modal'
 import ProfileInfo from './ProfileInfo'
 import { useState } from 'react'
+import { userCardStrings } from '../locales/en/ComponentStrings/UserCardStrings.js'
+import { useUser } from '../../context/UserContext.jsx'
 
 /**
  * Component to display a user card.
@@ -25,8 +27,86 @@ function UserCard({
   onSecondaryAction,
   secondaryButtonStyling,
   className,
+  setAlert,
 }) {
   const [openModal, setOpenModal] = useState(false)
+  const [isBlocked, setIsBlocked] = useState(false)
+  const { user: currentUser } = useUser()
+
+  const handleBlockUser = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/blockUser', {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocked_user_id: user.id }),
+      })
+
+      if (response.ok) {
+        setIsBlocked(true)
+        setOpenModal(false)
+        if (setAlert)
+          setAlert({
+            severity: 'success',
+            message: 'User blocked successfully',
+          })
+      } else {
+        const errorData = await response.json()
+        if (setAlert) setAlert({ severity: 'error', message: errorData.error })
+      }
+    } catch (err) {
+      console.error('Block error:', err)
+      if (setAlert)
+        setAlert({ severity: 'error', message: 'Failed to block user' })
+    }
+  }
+
+  const handleUnblockUser = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/unblockUser', {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocked_user_id: user.id }),
+      })
+
+      if (response.ok) {
+        setIsBlocked(false)
+        setOpenModal(false)
+        if (setAlert)
+          setAlert({
+            severity: 'success',
+            message: 'User unblocked successfully',
+          })
+      } else {
+        if (setAlert)
+          setAlert({ severity: 'error', message: 'Failed to unblock user' })
+      }
+    } catch (err) {
+      console.error('Unblock error:', err)
+      if (setAlert)
+        setAlert({ severity: 'error', message: 'Failed to unblock user' })
+    }
+  }
+
+  const handleOpenModal = async () => {
+    setOpenModal(true)
+    if (isSelf) return
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/blockStatus/${user.id}`,
+        {
+          credentials: 'include',
+        }
+      )
+      const data = await response.json()
+      setIsBlocked(data.isBlocked)
+    } catch (err) {
+      console.error('Failed to fetch block status:', err)
+    }
+  }
+
+  const isSelf = currentUser && Number(currentUser.id) === Number(user.id)
 
   return (
     <div>
@@ -36,14 +116,29 @@ function UserCard({
           setOpenModal(false)
         }}
       >
-        Hello!
+        <ProfileInfo
+          user={user}
+          actions={
+            !isSelf && (
+              <GenericButton
+                onClick={isBlocked ? handleUnblockUser : handleBlockUser}
+                unstyled
+                customStyling={`text-xs font-medium border rounded-2xl px-4 py-1 mr-6 ${
+                  isBlocked
+                    ? 'text-gray-500 border-gray-500'
+                    : 'text-red-500 border-red-500'
+                }`}
+              >
+                {isBlocked ? userCardStrings.unblock : userCardStrings.block}
+              </GenericButton>
+            )
+          }
+        ></ProfileInfo>
       </Modal>
       <GenericButton
         unstyled
         customStyling={'w-full'}
-        onClick={() => {
-          setOpenModal(true)
-        }}
+        onClick={handleOpenModal}
       >
         <div
           className={`flex flex-col rounded-xl shadow-md shadow-medium-grey bg-white ${className || ''}`}
@@ -101,6 +196,8 @@ UserCard.propTypes = {
   className: PropTypes.string,
   primaryButtonStyling: PropTypes.string,
   secondaryButtonStyling: PropTypes.string,
+
+  setAlert: PropTypes.func,
 }
 
 export default UserCard
