@@ -3,7 +3,9 @@ const { serverStrings } = require('../../../locales/en/serverLocales')
 const { app } = require('../../../server')
 const { selectUser } = require('../UserUtils')
 const {
-  /*insertNotification, viewUserNotification, viewAllUserNotifications,*/ getUserNotifications,
+  /*insertNotification,*/ viewUserNotification,
+  viewAllUserNotifications,
+  getUserNotifications,
 } = require('../NotificationQueries')
 
 global.fetch = jest.fn()
@@ -33,24 +35,189 @@ jest.mock('../NotificationQueries', () => ({
 }))
 
 const expectedAuthorizedUser = {
-  id: '123456',
+  id: 123456,
   name: 'Test User',
   email: 'test@example.com',
 }
 
 const genericServerError = { error: serverStrings.errors.generic }
 const accessDeniedError = { error: serverStrings.errors.accessDenied }
+// const notificationSendError = { error: serverStrings.errors.notificationSendError }
 
 describe('/notifications/notify endpoint', () => {
-  test('', () => {})
+  beforeEach(() => {
+    mockIsAuthenticated.mockClear()
+    selectUser.mockReset()
+  })
+
+  test('Return 403 if user is not authenticated', async () => {
+    mockIsAuthenticated.mockReturnValue(false)
+    const response = await request(app).post('/notifications/notify')
+
+    expect(response.status).toBe(403)
+    expect(response.body).toEqual(accessDeniedError)
+  })
+
+  test('Return 500 if user is not in database', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockReturnValue(null)
+    const response = await request(app).post('/notifications/notify')
+
+    expect(response.status).toBe(500)
+    expect(response.body).toEqual(genericServerError)
+  })
+
+  test('Return 500 if selectUser throws error', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockRejectedValue(new Error('oops'))
+    const response = await request(app).post('/notifications/notify')
+
+    expect(response.status).toBe(500)
+    expect(response.body).toEqual(genericServerError)
+  })
 })
 
 describe('/notifications/clearNotifications endpoint', () => {
-  test('', () => {})
+  beforeEach(() => {
+    mockIsAuthenticated.mockClear()
+    selectUser.mockReset()
+    viewUserNotification.mockReset()
+    viewAllUserNotifications.mockReset()
+  })
+
+  test('Return 403 if user is not authenticated', async () => {
+    mockIsAuthenticated.mockReturnValue(false)
+    const response = await request(app)
+      .patch('/notifications/clearNotifications')
+      .send({ notificationToClear: { all: true } })
+
+    expect(response.status).toBe(403)
+    expect(viewUserNotification).toHaveBeenCalledTimes(0)
+    expect(viewAllUserNotifications).toHaveBeenCalledTimes(0)
+    expect(response.body).toEqual(accessDeniedError)
+  })
+
+  test('Return 500 if user is not in database', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockReturnValue(null)
+    const response = await request(app)
+      .patch('/notifications/clearNotifications')
+      .send({ notificationToClear: { all: true } })
+
+    expect(response.status).toBe(500)
+    expect(viewUserNotification).toHaveBeenCalledTimes(0)
+    expect(viewAllUserNotifications).toHaveBeenCalledTimes(0)
+    expect(response.body).toEqual(genericServerError)
+  })
+
+  test('Return 500 if selectUser throws error', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockRejectedValue(new Error('oops'))
+    const response = await request(app)
+      .patch('/notifications/clearNotifications')
+      .send({ notificationToClear: { all: true } })
+
+    expect(response.status).toBe(500)
+    expect(viewUserNotification).toHaveBeenCalledTimes(0)
+    expect(viewAllUserNotifications).toHaveBeenCalledTimes(0)
+    expect(response.body).toEqual(genericServerError)
+  })
+
+  test('Return 500 if viewAllUserNotifications throws error', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockResolvedValue(expectedAuthorizedUser)
+    viewAllUserNotifications.mockRejectedValue(new Error('oops'))
+    const response = await request(app)
+      .patch('/notifications/clearNotifications')
+      .send({ notificationToClear: { all: true } })
+
+    expect(response.status).toBe(500)
+    expect(viewUserNotification).toHaveBeenCalledTimes(0)
+    expect(viewAllUserNotifications).toHaveBeenCalledTimes(1)
+    expect(response.body).toEqual(genericServerError)
+  })
+
+  test('Return 500 if viewUserNotification throws error', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockResolvedValue(expectedAuthorizedUser)
+    viewUserNotification.mockRejectedValue(new Error('oops'))
+    const response = await request(app)
+      .patch('/notifications/clearNotifications')
+      .send({ notificationToClear: { all: false, notificationID: 42 } })
+
+    expect(response.status).toBe(500)
+    expect(viewUserNotification).toHaveBeenCalledTimes(1)
+    expect(viewAllUserNotifications).toHaveBeenCalledTimes(0)
+    expect(response.body).toEqual(genericServerError)
+  })
+
+  test('Return 200 when clearing all notifications', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockResolvedValue(expectedAuthorizedUser)
+    viewAllUserNotifications.mockResolvedValue()
+    const response = await request(app)
+      .patch('/notifications/clearNotifications')
+      .send({ notificationToClear: { all: true } })
+
+    expect(response.status).toBe(200)
+    expect(viewAllUserNotifications).toHaveBeenCalledWith(123456)
+    expect(viewUserNotification).toHaveBeenCalledTimes(0)
+    expect(response.body).toEqual({ success: true })
+  })
+
+  test('Return 200 when clearing a single notification', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockResolvedValue(expectedAuthorizedUser)
+    viewUserNotification.mockResolvedValue()
+
+    const response = await request(app)
+      .patch('/notifications/clearNotifications')
+      .send({ notificationToClear: { all: false, notificationID: 42 } })
+
+    expect(response.status).toBe(200)
+    expect(viewUserNotification).toHaveBeenCalledWith(123456, 42)
+    expect(viewAllUserNotifications).toHaveBeenCalledTimes(0)
+    expect(response.body).toEqual({ success: true })
+  })
 })
 
 describe('/notifications/listenForNotifications endpoint', () => {
-  test('', () => {})
+  beforeEach(() => {
+    mockIsAuthenticated.mockClear()
+    selectUser.mockReset()
+  })
+
+  test('Return 403 if user is not authenticated', async () => {
+    mockIsAuthenticated.mockReturnValue(false)
+    const response = await request(app).get(
+      '/notifications/listenForNotifications'
+    )
+
+    expect(response.status).toBe(403)
+    expect(response.body).toEqual(accessDeniedError)
+  })
+
+  test('Return 500 if user is not in database', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockReturnValue(null)
+    const response = await request(app).get(
+      '/notifications/listenForNotifications'
+    )
+
+    expect(response.status).toBe(500)
+    expect(response.body).toEqual(genericServerError)
+  })
+
+  test('Return 500 if selectUser throws error', async () => {
+    mockIsAuthenticated.mockReturnValue(true)
+    selectUser.mockRejectedValue(new Error('oops'))
+    const response = await request(app).get(
+      '/notifications/listenForNotifications'
+    )
+
+    expect(response.status).toBe(500)
+    expect(response.body).toEqual(genericServerError)
+  })
 })
 
 describe('/notifications/getNotifications endpoint', () => {
@@ -65,6 +232,7 @@ describe('/notifications/getNotifications endpoint', () => {
     const response = await request(app).get('/notifications/getNotifications')
 
     expect(response.status).toBe(403)
+    expect(getUserNotifications).toHaveBeenCalledTimes(0)
     expect(response.body).toEqual(accessDeniedError)
   })
 
@@ -74,6 +242,7 @@ describe('/notifications/getNotifications endpoint', () => {
     const response = await request(app).get('/notifications/getNotifications')
 
     expect(response.status).toBe(500)
+    expect(getUserNotifications).toHaveBeenCalledTimes(0)
     expect(response.body).toEqual(genericServerError)
   })
 
@@ -83,6 +252,7 @@ describe('/notifications/getNotifications endpoint', () => {
     const response = await request(app).get('/notifications/getNotifications')
 
     expect(response.status).toBe(500)
+    expect(getUserNotifications).toHaveBeenCalledTimes(0)
     expect(response.body).toEqual(genericServerError)
   })
 
@@ -94,6 +264,7 @@ describe('/notifications/getNotifications endpoint', () => {
     const response = await request(app).get('/notifications/getNotifications')
 
     expect(response.status).toBe(500)
+    expect(getUserNotifications).toHaveBeenCalledTimes(1)
     expect(response.body).toEqual(genericServerError)
   })
 
