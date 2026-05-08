@@ -34,7 +34,6 @@ export default function MainMap({
   onLoad,
   onUnmount,
   mapKey,
-  defaultPin,
   events,
   onMapClick,
   onCenterChanged,
@@ -74,12 +73,6 @@ export default function MainMap({
         }}
       >
         <RadiusCircle center={defaultCenter} radius={searchRadius} />
-        {defaultPin && (
-          <AdvancedMarker position={defaultCenter}>
-            {/* to do: decide to remove this pin fully. will get cluttered if event pins are showing. */}
-            <Pin scale={0} />
-          </AdvancedMarker>
-        )}
         {route && <MapController center={defaultCenter} route={route} />}
         {children}
         {events?.map(
@@ -154,7 +147,6 @@ MainMap.propTypes = {
   onLoad: PropTypes.func,
   onUnmount: PropTypes.func,
   mapKey: PropTypes.string,
-  defaultPin: PropTypes.bool,
   events: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
@@ -171,7 +163,6 @@ MainMap.defaultProps = {
   onLoad: undefined,
   onUnmount: undefined,
   mapKey: undefined,
-  defaultPin: false,
   events: [],
   onMapClick: undefined,
   onCenterChanged: undefined,
