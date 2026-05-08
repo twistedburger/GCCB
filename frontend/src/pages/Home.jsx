@@ -182,6 +182,7 @@ function Home() {
               setHasPanned(true)
             }
           }}
+          searchRadius={filters.radius}
         />
 
         {!selectedRoute && !isEventDetail && (

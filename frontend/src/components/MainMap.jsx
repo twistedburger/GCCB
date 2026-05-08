@@ -11,6 +11,7 @@ import { useState } from 'react'
 import GenericButton from './GenericButton'
 import { useNavigate } from 'react-router-dom'
 import { Close } from '@mui/icons-material'
+import { RadiusCircle } from '../utils/MainMapUtils'
 
 /**
  * Component to display the main map.
@@ -22,6 +23,7 @@ import { Close } from '@mui/icons-material'
  * @param {Function} onUnmount - The function to call when the map is unmounted.
  * @param {Array} events - The events to map as markers on the map.
  * @param {Function} onMapClick - The function to call when the map is clicked.
+ * @param {Number} searchRadius - The radius of the current search to draw a circle.
  * @returns {JSX.Element}
  */
 
@@ -36,6 +38,7 @@ export default function MainMap({
   events,
   onMapClick,
   onCenterChanged,
+  searchRadius = 2000,
 }) {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const navigate = useNavigate()
@@ -51,7 +54,7 @@ export default function MainMap({
         className="absolute w-full h-full"
         key={mapKey}
         defaultCenter={defaultCenter}
-        defaultZoom={12}
+        defaultZoom={13}
         gestureHandling="greedy"
         disableDefaultUI={true}
         onLoad={onLoad}
@@ -70,6 +73,7 @@ export default function MainMap({
           }
         }}
       >
+        <RadiusCircle center={defaultCenter} radius={searchRadius} />
         {defaultPin && (
           <AdvancedMarker position={defaultCenter}>
             {/* to do: decide to remove this pin fully. will get cluttered if event pins are showing. */}
@@ -160,6 +164,7 @@ MainMap.propTypes = {
   ),
   onMapClick: PropTypes.func,
   onCenterChanged: PropTypes.func,
+  searchRadius: PropTypes.Number,
 }
 
 MainMap.defaultProps = {
@@ -170,4 +175,5 @@ MainMap.defaultProps = {
   events: [],
   onMapClick: undefined,
   onCenterChanged: undefined,
+  searchRadius: 0,
 }
