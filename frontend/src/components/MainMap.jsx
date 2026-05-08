@@ -4,8 +4,12 @@ import {
   Map,
   AdvancedMarker,
   Pin,
+  InfoWindow,
 } from '@vis.gl/react-google-maps'
 import MapController from './MapController'
+import { useState } from 'react'
+import GenericButton from './GenericButton'
+import { useNavigate } from 'react-router-dom'
 
 /**
  * Component to display the main map.
@@ -28,6 +32,9 @@ export default function MainMap({
   defaultPin,
   events,
 }) {
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const navigate = useNavigate()
+
   return (
     <APIProvider
       apiKey=""
@@ -39,15 +46,16 @@ export default function MainMap({
         className="absolute w-full h-full"
         key={mapKey}
         defaultCenter={defaultCenter}
-        defaultZoom={17}
+        defaultZoom={12}
         gestureHandling="greedy"
         disableDefaultUI={true}
         onLoad={onLoad}
         onUnmount={onUnmount}
+        onClick={() => setSelectedEvent(null)}
       >
         {defaultPin && (
           <AdvancedMarker position={defaultCenter}>
-            {/* to do: decide to remove this pin fully */}
+            {/* to do: decide to remove this pin fully. will get cluttered if event pins are showing. */}
             <Pin scale={0} />
           </AdvancedMarker>
         )}
@@ -60,10 +68,52 @@ export default function MainMap({
               <AdvancedMarker
                 key={event.id}
                 position={{ lat: event.lat, lng: event.lng }}
+                onClick={() => setSelectedEvent(event)}
               >
                 <Pin scale={0.75} />
               </AdvancedMarker>
             )
+        )}
+        {selectedEvent && (
+          <GenericButton
+            unstyled
+            onClick={() => {
+              navigate(`/event/${selectedEvent.id}`)
+            }}
+          >
+            <InfoWindow
+              position={{ lat: selectedEvent.lat, lng: selectedEvent.lng }}
+              onCloseClick={() => setSelectedEvent(null)}
+              disableAutoPan
+              shouldFocus={false}
+              headerDisabled
+              pixelOffset={[0, -32]}
+            >
+              <div className="px-3 pb-3">
+                <div className="flex justify-between items-start gap-4">
+                  <p className="font-semibold text-sm text-text-primary">
+                    {selectedEvent.title}
+                  </p>
+                  <GenericButton
+                    unstyled
+                    customStyling="text-text-secondary shrink-0 pr-2"
+                    onClick={e => {
+                      e.stopPropagation()
+                      setSelectedEvent(null)
+                    }}
+                  >
+                    ✕
+                  </GenericButton>
+                </div>
+                <p className="text-xs text-text-primary mt-1">
+                  {selectedEvent.location}
+                </p>
+                <p className="text-xs text-text-primary mt-0.5">
+                  {new Date(selectedEvent.event_time).toLocaleString()}
+                </p>
+              </div>
+            </InfoWindow>
+          </GenericButton>
         )}
       </Map>
     </APIProvider>
