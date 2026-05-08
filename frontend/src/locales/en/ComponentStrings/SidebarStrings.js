@@ -4,6 +4,7 @@ export const sidebarStrings = {
   dashboard: 'Dashboard',
   moderate: 'Moderate',
   bannedUsers: 'Banned Users',
+  chats: 'Chats',
   userGuide: 'USER GUIDE',
   logout: 'LOGOUT',
 }

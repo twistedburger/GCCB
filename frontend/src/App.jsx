@@ -17,6 +17,7 @@ import Filter from './pages/home/Filter'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
 import BannedUsers from './pages/BannedUsers'
+import Chats from './pages/Chats'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
@@ -107,6 +108,7 @@ function App() {
                   />
                   <Route path="/user-guide" element={<UserGuide />} />
                   <Route path="/bannedusers" element={<BannedUsers />} />
+                  <Route path="/chat/*" element={<Chats />} />
                 </Route>
                 <Route
                   element={
