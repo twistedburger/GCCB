@@ -1,3 +1,11 @@
+/**
+ * Processes the result of an event creation form.
+ *
+ * @param {Object} result - The response object from the form.
+ * @param {Function} setShowCreateEvent - Function to toggle the event creation modal/view.
+ * @param {Function} setAlert - Function to trigger a UI alert/notification.
+ * @param {Function} onSuccess - Callback to execute on success.
+ */
 export const handleFormResult = (
   result,
   { setShowCreateEvent, setAlert, onSuccess }
@@ -11,6 +19,12 @@ export const handleFormResult = (
   }
 }
 
+/**
+ * Returns a success callback that updates state with coordinates.
+ *
+ * @param {Function} setUserLocation - State setter function for the user's location.
+ * @returns {Function} A callback function that accepts a GeolocationPosition object.
+ */
 export function locationSetSuccess(setUserLocation) {
   return position => {
     setUserLocation({
@@ -20,10 +34,21 @@ export function locationSetSuccess(setUserLocation) {
   }
 }
 
+/**
+ * Error callback for the Geolocation API.
+ */
 export function locationSetError() {
   console.log('Location access denied, using default')
 }
 
+/**
+ * Constructs a backend URL for searching events or routes based on filters and location.
+ *
+ * @param {Object} filters - The search filter criteria.
+ * @param {Object} userLocation - The user's current coordinates.
+ * @param {boolean} isArriving - Flag indicating if the search is for arrival or departure.
+ * @returns {string} The formatted API endpoint URL with query parameters.
+ */
 export function buildSearchURL(filters, userLocation, isArriving) {
   const params = new URLSearchParams()
   if (filters.time) params.append('time', filters.time)
@@ -40,6 +65,12 @@ export function buildSearchURL(filters, userLocation, isArriving) {
     : `${import.meta.env.VITE_API_BASE_URL}/api/routes?${params}`
 }
 
+/**
+ * Converts coordinates into a readable street address using Google Maps Geocoder.
+ *
+ * @param {Object} latLng - The coordinates to geocode.
+ * @returns {Promise<string>} A promise that resolves to the formatted address string.
+ */
 export function reverseGeocode(latLng) {
   return new Promise((resolve, reject) => {
     const geocoder = new google.maps.Geocoder()
@@ -53,6 +84,14 @@ export function reverseGeocode(latLng) {
   })
 }
 
+/**
+ * Determines if the map has panned significantly away from the user's location based on a threshold.
+ *
+ * @param {Object} newCenter - The current center coordinates of the map.
+ * @param {Object} userLocation - The user's original/stored location coordinates.
+ * @param {number} [threshold=0.001] - The maximum total coordinate difference allowed before returning true.
+ * @returns {boolean} True if the distance exceeds the threshold, false otherwise.
+ */
 export function hasMapPanned(newCenter, userLocation, threshold = 0.001) {
   const dist =
     Math.abs(newCenter.lat - userLocation.lat) +

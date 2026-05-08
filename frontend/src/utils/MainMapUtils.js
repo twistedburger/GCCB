@@ -5,8 +5,8 @@ import { useEffect } from 'react'
 /**
  * Converts a PostGIS hex string to a lat/lng object.
  *
- * @param {String} hexString geometry string from PostGIS
- * @returns {Object} lat/lng coordinate object for google maps
+ * @param {String} hexString - The geometry string from PostGIS.
+ * @returns {Object} The lat/lng coordinate object for google maps.
  */
 export const postGISToLatLng = hexString => {
   const buf = new Uint8Array(hexString.match(/../g).map(b => parseInt(b, 16)))
@@ -16,6 +16,12 @@ export const postGISToLatLng = hexString => {
   return { lat, lng }
 }
 
+/**
+ * Creates a Circle component for users to see their search radius and renders it on the map.
+ *
+ * @param {Object} center - The center coordinates of the circle.
+ * @param {number} radius - The radius of the circle in meters.
+ */
 export const RadiusCircle = ({ center, radius }) => {
   const map = useMap()
 
