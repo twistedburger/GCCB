@@ -5,6 +5,4 @@ const NotificationType = Object.freeze({
   Message: { key: 'Message', idType: 'message_id', type: 'message' },
 })
 
-export { NotificationType }
-
-if (typeof module !== 'undefined') module.exports = { NotificationType }
+module.exports = { NotificationType }
