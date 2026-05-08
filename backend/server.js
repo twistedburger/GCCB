@@ -55,6 +55,15 @@ const analytics = createAnalyticsHelpers({
   emissions: { EMISSIONS_G_PER_KM },
 })
 
+setInterval(async () => {
+  await db.query(`
+    UPDATE route
+    SET completed = TRUE
+    WHERE completed = FALSE
+    AND depart_time < NOW()
+  `)
+}, 60 * 1000)
+
 /**
  * Proxy server route to fetch map from google maps api
  *
