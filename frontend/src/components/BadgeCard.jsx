@@ -17,6 +17,7 @@ import {
   DirectionsRailway,
 } from '@mui/icons-material'
 import GenericCard from './GenericCard'
+import { progressWidth, metricUnit } from '../utils/BadgeUtils'
 
 const BADGE_ICONS = {
   leaf: EmojiNature,
@@ -60,15 +61,27 @@ const TIER_CONFIG = {
 }
 
 export default function BadgeCard({ badge, showLocked = false }) {
-  const { title, category, tier, iconKey, earned } = badge
+  const {
+    title,
+    category,
+    tier,
+    iconKey,
+    metric,
+    earned,
+    dateEarned,
+    currentValue,
+    progress,
+    threshold,
+  } = badge
 
-  const isInProgress = !earned && (badge.currentValue ?? 0) > 0
+  const isInProgress = !earned && (currentValue ?? 0) > 0
   const isLocked = !earned && !isInProgress
 
   if (isLocked && !showLocked) return null
 
   const tierConfig = TIER_CONFIG[tier] ?? TIER_CONFIG[1]
   const IconComp = BADGE_ICONS[iconKey] ?? Star
+  const unit = metricUnit(metric)
 
   const iconStyle = earned
     ? tierConfig.iconColor
@@ -77,6 +90,14 @@ export default function BadgeCard({ badge, showLocked = false }) {
       : 'text-medium-grey'
 
   const cardExtra = isLocked ? 'opacity-60' : ''
+
+  const earnedDateLabel = dateEarned
+    ? new Date(dateEarned).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : ''
 
   return (
     <GenericCard customStyling={`p-4 flex flex-col gap-2 ${cardExtra}`}>
@@ -100,6 +121,37 @@ export default function BadgeCard({ badge, showLocked = false }) {
           {category?.replace('_', ' ')}
         </p>
       </div>
+
+      {earned && (
+        <p className="text-[11px] text-green-primary font-medium mt-auto">
+          Earned {earnedDateLabel}
+        </p>
+      )}
+
+      {isInProgress && (
+        <div className="mt-auto flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-1.5 rounded-full bg-light-grey overflow-hidden">
+              <div
+                className={`h-1.5 rounded-full transition-all duration-500 ${tierConfig.barColor}`}
+                style={{ width: progressWidth(progress) }}
+              />
+            </div>
+            <span className="text-[10px] text-text-secondary tabular-nums shrink-0">
+              {Math.round((progress ?? 0) * 100)}%
+            </span>
+          </div>
+          <p className="text-[11px] text-text-secondary">
+            {Number(currentValue ?? 0).toFixed(1)} / {threshold} {unit}
+          </p>
+        </div>
+      )}
+
+      {isLocked && (
+        <p className="text-[11px] text-medium-grey mt-auto">
+          {threshold} {unit} needed
+        </p>
+      )}
     </GenericCard>
   )
 }
