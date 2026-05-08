@@ -19,7 +19,12 @@ export function NotificationProvider({ children }) {
 
     stream.onmessage = event => {
       const notificationsResponse = JSON.parse(event.data)
-      setNotifications(notificationsResponse.notifications)
+      if (notificationsResponse.error) {
+        console.log(notificationsResponse.error)
+        setNotifications([])
+      } else {
+        setNotifications(notificationsResponse.notifications)
+      }
     }
 
     stream.onerror = () => {

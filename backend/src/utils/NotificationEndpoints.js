@@ -9,6 +9,7 @@ const {
 } = require('./NotificationQueries')
 const { EventEmitter } = require('events')
 const { selectUser } = require('./UserUtils')
+const { handleNotifications } = require('./NotificationUtils')
 
 const notificationEmitter = new EventEmitter()
 
@@ -88,28 +89,11 @@ notificationRouter.get('/listenForNotifications', async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
-
-  const handleNotifications = async notifications => {
-    const usersToNotify = notifications.map(
-      notification => notification.user_id
-    )
-    try {
-      const user = await selectUser(req)
-      if (usersToNotify.includes(user.id)) {
-        const notifications = await getUserNotifications(user.id)
-        res.write(`data: ${JSON.stringify({ notifications })}\n\n`)
-      }
-    } catch {
-      res.write(
-        `data: ${JSON.stringify({ error: serverStrings.errors.generic })}\n\n`
-      )
-    }
-  }
-
-  notificationEmitter.on('notification', handleNotifications)
+  let notificationHandler = handleNotifications(req, res)
+  notificationEmitter.on('notification', notificationHandler)
 
   req.on('close', () =>
-    notificationEmitter.off('notification', handleNotifications)
+    notificationEmitter.off('notification', notificationHandler)
   )
 })
 
