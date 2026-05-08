@@ -39,3 +39,23 @@ export function buildSearchURL(filters, userLocation, isArriving) {
     ? `${import.meta.env.VITE_API_BASE_URL}/api/events?${params}`
     : `${import.meta.env.VITE_API_BASE_URL}/api/routes?${params}`
 }
+
+export function reverseGeocode(latLng) {
+  return new Promise((resolve, reject) => {
+    const geocoder = new google.maps.Geocoder()
+    geocoder.geocode({ location: latLng }, (results, status) => {
+      if (status === 'OK' && results[0]) {
+        resolve(results[0].formatted_address)
+      } else {
+        reject(status)
+      }
+    })
+  })
+}
+
+export function hasMapPanned(newCenter, userLocation, threshold = 0.001) {
+  const dist =
+    Math.abs(newCenter.lat - userLocation.lat) +
+    Math.abs(newCenter.lng - userLocation.lng)
+  return dist > threshold
+}

@@ -10,6 +10,7 @@ import MapController from './MapController'
 import { useState } from 'react'
 import GenericButton from './GenericButton'
 import { useNavigate } from 'react-router-dom'
+import { Close } from '@mui/icons-material'
 
 /**
  * Component to display the main map.
@@ -34,6 +35,7 @@ export default function MainMap({
   defaultPin,
   events,
   onMapClick,
+  onCenterChanged,
 }) {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const navigate = useNavigate()
@@ -54,11 +56,17 @@ export default function MainMap({
         disableDefaultUI={true}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        onClick={e => {
+        onClick={mapClick => {
           setSelectedEvent(null)
           if (onMapClick) {
-            const { lat, lng } = e.detail.latLng
+            const { lat, lng } = mapClick.detail.latLng
             onMapClick({ lat, lng })
+          }
+        }}
+        onDragend={drag => {
+          if (onCenterChanged) {
+            const center = drag.map.getCenter()
+            onCenterChanged({ lat: center.lat(), lng: center.lng() })
           }
         }}
       >
@@ -98,20 +106,20 @@ export default function MainMap({
               headerDisabled
               pixelOffset={[0, -32]}
             >
-              <div className="px-3 pb-3">
+              <div className="pl-3 pb-3 pr-5">
                 <div className="flex justify-between items-start gap-4">
                   <p className="font-semibold text-sm text-text-primary">
                     {selectedEvent.title}
                   </p>
                   <GenericButton
                     unstyled
-                    customStyling="text-text-secondary shrink-0 pr-2"
-                    onClick={e => {
-                      e.stopPropagation()
+                    customStyling="text-text-secondary shrink-0"
+                    onClick={click => {
+                      click.stopPropagation()
                       setSelectedEvent(null)
                     }}
                   >
-                    ✕
+                    <Close></Close>
                   </GenericButton>
                 </div>
                 <p className="text-xs text-text-primary mt-1">
@@ -151,6 +159,7 @@ MainMap.propTypes = {
     })
   ),
   onMapClick: PropTypes.func,
+  onCenterChanged: PropTypes.func,
 }
 
 MainMap.defaultProps = {
@@ -160,4 +169,5 @@ MainMap.defaultProps = {
   defaultPin: false,
   events: [],
   onMapClick: undefined,
+  onCenterChanged: undefined,
 }

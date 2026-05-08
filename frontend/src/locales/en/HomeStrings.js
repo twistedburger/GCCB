@@ -6,6 +6,7 @@ export const homeStrings = {
 
   location: {
     current: 'Current Location',
+    searchThisArea: 'Search this area',
   },
 
   emptyState: 'No results found. Try adjusting your filters.',
