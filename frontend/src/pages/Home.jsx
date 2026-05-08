@@ -96,8 +96,10 @@ function Home() {
     const url = buildSearchURL(
       { ...filters, mainEventsOnly: apiMainEvents },
       userLocation,
-      isArriving
+      isArriving,
+      import.meta.env.VITE_API_BASE_URL
     )
+    console.log(url)
     fetch(url, { credentials: 'include' })
       .then(response => {
         if (!response.ok) throw new Error(`HTTP error: ${response.status}`)

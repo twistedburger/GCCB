@@ -16,6 +16,12 @@ export const homeStrings = {
     modalTitleWithName: title => `Report ${title}`,
   },
 
+  utils: {
+    successCreation: 'Event created successfully.',
+    failureCreation: 'Failed to create event.',
+    defaultLocation: 'Location access denied, using default',
+  },
+
   a11y: {
     drawerTitle: 'Search Results',
     drawerDescription: 'Search results near your location',

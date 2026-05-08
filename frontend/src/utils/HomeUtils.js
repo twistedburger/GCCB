@@ -1,3 +1,7 @@
+import { homeStrings } from '../locales/en/HomeStrings'
+
+const homeUtilStrings = homeStrings.utils
+
 /**
  * Processes the result of an event creation form.
  *
@@ -12,10 +16,10 @@ export const handleFormResult = (
 ) => {
   if (result.success) {
     setShowCreateEvent(false)
-    setAlert({ type: 'success', text: 'Event created successfully.' })
+    setAlert({ type: 'success', text: homeUtilStrings.successCreation })
     onSuccess?.()
   } else {
-    setAlert({ type: 'error', text: 'Failed to create event.' })
+    setAlert({ type: 'error', text: homeUtilStrings.failureCreation })
   }
 }
 
@@ -38,7 +42,7 @@ export function locationSetSuccess(setUserLocation) {
  * Error callback for the Geolocation API.
  */
 export function locationSetError() {
-  console.log('Location access denied, using default')
+  console.log(homeUtilStrings.defaultLocation)
 }
 
 /**
@@ -47,9 +51,10 @@ export function locationSetError() {
  * @param {Object} filters - The search filter criteria.
  * @param {Object} userLocation - The user's current coordinates.
  * @param {boolean} isArriving - Flag indicating if the search is for arrival or departure.
+ * @param {String} baseUrl - Base URL to create the search URL.
  * @returns {string} The formatted API endpoint URL with query parameters.
  */
-export function buildSearchURL(filters, userLocation, isArriving) {
+export function buildSearchURL(filters, userLocation, isArriving, baseUrl) {
   const params = new URLSearchParams()
   if (filters.time) params.append('time', filters.time)
   if (filters.transportationModes.length > 0)
@@ -61,8 +66,8 @@ export function buildSearchURL(filters, userLocation, isArriving) {
   params.append('latitude', userLocation.lat)
 
   return filters.mainEventsOnly
-    ? `${import.meta.env.VITE_API_BASE_URL}/api/events?${params}`
-    : `${import.meta.env.VITE_API_BASE_URL}/api/routes?${params}`
+    ? `${baseUrl}/api/events?${params}`
+    : `${baseUrl}/api/routes?${params}`
 }
 
 /**
@@ -71,11 +76,11 @@ export function buildSearchURL(filters, userLocation, isArriving) {
  * @param {Object} latLng - The coordinates to geocode.
  * @returns {Promise<string>} A promise that resolves to the formatted address string.
  */
-export function reverseGeocode(latLng) {
+export const reverseGeocode = latlng => {
   return new Promise((resolve, reject) => {
     const geocoder = new google.maps.Geocoder()
-    geocoder.geocode({ location: latLng }, (results, status) => {
-      if (status === 'OK' && results[0]) {
+    geocoder.geocode({ location: latlng }, (results, status) => {
+      if (status === 'OK' && results && results.length > 0) {
         resolve(results[0].formatted_address)
       } else {
         reject(status)
