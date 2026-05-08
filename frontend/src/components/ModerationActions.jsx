@@ -80,7 +80,7 @@ export default function ModerationActions({
               unstyled={true}
               customStyling="bg-green-secondary border border-green-primary text-green-primary py-1 px-2 rounded-lg text-xs"
             >
-              <span>Approve</span>
+              <span>{moderationStrings.approve}</span>
             </GenericButton>
             <GenericButton
               onClick={e => {
@@ -90,7 +90,7 @@ export default function ModerationActions({
               unstyled={true}
               customStyling="bg-red-100 border border-red-500 text-red-500 py-1 px-2 rounded-lg text-xs"
             >
-              <span>Reject</span>
+              <span>{moderationStrings.reject}</span>
             </GenericButton>
           </div>
         </div>

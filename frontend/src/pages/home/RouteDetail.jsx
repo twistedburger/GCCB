@@ -9,6 +9,10 @@ import TransitLegCard from '../../components/TransitLegCard'
 import { Drawer } from 'vaul'
 import Report from '../../components/Report'
 import { calculateTransitLegs } from '../../utils/RouteUtils'
+import { transitLegCardStrings } from '../../locales/en/ComponentStrings/TransitLegCardStrings'
+import { organizerCardStrings } from '../../locales/en/ComponentStrings/OrganizerCardStrings'
+import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
+import { routeDetailStrings } from '../../locales/en/RouteDetailStrings'
 
 /**
  * Drawer for displaying a route once selected.
@@ -22,6 +26,8 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
   const [snapPoint, setSnapPoint] = useState(0.25)
   const navigate = useNavigate()
   const [showReport, setShowReport] = useState(false)
+  const [showParticipants, setShowParticipants] = useState(false)
+  const [participants, setParticipants] = useState([])
   const [reportData, setReportData] = useState(null)
 
   const handleClose = () => {
@@ -58,9 +64,11 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
           }}
           className="z-50 ml-13.75 w-[calc(100%-55px)] rounded-t-3xl h-[96%] fixed bottom-0 bg-drawer-background flex flex-col overflow-hidden pointer-events-auto"
         >
-          <Drawer.Title className="sr-only">Route Detail</Drawer.Title>
+          <Drawer.Title className="sr-only">
+            {transitLegCardStrings.a11y.drawerTitle}
+          </Drawer.Title>
           <Drawer.Description className="sr-only">
-            Route and event details
+            {transitLegCardStrings.a11y.drawerDescription}
           </Drawer.Description>
           {selectedRoute && (
             <div className="flex flex-col max-h-full rounded-t-3xl">
@@ -77,10 +85,27 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
               </div>
               <div className="flex flex-col overflow-y-auto pb-[25dvh] px-6">
                 {/* drawer snap point is 80% max, so padding in Route Detail is 25% from bottom */}
-                <div className="flex flex-col pb-4">
-                  <h3 className="font-semibold text-xl text-text-primary pb-2">
+                <div className="flex flex-col gap-1 items-start">
+                  <h3 className="font-semibold text-xl text-text-primary">
                     {selectedRoute.title}
                   </h3>
+                  <GenericButton
+                    unstyled
+                    customStyling={'text-sm text-text-secondary font-medium'}
+                    onClick={async () => {
+                      const res = await fetch(
+                        `${process.env.REACT_APP_API_BASE_URL}/api/getParticipants/${selectedRoute.id}`,
+                        {
+                          credentials: 'include',
+                        }
+                      )
+                      const data = await res.json()
+                      setParticipants(data)
+                      setShowParticipants(true)
+                    }}
+                  >
+                    {routeDetailStrings.seeParticipants}
+                  </GenericButton>
                   <span className="text-xs text-text-secondary">
                     {selectedRoute.description}
                   </span>
@@ -94,7 +119,9 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                   />
                 </div>
                 <p className="font-semibold pt-4 pb-2 text-text-primary">
-                  {transitLegs.length > 0 ? 'Transit Details' : ''}
+                  {transitLegs.length > 0
+                    ? transitLegCardStrings.transitDetails
+                    : ''}
                 </p>
                 <div className="flex flex-col gap-2">
                   {transitLegs.map((leg, index) => (
@@ -106,23 +133,73 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                     />
                   ))}
                 </div>
-                <p className="font-semibold pt-4 pb-2 text-text-primary">
-                  Organizer
-                </p>
-                <OrganizerCard
-                  user={{
-                    id: selectedRoute.creator_id,
-                    name: selectedRoute.creator_name,
-                    nickname: selectedRoute.nickname,
-                    profile_pic: selectedRoute.profile_pic,
-                    role: '',
-                    description: '',
-                    active: true,
-                  }}
-                />
               </div>
             </div>
           )}
+
+          {/* Nested Drawer for participants */}
+          <Drawer.NestedRoot
+            open={showParticipants}
+            onOpenChange={setShowParticipants}
+            shouldScaleBackground={false}
+            dismissible={false}
+            modal={true}
+          >
+            <Drawer.Portal>
+              <Drawer.Overlay className="fixed inset-0 z-60 bg-black/40" />
+              <Drawer.Content
+                onOpenAutoFocus={e => {
+                  const focusable =
+                    e.currentTarget.querySelector('button, input')
+                  if (focusable) focusable.focus()
+                }}
+                onPointerDownOutside={() => setShowParticipants(false)}
+                className="fixed bottom-0 left-13.75 right-0 z-60 flex flex-col rounded-t-3xl bg-white"
+                style={{ height: '80%' }}
+              >
+                <Drawer.Title className="sr-only">
+                  {routeDetailStrings.participants}
+                </Drawer.Title>
+                <Drawer.Description className="sr-only">
+                  {routeDetailStrings.participantsDescription}
+                </Drawer.Description>
+                <div className="flex justify-between items-start px-4 pt-2 shrink-0">
+                  <div className="w-8" />
+                  <GenericButton
+                    onClick={() => setShowParticipants(false)}
+                    unstyled={true}
+                    customStyling="text-text-primary scale-110"
+                  >
+                    <Cancel />
+                  </GenericButton>
+                </div>
+                <div className="flex flex-col overflow-y-auto pb-8 px-6 gap-2">
+                  <p className="font-semibold pb-2 text-text-primary shrink-0">
+                    {organizerCardStrings.organizer}
+                  </p>
+                  <OrganizerCard
+                    user={{
+                      id: selectedRoute?.creator_id,
+                      name: selectedRoute?.creator_name,
+                      nickname: selectedRoute?.nickname,
+                      profile_pic: selectedRoute?.profile_pic,
+                      role: '',
+                      description: '',
+                      active: true,
+                    }}
+                  />
+                  <p className="font-semibold pt-4 pb-2 text-text-primary shrink-0">
+                    {routeDetailStrings.participants}
+                  </p>
+                  {participants.map(participant => (
+                    <OrganizerCard key={participant.id} user={participant} />
+                  ))}
+                </div>
+              </Drawer.Content>
+            </Drawer.Portal>
+          </Drawer.NestedRoot>
+
+          {/* Nested Drawer for reports */}
           <Drawer.NestedRoot
             open={showReport}
             onOpenChange={setShowReport}
@@ -154,10 +231,10 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                   {reportData && (
                     <>
                       <Drawer.Title className="text-lg font-bold mb-4">
-                        Report {reportData.title}
+                        {reportStrings.reportTitle(reportData.title)}
                       </Drawer.Title>
                       <Drawer.Description className="sr-only">
-                        Report Page
+                        {reportStrings.a11y.reportPage}
                       </Drawer.Description>
                       <Report
                         type={reportData.type}
@@ -179,6 +256,7 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
 
 RouteDetail.propTypes = {
   selectedRoute: PropTypes.shape({
+    id: PropTypes.number,
     title: PropTypes.string,
     description: PropTypes.string,
     creator_id: PropTypes.number,

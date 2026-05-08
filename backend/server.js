@@ -1,4 +1,9 @@
-require('dotenv').config({ path: __dirname + '/.env' })
+const path = require('path')
+const dotenv = require('dotenv')
+
+const envFile =
+  process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
+dotenv.config({ path: path.join(__dirname, envFile) })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
@@ -18,18 +23,30 @@ const config = {
   authRequired: false,
   auth0Logout: true,
   secret: process.env.AUTH0_SECRET,
-  baseURL: 'http://localhost:3000',
+  baseURL: process.env.BASE_URL || `http://localhost:${port}`,
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_DOMAIN,
 }
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 )
-app.use(auth(config))
+
+app.use(
+  auth({
+    ...config,
+    session: {
+      cookie: {
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  })
+)
+
 app.use(express.json())
 
 const analytics = createAnalyticsHelpers({
@@ -77,7 +94,7 @@ app.get('/maps/api/js', async (req, res) => {
  */
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  const returnTo = req.query.returnTo || process.env.FRONTEND_URL
   res.oidc.login({
     returnTo: returnTo,
     authorizationParams: {
@@ -90,7 +107,7 @@ app.get('/loginRoute', (req, res) => {
  * Logout route routes to Auth0 deauthentication. Returns to homepage once logout completed
  */
 app.get('/logoutRoute', (req, res) => {
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  const returnTo = req.query.returnTo || process.env.FRONTEND_URL
   res.oidc.logout({
     returnTo: returnTo,
   })
@@ -855,13 +872,15 @@ app.get('/api/eventdetail/:id', async (req, res) => {
         ) as "isJoined"
       FROM route r
       LEFT JOIN event_route er ON er.route_id = r.id
-      WHERE er.event_id = $1 AND r.reported < 3 AND r.depart_time > NOW()
+      WHERE er.event_id = $1
+      AND r.reported < 3
+      AND r.depart_time > NOW()
       ${
         blockedIds.length > 0
           ? `AND NOT EXISTS (
         SELECT 1 FROM user_route ur
         WHERE ur.route_id = r.id
-        AND ur.user_id IN (${blockedIds.map((_, i) => `$${i + 2}`).join(',')})
+        AND ur.user_id IN (${blockedIds.map((_, i) => `$${i + 3}`).join(',')})
         )`
           : ''
       }`,
@@ -1790,6 +1809,125 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
     return res.status(500).send(serverStrings.errors.generic)
   } finally {
     client.release()
+  }
+})
+
+/**
+ * Returns banned users or blocked users depending on user's role.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} banned users, or an empty array
+ */
+app.get('/api/bannedUsers', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    let result
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+
+    if (user.role === 'moderator') {
+      result = await db.query(`
+      SELECT * FROM "user"
+      WHERE reported > 3
+      ORDER BY name
+    `)
+    } else {
+      result = await db.query(
+        `
+        SELECT u.* FROM blocked_user bu
+        LEFT JOIN "user" u ON u.id = bu.blocked_user_id
+        WHERE bu.blocker_id = $1
+        ORDER BY u.name
+      `,
+        [user.id]
+      )
+    }
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Unbans or unblocks a user depending on their role.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+app.post('/api/unbanUser/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    let result
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+
+    if (user.role === 'moderator') {
+      result = await db.query(
+        `
+      UPDATE "user"
+      SET reported = 0
+      WHERE id = $1
+      RETURNING * 
+    `,
+        [req.params.userId]
+      )
+    } else {
+      result = await db.query(
+        `
+        DELETE FROM blocked_user
+        WHERE blocker_id = $1 AND blocked_user_id = $2
+        RETURNING *
+      `,
+        [user.id, req.params.userId]
+      )
+    }
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error unbanning user:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Returns the joined participants for a selected route.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} joined participants for a given route, or an empty array
+ */
+app.get('/api/getParticipants/:routeId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const { routeId } = req.params
+
+  try {
+    const result = await db.query(
+      `SELECT u.id, u.name, u.nickname, u.profile_pic, u.role, u.description, u.active
+       FROM user_route ur
+       JOIN "user" u ON u.id = ur.user_id
+       WHERE ur.route_id = $1`,
+      [routeId]
+    )
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error fetching participants:', error)
+    res.status(500).send(serverStrings.errors.generic)
   }
 })
 

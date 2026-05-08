@@ -227,7 +227,7 @@ export default function Sidebar({ userData }) {
               </button>
               <button
                 onClick={() =>
-                  (window.location.href = 'http://localhost:3000/logoutRoute')
+                  (window.location.href = `${import.meta.env.VITE_API_BASE_URL}/logoutRoute`)
                 }
                 className="block py-2 text-xs text-red-500 font-bold"
               >

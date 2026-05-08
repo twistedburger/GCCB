@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --mode development",
+    "prod": "vite --mode production",
+    "build": "vite build --mode production",
     "preview": "vite preview",
     "test": "jest",
     "lint": "eslint .",
@@ -31,7 +32,7 @@
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-hooks": "^6.0.0-rc.2",
     "globals": "^17.0.0",
     "identity-obj-proxy": "^3.0.0",
     "jest-environment-jsdom": "^30.3.0"

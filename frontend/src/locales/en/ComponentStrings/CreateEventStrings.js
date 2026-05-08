@@ -23,5 +23,16 @@ export const createEventStrings = {
   descriptionLabel: 'Event Description',
   addedRoutesTitle: 'Added Routes',
   addRoute: 'Add a Route',
+  alreadyJoinedRoute: 'Already Joined a Route',
   createEvent: 'Create Event',
+  routeCreationSuccess: 'Route created successfully!',
+  routeCreationError: 'Error creating route. Please try again.',
+  travelOptions: 'Travel Options',
+  noRoutes: 'No travel options available for this event.',
+  createNewRoute: 'Create a New Route',
+
+  a11y: {
+    drawerTitle: 'Event Detail',
+    drawerDescription: 'Event details',
+  },
 }

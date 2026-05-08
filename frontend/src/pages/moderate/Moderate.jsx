@@ -7,6 +7,7 @@ import OrganizerCard from '../../components/OrganizerCard'
 import { useNavigate } from 'react-router-dom'
 import ModerationActions from '../../components/ModerationActions'
 import Alert from '../../components/Alert'
+import { moderationStrings } from '../../locales/en/ComponentStrings/ModerationActionsStrings'
 
 /**
  * Creates the Moderator page.
@@ -22,7 +23,9 @@ function Moderate() {
   const [viewingReports] = useState(true)
 
   const fetchReportQueue = async () => {
-    const response = await fetch(`http://localhost:3000/api/reports`)
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/api/reports`
+    )
     const reports = await response.json()
     setReportQueue(reports)
   }
@@ -30,7 +33,7 @@ function Moderate() {
   // Disable verification for now.
   // const fetchPendingEvents = async () => {
   //   const response = await fetch(
-  //     `http://localhost:3000/api/pendingVerifications`
+  //     `${import.meta.env.VITE_API_BASE_URL}/api/pendingVerifications`
   //   )
   //   const data = await response.json()
   //   setEventQueue(data)
@@ -52,7 +55,7 @@ function Moderate() {
         />
       )}
       <p className="text-[23px] text-text-primary font-medium">
-        Pending Reports
+        {moderationStrings.pageTitle}
       </p>
       {/* Disable verification for now */}
       {/* <div className="flex justify-center mt-6 mb-4 *:w-full">

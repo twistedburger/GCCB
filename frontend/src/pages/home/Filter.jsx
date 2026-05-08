@@ -9,6 +9,7 @@ import dayjs from 'dayjs'
 import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import TransportationModeSelect from '../../components/TransportationModeSelect.jsx'
+import { filterStrings } from '../../locales/en/FilterStrings'
 
 const SHEET_ANIMATION_DURATION = 300
 
@@ -63,7 +64,7 @@ export default function Filter() {
       <div className="px-6 py-4 flex flex-col justify-between items-center h-screen">
         <div className="flex-1 w-full">
           <div className="flex justify-between">
-            <p className="text-2xl font-medium pb-2">Filters</p>
+            <p className="text-2xl font-medium pb-2">{filterStrings.title}</p>
             <GenericButton
               onClick={handleCancel}
               unstyled={true}
@@ -77,7 +78,7 @@ export default function Filter() {
             onChange={setTransportationModes}
             multiple={true}
           />
-          <p className="py-2 font-semibold">Time</p>
+          <p className="py-2 font-semibold">{filterStrings.sections.time}</p>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateTimePicker
               value={time}
@@ -94,8 +95,10 @@ export default function Filter() {
             />
           </LocalizationProvider>
           <div className="flex flex-row items-center gap-1 pt-2">
-            <p className="font-semibold">Radius •</p>
-            <p className="text-sm text-text-secondary">{radius} m</p>
+            <p className="font-semibold">{filterStrings.sections.radius} •</p>
+            <p className="text-sm text-text-secondary">
+              {filterStrings.radiusLabel(radius)}
+            </p>
           </div>
           <div className="pr-2">
             <Slider
@@ -108,7 +111,9 @@ export default function Filter() {
               marks
             />
           </div>
-          <p className="pb-2 font-semibold">More Filters</p>
+          <p className="pb-2 font-semibold">
+            {filterStrings.sections.moreFilters}
+          </p>
           <div>
             <GenericButton
               onClick={() => setVerifiedEventsOnly(!verifiedEventsOnly)}
@@ -116,13 +121,16 @@ export default function Filter() {
               customStyling="mb-4 bg-white py-1.5 px-4 text-sm font-medium rounded-xl shadow-light-grey shadow-sm"
             >
               {verifiedEventsOnly
-                ? '✓ Show Verified Events Only'
-                : 'Show Verified Events Only'}
+                ? filterStrings.toggle.verifiedEventsOnlyActive
+                : filterStrings.toggle.verifiedEventsOnly}
             </GenericButton>
             <GenericToggle
               value={mainEventsOnly}
               onChange={setMainEventsOnly}
-              labels={['Display Main Events', 'Display Individual Routes']}
+              labels={[
+                filterStrings.toggle.displayMainEvents,
+                filterStrings.toggle.displayIndividualRoutes,
+              ]}
             />
           </div>
         </div>
@@ -137,9 +145,11 @@ export default function Filter() {
             }}
             customStyling="bg-white !text-blue-primary shadow-light-grey shadow-sm"
           >
-            Clear Filters
+            {filterStrings.buttons.clearFilters}
           </GenericButton>
-          <GenericButton onClick={handleApply}>Apply Filters</GenericButton>
+          <GenericButton onClick={handleApply}>
+            {filterStrings.buttons.applyFilters}
+          </GenericButton>
         </div>
       </div>
     </div>
