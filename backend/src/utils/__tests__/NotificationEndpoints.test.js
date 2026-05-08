@@ -248,16 +248,9 @@ describe('/notifications/clearNotifications endpoint', () => {
 describe('/notifications/listenForNotifications endpoint', () => {
   beforeEach(() => {
     mockIsAuthenticated.mockClear()
-    selectUser.mockReset()
-    getUserNotifications.mockReset()
   })
 
-  test('Tests not implemented', async () => {
-    //Not sure how to test this function with unit tests
-    expect(false).toBe('Tests not implemented')
-  })
-
-  /*test('Return 403 if user is not authenticated', async () => {
+  test('Return 403 if user is not authenticated', async () => {
     mockIsAuthenticated.mockReturnValue(false)
     const response = await request(app).get(
       '/notifications/listenForNotifications'
@@ -266,67 +259,6 @@ describe('/notifications/listenForNotifications endpoint', () => {
     expect(response.status).toBe(403)
     expect(response.body).toEqual(accessDeniedError)
   })
-
-  test('Return 500 if user is not in database', async (done) => {
-    mockIsAuthenticated.mockReturnValue(true)
-    selectUser.mockReturnValue(null)
-    const response = await request(app).get(
-      '/notifications/listenForNotifications'
-    ).timeout(50);
-
-    expect(response.status).toBe(500)
-    expect(response.body).toEqual(genericServerError)
-  })
-
-  test('Return 500 if selectUser throws error', async (done) => {
-    mockIsAuthenticated.mockReturnValue(true)
-    selectUser.mockRejectedValue(new Error('oops'))
-    const response = await request(app).get(
-      '/notifications/listenForNotifications'
-    ).timeout(50);
-
-    expect(response.status).toBe(500)
-    expect(response.body).toEqual(genericServerError)
-  })
-
-  test('Sets SSE headers on successful connection', async () => {
-    mockIsAuthenticated.mockReturnValue(true)
-    selectUser.mockResolvedValue(expectedAuthorizedUser)
-    getUserNotifications.mockResolvedValue([])
-
-    const response = await request(app)
-      .get('/notifications/listenForNotifications')
-      .timeout({ response: 500 })
-      .catch(err => err.response ?? err)
-
-    expect(response.headers['content-type']).toContain('text/event-stream')
-    expect(response.headers['cache-control']).toBe('no-cache')
-    expect(response.headers['connection']).toBe('keep-alive')
-  })
-
-  test('Writes error to stream if user logs out', (done) => {
-    mockIsAuthenticated.mockReturnValue(true);
-    
-    selectUser
-        .mockResolvedValueOnce({ id: 123456 })
-        .mockRejectedValueOnce(new Error('Async error'));
-
-    const stream = request(app)
-        .get('/notifications/listenForNotifications')
-        .pipe(new require('stream').PassThrough());
-
-    stream.on('data', (chunk) => {
-        const data = chunk.toString();
-        if (data.includes('error')) {
-        expect(data).toContain(serverStrings.errors.generic);
-        done(); 
-        }
-    });
-
-    setTimeout(() => {
-        notificationEmitter.emit('notification', [{ user_id: 123456 }]);
-    }, 50);
-    })*/
 })
 
 describe('/notifications/getNotifications endpoint', () => {
