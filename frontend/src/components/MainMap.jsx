@@ -19,6 +19,8 @@ import { useNavigate } from 'react-router-dom'
  * @param {Object} route - The route information for the map.
  * @param {Function} onLoad - The function to call when the map is loaded.
  * @param {Function} onUnmount - The function to call when the map is unmounted.
+ * @param {Array} events - The events to map as markers on the map.
+ * @param {Function} onMapClick - The function to call when the map is clicked.
  * @returns {JSX.Element}
  */
 
@@ -31,6 +33,7 @@ export default function MainMap({
   mapKey,
   defaultPin,
   events,
+  onMapClick,
 }) {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const navigate = useNavigate()
@@ -51,7 +54,13 @@ export default function MainMap({
         disableDefaultUI={true}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        onClick={() => setSelectedEvent(null)}
+        onClick={e => {
+          setSelectedEvent(null)
+          if (onMapClick) {
+            const { lat, lng } = e.detail.latLng
+            onMapClick({ lat, lng })
+          }
+        }}
       >
         {defaultPin && (
           <AdvancedMarker position={defaultCenter}>
@@ -141,6 +150,7 @@ MainMap.propTypes = {
       longitude: PropTypes.number,
     })
   ),
+  onMapClick: PropTypes.func,
 }
 
 MainMap.defaultProps = {
@@ -149,4 +159,5 @@ MainMap.defaultProps = {
   mapKey: undefined,
   defaultPin: false,
   events: [],
+  onMapClick: undefined,
 }

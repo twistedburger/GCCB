@@ -70,6 +70,8 @@ function Home() {
   const [loading, setLoading] = useState(true)
   const [searchAddress, setSearchAddress] = useState('')
   const locationSearchRef = useRef(null)
+  const [createEventLocation, setCreateEventLocation] = useState(null)
+  const [createEventLatLng, setCreateEventLatLng] = useState(null)
 
   const { authorizeUser } = useAuth()
   authorizeUser()
@@ -163,6 +165,16 @@ function Home() {
             ...event,
             ...postGISToLatLng(event.location_geog),
           }))}
+          onMapClick={({ lat, lng }) => {
+            const geocoder = new google.maps.Geocoder()
+            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+              if (status === 'OK' && results[0]) {
+                setCreateEventLocation(results[0].formatted_address)
+                setCreateEventLatLng([lat, lng])
+                setShowCreateEvent(true)
+              }
+            })
+          }}
         />
 
         {!selectedRoute && !isEventDetail && (
@@ -327,9 +339,15 @@ function Home() {
         createPortal(
           <Modal
             isOpen={showCreateEvent}
-            onClose={() => setShowCreateEvent(false)}
+            onClose={() => {
+              setShowCreateEvent(false)
+              setCreateEventLocation(null)
+              setCreateEventLatLng(null)
+            }}
           >
             <CreateEvent
+              initLoc={createEventLocation}
+              initLatLng={createEventLatLng}
               onSubmit={result =>
                 handleFormResult(result, {
                   setShowCreateEvent,
