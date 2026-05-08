@@ -43,6 +43,7 @@ export default function RouteCard({
       route.transportationMode === 'Car') &&
     peopleGoing >= route.max_ppl
   const activeJoinedState = isDraft ? route.isJoined : isJoined
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     setPeopleGoing(parseInt(route.people_going, 10) || 0)
@@ -52,15 +53,14 @@ export default function RouteCard({
     if (isDraft) return
 
     const checkJoined = async () => {
-      const result = await fetch(
-        `http://localhost:3000/api/routes/${route.id}/isJoined`,
-        { credentials: 'include' }
-      )
+      const result = await fetch(`${baseURL}/api/routes/${route.id}/isJoined`, {
+        credentials: 'include',
+      })
       const data = await result.json()
       setIsJoined(data.isJoined)
     }
     checkJoined()
-  }, [route.id, isDraft])
+  }, [route.id, isDraft]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleJoin = async e => {
     e.stopPropagation()
@@ -70,7 +70,7 @@ export default function RouteCard({
       return
     }
 
-    await fetch(`http://localhost:3000/api/routes/${route.id}/join`, {
+    await fetch(`${baseURL}/api/routes/${route.id}/join`, {
       method: 'POST',
       credentials: 'include',
     })
@@ -86,7 +86,7 @@ export default function RouteCard({
       return
     }
 
-    await fetch(`http://localhost:3000/api/routes/${route.id}/leave`, {
+    await fetch(`${baseURL}/api/routes/${route.id}/leave`, {
       method: 'DELETE',
       credentials: 'include',
     })

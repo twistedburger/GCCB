@@ -1,4 +1,9 @@
-require('dotenv').config({ path: __dirname + '/.env' })
+const path = require('path')
+const dotenv = require('dotenv')
+
+const envFile =
+  process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
+dotenv.config({ path: path.join(__dirname, envFile) })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
@@ -18,18 +23,30 @@ const config = {
   authRequired: false,
   auth0Logout: true,
   secret: process.env.AUTH0_SECRET,
-  baseURL: 'http://localhost:3000',
+  baseURL: process.env.BASE_URL || `http://localhost:${port}`,
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_DOMAIN,
 }
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 )
-app.use(auth(config))
+
+app.use(
+  auth({
+    ...config,
+    session: {
+      cookie: {
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  })
+)
+
 app.use(express.json())
 
 const analytics = createAnalyticsHelpers({
@@ -77,7 +94,7 @@ app.get('/maps/api/js', async (req, res) => {
  */
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  const returnTo = req.query.returnTo || process.env.FRONTEND_URL
   res.oidc.login({
     returnTo: returnTo,
     authorizationParams: {
@@ -90,7 +107,7 @@ app.get('/loginRoute', (req, res) => {
  * Logout route routes to Auth0 deauthentication. Returns to homepage once logout completed
  */
 app.get('/logoutRoute', (req, res) => {
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  const returnTo = req.query.returnTo || process.env.FRONTEND_URL
   res.oidc.logout({
     returnTo: returnTo,
   })

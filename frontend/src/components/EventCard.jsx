@@ -22,6 +22,7 @@ export default function EventCard({ event, hideReport = false, onReport }) {
   const dateObj = new Date(event.event_time)
   const navigate = useNavigate()
   const [bannerUrl, setBannerUrl] = useState(event.banner_url)
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     const refreshBanner = async () => {
@@ -30,18 +31,15 @@ export default function EventCard({ event, hideReport = false, onReport }) {
         return
       }
       try {
-        const response = await fetch(
-          'http://localhost:3000/api/refresh-banner',
-          {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              placeID: event.place_id,
-              eventID: event.id,
-            }),
-          }
-        )
+        const response = await fetch(`${baseURL}/api/refresh-banner`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            placeID: event.place_id,
+            eventID: event.id,
+          }),
+        })
         const data = await response.json()
         setBannerUrl(data.bannerUrl || bcitCover)
       } catch (err) {
@@ -58,7 +56,7 @@ export default function EventCard({ event, hideReport = false, onReport }) {
     const img = new Image()
     img.src = event.banner_url
     img.onerror = () => refreshBanner()
-  }, [event.id, event.banner_url, event.place_id])
+  }, [event.id, event.banner_url, event.place_id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div

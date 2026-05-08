@@ -309,11 +309,11 @@ describe('TripFrequency', () => {
 
     // both endpoints should have been called on mount
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/analytics/summary',
+      `${import.meta.env.VITE_API_BASE_URL}/api/analytics/summary`,
       { credentials: 'include' }
     )
     expect(fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/analytics/by-mode',
+      `${import.meta.env.VITE_API_BASE_URL}/api/analytics/by-mode`,
       { credentials: 'include' }
     )
   })

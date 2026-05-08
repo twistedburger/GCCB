@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types'
-import GenericButton from './GenericButton'
+import GenericCard from './GenericCard'
+import { analyticsStrings } from '../locales/en/AnalyticsStrings'
 
 /**
  * Component to display a metric card in the dashboard.
@@ -11,17 +12,16 @@ import GenericButton from './GenericButton'
  * @returns {JSX.Element}
  */
 
-function DashboardMetricCard({ title, value, subtitle, onClick }) {
+export default function DashboardMetricCard({
+  title,
+  value,
+  subtitle,
+  onClick,
+}) {
   return (
-    <GenericButton
-      type="button"
+    <GenericCard
       onClick={onClick}
-      unstyled
-      customStyling={`
-        w-full rounded-2xl border border-zinc-200 bg-white p-4 text-left shadow-sm
-        transition hover:scale-[1.02] hover:shadow-md
-        focus:outline-none focus:ring-2 focus:ring-zinc-300
-      `}
+      customStyling="p-4 text-left rounded-2xl hover:shadow-md active:shadow-sm active:scale-[0.99]"
     >
       <div className="text-lg font-semibold text-zinc-900">{value}</div>
       <div className="mt-1 text-xs text-zinc-600">{title}</div>
@@ -29,7 +29,13 @@ function DashboardMetricCard({ title, value, subtitle, onClick }) {
       {subtitle ? (
         <div className="mt-2 text-xs text-zinc-500">{subtitle}</div>
       ) : null}
-    </GenericButton>
+
+      {onClick ? (
+        <span className="mt-3 block text-xs font-medium text-blue-primary">
+          {analyticsStrings.dashboard.metrics.viewDetails}
+        </span>
+      ) : null}
+    </GenericCard>
   )
 }
 
@@ -39,5 +45,3 @@ DashboardMetricCard.propTypes = {
   subtitle: PropTypes.string,
   onClick: PropTypes.func,
 }
-
-export default DashboardMetricCard

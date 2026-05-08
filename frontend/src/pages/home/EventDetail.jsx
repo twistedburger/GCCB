@@ -41,6 +41,7 @@ export default function EventDetail() {
   const [alert, setAlert] = useState(null)
 
   const [reportData, setReportData] = useState(null)
+  const baseURL = import.meta.env.VITE_API_BASE_URL
   const { user } = useUser()
   const [isRouteRemovalDialogOpen, setIsRouteRemovalDialogOpen] =
     useState(false)
@@ -56,7 +57,7 @@ export default function EventDetail() {
 
   const handleAddRoute = async routeData => {
     try {
-      const response = await fetch(`http://localhost:3000/api/createRoute`, {
+      const response = await fetch(`${baseURL}/api/createRoute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -130,7 +131,7 @@ export default function EventDetail() {
   const handleConfirmRouteRemoval = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/routes/${routeIdToRemove}/delete`,
+        `${baseURL}/api/routes/${routeIdToRemove}/delete`,
         {
           method: 'DELETE',
           credentials: 'include',
@@ -155,17 +156,14 @@ export default function EventDetail() {
 
   useEffect(() => {
     const fetchEvent = async () => {
-      const response = await fetch(
-        `http://localhost:3000/api/eventdetail/${id}`,
-        {
-          credentials: 'include',
-        }
-      )
+      const response = await fetch(`${baseURL}/api/eventdetail/${id}`, {
+        credentials: 'include',
+      })
       const data = await response.json()
       setEvent(data)
     }
     fetchEvent()
-  }, [id])
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
