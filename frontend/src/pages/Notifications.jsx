@@ -1,8 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import GenericButton from '../components/GenericButton'
 import { NotificationType } from '../../../shared/NotificationTypes'
+import TransitLegCard from '../components/TransitLegCard'
 
 export default function Notifications() {
+  const [notifications, setNotifications] = useState([])
   useEffect(() => {
     const stream = new EventSource(
       'http://localhost:3000/notifications/listenForNotifications',
@@ -10,8 +12,8 @@ export default function Notifications() {
     )
 
     stream.onmessage = event => {
-      const notification = JSON.parse(event.data)
-      console.log(notification)
+      const notificationsResponse = JSON.parse(event.data)
+      setNotifications(notificationsResponse.notifications)
     }
 
     stream.onerror = () => {
@@ -46,6 +48,14 @@ export default function Notifications() {
       >
         Send Notification
       </GenericButton>
+      {notifications.map(n => (
+        <TransitLegCard
+          key={n}
+          name={n.notification_type}
+          type={''}
+          distance={n.metadata.message}
+        />
+      ))}
     </div>
   )
 }
