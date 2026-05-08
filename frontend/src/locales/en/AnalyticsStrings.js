@@ -61,6 +61,7 @@ export const analyticsStrings = {
         },
         badges: {
           title: 'Badges',
+          viewAll: 'View all',
         },
       },
     },
