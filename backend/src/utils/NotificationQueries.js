@@ -43,10 +43,10 @@ async function insertNotification(notification) {
     [notificationType.type, notification.id, notification.metadata]
   )
   const notificationID = result.rows[0].notification_id
-
-  const userQuery = await db.query(notificationType.getUsersQuery, [
-    notification.id,
-  ])
+  const userQuery = await db.query(
+    NotificationType[notificationType.key].getUsersQuery,
+    [notification.id]
+  )
   const filteredUsers = userQuery.rows.filter(
     row => row.user_id !== notification.userID
   )

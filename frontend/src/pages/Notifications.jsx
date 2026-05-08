@@ -44,7 +44,7 @@ export default function Notifications() {
           console.log(response)
         }}
       >
-        ClickMe
+        Send Notification
       </GenericButton>
     </div>
   )

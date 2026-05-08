@@ -19,6 +19,7 @@ const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
 const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
 const notificationRouter = require('./src/utils/NotificationEndpoints')
+const { selectUser } = require('./src/utils/UserUtils')
 
 const config = {
   authRequired: false,
@@ -222,21 +223,6 @@ async function checkAndUpdateActiveStatus(user) {
   }
 
   return isStillActive
-}
-
-/**
- * Select the current user from the DB. user must be authenticated
- * @returns {Object} the user fetched from the DB, or null
- */
-async function selectUser(req) {
-  const results = await db.query('SELECT * FROM "user" WHERE email = $1', [
-    req.oidc.user.email,
-  ])
-
-  if (results.rowCount !== 0) {
-    return results.rows[0]
-  }
-  return null
 }
 
 /**

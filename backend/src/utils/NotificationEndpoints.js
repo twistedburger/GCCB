@@ -7,8 +7,8 @@ const {
   viewAllUserNotifications,
   getUserNotifications,
 } = require('./NotificationQueries')
-const { selectUser } = require('../../server')
 const { EventEmitter } = require('events')
+const { selectUser } = require('./UserUtils')
 
 const notificationEmitter = new EventEmitter()
 
@@ -25,12 +25,10 @@ notificationRouter.post('/notify', async (req, res) => {
     return res.status(403).json({ error: serverStrings.errors.accessDenied })
   }
   const user = await selectUser(req)
-  const { notification } = req.body
+  const notification = req.body
   notification.userID = user.id
-
   try {
     const notifications = await insertNotification(notification)
-
     notificationEmitter.emit('notification', notifications)
 
     return res.status(200).json({ success: true })
@@ -90,7 +88,7 @@ notificationRouter.get('/listenForNotifications', async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
 
-  const handleNotifications = async ({ notifications }) => {
+  const handleNotifications = async notifications => {
     const usersToNotify = notifications.map(
       notification => notification.user_id
     )
