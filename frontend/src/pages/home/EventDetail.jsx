@@ -372,8 +372,8 @@ export default function EventDetail() {
                         id: event.creator_id,
                         name: event.creator_name,
                         nickname: event.nickname,
-                        role: '',
-                        description: '',
+                        role: event.role,
+                        description: event.creator_description,
                         profile_pic: event.profile_pic,
                         active: true,
                       }}

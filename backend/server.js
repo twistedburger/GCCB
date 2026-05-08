@@ -827,7 +827,9 @@ app.get('/api/eventdetail/:id', async (req, res) => {
         u.id as creator_id,
         u.name as creator_name, 
         u.nickname, 
-        u.profile_pic
+        u.profile_pic,
+        u.role,
+        u.description AS creator_description
        FROM event e
        LEFT JOIN "user" u ON u.id = e.creator_id
        WHERE e.id = $1`,

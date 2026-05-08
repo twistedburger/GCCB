@@ -10,7 +10,6 @@ import { Drawer } from 'vaul'
 import Report from '../../components/Report'
 import { calculateTransitLegs } from '../../utils/RouteUtils'
 import { transitLegCardStrings } from '../../locales/en/ComponentStrings/TransitLegCardStrings'
-import { userCardStrings } from '../../locales/en/ComponentStrings/UserCardStrings'
 import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
 import { routeDetailStrings } from '../../locales/en/RouteDetailStrings'
 
@@ -39,6 +38,8 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
     () => calculateTransitLegs(selectedRoute),
     [selectedRoute]
   )
+
+  console.log(selectedRoute)
 
   return (
     <Drawer.Root
@@ -175,7 +176,7 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                 </div>
                 <div className="flex flex-col overflow-y-auto pb-8 px-6 gap-2">
                   <p className="font-semibold pb-2 text-text-primary shrink-0">
-                    {userCardStrings.organizer}
+                    {routeDetailStrings.organizer}
                   </p>
                   <UserCard
                     user={{
@@ -183,8 +184,8 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                       name: selectedRoute?.creator_name,
                       nickname: selectedRoute?.nickname,
                       profile_pic: selectedRoute?.profile_pic,
-                      role: '',
-                      description: '',
+                      role: selectedRoute?.role,
+                      description: selectedRoute?.creator_description,
                       active: true,
                     }}
                   />
@@ -263,6 +264,8 @@ RouteDetail.propTypes = {
     creator_name: PropTypes.string,
     nickname: PropTypes.string,
     profile_pic: PropTypes.string,
+    role: PropTypes.string,
+    creator_description: PropTypes.string,
   }),
   onClose: PropTypes.func,
   setAlert: PropTypes.func,
