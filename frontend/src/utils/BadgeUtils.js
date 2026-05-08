@@ -1,3 +1,25 @@
+export const CATEGORIES = Object.freeze({
+  ECO_IMPACT: 'eco_impact',
+  TRIPS: 'trips',
+  MODES: 'modes',
+  SOCIAL: 'social',
+  EVENTS: 'events',
+})
+
+export const CATEGORY_ORDER = [
+  CATEGORIES.ECO_IMPACT,
+  CATEGORIES.TRIPS,
+  CATEGORIES.MODES,
+  CATEGORIES.SOCIAL,
+  CATEGORIES.EVENTS,
+]
+
+export const VIEWS = Object.freeze({
+  ALL: 'all',
+  EARNED: 'earned',
+  IN_PROGRESS: 'inProgress',
+})
+
 export function progressWidth(progress) {
   return `${Math.min(Math.max(progress ?? 0, 0), 1) * 100}%`
 }
@@ -13,12 +35,6 @@ const METRIC_UNITS = Object.freeze({
 export function metricUnit(metric) {
   return METRIC_UNITS[metric] ?? ''
 }
-
-export const VIEWS = Object.freeze({
-  ALL: 'all',
-  EARNED: 'earned',
-  IN_PROGRESS: 'inProgress',
-})
 
 const VIEW_FILTERS = {
   [VIEWS.EARNED]: badges =>
