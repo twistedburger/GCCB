@@ -26,6 +26,7 @@ export default function MainMap({
   onUnmount,
   mapKey,
   defaultPin,
+  events,
 }) {
   return (
     <APIProvider
@@ -46,11 +47,24 @@ export default function MainMap({
       >
         {defaultPin && (
           <AdvancedMarker position={defaultCenter}>
-            <Pin scale={0.75} />
+            {/* to do: decide to remove this pin fully */}
+            <Pin scale={0} />
           </AdvancedMarker>
         )}
         {route && <MapController center={defaultCenter} route={route} />}
         {children}
+        {events?.map(
+          event =>
+            event.lat &&
+            event.lng && (
+              <AdvancedMarker
+                key={event.id}
+                position={{ lat: event.lat, lng: event.lng }}
+              >
+                <Pin scale={0.75} />
+              </AdvancedMarker>
+            )
+        )}
       </Map>
     </APIProvider>
   )
@@ -70,6 +84,13 @@ MainMap.propTypes = {
   onUnmount: PropTypes.func,
   mapKey: PropTypes.string,
   defaultPin: PropTypes.bool,
+  events: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      latitude: PropTypes.number,
+      longitude: PropTypes.number,
+    })
+  ),
 }
 
 MainMap.defaultProps = {
@@ -77,4 +98,5 @@ MainMap.defaultProps = {
   onUnmount: undefined,
   mapKey: undefined,
   defaultPin: false,
+  events: [],
 }

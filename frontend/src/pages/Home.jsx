@@ -25,6 +25,7 @@ import { createPortal } from 'react-dom'
 import { CircularProgress } from '@mui/material'
 import { homeStrings } from '../locales/en/HomeStrings'
 import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
+import { postGISToLatLng } from '../utils/MainMapUtils'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -158,7 +159,10 @@ function Home() {
           }
           defaultCenter={userLocation || DEFAULT_COORDINATES}
           route={selectedRoute}
-          defaultPin={!selectedRoute && !!userLocation}
+          events={cardsToDisplay.map(event => ({
+            ...event,
+            ...postGISToLatLng(event.location_geog),
+          }))}
         />
 
         {!selectedRoute && !isEventDetail && (
