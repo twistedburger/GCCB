@@ -22,6 +22,10 @@ import { useUser } from '../context/UserContext.jsx'
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [ssoProfile, setSsoProfile] = useState(null)
+
+  const baseURL = import.meta.env.VITE_API_BASE_URL
+  const frontendUrl = import.meta.env.VITE_FRONTEND_URL
+
   const [bannedError] = useState(
     new URLSearchParams(window.location.search).get('error') === 'banned'
   )
@@ -29,7 +33,7 @@ function App() {
 
   const authenticateUser = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:3000/authenticateUser', {
+      const response = await fetch(`${baseURL}/authenticateUser`, {
         credentials: 'include',
       })
 
@@ -40,7 +44,7 @@ function App() {
 
       const data = await response.json()
       if (data.banned) {
-        window.location.href = `http://localhost:3000/logoutRoute?returnTo=${encodeURIComponent('http://localhost:5173/?error=banned')}`
+        window.location.href = `${baseURL}/logoutRoute?returnTo=${encodeURIComponent(`${frontendUrl}/?error=banned`)}`
         return
       }
       if (data) {

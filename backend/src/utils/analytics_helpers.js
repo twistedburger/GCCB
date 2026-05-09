@@ -152,7 +152,11 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
            r.path,
            r.created_at AS "createdAt"
          FROM route r
-         WHERE r.completed = true${ordering}`
+         WHERE EXISTS (
+           SELECT 1 FROM user_route ur
+           WHERE ur.route_id = r.id
+             AND ur.completed = true
+         )${ordering}`
       )
       return res.rows
     }
@@ -176,7 +180,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
        FROM route r
        INNER JOIN user_route ur ON ur.route_id = r.id
        WHERE ur.user_id = $1
-         AND r.completed = true${ordering}`,
+         AND ur.completed = true${ordering}`,
       [userId]
     )
     return res.rows
@@ -210,7 +214,8 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
          COUNT(*)::int AS participant_count,
          BOOL_OR(user_id = $2) AS creator_included
        FROM user_route
-       WHERE route_id = $1`,
+       WHERE route_id = $1
+         AND completed = true`,
       [routeId, creatorId]
     )
 

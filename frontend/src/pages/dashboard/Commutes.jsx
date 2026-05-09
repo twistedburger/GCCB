@@ -29,7 +29,7 @@ function Commutes() {
         setError('')
 
         const response = await fetch(
-          'http://localhost:3000/api/commute-history',
+          `${import.meta.env.VITE_API_BASE_URL}/api/commute-history`,
           {
             credentials: 'include',
           }
