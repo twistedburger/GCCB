@@ -18,8 +18,6 @@ export default function ChatInput({
     }
   }
 
-  console.log('ChatInput props:', { isClosed, isConnected, isDeleted })
-
   const getPlaceholder = () => {
     if (isDeleted) return chatInputStrings.deleted
     if (isClosed) return chatInputStrings.closed
