@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types'
+import { chatBubbleStrings } from '../../locales/en/ComponentStrings/ChatBubbleStrings'
 
 export default function ChatBubble({ message, isMe }) {
   if (message.isSystem) {
@@ -19,7 +20,7 @@ export default function ChatBubble({ message, isMe }) {
     >
       <div className="flex items-baseline gap-2 mb-1 px-1">
         <span className="text-xs font-bold text-dark-grey">
-          {isMe ? 'You' : message.sender_nickname}
+          {isMe ? chatBubbleStrings.you : message.sender_nickname}
         </span>
         <span className="text-[9px] text-dark-grey uppercase">
           {new Date(message.sent_at).toLocaleTimeString([], {
