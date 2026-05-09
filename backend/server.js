@@ -9,8 +9,10 @@ const { auth } = require('express-openid-connect')
 const cors = require('cors')
 const axios = require('axios')
 const { serverStrings } = require('./locales/en/serverLocales')
+const { createServer } = require('http')
 
 const app = express()
+const httpServer = createServer(app)
 const db = require('./db')
 const pool = db.pool
 const port = 3000
@@ -18,6 +20,8 @@ const port = 3000
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
 const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
+const { initSocket, broadcast } = require('./socket/chat.socket')
+const chatService = require('./src/service/chat.service')
 
 const config = {
   authRequired: false,
@@ -48,7 +52,7 @@ app.use(
 )
 
 app.use(express.json())
-app.use('/api/chat', require('./routes/chat.routes'))
+app.use('/api/chat', require('./route/chat.route'))
 
 const analytics = createAnalyticsHelpers({
   db,
@@ -664,9 +668,10 @@ app.post('/api/createEvent', async (req, res) => {
       )
 
       // create chatroom and add creator as first member
+      const chatCloseTime = route.departTime
       const { rows: chatroomRows } = await client.query(
-        `INSERT INTO chatroom (route_id, created_by) VALUES ($1, $2) RETURNING id`,
-        [routeID, user.id]
+        `INSERT INTO chatroom (route_id, close_at, delete_at) VALUES ($1, $2::timestamp, $2::timestamp + interval '2 days') RETURNING id`,
+        [routeID, chatCloseTime]
       )
       const chatroomID = chatroomRows[0].id
 
@@ -688,6 +693,8 @@ app.post('/api/createEvent', async (req, res) => {
 
 /**
  * Adds a route to the database
+ * Also creates a chatroom for the route and adds the creator as the first member of the chatroom.
+ * The chatroom's close_at is set to the route's depart_time, and delete_at is set to 2 days after the depart_time.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -713,15 +720,11 @@ app.post('/api/createRoute', async (req, res) => {
       routeData,
       isJoined
     )
-
-    // create chatroom and add creator as first member
-    const { rows } = await client.query(
-      `INSERT INTO chatroom (route_id, created_by) VALUES ($1, $2) RETURNING id`,
-      [routeID, user.id]
-    )
-    await client.query(
-      `INSERT INTO chatroom_member (chatroom_id, user_id) VALUES ($1, $2)`,
-      [rows[0].id, user.id]
+    await chatService.createNewRoom(
+      client,
+      routeID,
+      user.id,
+      routeData.departTime
     )
 
     await client.query('COMMIT')
@@ -954,6 +957,7 @@ app.get('/api/routes/:id/isJoined', async (req, res) => {
 
 /**
  * Adds a user to a route by adding a record to the user_route table.
+ * Also adds the user to the associated chatroom and broadcasts a system message to the chatroom that a new member has joined.s
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -966,6 +970,7 @@ app.post('/api/routes/:id/join', async (req, res) => {
       .status(403)
       .json({ error: serverStrings.errors.notAuthenticated })
   }
+
   try {
     const user = await selectUser(req)
     const routeId = req.params.id
@@ -975,22 +980,26 @@ app.post('/api/routes/:id/join', async (req, res) => {
       [user.id, routeId]
     )
 
-    await db.query(
-      `INSERT INTO chatroom_member (chatroom_id, user_id)
-       SELECT id, $2 FROM chatroom WHERE route_id = $1
-       ON CONFLICT DO NOTHING`,
-      [routeId, user.id]
+    const chatroomRes = await db.query(
+      'SELECT id FROM chatroom WHERE route_id = $1',
+      [routeId]
     )
+
+    if (chatroomRes.rowCount > 0) {
+      const chatroomId = chatroomRes.rows[0].id
+      const newMember = await chatService.addUserToRoom(chatroomId, user.id)
+      broadcast(chatroomId, 'MEMBER_JOINED', { newMember })
+    }
 
     res.json({ success: true })
   } catch (error) {
-    console.error(error)
+    console.error('Error joining route/chat:', error)
     res.status(500).json({ error: serverStrings.errors.joinFailed })
   }
 })
 
 /**
- * Deletes a route.
+ * Deletes a route, removes all associated user_route and event_route records, deletes the associated chatroom and messages.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -1010,6 +1019,8 @@ app.delete('/api/routes/:id/delete', async (req, res) => {
     const routeId = req.params.id
 
     await client.query('BEGIN')
+    const chatroomId = await chatService.deleteRoom(client, routeId)
+    broadcast(chatroomId, 'ROOM_DELETED', { chatroomId })
     await client.query('DELETE FROM event_route WHERE route_id = $1', [routeId])
     await client.query('DELETE FROM user_route WHERE route_id = $1', [routeId])
     await client.query('DELETE FROM route WHERE id = $1', [routeId])
@@ -1033,16 +1044,37 @@ app.delete('/api/routes/:id/delete', async (req, res) => {
  * @returns {Object} {success:  true}
  */
 app.delete('/api/routes/:id/leave', async (req, res) => {
-  if (!req.oidc.isAuthenticated())
+  if (!req.oidc.isAuthenticated()) {
     return res
       .status(403)
       .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
   try {
     const user = await selectUser(req)
+    const routeId = req.params.id
+
+    const chatroomRes = await db.query(
+      'SELECT id FROM chatroom WHERE route_id = $1',
+      [routeId]
+    )
+
     await db.query(
       'DELETE FROM user_route WHERE user_id = $1 AND route_id = $2',
-      [user.id, req.params.id]
+      [user.id, routeId]
     )
+
+    await chatService.removeUserFromRoom(routeId, user.id)
+
+    if (chatroomRes.rowCount > 0) {
+      const chatroomId = chatroomRes.rows[0].id
+
+      broadcast(chatroomId, 'MEMBER_LEFT', {
+        userId: user.id,
+        userNickname: user.nickname,
+      })
+    }
+
     res.json({ success: true })
   } catch (error) {
     console.error(error)
@@ -1399,12 +1431,6 @@ app.get('/api/analytics/by-mode', async (req, res) => {
     return res.status(500).send(serverStrings.errors.generic)
   }
 })
-
-if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`GCCB Backend listening on port ${port}`)
-  })
-}
 
 /**
  * Returns reports to be reviewed by the moderator.
@@ -2087,4 +2113,11 @@ app.post('/api/unbanUser/:userId', async (req, res) => {
   }
 })
 
-module.exports = app
+initSocket(httpServer)
+console.log('Sockets initialized')
+
+httpServer.listen(port, () => {
+  console.log(`Server & Sockets integrated on port ${port}`)
+})
+
+module.exports = { app, httpServer }

@@ -21,6 +21,7 @@ const serverStrings = {
     analyticsUserOnly: 'Only regular users can access commute history.',
     routeDeletionFailed: 'Failed to delete route',
     routeCompletionFailed: 'Failed to mark route as complete',
+    notMember: 'Not a member of this chatroom',
   },
 }
 
