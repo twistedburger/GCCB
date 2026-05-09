@@ -6,7 +6,7 @@
 export async function loadNotifications(setNotifications) {
   try {
     const response = await fetch(
-      'http://localhost:3000/notifications/getNotifications',
+      `${import.meta.env.VITE_API_BASE_URL}/notifications/getNotifications`,
       {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -32,7 +32,7 @@ export async function clearAllNotifications() {
   try {
     const request = { all: true }
     const response = await fetch(
-      'http://localhost:3000/notifications/clearNotifications',
+      `${import.meta.env.VITE_API_BASE_URL}/notifications/clearNotifications`,
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

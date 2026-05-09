@@ -38,7 +38,7 @@ export default function Notifications() {
             metadata: { message: 'hello' },
           }
           const response = await fetch(
-            'http://localhost:3000/notifications/notify',
+            `${import.meta.env.VITE_API_BASE_URL}/notifications/notify`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
