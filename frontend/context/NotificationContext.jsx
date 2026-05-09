@@ -5,6 +5,12 @@ import { createContext, useContext, useEffect, useState } from 'react'
 
 const NotificationContext = createContext(null)
 
+/**
+ * Establishes an open stream from the server to listen for notifications.
+ *
+ * @param {Object} Children
+ * @returns closes the stream
+ */
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([])
   useEffect(() => {
@@ -41,6 +47,11 @@ export function NotificationProvider({ children }) {
   )
 }
 
+/**
+ * Use the notification context
+ *
+ * @returns Notification context
+ */
 export function useNotifications() {
   return useContext(NotificationContext)
 }
