@@ -1,6 +1,6 @@
 const request = require('supertest')
 const { serverStrings } = require('../../../locales/en/serverLocales')
-const { app } = require('../../../server')
+const app = require('../../../server')
 const { selectUser } = require('../UserUtils')
 const {
   insertNotification,
@@ -153,7 +153,7 @@ describe('/notifications/clearNotifications endpoint', () => {
     mockIsAuthenticated.mockReturnValue(false)
     const response = await request(app)
       .patch('/notifications/clearNotifications')
-      .send({ notificationToClear: { all: true } })
+      .send({ all: true })
 
     expect(response.status).toBe(403)
     expect(viewUserNotification).toHaveBeenCalledTimes(0)
@@ -166,7 +166,7 @@ describe('/notifications/clearNotifications endpoint', () => {
     selectUser.mockReturnValue(null)
     const response = await request(app)
       .patch('/notifications/clearNotifications')
-      .send({ notificationToClear: { all: true } })
+      .send({ all: true })
 
     expect(response.status).toBe(500)
     expect(viewUserNotification).toHaveBeenCalledTimes(0)
@@ -179,7 +179,7 @@ describe('/notifications/clearNotifications endpoint', () => {
     selectUser.mockRejectedValue(new Error('oops'))
     const response = await request(app)
       .patch('/notifications/clearNotifications')
-      .send({ notificationToClear: { all: true } })
+      .send({ all: true })
 
     expect(response.status).toBe(500)
     expect(viewUserNotification).toHaveBeenCalledTimes(0)
@@ -193,7 +193,7 @@ describe('/notifications/clearNotifications endpoint', () => {
     viewAllUserNotifications.mockRejectedValue(new Error('oops'))
     const response = await request(app)
       .patch('/notifications/clearNotifications')
-      .send({ notificationToClear: { all: true } })
+      .send({ all: true })
 
     expect(response.status).toBe(500)
     expect(viewUserNotification).toHaveBeenCalledTimes(0)
@@ -207,7 +207,7 @@ describe('/notifications/clearNotifications endpoint', () => {
     viewUserNotification.mockRejectedValue(new Error('oops'))
     const response = await request(app)
       .patch('/notifications/clearNotifications')
-      .send({ notificationToClear: { all: false, notificationID: 42 } })
+      .send({ all: false, notificationID: 42 })
 
     expect(response.status).toBe(500)
     expect(viewUserNotification).toHaveBeenCalledTimes(1)
@@ -221,7 +221,7 @@ describe('/notifications/clearNotifications endpoint', () => {
     viewAllUserNotifications.mockResolvedValue()
     const response = await request(app)
       .patch('/notifications/clearNotifications')
-      .send({ notificationToClear: { all: true } })
+      .send({ all: true })
 
     expect(response.status).toBe(200)
     expect(viewAllUserNotifications).toHaveBeenCalledWith(123456)
@@ -236,7 +236,7 @@ describe('/notifications/clearNotifications endpoint', () => {
 
     const response = await request(app)
       .patch('/notifications/clearNotifications')
-      .send({ notificationToClear: { all: false, notificationID: 42 } })
+      .send({ all: false, notificationID: 42 })
 
     expect(response.status).toBe(200)
     expect(viewUserNotification).toHaveBeenCalledWith(123456, 42)

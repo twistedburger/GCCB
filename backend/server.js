@@ -2007,4 +2007,4 @@ app.post('/api/unblockUser/:userId', async (req, res) => {
   }
 })
 
-module.exports = { app, selectUser }
+module.exports = app
