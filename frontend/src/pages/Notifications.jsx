@@ -1,14 +1,22 @@
 import GenericButton from '../components/GenericButton'
 import { NotificationType } from '../../../shared/NotificationTypes'
-import TransitLegCard from '../components/TransitLegCard'
 import { useNotifications } from '../../context/NotificationContext'
+import GenericCard from '../components/GenericCard'
+import { notificationStrings } from '../locales/en/NotificationStrings'
 
+/**
+ * Display the notifications page.
+ *
+ * @returns {JSX.Element}
+ */
 export default function Notifications() {
   const { notifications } = useNotifications()
 
   return (
     <div>
-      <p>Notifications</p>
+      <p>{notificationStrings.title}</p>
+      <GenericButton>{notificationStrings.clearAll}</GenericButton>
+      {/* This button is temporary and will be removed when notification sending works*/}
       <GenericButton
         onClick={async () => {
           console.log('hello')
@@ -32,12 +40,9 @@ export default function Notifications() {
         Send Notification
       </GenericButton>
       {notifications.map(n => (
-        <TransitLegCard
-          key={n}
-          name={n.notification_type}
-          type={''}
-          distance={n.metadata.message}
-        />
+        <GenericCard key={n.notification_id}>
+          {`${n.notification_id}: ${n.metadata.message}`}
+        </GenericCard>
       ))}
     </div>
   )
