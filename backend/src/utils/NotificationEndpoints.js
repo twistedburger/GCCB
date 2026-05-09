@@ -61,7 +61,7 @@ notificationRouter.patch('/clearNotifications', async (req, res) => {
 
   try {
     const user = await selectUser(req)
-    const { notificationToClear } = req.body
+    const notificationToClear = req.body
 
     if (notificationToClear.all) {
       await viewAllUserNotifications(user.id)
