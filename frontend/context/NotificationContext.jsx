@@ -19,7 +19,7 @@ export function NotificationProvider({ children }) {
 
   useEffect(() => {
     const stream = new EventSource(
-      'http://localhost:3000/notifications/listenForNotifications',
+      `${import.meta.env.VITE_API_BASE_URL}/notifications/listenForNotifications`,
       { withCredentials: true }
     )
 
