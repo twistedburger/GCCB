@@ -32,8 +32,12 @@ export const CheckAuthorization = (authorization, requiredAuthorization) => {
  */
 
 const ProtectedRoute = ({ requiredAuthorization }) => {
-  const { authorization } = useAuth()
+  const { authorization, isLoading } = useAuth()
   const location = useLocation()
+
+  if (isLoading) {
+    return <div></div>
+  }
 
   if (!CheckAuthorization(authorization, requiredAuthorization)) {
     return <Navigate to="/" replace state={{ from: location.pathname }} />
