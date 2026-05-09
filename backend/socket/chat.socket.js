@@ -51,7 +51,7 @@ const initSocket = httpServer => {
 
         if (savedMessage) {
           io.to(`room_${chatroomId}`).emit('NEW_MESSAGE', {
-            message: savedMessage,
+            message: savedMessage.data,
           })
         }
       } catch (err) {
