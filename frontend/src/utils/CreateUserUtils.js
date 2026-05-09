@@ -5,6 +5,7 @@
  * @param {func} onUserCreated callback function on user creation and insertion success
  */
 export const insertUser = async (formData, onUserCreated) => {
+  const baseURL = import.meta.env.VITE_API_BASE_URL
   const data = new FormData()
 
   data.append('name', formData.name)
@@ -16,7 +17,7 @@ export const insertUser = async (formData, onUserCreated) => {
     data.append('file', formData.file)
   }
 
-  const response = await fetch('http://localhost:3000/createNewUser', {
+  const response = await fetch(`${baseURL}/createNewUser`, {
     method: 'POST',
     body: data,
     credentials: 'include',

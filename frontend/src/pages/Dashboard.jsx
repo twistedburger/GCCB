@@ -146,7 +146,7 @@ function Dashboard() {
       data.append('file', formData.file)
     }
 
-    const updateResponse = await fetch('http://localhost:3000/updateProfile', {
+    const updateResponse = await fetch(`${baseURL}/updateProfile`, {
       method: 'PUT',
       credentials: 'include',
       body: data,
