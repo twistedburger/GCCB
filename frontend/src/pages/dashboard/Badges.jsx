@@ -23,7 +23,6 @@ const badgesStrings = {
     [CATEGORIES.TRIPS]: 'Trip Milestones',
     [CATEGORIES.MODES]: 'Mode Explorer',
     [CATEGORIES.SOCIAL]: 'Social',
-    [CATEGORIES.EVENTS]: 'Events',
   },
   emptyEarned: 'Complete trips to start earning badges!',
   emptyProgress: 'No badges in progress yet.',

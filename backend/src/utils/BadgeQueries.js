@@ -30,16 +30,6 @@ class BadgeQueries {
     return rows[0].count
   }
 
-  async fetchEventCount(userId) {
-    const { rows } = await this.#db.query(
-      `SELECT COUNT(*)::int AS count
-       FROM user_event
-       WHERE user_id = $1`,
-      [userId]
-    )
-    return rows[0].count
-  }
-
   async awardBadge(userId, badgeId) {
     await this.#db.query(
       `INSERT INTO user_badge (user_id, badge_id)

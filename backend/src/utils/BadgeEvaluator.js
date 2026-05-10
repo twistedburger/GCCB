@@ -8,26 +8,16 @@ class BadgeEvaluator {
     tripCount: 'trip_count',
     modeTrips: 'mode_trips',
     routesCreated: 'routes_created',
-    eventsAttended: 'events_attended',
   })
 
   static #METRIC_RESOLVERS = {
     [BadgeEvaluator.#METRICS.co2SavedKg]: summary =>
       summary?.totalCo2SavedKg ?? 0,
     [BadgeEvaluator.#METRICS.tripCount]: summary => summary?.tripCount ?? 0,
-    [BadgeEvaluator.#METRICS.modeTrips]: (
-      summary,
-      routeCount,
-      eventCount,
-      metricArg
-    ) => summary?.tripFrequenciesByMode?.[metricArg] ?? 0,
+    [BadgeEvaluator.#METRICS.modeTrips]: (summary, routeCount, metricArg) =>
+      summary?.tripFrequenciesByMode?.[metricArg] ?? 0,
     [BadgeEvaluator.#METRICS.routesCreated]: (summary, routeCount) =>
       routeCount,
-    [BadgeEvaluator.#METRICS.eventsAttended]: (
-      summary,
-      routeCount,
-      eventCount
-    ) => eventCount,
   }
 
   /**
@@ -38,17 +28,16 @@ class BadgeEvaluator {
     this.#badgeQueries = badgeQueries
   }
 
-  getBadgeMetricValue(badge, analyticsSummary, routeCount, eventCount) {
+  getBadgeMetricValue(badge, analyticsSummary, routeCount) {
     const resolver = BadgeEvaluator.#METRIC_RESOLVERS[badge.metric]
     if (!resolver) return 0
-    return resolver(analyticsSummary, routeCount, eventCount, badge.metric_arg)
+    return resolver(analyticsSummary, routeCount, badge.metric_arg)
   }
 
   async evaluateBadges(userId, analyticsSummary) {
-    const [unearnedBadges, routeCount, eventCount] = await Promise.all([
+    const [unearnedBadges, routeCount] = await Promise.all([
       this.#badgeQueries.fetchUnearnedBadges(userId),
       this.#badgeQueries.fetchRouteCount(userId),
-      this.#badgeQueries.fetchEventCount(userId),
     ])
 
     const newlyAwarded = []
@@ -57,8 +46,7 @@ class BadgeEvaluator {
       const current = this.getBadgeMetricValue(
         badge,
         analyticsSummary,
-        routeCount,
-        eventCount
+        routeCount
       )
 
       if (current >= badge.threshold) {

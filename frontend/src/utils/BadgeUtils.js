@@ -1,9 +1,14 @@
+export const VIEWS = Object.freeze({
+  ALL: 'all',
+  EARNED: 'earned',
+  IN_PROGRESS: 'inProgress',
+})
+
 export const CATEGORIES = Object.freeze({
   ECO_IMPACT: 'eco_impact',
   TRIPS: 'trips',
   MODES: 'modes',
   SOCIAL: 'social',
-  EVENTS: 'events',
 })
 
 export const CATEGORY_ORDER = [
@@ -11,14 +16,7 @@ export const CATEGORY_ORDER = [
   CATEGORIES.TRIPS,
   CATEGORIES.MODES,
   CATEGORIES.SOCIAL,
-  CATEGORIES.EVENTS,
 ]
-
-export const VIEWS = Object.freeze({
-  ALL: 'all',
-  EARNED: 'earned',
-  IN_PROGRESS: 'inProgress',
-})
 
 export function progressWidth(progress) {
   return `${Math.min(Math.max(progress ?? 0, 0), 1) * 100}%`
@@ -29,7 +27,6 @@ const METRIC_UNITS = Object.freeze({
   trip_count: 'trips',
   mode_trips: 'trips',
   routes_created: 'routes',
-  events_attended: 'events',
 })
 
 export function metricUnit(metric) {
