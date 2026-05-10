@@ -292,14 +292,6 @@ function Dashboard() {
                     </div>
                   ))}
                 </div>
-                <GenericButton
-                  type="button"
-                  onClick={() => navigate('/dashboard/badges')}
-                  unstyled
-                  customStyling="text-xs font-medium text-blue-primary hover:underline"
-                >
-                  {dashboardStrings.metrics.user.badges.viewAll} →
-                </GenericButton>
               </div>
             )}
 
