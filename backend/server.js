@@ -1235,8 +1235,8 @@ app.get('/api/analytics/by-mode', async (req, res) => {
         totalDistanceKm: 0,
         totalCo2SavedKg: 0,
       },
-      bus: {
-        mode: 'bus',
+      transit: {
+        mode: 'transit',
         tripCount: 0,
         totalDistanceKm: 0,
         totalCo2SavedKg: 0,
@@ -1275,15 +1275,17 @@ app.get('/api/analytics/by-mode', async (req, res) => {
       }
     }
 
-    const data = ['walk', 'bicycle', 'bus', 'rail', 'car', 'other'].map(key => {
-      const item = aggregates[key]
-      return {
-        mode: item.mode,
-        tripCount: item.tripCount,
-        totalDistanceKm: analytics.roundToTwoDecimals(item.totalDistanceKm),
-        totalCo2SavedKg: analytics.roundToTwoDecimals(item.totalCo2SavedKg),
+    const data = ['walk', 'bicycle', 'transit', 'rail', 'car', 'other'].map(
+      key => {
+        const item = aggregates[key]
+        return {
+          mode: item.mode,
+          tripCount: item.tripCount,
+          totalDistanceKm: analytics.roundToTwoDecimals(item.totalDistanceKm),
+          totalCo2SavedKg: analytics.roundToTwoDecimals(item.totalCo2SavedKg),
+        }
       }
-    })
+    )
 
     return res.status(200).json({
       scope: isAdmin ? 'system' : 'user',
