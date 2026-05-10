@@ -664,6 +664,17 @@ app.post('/api/createEvent', async (req, res) => {
     }
 
     await client.query('COMMIT')
+
+    // Evaluate Social badges if a route was created with this event
+    if (route) {
+      try {
+        const summary = await analytics.buildAnalyticsSummary(user.id, false)
+        await badgeEvaluator.evaluateBadges(user.id, summary)
+      } catch (err) {
+        console.error('Badge evaluation failed (createEvent):', err)
+      }
+    }
+
     res.status(201).json(newEvent)
   } catch (error) {
     await client.query('ROLLBACK')
@@ -703,6 +714,15 @@ app.post('/api/createRoute', async (req, res) => {
     )
 
     await client.query('COMMIT')
+
+    // Await badge evaluation so Social badges reflect the new route immediately
+    try {
+      const summary = await analytics.buildAnalyticsSummary(user.id, false)
+      await badgeEvaluator.evaluateBadges(user.id, summary)
+    } catch (err) {
+      console.error('Badge evaluation failed (createRoute):', err)
+    }
+
     res.status(201).json({ success: true, routeID })
   } catch (error) {
     await client.query('ROLLBACK')
@@ -1892,9 +1912,9 @@ app.post('/api/completeRoute', async (req, res) => {
       [user.id, routeID]
     )
 
-    const summary = await analytics.fetchSummaryForUser(user.id)
-    badgeEvaluator
-      .evaluateBadges(user.id, summary)
+    analytics
+      .buildAnalyticsSummary(user.id, false)
+      .then(summary => badgeEvaluator.evaluateBadges(user.id, summary))
       .catch(err => console.error('Badge evaluation failed:', err))
 
     res.json({ success: true })
