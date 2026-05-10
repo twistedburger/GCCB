@@ -22,10 +22,10 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     bicycling: 'bicycle',
     cycle: 'bicycle',
 
-    bus: 'bus',
-    intercity_bus: 'bus',
-    trolleybus: 'bus',
-    share_taxi: 'bus',
+    bus: 'transit',
+    intercity_bus: 'transit',
+    trolleybus: 'transit',
+    share_taxi: 'transit',
 
     rail: 'rail',
     subway: 'rail',
@@ -39,7 +39,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     long_distance_train: 'rail',
     monorail: 'rail',
 
-    transit: 'bus',
+    transit: 'transit',
 
     drive: 'car',
     driving: 'car',
@@ -85,11 +85,11 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     )
 
     if (!vehicleType) {
-      return 'bus'
+      return 'transit'
     }
 
     const analyticsMode = toAnalyticsMode(vehicleType)
-    return analyticsMode === 'other' ? 'bus' : analyticsMode
+    return analyticsMode === 'other' ? 'transit' : analyticsMode
   }
 
   /**
