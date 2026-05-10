@@ -12,6 +12,7 @@ const config = {
 
 if (process.argv.includes('--seed')) {
   config.scripts.push('dummy_data.sql')
+  config.scripts.push('seed_badges.sql')
 }
 
 const execOptions = {
