@@ -560,6 +560,9 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
     description,
   } = routeData
 
+  // Frontend sends distance in metres; convert to km for backend analytics
+  const distanceKm = Number(distance) / 1000
+
   const routeResult = await client.query(
     `INSERT INTO route (
       title, creator_id, transportation_mode, origin, destination,
@@ -576,7 +579,7 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
       destination,
       departTime,
       maxPpl,
-      distance,
+      distanceKm,
       path,
       completed,
       description,
