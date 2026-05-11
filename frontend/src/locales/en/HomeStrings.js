@@ -6,6 +6,7 @@ export const homeStrings = {
 
   location: {
     current: 'Current Location',
+    searchThisArea: 'Search this area',
   },
 
   emptyState: 'No results found. Try adjusting your filters.',
@@ -13,6 +14,12 @@ export const homeStrings = {
   report: {
     modalTitle: 'Report',
     modalTitleWithName: title => `Report ${title}`,
+  },
+
+  utils: {
+    successCreation: 'Event created successfully.',
+    failureCreation: 'Failed to create event.',
+    defaultLocation: 'Location access denied, using default',
   },
 
   a11y: {

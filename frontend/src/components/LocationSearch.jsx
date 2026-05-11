@@ -8,6 +8,7 @@ import { locationSearchStrings } from '../locales/en/ComponentStrings/LocationSe
  * @param {Object} clearRef - A ref to access the clear functionality.
  * @param {Function} onSearch - The function to call when a location is searched.
  * @param {string} defaultLocation - The default location for the search.
+ * @param {string} defaultValue - The default value to be displayed to the user in the search bar.
  * @param {string} placeHolder - The placeholder text for the search input.
  * @returns {JSX.Element}
  */
@@ -16,6 +17,7 @@ export default function LocationSearch({
   clearRef,
   onSearch,
   defaultLocation = '',
+  displayValue = '',
   placeHolder = locationSearchStrings.searchPlaceholder,
   className = 'w-full flex flex-row justify-start focus-within:ring-4 focus-within:ring-blue-100 border border-transparent rounded-xl shadow-md shadow-light-grey transition-all',
   disabled = false,
@@ -44,6 +46,16 @@ export default function LocationSearch({
       }
     }
   }, [clearRef])
+
+  useEffect(() => {
+    if (!displayValue) return
+    const timer = setTimeout(() => {
+      if (autocompleteRef.current) {
+        autocompleteRef.current.value = displayValue
+      }
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [displayValue])
 
   useEffect(() => {
     const el = autocompleteRef.current
@@ -91,6 +103,7 @@ LocationSearch.propTypes = {
   onSearch: PropTypes.func.isRequired,
   clearRef: PropTypes.shape({ current: PropTypes.object }),
   defaultLocation: PropTypes.string,
+  displayValue: PropTypes.string,
   placeHolder: PropTypes.string,
   className: PropTypes.string,
   disabled: PropTypes.bool,

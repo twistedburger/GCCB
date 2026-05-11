@@ -76,6 +76,15 @@ const analytics = createAnalyticsHelpers({
   emissions: { EMISSIONS_G_PER_KM },
 })
 
+setInterval(async () => {
+  await db.query(`
+    UPDATE route
+    SET completed = TRUE
+    WHERE completed = FALSE
+    AND depart_time < NOW()
+  `)
+}, 60 * 1000)
+
 /**
  * Proxy server route to fetch map from google maps api
  *
@@ -1788,95 +1797,6 @@ app.get('/api/activity/co2-timeseries', async (req, res) => {
     return res.status(500).send(serverStrings.errors.generic)
   } finally {
     client.release()
-  }
-})
-
-/**
- * Returns banned users or blocked users depending on user's role.
- *
- * If the database has an error, a 500 status code is sent with an error message.
- *
- * @returns {[Object]} banned users, or an empty array
- */
-app.get('/api/bannedUsers', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    let result
-    if (!user) {
-      return res.status(404).json({ error: serverStrings.errors.noUser })
-    }
-
-    if (user.role === 'moderator') {
-      result = await db.query(`
-      SELECT * FROM "user"
-      WHERE reported > 3
-      ORDER BY name
-    `)
-    } else {
-      result = await db.query(
-        `
-        SELECT u.* FROM blocked_user bu
-        LEFT JOIN "user" u ON u.id = bu.blocked_user_id
-        WHERE bu.blocker_id = $1
-        ORDER BY u.name
-      `,
-        [user.id]
-      )
-    }
-
-    res.status(200).json(result.rows)
-  } catch (error) {
-    console.error('Error fetching users:', error)
-    res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-/**
- * Unbans or unblocks a user depending on their role.
- *
- * If the database has an error, a 500 status code is sent with an error message.
- */
-app.post('/api/unbanUser/:userId', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    let result
-    if (!user) {
-      return res.status(404).json({ error: serverStrings.errors.noUser })
-    }
-
-    if (user.role === 'moderator') {
-      result = await db.query(
-        `
-      UPDATE "user"
-      SET reported = 0
-      WHERE id = $1
-      RETURNING * 
-    `,
-        [req.params.userId]
-      )
-    } else {
-      result = await db.query(
-        `
-        DELETE FROM blocked_user
-        WHERE blocker_id = $1 AND blocked_user_id = $2
-        RETURNING *
-      `,
-        [user.id, req.params.userId]
-      )
-    }
-
-    res.status(200).json(result.rows)
-  } catch (error) {
-    console.error('Error unbanning user:', error)
-    res.status(500).send(serverStrings.errors.generic)
   }
 })
 
