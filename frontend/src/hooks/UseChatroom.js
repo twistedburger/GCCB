@@ -32,10 +32,10 @@ export function useChatRoom(user) {
   useEffect(() => {
     if (!isResizing) return
 
-    const handleResize = e => {
-      const clientX = e.type.startsWith('touch')
-        ? e.touches[0].clientX
-        : e.clientX
+    const handleResize = event => {
+      const clientX = event.type.startsWith('touch')
+        ? event.touches[0].clientX
+        : event.clientX
       const offsetLeft = sidebarRef.current
         ? sidebarRef.current.getBoundingClientRect().left
         : 0

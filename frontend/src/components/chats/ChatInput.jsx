@@ -11,9 +11,9 @@ export default function ChatInput({
   isConnected,
   isDeleted,
 }) {
-  const handleKeyDown = e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
+  const handleKeyDown = event => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
       onSendMessage()
     }
   }
@@ -36,7 +36,7 @@ export default function ChatInput({
           <TextBox
             placeholder={getPlaceholder()}
             value={isDeleted ? '' : input} // Clear input if deleted
-            onChange={e => setInput(e.target.value)}
+            onChange={event => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isClosed || !isConnected || isDeleted}
             multiline={false}
