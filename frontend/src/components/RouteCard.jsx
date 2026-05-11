@@ -31,6 +31,7 @@ export default function RouteCard({
   isCompleted = false,
   routeDetailView = false,
   onSelect,
+  isDisabled = false,
   onToggleJoin,
   onReport,
 }) {
@@ -215,8 +216,8 @@ export default function RouteCard({
               ) : (
                 <GenericButton
                   unstyled
-                  disabled={isFull}
-                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
+                  disabled={isFull || isDisabled}
+                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-xs ml-2 ${isFull ? 'opacity-50' : ''} ${isDisabled ? 'bg-light-grey text-text-primary' : 'text-white '}`}
                   onClick={handleJoin}
                 >
                   {routeCardStrings.join}
@@ -238,5 +239,6 @@ RouteCard.propTypes = {
   onSelect: PropTypes.func,
   onToggleJoin: PropTypes.func,
   onReport: PropTypes.func,
+  isDisabled: PropTypes.bool,
   routeDetailView: PropTypes.bool,
 }
