@@ -20,7 +20,7 @@ const port = 3000
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
 const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
-const { initSocket, broadcast } = require('./socket/chat.socket')
+const { initSocket, broadcast } = require('./sockets/ChatSocket')
 const chatService = require('./src/service/chat.service')
 
 const config = {
@@ -52,7 +52,7 @@ app.use(
 )
 
 app.use(express.json())
-app.use('/api/chat', require('./route/chat.route'))
+app.use('/api/chat', require('./endpoints/ChatEndpoints'))
 
 const analytics = createAnalyticsHelpers({
   db,

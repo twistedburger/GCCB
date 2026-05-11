@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const chatService = require('../src/service/chat.service')
 const requireAuth = require('../middleware/requireAuth')
-const { selectUser } = require('../src/utils/userHelpers')
+const { selectUser } = require('../src/utils/UserUtils')
 
 /**
  * Fetches all chat rooms for the authenticated user.

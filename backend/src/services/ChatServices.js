@@ -1,7 +1,7 @@
 const { pool } = require('../../db.js')
 const {
   chatServiceStrings,
-} = require('../../locales/en/service/chatServiceLocales')
+} = require('../../locales/en/service/chatServiceLocales.js')
 
 /**
  * Closes expired rooms and deletes archived ones.
