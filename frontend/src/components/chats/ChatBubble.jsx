@@ -18,12 +18,14 @@ export default function ChatBubble({ message, isMe }) {
         isMe ? 'self-end items-end' : 'self-start items-start'
       }`}
     >
-      <div className="flex items-baseline gap-2 mb-1 px-1">
+      <div
+        className={`flex flex-col mb-1 px-1 ${isMe ? 'items-end' : 'items-start'}`}
+      >
         <span className="text-xs font-bold text-dark-grey">
-          {isMe ? chatBubbleStrings.you : message.sender_nickname}
+          {isMe ? chatBubbleStrings.you : message.senderNickname}
         </span>
         <span className="text-[9px] text-dark-grey uppercase">
-          {new Date(message.sent_at).toLocaleTimeString([], {
+          {new Date(message.sentAt).toLocaleTimeString([], {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
@@ -50,9 +52,9 @@ export default function ChatBubble({ message, isMe }) {
 
 ChatBubble.propTypes = {
   message: PropTypes.shape({
-    sender_nickname: PropTypes.string.isRequired,
+    senderNickname: PropTypes.string.isRequired,
     content: PropTypes.string.isRequired,
-    sent_at: PropTypes.string.isRequired,
+    sentAt: PropTypes.string.isRequired,
     isSystem: PropTypes.bool,
   }).isRequired,
   isMe: PropTypes.bool.isRequired,

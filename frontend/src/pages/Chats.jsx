@@ -7,6 +7,8 @@ import { chatsStrings } from '../locales/en/ChatsStrings'
 export default function Chats() {
   const { user } = useUser()
   const chat = useChatRoom(user)
+  const rooms = chat.rooms
+  console.log('Rooms:', rooms) // Debugging log to check the structure of rooms
 
   return (
     <div
@@ -34,7 +36,7 @@ export default function Chats() {
             >
               <div className="flex justify-between items-start min-w-0">
                 <span className="font-semibold text-sm truncate mr-2">
-                  {room.route_title}
+                  {room.routeTitle}
                 </span>
                 <div
                   className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${room.is_closed ? 'bg-medium-grey' : 'bg-green-primary'}`}

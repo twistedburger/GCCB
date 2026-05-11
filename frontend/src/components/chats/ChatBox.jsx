@@ -30,11 +30,11 @@ export default function ChatBox({
       <header className="h-15 px-6 flex items-center justify-between bg-white border-b border-zinc-200">
         <div>
           <h3 className="font-bold text-zinc-900 leading-tight">
-            {activeRoom.route_title}
+            {activeRoom.routeTitle}
           </h3>
           <p className="text-xs text-zinc-500">
             {members.length === 1
-              ? chatBoxStrings.participants_one
+              ? chatBoxStrings.oneParticipant
               : `${members.length} ${chatBoxStrings.participants}`}
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function ChatBox({
           <ChatBubble
             key={message.id}
             message={message}
-            isMe={String(user?.id) === String(message.sender_id)}
+            isMe={String(user?.id) === String(message.senderId)}
           />
         ))}
       </div>

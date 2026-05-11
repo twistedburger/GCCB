@@ -125,7 +125,7 @@ export function useChatRoom(user) {
       const systemMsg = {
         id: `sys-join-${Date.now()}`,
         content: `${userNickname} ${chatsStrings.systemMemberJoined}`,
-        sent_at: new Date().toISOString(),
+        sentAt: new Date().toISOString(),
         isSystem: true,
       }
       setMessages(prev => [...prev, systemMsg])
@@ -137,7 +137,7 @@ export function useChatRoom(user) {
       const systemMsg = {
         id: `sys-${Date.now()}`,
         content: `${userNickname} ${chatsStrings.systemMemberLeft}`,
-        sent_at: new Date().toISOString(),
+        sentAt: new Date().toISOString(),
         isSystem: true,
       }
       setMessages(prev => [...prev, systemMsg])

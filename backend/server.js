@@ -21,7 +21,7 @@ const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
 const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
 const { initSocket, broadcast } = require('./sockets/ChatSocket')
-const chatService = require('./src/service/chat.service')
+const chatService = require('./src/services/ChatServices')
 
 const config = {
   authRequired: false,

@@ -40,7 +40,7 @@ const getRoomsByUserId = async userId => {
       `
       SELECT 
         c.*, 
-        r.title AS route_title 
+        r.title AS "routeTitle" 
       FROM chatroom c
       JOIN route r ON c.route_id = r.id
       WHERE c.id IN (SELECT chatroom_id FROM chatroom_member WHERE user_id = $1)
@@ -64,7 +64,7 @@ const getRoomFullDetails = async chatroomId => {
       `
       SELECT 
         c.*, 
-        r.title AS route_title
+        r.title AS "routeTitle"
       FROM chatroom c
       JOIN route r ON c.route_id = r.id
       WHERE c.id = $1
@@ -74,13 +74,17 @@ const getRoomFullDetails = async chatroomId => {
 
     const messages = await pool.query(
       `
-      SELECT 
-        m.*, 
-        u.nickname AS sender_nickname 
-      FROM chat_message m
-      JOIN "user" u ON m.sender_id = u.id
-      WHERE m.chatroom_id = $1 
-      ORDER BY m.sent_at ASC
+    SELECT 
+      m.id,
+      m.chatroom_id,
+      m.sender_id AS "senderId",
+      m.content,
+      m.sent_at AS "sentAt",
+      u.nickname AS "senderNickname" 
+    FROM chat_message m
+    JOIN "user" u ON m.sender_id = u.id
+    WHERE m.chatroom_id = $1 
+    ORDER BY m.sent_at ASC
     `,
       [chatroomId]
     )
@@ -257,7 +261,7 @@ const saveMessage = async (chatroomId, senderId, content) => {
       success: true,
       data: {
         ...newMessage,
-        sender_nickname: userResult.rows[0].nickname,
+        senderNickname: userResult.rows[0].nickname,
       },
     }
   } catch (err) {
