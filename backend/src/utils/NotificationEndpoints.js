@@ -112,7 +112,19 @@ notificationRouter.get('/getNotifications', async (req, res) => {
   try {
     const user = await selectUser(req)
     const notifications = await getUserNotifications(user.id)
-    return res.status(200).json({ notifications: notifications })
+    const transformedNotifications = []
+    notifications.forEach(notification => {
+      transformedNotifications.push({
+        notificationID: notification.notification_id,
+        notificationType: notification.notification_type,
+        routeID: notification.route_id,
+        eventID: notification.event_id,
+        badgeID: notification.badge_id,
+        metadata: notification.metadata,
+        createdAt: notification.created_at,
+      })
+    })
+    return res.status(200).json({ notifications: transformedNotifications })
   } catch {
     return res.status(500).json({ error: serverStrings.errors.generic })
   }
