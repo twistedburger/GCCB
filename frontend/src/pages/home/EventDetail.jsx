@@ -389,6 +389,7 @@ export default function EventDetail() {
                               onToggleJoin={() => handleToggleJoin(route)}
                               onReport={data => setReportData(data)}
                               individualView={false}
+                              isDisabled={isAlreadyJoined && !route.isJoined}
                               onSelect={route => {
                                 const fullRoute = {
                                   ...route,
