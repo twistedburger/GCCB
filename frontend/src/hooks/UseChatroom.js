@@ -4,6 +4,14 @@ import { chatsStrings } from '../locales/en/ChatsStrings'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
+/**
+ * Custom hook to manage chatroom state and interactions,
+ * including fetching rooms, handling active room details, managing WebSocket connections for real-time updates,
+ * and implementing sidebar resizing logic.
+ *
+ * @param {user} User object representing the authenticated user.
+ * @returns
+ */
 export function useChatRoom(user) {
   const [rooms, setRooms] = useState([])
   const [activeRoom, setActiveRoom] = useState(null)

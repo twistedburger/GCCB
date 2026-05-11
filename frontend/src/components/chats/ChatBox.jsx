@@ -4,6 +4,21 @@ import ChatInput from './ChatInput'
 import { chatBoxStrings } from '../../locales/en/ComponentStrings/ChatBoxStrings'
 import PropTypes from 'prop-types'
 
+/**
+ * Component for rendering the main chat interface.
+ *
+ * @param {activeRoom} activeRoom object containing details of the currently active chat room, including routeTitle.
+ * @param {messages} Array of message objects to display in the chat, each containing senderNickname, content, sentAt, and isSystem properties.
+ * @param {user} User object representing the message creator.
+ * @param {members} Array of user objects representing the members of the chat room.
+ * @param {isClosed} Boolean indicating if the chat room is closed.
+ * @param {isConnected} Boolean indicating if the user is connected to the chat.
+ * @param {isDeleted} Boolean indicating if the chat room is deleted.
+ * @param {input} String representing the current value of the chat input field.
+ * @param {setInput} Function to update the input state when the user types a message.
+ * @param {onSendMessage} Function to call when the user sends a message, typically handling the message submission logic.
+ * @returns JSX element representing the chat box.
+ */
 export default function ChatBox({
   activeRoom,
   messages,

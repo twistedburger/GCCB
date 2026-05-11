@@ -4,6 +4,13 @@ const { chatSocketStrings } = require('../locales/en/socket/ChatSocketLocales')
 
 let io
 
+/**
+ * Initializes the Socket.IO server and sets up event handlers for chat functionality.
+ * Listens for 'AUTH' events to authenticate users and 'SEND_MESSAGE' events to handle incoming messages.
+ *
+ * @param {import('http').Server} httpServer The HTTP server instance
+ * @returns {import('socket.io').Server}
+ */
 const initSocket = httpServer => {
   io = new Server(httpServer, {
     cors: { origin: process.env.FRONTEND_URL, credentials: true },
@@ -63,6 +70,13 @@ const initSocket = httpServer => {
   })
 }
 
+/**
+ * Utility function to broadcast an event to a specific chatroom.
+ *
+ * @param {number} chatroomId The ID of the chatroom to broadcast to
+ * @param {string} type The type of message to broadcast
+ * @param {any} payload The message payload
+ */
 const broadcast = (chatroomId, type, payload) => {
   if (io) io.to(`room_${chatroomId}`).emit(type, payload)
 }

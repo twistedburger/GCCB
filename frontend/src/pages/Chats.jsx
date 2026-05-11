@@ -4,6 +4,12 @@ import GenericCard from '../components/GenericCard'
 import ChatBox from '../components/chats/ChatBox'
 import { chatsStrings } from '../locales/en/ChatsStrings'
 
+/**
+ * Provides a split-screen page displaying list of participating chatrooms on the left and active chatbox on the right.
+ * Users can select a chatroom to view and send messages. The sidebar is resizable for better user experience.
+ *
+ * @returns {JSX.Element} The Chats page component.
+ */
 export default function Chats() {
   const { user } = useUser()
   const chat = useChatRoom(user)

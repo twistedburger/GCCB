@@ -1,6 +1,13 @@
 import PropTypes from 'prop-types'
 import { chatBubbleStrings } from '../../locales/en/ComponentStrings/ChatBubbleStrings'
 
+/**
+ * Component for rendering a single chat message bubble.
+ *
+ * @param {message} message chat message object containing senderNickname, content, sentAt, and isSystem properties.
+ * @param {isMe} Boolean indicating if the message was sent by the current user, used for styling.
+ * @returns JSX element representing the chat bubble.
+ */
 export default function ChatBubble({ message, isMe }) {
   if (message.isSystem) {
     return (

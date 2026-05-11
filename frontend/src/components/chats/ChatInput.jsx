@@ -3,6 +3,18 @@ import GenericButton from '../GenericButton'
 import PropTypes from 'prop-types'
 import { chatInputStrings } from '../../locales/en/ComponentStrings/ChatInputStrings'
 
+/**
+ * Component for the chat input area, allowing users to type and send messages.
+ * Handles different states such as closed, connecting, and deleted rooms, providing appropriate placeholders and disabling input when necessary.
+ *
+ * @param {input} input - The current value of the chat input field.
+ * @param {setInput} setInput - Function to update the chat input value.
+ * @param {onSendMessage} onSendMessage - Function to call when sending a message.
+ * @param {isClosed} isClosed - Boolean indicating if the chat room is closed.
+ * @param {isConnected} isConnected - Boolean indicating if the user is connected to the chat room.
+ * @param {isDeleted} isDeleted - Boolean indicating if the chat room has been deleted.
+ * @returns JSX element representing the chat input area, with conditional rendering based on the room's state.
+ */
 export default function ChatInput({
   input,
   setInput,
@@ -18,6 +30,11 @@ export default function ChatInput({
     }
   }
 
+  /**
+   * Gets the appropriate placeholder text for the input field based on the chat room's state.
+   *
+   * @returns {string} The placeholder text to display in the input field.
+   */
   const getPlaceholder = () => {
     if (isDeleted) return chatInputStrings.deleted
     if (isClosed) return chatInputStrings.closed
@@ -35,7 +52,7 @@ export default function ChatInput({
         <div className="flex-1">
           <TextBox
             placeholder={getPlaceholder()}
-            value={isDeleted ? '' : input} // Clear input if deleted
+            value={isDeleted ? '' : input}
             onChange={event => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isClosed || !isConnected || isDeleted}
