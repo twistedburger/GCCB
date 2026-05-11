@@ -48,7 +48,7 @@ export default function ChatInput({
           disabled={isSendDisabled}
           customStyling="m-0 mb-4 px-6 py-3 h-[50px] flex items-center justify-center shrink-0"
         >
-          Send
+          {chatInputStrings.sendButton}
         </GenericButton>
       </div>
     </div>

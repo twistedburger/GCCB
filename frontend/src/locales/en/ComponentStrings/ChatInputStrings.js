@@ -3,4 +3,5 @@ export const chatInputStrings = {
   connecting: 'Connecting to chat...',
   closed: 'This chatroom is closed',
   deleted: 'This route has been deleted',
+  sendButton: 'Send',
 }
