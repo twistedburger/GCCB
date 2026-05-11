@@ -19,6 +19,12 @@ import {
 import GenericCard from './GenericCard'
 import { progressWidth, metricUnit } from '../utils/BadgeUtils'
 
+/**
+ * Maps badge icon_key values to Material UI icons.
+ * Will default to a Star if the icon_key is not found.
+ *
+ * @type {Object.<string, React.ComponentType>}
+ */
 const BADGE_ICONS = {
   leaf: EmojiNature,
   bicycle: DirectionsBike,
@@ -39,6 +45,11 @@ const BADGE_ICONS = {
   repeat: Repeat,
 }
 
+/**
+ * Visual configs for each badge tier.
+ *
+ * @type {Object.<number, { label: string, pillStyle: string, iconColor: string, barColor: string }>}
+ */
 const TIER_CONFIG = {
   1: {
     label: 'Bronze',
@@ -60,6 +71,32 @@ const TIER_CONFIG = {
   },
 }
 
+/**
+ * Displays a single badge tile in one of three visual states:
+ * - Earned: fully coloured icon with date label
+ * - In Progress: partially muted icon with progress bar, percentage and threshold label
+ * - Locked: greyscale, dimmed, thresholds shown
+ *
+ * Locked badges are hidden unless showLocked is true.
+ * Used in the Badges page grid and can be extended for other badge displays.
+ *
+ * @param {Object}  props
+ * @param {Object}  props.badge                Badge object from GET /api/badges.
+ * @param {number}  props.badge.id             Badge DB id.
+ * @param {string}  props.badge.key            Unique badge key.
+ * @param {string}  props.badge.title          Display title.
+ * @param {string}  props.badge.category       DB category value e.g. 'eco_impact'.
+ * @param {number}  props.badge.tier           Tier level: 1 (Bronze), 2 (Silver), 3 (Gold).
+ * @param {string}  props.badge.metric         Metric key e.g. 'trip_count'.
+ * @param {number}  props.badge.threshold      Value required to earn the badge.
+ * @param {string}  props.badge.iconKey        Key into BADGE_ICONS map.
+ * @param {boolean} props.badge.earned         Whether the badge has been earned.
+ * @param {string}  [props.badge.dateEarned]   ISO date string of when the badge was earned.
+ * @param {number}  [props.badge.currentValue] User's current metric value.
+ * @param {number}  [props.badge.progress]     Fraction between 0 and 1.
+ * @param {boolean} [props.showLocked]         Whether to render locked badges. Default false.
+ * @returns {JSX.Element|null}
+ */
 export default function BadgeCard({ badge, showLocked = false }) {
   const {
     title,

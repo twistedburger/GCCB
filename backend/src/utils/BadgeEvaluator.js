@@ -1,3 +1,7 @@
+/**
+ * Contains the logic for evaluating user badges based on analytics data.
+ * Handles badge achievement checks, progress updates, and retrieval of badge details.
+ */
 class BadgeEvaluator {
   /** @type {import('./BadgeQueries').BadgeQueries} */
   #badgeQueries
@@ -10,6 +14,11 @@ class BadgeEvaluator {
     routesCreated: 'routes_created',
   })
 
+  /**
+   * Maps each badge metric type to a resolver function.
+   *
+   * @type {Object.<string, function(Object, number, string=): number>}
+   */
   static #METRIC_RESOLVERS = {
     [BadgeEvaluator.#METRICS.co2SavedKg]: summary =>
       summary?.totalCo2SavedKg ?? 0,
@@ -28,12 +37,31 @@ class BadgeEvaluator {
     this.#badgeQueries = badgeQueries
   }
 
+  /**
+   * Returns the user's current value for a given badge's metric.
+   *
+   * @param {Object} badge            Badge row from the DB.
+   * @param {Object} analyticsSummary Analytics summary
+   * @param {number} routeCount       Number of routes created by the user.
+   * @returns {number}
+   */
   getBadgeMetricValue(badge, analyticsSummary, routeCount) {
     const resolver = BadgeEvaluator.#METRIC_RESOLVERS[badge.metric]
     if (!resolver) return 0
     return resolver(analyticsSummary, routeCount, badge.metric_arg)
   }
 
+  /**
+   * Evaluates all unearned badges for a user and:
+   * - Awards any badge where threshold progress has been met.
+   * - Upserts badge_progress for badges still in progress.
+   *
+   * Called after route completion and route/event creation.
+   *
+   * @param {number} userId
+   * @param {Object} analyticsSummary Analytics summary from buildAnalyticsSummary.
+   * @returns {Promise<string[]>} Keys of any newly awarded badges.
+   */
   async evaluateBadges(userId, analyticsSummary) {
     const [unearnedBadges, routeCount] = await Promise.all([
       this.#badgeQueries.fetchUnearnedBadges(userId),
@@ -60,6 +88,12 @@ class BadgeEvaluator {
     return newlyAwarded
   }
 
+  /**
+   * Returns all badges for a user with earned status and progress.
+   *
+   * @param {number} userId
+   * @returns {Promise<Object[]>}
+   */
   async getBadgesForUser(userId) {
     return this.#badgeQueries.fetchUserBadgeDetails(userId)
   }

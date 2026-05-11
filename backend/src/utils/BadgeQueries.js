@@ -1,11 +1,25 @@
+/**
+ * Provides methods for querying and updating badge-related data in the database.
+ * Handles fetching badges, awarding badges, updating progress, and retrieving user badge details.
+ */
 class BadgeQueries {
   /** @type {import('pg').Pool} */
   #db
 
+  /**
+   * @param {Object} params
+   * @param {import('pg').Pool} params.db
+   */
   constructor({ db }) {
     this.#db = db
   }
 
+  /**
+   * Fetches all badges the user have not been earned.
+   *
+   * @param {number} userId
+   * @returns {Promise<Object[]>} Array of badge rows.
+   */
   async fetchUnearnedBadges(userId) {
     const { rows } = await this.#db.query(
       `SELECT b.*
@@ -20,6 +34,13 @@ class BadgeQueries {
     return rows
   }
 
+  /**
+   * Fetches the number of routes created by the user.
+   * Used to evaluate Social badge progress (routes_created metric).
+   *
+   * @param {number} userId
+   * @returns {Promise<number>}
+   */
   async fetchRouteCount(userId) {
     const { rows } = await this.#db.query(
       `SELECT COUNT(*)::int AS count
@@ -30,6 +51,14 @@ class BadgeQueries {
     return rows[0].count
   }
 
+  /**
+   * Awards a badge to a user by inserting into user_badge.
+   * Ignores duplicate awards if somehow earned again.
+   *
+   * @param {number} userId
+   * @param {number} badgeId
+   * @returns {Promise<void>}
+   */
   async awardBadge(userId, badgeId) {
     await this.#db.query(
       `INSERT INTO user_badge (user_id, badge_id)
@@ -39,6 +68,15 @@ class BadgeQueries {
     )
   }
 
+  /**
+   * Upserts the user's current progress toward a badge.
+   * Creates the row if it doesn't exist; otherwise updates.
+   *
+   * @param {number} userId
+   * @param {number} badgeId
+   * @param {number} currentValue
+   * @returns {Promise<void>}
+   */
   async upsertBadgeProgress(userId, badgeId, currentValue) {
     await this.#db.query(
       `INSERT INTO badge_progress (user_id, badge_id, current_value, last_updated)
@@ -51,6 +89,16 @@ class BadgeQueries {
     )
   }
 
+  /**
+   * Fetches all badges for a user with earned status, date earned, and
+   * current progress.
+   *
+   * Ordered by tier descending (Gold first), then category, then threshold
+   * ascending.
+   *
+   * @param {number} userId
+   * @returns {Promise<Object[]>}
+   */
   async fetchUserBadgeDetails(userId) {
     const { rows } = await this.#db.query(
       `SELECT
