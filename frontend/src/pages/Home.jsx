@@ -18,6 +18,8 @@ import {
   handleFormResult,
   locationSetError,
   locationSetSuccess,
+  reverseGeocode,
+  hasMapPanned,
 } from '../utils/HomeUtils'
 import DisplayFilters from '../components/DisplayFilters'
 import MainMap from '../components/MainMap'
@@ -25,6 +27,7 @@ import { createPortal } from 'react-dom'
 import { CircularProgress } from '@mui/material'
 import { homeStrings } from '../locales/en/HomeStrings'
 import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
+import { postGISToLatLng } from '../utils/MainMapUtils'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -69,6 +72,10 @@ function Home() {
   const [loading, setLoading] = useState(true)
   const [searchAddress, setSearchAddress] = useState('')
   const locationSearchRef = useRef(null)
+  const [createEventLocation, setCreateEventLocation] = useState(null)
+  const [createEventLatLng, setCreateEventLatLng] = useState(null)
+  const [mapCenter, setMapCenter] = useState(null)
+  const [hasPanned, setHasPanned] = useState(false)
 
   const { authorizeUser } = useAuth()
   authorizeUser()
@@ -89,8 +96,10 @@ function Home() {
     const url = buildSearchURL(
       { ...filters, mainEventsOnly: apiMainEvents },
       userLocation,
-      isArriving
+      isArriving,
+      import.meta.env.VITE_API_BASE_URL
     )
+    console.log(url)
     fetch(url, { credentials: 'include' })
       .then(response => {
         if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
@@ -158,17 +167,48 @@ function Home() {
           }
           defaultCenter={userLocation || DEFAULT_COORDINATES}
           route={selectedRoute}
-          defaultPin={!selectedRoute && !!userLocation}
+          events={cardsToDisplay.map(event => ({
+            ...event,
+            ...postGISToLatLng(event.location_geog),
+          }))}
+          onMapClick={async ({ lat, lng }) => {
+            const address = await reverseGeocode({ lat, lng })
+            setCreateEventLocation(address)
+            setCreateEventLatLng([lat, lng])
+            setShowCreateEvent(true)
+          }}
+          onCenterChanged={({ lat, lng }) => {
+            if (!userLocation) return
+            if (hasMapPanned({ lat, lng }, userLocation)) {
+              setMapCenter({ lat, lng })
+              setHasPanned(true)
+            }
+          }}
+          searchRadius={filters.radius}
         />
 
         {!selectedRoute && !isEventDetail && (
           <LocationSearch
             clearRef={locationSearchRef}
+            displayValue={searchAddress}
             className="rounded-xl absolute inset-x-0 top-0 m-12 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
             onSearch={handleSearch}
             disabled={loading}
           />
+        )}
+        {hasPanned && !selectedRoute && !isEventDetail && (
+          <button
+            className="absolute top-26 left-1/2 -translate-x-1/2 z-10 bg-background-off-white text-sm font-medium px-4 py-2 rounded-full shadow-md text-text-primary"
+            onClick={async () => {
+              const address = await reverseGeocode(mapCenter)
+              setSearchAddress(address)
+              setUserLocation(mapCenter)
+              setHasPanned(false)
+            }}
+          >
+            {homeStrings.location.searchThisArea}
+          </button>
         )}
         <Drawer.Root
           open={true}
@@ -323,9 +363,15 @@ function Home() {
         createPortal(
           <Modal
             isOpen={showCreateEvent}
-            onClose={() => setShowCreateEvent(false)}
+            onClose={() => {
+              setShowCreateEvent(false)
+              setCreateEventLocation(null)
+              setCreateEventLatLng(null)
+            }}
           >
             <CreateEvent
+              initLoc={createEventLocation}
+              initLatLng={createEventLatLng}
               onSubmit={result =>
                 handleFormResult(result, {
                   setShowCreateEvent,

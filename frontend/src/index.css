@@ -130,3 +130,7 @@ html {
 .animate-alert-in {
   animation: alertIn 0.4s ease-out forwards;
 }
+
+.gm-style-iw-d {
+  overflow: hidden !important;
+}
