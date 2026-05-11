@@ -1,6 +1,6 @@
 const { Server } = require('socket.io')
 const chatService = require('../src/service/chat.service')
-const { chatSocketStrings } = require('../locales/en/socket/chatSocketLocales')
+const { chatSocketStrings } = require('../locales/en/socket/ChatSocketLocales')
 
 let io
 
