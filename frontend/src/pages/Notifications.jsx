@@ -1,9 +1,9 @@
 import GenericButton from '../components/GenericButton'
 import { NotificationType } from '../../../shared/NotificationTypes'
 import { useNotifications } from '../../context/NotificationContext'
-import GenericCard from '../components/GenericCard'
 import { notificationStrings } from '../locales/en/NotificationStrings'
 import { clearAllNotifications } from '../utils/NotificationUtils'
+import NotificationCard from '../components/NotificationCard'
 
 /**
  * Display the notifications page.
@@ -51,10 +51,11 @@ export default function Notifications() {
       >
         Send Notification
       </GenericButton>
-      {notifications.map(n => (
-        <GenericCard key={n.notification_id}>
-          {`${n.notification_id}: ${n.metadata.message}`}
-        </GenericCard>
+      {notifications.map(notification => (
+        <NotificationCard
+          key={notification.notificationID}
+          notification={notification}
+        ></NotificationCard>
       ))}
     </div>
   )
