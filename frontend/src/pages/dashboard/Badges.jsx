@@ -3,34 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import GenericButton from '../../components/GenericButton'
 import BadgeCard from '../../components/BadgeCard'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
-import {
-  VIEWS,
-  CATEGORIES,
-  CATEGORY_ORDER,
-  filterForView,
-} from '../../utils/BadgeUtils'
+import { VIEWS, CATEGORY_ORDER, filterForView } from '../../utils/BadgeUtils'
+import { badgesStrings } from '../../locales/en/ComponentStrings/BadgeStrings'
 
-// TODO: to be moved to a localization file
-const badgesStrings = {
-  title: 'Badges',
-  views: {
-    all: 'All',
-    earned: 'Earned',
-    inProgress: 'In Progress',
-  },
-  categories: {
-    [CATEGORIES.ECO_IMPACT]: 'Eco Impact',
-    [CATEGORIES.TRIPS]: 'Trip Milestones',
-    [CATEGORIES.MODES]: 'Mode Explorer',
-    [CATEGORIES.SOCIAL]: 'Social',
-  },
-  emptyEarned: 'Complete trips to start earning badges!',
-  emptyProgress: 'No badges in progress yet.',
-  loading: 'Loading badges.',
-  error: 'Failed to load badges.',
-  earnedCount: (earned, total) => `${earned} of ${total} earned`,
-}
-
+/**
+ * Badge display page.
+ *
+ * @returns {JSX.Element}
+ */
 export default function Badges() {
   const navigate = useNavigate()
 
