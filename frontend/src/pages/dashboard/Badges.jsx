@@ -13,7 +13,7 @@ import { badgesStrings } from '../../locales/en/ComponentStrings/BadgeStrings'
  */
 export default function Badges() {
   const navigate = useNavigate()
-
+  const baseURL = import.meta.env.VITE_API_BASE_URL
   const [badges, setBadges] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -24,7 +24,7 @@ export default function Badges() {
       try {
         setLoading(true)
         setError(null)
-        const res = await fetch('http://localhost:3000/api/badges', {
+        const res = await fetch(`${baseURL}/api/badges`, {
           credentials: 'include',
         })
         if (!res.ok) throw new Error(badgesStrings.error)
