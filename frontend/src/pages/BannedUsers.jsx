@@ -2,9 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import OrganizerCard from '../components/OrganizerCard'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 import Alert from '../components/Alert'
-import { useAuth } from '../hooks/Authorization'
+import { useAuth, authLevel } from '../hooks/Authorization'
 import {
-  getIsModerator,
   getBannedUsersStrings,
   fetchUsers,
   removeUser,
@@ -21,7 +20,7 @@ function BannedUsers() {
   const [openModal, setOpenModal] = useState(false)
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
-  const isModerator = getIsModerator(authorization)
+  const isModerator = authorization === authLevel.MODERATOR.label
   const strings = getBannedUsersStrings(isModerator)
 
   const handleFetchUsers = useCallback(async () => {
