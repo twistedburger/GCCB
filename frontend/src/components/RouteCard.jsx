@@ -95,13 +95,14 @@ export default function RouteCard({
     setPeopleGoing(prev => prev - 1)
   }
 
-  const handleClick = e => {
+  const handleClick = async e => {
     e.stopPropagation()
-    if (onToggleJoin && !isDraft) {
-      onToggleJoin(route)
-    } else {
+    if (isDraft) {
       handleLeave(e)
+      return
     }
+    await handleLeave(e)
+    if (onToggleJoin) onToggleJoin(route)
   }
 
   return (
@@ -202,6 +203,7 @@ export default function RouteCard({
               </GenericButton>
             )}
             {!isCompleted &&
+              !isDisabled &&
               (activeJoinedState ? (
                 <GenericButton
                   unstyled
