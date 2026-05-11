@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const chatService = require('../src/service/chat.service')
-const requireAuth = require('../middleware/requireAuth')
+const requireAuth = require('../middleware/RequireAuth')
 const { selectUser } = require('../src/utils/UserUtils')
 
 /**
