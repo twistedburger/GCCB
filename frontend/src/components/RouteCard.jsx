@@ -31,6 +31,7 @@ export default function RouteCard({
   isCompleted = false,
   routeDetailView = false,
   onSelect,
+  isDisabled = false,
   onToggleJoin,
   onReport,
 }) {
@@ -62,6 +63,11 @@ export default function RouteCard({
     checkJoined()
   }, [route.id, isDraft]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (isDraft || route.isJoined === undefined) return
+    setIsJoined(route.isJoined)
+  }, [route.isJoined, isDraft])
+
   const handleJoin = async e => {
     e.stopPropagation()
     if (isDraft) {
@@ -76,6 +82,7 @@ export default function RouteCard({
     })
     setIsJoined(true)
     setPeopleGoing(prev => prev + 1)
+    if (onToggleJoin) onToggleJoin(route)
   }
 
   const handleLeave = async e => {
@@ -94,9 +101,13 @@ export default function RouteCard({
     setPeopleGoing(prev => prev - 1)
   }
 
-  const handleClick = e => {
+  const handleClick = async e => {
     e.stopPropagation()
-    if (onToggleJoin && !isDraft) {
+    if (isDraft) {
+      handleLeave(e)
+      return
+    }
+    if (onToggleJoin) {
       onToggleJoin(route)
     } else {
       handleLeave(e)
@@ -201,6 +212,7 @@ export default function RouteCard({
               </GenericButton>
             )}
             {!isCompleted &&
+              !isDisabled &&
               (activeJoinedState ? (
                 <GenericButton
                   unstyled
@@ -216,7 +228,7 @@ export default function RouteCard({
                 <GenericButton
                   unstyled
                   disabled={isFull}
-                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
+                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-text-primary text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
                   onClick={handleJoin}
                 >
                   {routeCardStrings.join}
@@ -238,5 +250,6 @@ RouteCard.propTypes = {
   onSelect: PropTypes.func,
   onToggleJoin: PropTypes.func,
   onReport: PropTypes.func,
+  isDisabled: PropTypes.bool,
   routeDetailView: PropTypes.bool,
 }
