@@ -63,6 +63,11 @@ export default function RouteCard({
     checkJoined()
   }, [route.id, isDraft]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (isDraft || route.isJoined === undefined) return
+    setIsJoined(route.isJoined)
+  }, [route.isJoined, isDraft])
+
   const handleJoin = async e => {
     e.stopPropagation()
     if (isDraft) {
@@ -77,6 +82,7 @@ export default function RouteCard({
     })
     setIsJoined(true)
     setPeopleGoing(prev => prev + 1)
+    if (onToggleJoin) onToggleJoin(route)
   }
 
   const handleLeave = async e => {
@@ -101,8 +107,11 @@ export default function RouteCard({
       handleLeave(e)
       return
     }
-    await handleLeave(e)
-    if (onToggleJoin) onToggleJoin(route)
+    if (onToggleJoin) {
+      onToggleJoin(route)
+    } else {
+      handleLeave(e)
+    }
   }
 
   return (
@@ -218,8 +227,8 @@ export default function RouteCard({
               ) : (
                 <GenericButton
                   unstyled
-                  disabled={isFull || isDisabled}
-                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-xs ml-2 ${isFull ? 'opacity-50' : ''} ${isDisabled ? 'bg-light-grey text-text-primary' : 'text-white '}`}
+                  disabled={isFull}
+                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-text-primary text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
                   onClick={handleJoin}
                 >
                   {routeCardStrings.join}
