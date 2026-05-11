@@ -988,7 +988,10 @@ app.post('/api/routes/:id/join', async (req, res) => {
     if (chatroomRes.rowCount > 0) {
       const chatroomId = chatroomRes.rows[0].id
       const newMember = await chatService.addUserToRoom(chatroomId, user.id)
-      broadcast(chatroomId, 'MEMBER_JOINED', { newMember })
+      broadcast(chatroomId, 'MEMBER_JOINED', {
+        userId: newMember.data.id,
+        userNickname: newMember.data.nickname,
+      })
     }
 
     res.json({ success: true })
@@ -1064,11 +1067,9 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
       [user.id, routeId]
     )
 
-    await chatService.removeUserFromRoom(routeId, user.id)
-
     if (chatroomRes.rowCount > 0) {
       const chatroomId = chatroomRes.rows[0].id
-
+      await chatService.removeUserFromRoom(chatroomId, user.id)
       broadcast(chatroomId, 'MEMBER_LEFT', {
         userId: user.id,
         userNickname: user.nickname,

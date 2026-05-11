@@ -118,13 +118,17 @@ export default function Chats() {
 
     socket.on('MEMBER_JOINED', data => {
       setMembers(prev => {
-        if (prev.find(m => String(m.id) === String(data.newMember.id)))
-          return prev
-        return [...prev, data.newMember]
+        if (prev.find(m => String(m?.id) === String(data.userId))) return prev
+        const newMemberObj = {
+          id: data.userId,
+          nickname: data.userNickname || chatsStrings.fallbackNewMember,
+        }
+
+        return [...prev, newMemberObj]
       })
 
-      const userNickname =
-        data.newMember.nickname || chatsStrings.fallbackNewMember
+      const userNickname = data.userNickname || chatsStrings.fallbackNewMember
+
       const systemMsg = {
         id: `sys-join-${Date.now()}`,
         content: `${userNickname} ${chatsStrings.systemMemberJoined}`,
@@ -135,7 +139,10 @@ export default function Chats() {
     })
 
     socket.on('MEMBER_LEFT', data => {
-      setMembers(prev => prev.filter(m => String(m.id) !== String(data.userId)))
+      setMembers(prev =>
+        prev.filter(m => String(m?.id) !== String(data.userId))
+      )
+
       const userNickname = data.userNickname || chatsStrings.fallbackNickname
       const systemMsg = {
         id: `sys-${Date.now()}`,
