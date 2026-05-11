@@ -312,33 +312,13 @@ describe('/notifications/getNotifications endpoint', () => {
   test('Return 200 and notifications on success with notifications', async () => {
     mockIsAuthenticated.mockReturnValue(true)
     selectUser.mockReturnValue(expectedAuthorizedUser)
-    getUserNotifications.mockReturnValue([
-      {
-        notification_id: 1,
-        notification_type: NotificationType.Event,
-        route_id: 1,
-        event_id: null,
-        badge_id: null,
-        metadata: {},
-        created_at: '2026',
-      },
-    ])
+    getUserNotifications.mockReturnValue([{ notificationID: 1 }])
 
     const response = await request(app).get('/notifications/getNotifications')
 
     expect(response.status).toBe(200)
     expect(response.body).toEqual({
-      notifications: [
-        {
-          notificationID: 1,
-          notificationType: NotificationType.Event,
-          routeID: 1,
-          eventID: null,
-          badgeID: null,
-          metadata: {},
-          createdAt: '2026',
-        },
-      ],
+      notifications: [{ notificationID: 1 }],
     })
   })
 

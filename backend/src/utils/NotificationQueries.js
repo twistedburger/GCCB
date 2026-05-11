@@ -103,7 +103,19 @@ async function getUserNotifications(userID) {
          ORDER BY notification.created_at DESC`,
     [userID]
   )
-  return result.rows
+  const notifications = []
+  result.rows.forEach(notification => {
+    notifications.push({
+      notificationID: notification.notification_id,
+      notificationType: notification.notification_type,
+      routeID: notification.route_id,
+      eventID: notification.event_id,
+      badgeID: notification.badge_id,
+      metadata: notification.metadata,
+      createdAt: notification.created_at,
+    })
+  })
+  return notifications
 }
 
 module.exports = {
