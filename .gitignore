@@ -140,3 +140,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+backend/env.production
+frontend/env.development
+frontend/env.production
+.gitignore
