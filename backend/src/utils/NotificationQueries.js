@@ -8,19 +8,19 @@ const {
 const NotificationType = Object.freeze({
   Event: {
     ...BaseType.Event,
-    getUsersQuery: `SELECT user_route.user_id FROM "user_route" JOIN "event_route" ON user_route.route_id = event_route.route_id WHERE event_route.event_id = $1`,
+    getUsersQuery: `SELECT DISTINCT user_route.user_id FROM "user_route" JOIN "event_route" ON user_route.route_id = event_route.route_id WHERE event_route.event_id = $1`,
   },
   Route: {
     ...BaseType.Route,
-    getUsersQuery: `SELECT user_id FROM "user_route" WHERE route_id = $1`,
+    getUsersQuery: `SELECT DISTINCT user_id FROM "user_route" WHERE route_id = $1`,
   },
   Badge: {
     ...BaseType.Badge,
-    getUsersQuery: `SELECT user_id FROM "user_badge" WHERE badge_id = $1`,
+    getUsersQuery: `SELECT DISTINCT user_id FROM "user_badge" WHERE badge_id = $1`,
   },
   Message: {
     ...BaseType.Message,
-    getUsersQuery: `SELECT user_id FROM "user_message" WHERE message_id = $1`,
+    getUsersQuery: `SELECT DISTINCT user_id FROM "user_message" WHERE message_id = $1`,
   },
 })
 
@@ -50,6 +50,7 @@ async function insertNotification(notification) {
   const filteredUsers = userQuery.rows.filter(
     row => row.user_id !== notification.userID
   )
+
   if (filteredUsers.length > 0) {
     const values = filteredUsers.map((_, i) => `($${i + 2}, $1)`).join(', ')
     const params = [notificationID, ...filteredUsers.map(row => row.user_id)]
