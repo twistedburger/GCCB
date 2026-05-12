@@ -1,3 +1,4 @@
+import { NotificationType } from '../../../shared/NotificationTypes'
 import { notificationStrings } from '../locales/en/NotificationStrings'
 
 /**
@@ -96,27 +97,42 @@ export async function clearNotification(notificationID) {
  *   onClick: Callback function on how to handle clicking notification
  * }
  */
-export async function getNotificationDetails(notification) {
-  switch (notification.type) {
-    case 'route':
-      await fetchRoute(notification.routeID)
+export async function getNotificationDetails(notification, navigate) {
+  const details = {
+    message: notification.metadata.message,
+    time: notification.createdAt,
+    title: null,
+    onClick: null,
+  }
+
+  switch (notification.notificationType) {
+    case NotificationType.Route.type: {
+      const route = await fetchRoute(notification.routeID)
+      details.title = route.title
       break
-    case 'event':
-      await fetchEvent(notification.eventID)
+    }
+
+    case NotificationType.Event.type: {
+      const event = await fetchEvent(notification.eventID)
+      details.title = event.title
+      details.onClick = async () => {
+        await clearNotification(notification.notificationID)
+        navigate(`/event/${notification.eventID}`)
+      }
       break
-    case 'badge':
-      await fetchBadge(notification.badgeID)
+    }
+
+    case NotificationType.Badge.type: {
+      const badge = await fetchBadge(notification.badgeID)
+      details.title = badge.title
       break
+    }
+
     default:
       break
   }
   return {
-    title: notification.notificationType,
-    message: notification.metadata.message,
-    time: notification.createdAt,
-    onClick: () => {
-      console.log(notification.notificationType)
-    },
+    details,
   }
 }
 
@@ -140,8 +156,10 @@ async function fetchRoute(routeID) {
       console.log(route.error)
       return null
     }
+    return route
   } catch {
     console.log(notificationStrings.errorLoadingRoute)
+    return null
   }
 }
 
@@ -153,7 +171,7 @@ async function fetchRoute(routeID) {
 async function fetchEvent(eventID) {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/api/eventdetail?id=${eventID}`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/eventdetail/${eventID}`,
       {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -165,8 +183,10 @@ async function fetchEvent(eventID) {
       console.log(event.error)
       return null
     }
+    return event
   } catch {
     console.log(notificationStrings.errorLoadingEvent)
+    return null
   }
 }
 
@@ -190,7 +210,9 @@ async function fetchBadge(badgeID) {
       console.log(badge.error)
       return null
     }
+    return badge
   } catch {
     console.log(notificationStrings.errorLoadingBadge)
+    return null
   }
 }

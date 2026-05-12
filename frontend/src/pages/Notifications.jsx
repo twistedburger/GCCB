@@ -31,9 +31,8 @@ export default function Notifications() {
       {/* This button is temporary and will be removed when notification sending works*/}
       <GenericButton
         onClick={async () => {
-          console.log('hello')
           const notification = {
-            type: NotificationType.Route,
+            type: NotificationType.Event,
             id: 2,
             metadata: { message: 'hello' },
           }
