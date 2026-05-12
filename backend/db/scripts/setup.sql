@@ -157,6 +157,31 @@ CREATE TABLE IF NOT EXISTS "blocked_user" (
     CONSTRAINT fk_bu_blocked_user    FOREIGN KEY (blocked_user_id)    REFERENCES "user"(id)
 );
 
+-- 14. Notifications
+CREATE TYPE notification_type_enum AS ENUM (
+  'route',
+  'event',
+  'badge',
+  'message'
+);
+
+CREATE TABLE IF NOT EXISTS "notification" (
+  notification_id   SERIAL PRIMARY KEY,
+  notification_type notification_type_enum NOT NULL,
+  route_id          INT NULL,
+  event_id          INT NULL,
+  badge_id          INT NULL,
+  metadata          JSONB,
+  created_at        TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS "user_notification" (
+  id                SERIAL PRIMARY KEY,
+  user_id           INT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  notification_id   INT NOT NULL REFERENCES "notification"(notification_id) ON DELETE CASCADE,
+  read_at           TIMESTAMP NULL
+);
+
 CREATE INDEX IF NOT EXISTS event_geog_idx ON "event" USING gist(location_geog);
 CREATE INDEX IF NOT EXISTS route_geog_idx ON "route" USING gist(origin_geog);
 
@@ -223,5 +248,7 @@ GRANT SELECT, INSERT, DELETE         ON TABLE blocked_user       TO :app_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE chatroom           TO :app_role;
 GRANT SELECT, INSERT, DELETE         ON TABLE chatroom_member    TO :app_role;
 GRANT SELECT, INSERT, DELETE         ON TABLE chat_message       TO :app_role;
+GRANT SELECT, INSERT                 ON TABLE notification       TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE user_notification  TO :app_role;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO :app_role;

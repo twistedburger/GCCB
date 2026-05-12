@@ -23,6 +23,7 @@ import {
   AdminPanelSettingsOutlined,
   PersonOffOutlined,
   ForumOutlined,
+  NotificationsNoneOutlined,
 } from '@mui/icons-material'
 import { authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
@@ -70,6 +71,12 @@ const mainNavigation = [
     icon: <ForumOutlined />,
     label: sidebarStrings.chats,
     path: '/chat',
+  },
+  {
+    id: 'Notifications',
+    icon: <NotificationsNoneOutlined />,
+    label: sidebarStrings.notifications,
+    path: '/notifications',
   },
 ]
 
