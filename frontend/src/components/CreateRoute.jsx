@@ -14,7 +14,10 @@ import TransitLegCard from './TransitLegCard'
 import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
 import { createRouteStrings } from '../locales/en/ComponentStrings/CreateRouteStrings'
-import { getDepartureTimeError } from '../utils/CreateRouteUtils'
+import {
+  getDepartureTimeError,
+  formatDateTimeInput,
+} from '../utils/CreateRouteUtils'
 
 /**
  * Component to create a new route.
@@ -183,6 +186,15 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
     })
   }, [departTime, eventTime])
 
+  useEffect(() => {
+    if (!eventTime) return
+
+    const eventDate = new Date(eventTime)
+    const defaultDepart = new Date(eventDate.getTime() - 60 * 60 * 1000)
+
+    setDepartTime(formatDateTimeInput(defaultDepart))
+  }, [eventTime])
+
   const handleMapLoad = useCallback(m => setMap(m), [])
   const handleMapUnmount = useCallback(() => setMap(null), [])
 
@@ -289,9 +301,24 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
         </label>
         <input
           id="depart-time"
-          type="datetime-local"
-          value={departTime}
-          onChange={e => setDepartTime(e.target.value)}
+          type="time"
+          value={departTime ? departTime.slice(11, 16) : ''}
+          onChange={change => {
+            const selectedTime = change.target.value
+
+            if (!eventTime) return
+
+            const eventDate = new Date(eventTime)
+
+            const [hours, minutes] = selectedTime.split(':')
+
+            eventDate.setHours(Number(hours))
+            eventDate.setMinutes(Number(minutes))
+            eventDate.setSeconds(0)
+            eventDate.setMilliseconds(0)
+
+            setDepartTime(formatDateTimeInput(eventDate))
+          }}
           className={`w-full px-4 py-3 rounded-xl transition-all duration-200 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
              bg-gray-50 text-text-primary outline-none border
              ${errors.departTime ? 'border-red-500' : 'border-transparent focus:border-2 focus:border-blue-500 focus:ring-4 focus:ring-blue-100'}`}
