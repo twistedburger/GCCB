@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import GenericCard from './GenericCard'
 import { useEffect, useState } from 'react'
+import { notificationStrings } from '../locales/en/NotificationStrings'
 
 export default function NotificationCard(notification) {
   const [notificationDetails, setNotificationDetails] = useState(null)
@@ -16,7 +17,7 @@ export default function NotificationCard(notification) {
       <p>Received at : {notificationDetails.time}</p>
     </GenericCard>
   ) : (
-    <></>
+    <>{notificationStrings.loading}</>
   )
 }
 

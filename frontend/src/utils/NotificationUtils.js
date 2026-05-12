@@ -1,3 +1,5 @@
+import { notificationStrings } from '../locales/en/NotificationStrings'
+
 /**
  * Load the notifications for the logged in user.
  *
@@ -15,11 +17,12 @@ export async function loadNotifications(setNotifications) {
     )
     const notifications = await response.json()
     if (notifications.error) {
+      console.log(notifications.error)
       return
     }
     setNotifications(notifications.notifications)
-  } catch (error) {
-    console.log(error)
+  } catch {
+    console.log(notificationStrings.errorLoadingNotifications)
   }
 }
 
@@ -42,11 +45,41 @@ export async function clearAllNotifications() {
     )
     const notifications = await response.json()
     if (notifications.error) {
+      console.log(notifications.error)
       return false
     }
     return true
-  } catch (error) {
-    console.log(error)
+  } catch {
+    console.log(notificationStrings.errorClearingNotifications)
+    return false
+  }
+}
+
+/**
+ * Clear the selected notification
+ *
+ * @param {number} notificationID
+ */
+export async function clearNotification(notificationID) {
+  try {
+    const request = { all: false, notificationID: notificationID }
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/notifications/clearNotifications`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+        credentials: 'include',
+      }
+    )
+    const notifications = await response.json()
+    if (notifications.error) {
+      console.log(notifications.error)
+      return false
+    }
+    return true
+  } catch {
+    console.log(notificationStrings.errorClearingNotifications)
     return false
   }
 }
