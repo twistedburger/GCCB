@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 import GenericCard from './GenericCard'
 import { useEffect, useState } from 'react'
 import { notificationStrings } from '../locales/en/NotificationStrings'
+import { getNotificationDetails } from '../utils/NotificationUtils'
 
 export default function NotificationCard(notification) {
   const [notificationDetails, setNotificationDetails] = useState(null)
@@ -31,15 +32,4 @@ GenericCard.propTypes = {
     metadata: PropTypes.shape,
     createdAt: PropTypes.string,
   }).isRequired,
-}
-
-const getNotificationDetails = notification => {
-  return {
-    title: notification.notificationType,
-    message: notification.metadata.message,
-    time: notification.createdAt,
-    onClick: () => {
-      console.log(notification.notificationType)
-    },
-  }
 }
