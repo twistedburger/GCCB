@@ -25,6 +25,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^5.1.2",
     "babel-jest": "^30.2.0",
+    "babel-plugin-transform-vite-meta-env": "^1.0.3",
     "eslint": "^9.39.2",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^10.1.8",
