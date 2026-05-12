@@ -260,7 +260,11 @@ const saveMessage = async (chatroomId, senderId, content) => {
     return {
       success: true,
       data: {
-        ...newMessage,
+        id: newMessage.id,
+        chatroomId: newMessage.chatroom_id,
+        senderId: newMessage.sender_id,
+        content: newMessage.content,
+        sentAt: newMessage.sent_at,
         senderNickname: userResult.rows[0].nickname,
       },
     }
