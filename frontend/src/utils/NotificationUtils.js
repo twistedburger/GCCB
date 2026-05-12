@@ -16,7 +16,7 @@ export async function loadNotifications(setNotifications) {
       }
     )
     const notifications = await response.json()
-    if (notifications.error) {
+    if (!response.ok) {
       console.log(notifications.error)
       return
     }
@@ -44,7 +44,7 @@ export async function clearAllNotifications() {
       }
     )
     const notifications = await response.json()
-    if (notifications.error) {
+    if (!response.ok) {
       console.log(notifications.error)
       return false
     }
@@ -73,7 +73,7 @@ export async function clearNotification(notificationID) {
       }
     )
     const notifications = await response.json()
-    if (notifications.error) {
+    if (!response.ok) {
       console.log(notifications.error)
       return false
     }
@@ -136,7 +136,7 @@ async function fetchRoute(routeID) {
       }
     )
     const route = await response.json()
-    if (route.error) {
+    if (!response.ok) {
       console.log(route.error)
       return null
     }
@@ -161,7 +161,7 @@ async function fetchEvent(eventID) {
       }
     )
     const event = await response.json()
-    if (event.error) {
+    if (!response.ok) {
       console.log(event.error)
       return null
     }
@@ -186,7 +186,7 @@ async function fetchBadge(badgeID) {
       }
     )
     const badge = await response.json()
-    if (badge.error) {
+    if (!response.ok) {
       console.log(badge.error)
       return null
     }
