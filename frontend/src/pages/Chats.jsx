@@ -13,8 +13,6 @@ import { chatsStrings } from '../locales/en/ChatsStrings'
 export default function Chats() {
   const { user } = useUser()
   const chat = useChatRoom(user)
-  const rooms = chat.rooms
-  console.log('Rooms:', rooms) // Debugging log to check the structure of rooms
 
   return (
     <div
