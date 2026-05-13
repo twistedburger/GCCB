@@ -99,7 +99,7 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
             : null,
         }
       )
-      setDistance(route.distanceMeters)
+      setDistance(route.distanceMeters / 1000)
       setRoute(route)
       setErrors(prev => ({ ...prev, route: null }))
     } catch (err) {
