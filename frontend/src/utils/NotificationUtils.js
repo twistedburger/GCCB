@@ -86,7 +86,7 @@ export async function clearNotification(notificationID) {
 }
 
 /**
- * Get the details of the current notification
+ * Get the details of the current notification.
  *
  * @param {Object} notification
  * @returns {Object} notification details:
@@ -101,30 +101,28 @@ export async function getNotificationDetails(notification, navigate) {
   const details = {
     message: notification.metadata.message,
     time: notification.createdAt,
-    title: null,
-    onClick: null,
+    title: notification.metadata.title,
   }
 
   switch (notification.notificationType) {
     case NotificationType.Route.type: {
-      const route = await fetchRoute(notification.routeID)
-      details.title = route.title
+      details.onClick = async () => {
+        navigate(`/mytrip/${notification.routeID}`)
+      }
       break
     }
 
     case NotificationType.Event.type: {
-      const event = await fetchEvent(notification.eventID)
-      details.title = event.title
       details.onClick = async () => {
-        await clearNotification(notification.notificationID)
         navigate(`/event/${notification.eventID}`)
       }
       break
     }
 
     case NotificationType.Badge.type: {
-      const badge = await fetchBadge(notification.badgeID)
-      details.title = badge.title
+      details.onClick = async () => {
+        navigate(`/dashboard/badges/${notification.badgeID}`)
+      }
       break
     }
 
@@ -137,82 +135,49 @@ export async function getNotificationDetails(notification, navigate) {
 }
 
 /**
- * Helper function to fetch the route based on route ID
+ * Sends a notification.
  *
- * @param {number} routeID
+ * @param {NotificationType} notificationType - The type of the notification
+ * @param {number} itemID - The Database ID of the item the notification is about
+ * @param {string} itemTitle - The title of the item the notification is about (EG. "Hackathon", "Bus to BCIT")
+ * @param {string} message - The message relevant to the notification (EG. "Route deleted")
+ * @param {bool} isDeleted - boolean if the item has been deleted. Default false
+ * @returns {bool} success
  */
-async function fetchRoute(routeID) {
-  try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/routes/getRoute?id=${routeID}`,
-      {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      }
-    )
-    const route = await response.json()
-    if (!response.ok) {
-      console.log(route.error)
-      return null
-    }
-    return route
-  } catch {
-    console.log(notificationStrings.errorLoadingRoute)
-    return null
+export async function sendNotification(
+  notificationType,
+  itemID,
+  itemTitle,
+  message,
+  isDeleted = false
+) {
+  if (!Object.values(NotificationType).includes(notificationType)) {
+    console.log(notificationStrings.invalidNotification)
+    return false
   }
-}
 
-/**
- * Helper function to fetch the event based on event ID
- *
- * @param {number} eventID
- */
-async function fetchEvent(eventID) {
-  try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/api/eventdetail/${eventID}`,
-      {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      }
-    )
-    const event = await response.json()
-    if (!response.ok) {
-      console.log(event.error)
-      return null
-    }
-    return event
-  } catch {
-    console.log(notificationStrings.errorLoadingEvent)
-    return null
+  const notification = {
+    type: notificationType,
+    id: itemID,
+    metadata: { message: message, title: itemTitle, isDeleted: isDeleted },
   }
-}
 
-/**
- * Helper function to fetch the badge based on badge ID
- *
- * @param {number} badgeID
- */
-async function fetchBadge(badgeID) {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/badges/getBadge?id=${badgeID}`,
+      `${import.meta.env.VITE_API_BASE_URL}/notifications/notify`,
       {
-        method: 'GET',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notification),
         credentials: 'include',
       }
     )
-    const badge = await response.json()
+    const responseJson = await response.json()
     if (!response.ok) {
-      console.log(badge.error)
-      return null
+      console.log(responseJson.error)
+      return false
     }
-    return badge
   } catch {
-    console.log(notificationStrings.errorLoadingBadge)
-    return null
+    console.log(notificationStrings.errorSendingNotifications)
   }
 }

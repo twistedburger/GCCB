@@ -2,7 +2,10 @@ import GenericButton from '../components/GenericButton'
 import { NotificationType } from '../../../shared/NotificationTypes'
 import { useNotifications } from '../../context/NotificationContext'
 import { notificationStrings } from '../locales/en/NotificationStrings'
-import { clearAllNotifications } from '../utils/NotificationUtils'
+import {
+  clearAllNotifications,
+  sendNotification,
+} from '../utils/NotificationUtils'
 import NotificationCard from '../components/NotificationCard'
 
 /**
@@ -30,22 +33,19 @@ export default function Notifications() {
       </GenericButton>
       {/* This button is temporary and will be removed when notification sending works*/}
       <GenericButton
-        onClick={async () => {
-          const notification = {
-            type: NotificationType.Event,
-            id: 2,
-            metadata: { message: 'hello' },
-          }
-          const response = await fetch(
-            `${import.meta.env.VITE_API_BASE_URL}/notifications/notify`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(notification),
-              credentials: 'include',
-            }
+        onClick={() => {
+          sendNotification(
+            NotificationType.Event,
+            2,
+            'Event Title',
+            'Notification Message'
           )
-          console.log(response)
+          sendNotification(
+            NotificationType.Route,
+            2,
+            'Route Title',
+            'Notification Message'
+          )
         }}
       >
         Send Notification

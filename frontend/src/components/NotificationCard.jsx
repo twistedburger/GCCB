@@ -2,7 +2,10 @@ import PropTypes from 'prop-types'
 import GenericCard from './GenericCard'
 import { useEffect, useState } from 'react'
 import { notificationStrings } from '../locales/en/NotificationStrings'
-import { getNotificationDetails } from '../utils/NotificationUtils'
+import {
+  clearNotification,
+  getNotificationDetails,
+} from '../utils/NotificationUtils'
 import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../../context/NotificationContext'
 
@@ -10,7 +13,6 @@ export default function NotificationCard({ notification }) {
   const [notificationDetails, setNotificationDetails] = useState(null)
   const { notifications, setNotifications } = useNotifications()
   const navigate = useNavigate()
-
   useEffect(() => {
     const fetchDetails = async () => {
       const { details } = await getNotificationDetails(notification, navigate)
@@ -22,6 +24,7 @@ export default function NotificationCard({ notification }) {
   return notificationDetails ? (
     <GenericCard
       onClick={() => {
+        clearNotification(notification.notificationID)
         setNotifications(
           notifications.filter(
             notificationToCheck =>

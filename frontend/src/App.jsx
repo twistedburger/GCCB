@@ -100,6 +100,7 @@ function App() {
                   }
                 >
                   <Route path="/mytrip" element={<MyTrip />} />
+                  <Route path="/mytrip/:id" element={<MyTrip />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route
                     path="/dashboard/co2-savings"
