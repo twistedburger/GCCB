@@ -111,7 +111,7 @@ function App() {
                   />
                   <Route path="/user-guide" element={<UserGuide />} />
                   <Route path="/bannedusers" element={<BannedUsers />} />
-                  <Route path="/chat/*" element={<Chats />} />
+                  <Route path="/chats/*" element={<Chats />} />
                   <Route path="/notifications" element={<Notifications />} />
                 </Route>
                 <Route
