@@ -11,16 +11,17 @@ export async function fetchMyTrips(setActiveTrips, setCompletedTrips) {
   const response = await fetch(`${baseUrl}/api/myTrips`, {
     credentials: 'include',
   })
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Failed to fetch trips. ${errorText}`)
-  }
 
   const data = await response.json()
   if (!Array.isArray(data)) return
 
-  setActiveTrips(data.filter(trip => !trip.completed))
-  setCompletedTrips(data.filter(trip => trip.completed))
+  const taggedData = data.map(trip => ({
+    ...trip,
+    isJoined: true,
+  }))
+
+  setActiveTrips(taggedData.filter(trip => !trip.completed))
+  setCompletedTrips(taggedData.filter(trip => trip.completed))
 }
 
 /**
@@ -124,12 +125,26 @@ export async function leaveRoute(
   setCompletedTrips,
   setConfirmLeave
 ) {
-  await fetch(`${baseUrl}/api/routes/${confirmLeave.id}/leave`, {
-    method: 'DELETE',
-    credentials: 'include',
-  })
-  await fetchMyTrips(setActiveTrips, setCompletedTrips)
-  setConfirmLeave(null)
+  try {
+    const response = await fetch(
+      `${baseUrl}/api/routes/${confirmLeave.id}/leave`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+      }
+    )
+
+    if (response.ok) {
+      setActiveTrips(prev => prev.filter(trip => trip.id !== confirmLeave.id))
+      setCompletedTrips(prev =>
+        prev.filter(trip => trip.id !== confirmLeave.id)
+      )
+
+      setConfirmLeave(null)
+    }
+  } catch (error) {
+    console.error('Leave failed:', error)
+  }
 }
 
 /**

@@ -60,8 +60,10 @@ export default function MyTrips() {
 
   const handleRouteLeaveRequest = route => {
     const isRouteCreator = user?.id === route.creator_id
+    const isCar =
+      route.transportation_mode === 'Car' || route.transportationMode === 'Car'
 
-    if (isRouteCreator) {
+    if (isRouteCreator && isCar) {
       setRouteIdToRemove(route.id)
       setIsRouteRemovalDialogOpen(true)
     } else {
