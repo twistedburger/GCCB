@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material'
 import GenericCard from './GenericCard'
 import { progressWidth, metricUnit } from '../utils/BadgeUtils'
+import { badgesStrings } from '../locales/en/ComponentStrings/BadgeStrings'
 
 /**
  * Maps badge icon_key values to Material UI icons.
@@ -161,7 +162,7 @@ export default function BadgeCard({ badge, showLocked = false }) {
 
       {earned && (
         <p className="text-[11px] text-green-primary font-medium mt-auto">
-          Earned {earnedDateLabel}
+          {badgesStrings.earned(earnedDateLabel)}
         </p>
       )}
 
@@ -186,7 +187,7 @@ export default function BadgeCard({ badge, showLocked = false }) {
 
       {isLocked && (
         <p className="text-[11px] text-medium-grey mt-auto">
-          {threshold} {unit} needed
+          {badgesStrings.needed(threshold, unit)}
         </p>
       )}
     </GenericCard>

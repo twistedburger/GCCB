@@ -19,6 +19,8 @@ export const badgesStrings = {
     [CATEGORIES.SOCIAL]: 'Social',
   },
 
+  earned: date => `Earned ${date}`,
+  needed: (threshold, unit) => `${threshold} ${unit} needed`,
   emptyEarned: 'Complete trips to start earning badges!',
   emptyProgress: 'No badges in progress yet.',
 }
