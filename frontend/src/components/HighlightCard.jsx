@@ -15,9 +15,9 @@ const HighlightCard = forwardRef(function HighlightCard(
   return (
     <div
       ref={ref}
-      className={
-        highlight && shouldFlash ? 'animate-pulse bg-yellow-200 rounded-lg' : ''
-      }
+      className={`transition-all duration-700 rounded-xl ${
+        highlight && shouldFlash ? 'bg-yellow-200 p-2' : 'bg-transparent p-0'
+      }`}
     >
       {children}
     </div>
