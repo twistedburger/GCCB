@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { userCardStrings } from '../locales/en/ComponentStrings/UserCardStrings.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { authLevel } from '../hooks/Authorization.jsx'
+import ConfirmationDialog from './ConfirmationDialog'
 
 /**
  * Component to display a user card.
@@ -36,6 +37,7 @@ function UserCard({
   const baseURL = import.meta.env.VITE_API_BASE_URL
   const [openModal, setOpenModal] = useState(false)
   const [isBlocked, setIsBlocked] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
   const { user: currentUser } = useUser()
 
   const handleBlockUser = async () => {
@@ -49,6 +51,7 @@ function UserCard({
       if (response.ok) {
         setIsBlocked(true)
         setOpenModal(false)
+        setConfirmAction(null)
         setAlert?.({
           type: 'success',
           message: userCardStrings.errors.successfulBlock,
@@ -79,6 +82,7 @@ function UserCard({
       if (response.ok) {
         setIsBlocked(false)
         setOpenModal(false)
+        setConfirmAction(null)
         setAlert?.({
           type: 'success',
           message: userCardStrings.errors.successfulUnblock,
@@ -135,7 +139,9 @@ function UserCard({
           actions={
             canBlock && (
               <GenericButton
-                onClick={isBlocked ? handleUnblockUser : handleBlockUser}
+                onClick={() =>
+                  setConfirmAction(isBlocked ? 'unblock' : 'block')
+                }
                 unstyled
                 customStyling={`text-xs font-medium border rounded-2xl px-4 py-1 mr-6 ${
                   isBlocked
@@ -149,6 +155,23 @@ function UserCard({
           }
         ></ProfileInfo>
       </Modal>
+      <ConfirmationDialog
+        isOpen={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={
+          confirmAction === 'block' ? handleBlockUser : handleUnblockUser
+        }
+        variant={confirmAction === 'block' ? 'danger' : 'primary'}
+        title={
+          confirmAction === 'block'
+            ? userCardStrings.blockTitle
+            : userCardStrings.unblockTitle
+        }
+      >
+        {confirmAction === 'block'
+          ? userCardStrings.blockConfirm
+          : userCardStrings.unblockConfirm}
+      </ConfirmationDialog>
       <GenericButton
         unstyled
         customStyling={'w-full'}
@@ -157,7 +180,7 @@ function UserCard({
         <div
           className={`flex flex-col rounded-xl shadow-md shadow-medium-grey bg-white ${className || ''}`}
         >
-          <div className="flex p-4 pt-4 gap-4">
+          <div className="flex p-4 gap-4">
             <div className="shrink-0 flex items-start justify-center">
               <ProfileInfo
                 user={user}
