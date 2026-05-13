@@ -39,8 +39,6 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
     [selectedRoute]
   )
 
-  console.log(selectedRoute)
-
   return (
     <Drawer.Root
       open={!!selectedRoute}

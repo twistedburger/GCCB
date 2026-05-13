@@ -2014,12 +2014,12 @@ app.post('/api/unblockUser/:userId', async (req, res) => {
  *
  * @param {number} req.body.blocked_user_id - The ID of the user to block.
  */
-app.post('/api/blockUser', async (req, res) => {
+app.post('/api/blockUser/:userId', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const { blocked_user_id } = req.body
+  const blocked_user_id = req.params.userId
   const currentUser = await selectUser(req)
   const blocker_id = currentUser.id
 

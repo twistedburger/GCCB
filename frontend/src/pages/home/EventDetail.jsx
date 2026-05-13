@@ -383,6 +383,7 @@ export default function EventDetail() {
                         active: true,
                       }}
                       setAlert={setAlert}
+                      showDescription={false}
                     />
                     <div>
                       <p className="font-semibold pt-4 pb-2 text-text-primary">

@@ -5,6 +5,7 @@ import ProfileInfo from './ProfileInfo'
 import { useState } from 'react'
 import { userCardStrings } from '../locales/en/ComponentStrings/UserCardStrings.js'
 import { useUser } from '../../context/UserContext.jsx'
+import { authLevel } from '../hooks/Authorization.jsx'
 
 /**
  * Component to display a user card.
@@ -16,6 +17,8 @@ import { useUser } from '../../context/UserContext.jsx'
  * @param {string} secondaryActionLabel - The label for the secondary action button.
  * @param {Function} onSecondaryAction - The function to call when the secondary action is clicked.
  * @param {string} secondaryButtonStyling - Custom styling for the secondary button.
+ * @param {Function} setAlert - The function to set the alert message.
+ * @param {boolean} showDescription - Whether to show the user's description or not in their profile information.
  */
 
 function UserCard({
@@ -28,64 +31,70 @@ function UserCard({
   secondaryButtonStyling,
   className,
   setAlert,
+  showDescription = true,
 }) {
+  const baseURL = import.meta.env.VITE_API_BASE_URL
   const [openModal, setOpenModal] = useState(false)
   const [isBlocked, setIsBlocked] = useState(false)
   const { user: currentUser } = useUser()
 
   const handleBlockUser = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/blockUser', {
+      const response = await fetch(`${baseURL}/api/blockUser/${user.id}`, {
         credentials: 'include',
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blocked_user_id: user.id }),
       })
+      const data = await response.json()
 
       if (response.ok) {
         setIsBlocked(true)
         setOpenModal(false)
-        if (setAlert)
-          setAlert({
-            severity: 'success',
-            message: 'User blocked successfully',
-          })
+        setAlert?.({
+          type: 'success',
+          message: userCardStrings.errors.successfulBlock,
+        })
       } else {
-        const errorData = await response.json()
-        if (setAlert) setAlert({ severity: 'error', message: errorData.error })
+        setAlert?.({
+          type: 'error',
+          message: data.error ?? userCardStrings.errors.failedBlocked,
+        })
       }
     } catch (err) {
-      console.error('Block error:', err)
-      if (setAlert)
-        setAlert({ severity: 'error', message: 'Failed to block user' })
+      console.error(err)
+      setAlert?.({
+        type: 'error',
+        message: userCardStrings.errors.failedBlocked,
+      })
     }
   }
 
   const handleUnblockUser = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/unblockUser', {
+      const response = await fetch(`${baseURL}/api/unblockUser/${user.id}`, {
         credentials: 'include',
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blocked_user_id: user.id }),
       })
+      const data = await response.json()
 
       if (response.ok) {
         setIsBlocked(false)
         setOpenModal(false)
-        if (setAlert)
-          setAlert({
-            severity: 'success',
-            message: 'User unblocked successfully',
-          })
+        setAlert?.({
+          type: 'success',
+          message: userCardStrings.errors.successfulUnblock,
+        })
       } else {
-        if (setAlert)
-          setAlert({ severity: 'error', message: 'Failed to unblock user' })
+        setAlert?.({
+          type: 'error',
+          message: data.error ?? userCardStrings.errors.failedUnblocked,
+        })
       }
     } catch (err) {
-      console.error('Unblock error:', err)
-      if (setAlert)
-        setAlert({ severity: 'error', message: 'Failed to unblock user' })
+      console.error(err)
+      setAlert?.({
+        type: 'error',
+        message: userCardStrings.errors.failedUnblocked,
+      })
     }
   }
 
@@ -93,20 +102,25 @@ function UserCard({
     setOpenModal(true)
     if (isSelf) return
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/blockStatus/${user.id}`,
-        {
-          credentials: 'include',
-        }
-      )
+      const response = await fetch(`${baseURL}/api/blockStatus/${user.id}`, {
+        credentials: 'include',
+      })
       const data = await response.json()
       setIsBlocked(data.isBlocked)
     } catch (err) {
-      console.error('Failed to fetch block status:', err)
+      console.error(err)
+      setAlert?.({
+        type: 'error',
+        message: userCardStrings.errors.failedBlockStatus,
+      })
     }
   }
 
   const isSelf = currentUser && Number(currentUser.id) === Number(user.id)
+  // prevent user from blocking themselves, or anyone above users (moderators, etc.)
+  const canBlock =
+    !isSelf &&
+    authLevel[user.role?.toUpperCase()]?.value <= authLevel.USER.value
 
   return (
     <div>
@@ -119,7 +133,7 @@ function UserCard({
         <ProfileInfo
           user={user}
           actions={
-            !isSelf && (
+            canBlock && (
               <GenericButton
                 onClick={isBlocked ? handleUnblockUser : handleBlockUser}
                 unstyled
@@ -145,7 +159,11 @@ function UserCard({
         >
           <div className="flex p-4 pt-4 gap-4">
             <div className="shrink-0 flex items-start justify-center">
-              <ProfileInfo user={user} size={'sm'}></ProfileInfo>
+              <ProfileInfo
+                user={user}
+                size={'sm'}
+                showDesc={showDescription}
+              ></ProfileInfo>
               {(primaryActionLabel || secondaryActionLabel) && (
                 <div className="flex flex-col gap-2 ml-4 shrink-0">
                   {primaryActionLabel && (
@@ -198,6 +216,7 @@ UserCard.propTypes = {
   secondaryButtonStyling: PropTypes.string,
 
   setAlert: PropTypes.func,
+  showDescription: PropTypes.bool,
 }
 
 export default UserCard

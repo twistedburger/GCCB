@@ -9,21 +9,23 @@ import { analyticsStrings } from '../locales/en/AnalyticsStrings'
  * @param {Object} [actions] - Actions to be displayed along with the profile information (blocking, editing, etc.)
  * @returns {JSX.Element}
  */
-function ProfileInfo({ user, actions, size = 'md' }) {
+function ProfileInfo({ user, actions, showDesc = true, size = 'md' }) {
   const dashboardStrings = analyticsStrings.dashboard
   const sizes = {
     sm: {
-      avatar: 60,
-      container: 'w-16 h-16',
-      text: 'text-lg',
-      desc: 'text-xs',
+      avatar: 50,
+      container: 'w-12 h-12',
+      nameSize: 'text-med',
+      textSize: 'text-xs',
+      margin: 'mt-2',
       gap: 'gap-2',
     },
     md: {
       avatar: 100,
       container: 'w-24 h-24',
       text: 'text-xl',
-      desc: 'text-sm',
+      textSize: 'text-sm',
+      margin: 'mt-4',
       gap: 'gap-4',
     },
   }
@@ -34,34 +36,40 @@ function ProfileInfo({ user, actions, size = 'md' }) {
       <div
         className={`flex flex-row justify-between items-start ${sizeSelection.gap}`}
       >
-        <div className={`flex flex-row ${sizeSelection.gap}`}>
-          <div className={`relative shrink-0 ${sizeSelection.container}`}>
+        <div
+          className={`flex flex-row ${sizeSelection.gap} items-center justify-center`}
+        >
+          <div className={`${sizeSelection.container} ml-auto mt-auto`}>
             <Avatar
               src={user?.profile_pic}
               sx={{ width: sizeSelection.avatar, height: sizeSelection.avatar }}
             />
           </div>
-          <div className="flex flex-col">
+          <div>
             <div
-              className={`${sizeSelection.text} font-semibold text-text-primary leading-none`}
+              className={`${sizeSelection.nameSize} font-semibold text-text-primary leading-none`}
             >
               {user?.name ?? dashboardStrings.profile.unknownName}
             </div>
-            <div className="text-text-secondary text-sm">
+            <div className={`text-text-secondary ${sizeSelection.textSize}`}>
               @{user?.nickname ?? dashboardStrings.profile.unknownNickname}
             </div>
-            <div className="mt-1 text-blue-primary font-semibold leading-none text-sm">
+            <div
+              className={`mt-1 text-blue-primary font-semibold leading-none ${sizeSelection.textSize}`}
+            >
               {user?.role ?? 'user'}
             </div>
           </div>
         </div>
         <div className="shrink-0">{actions}</div>
       </div>
-      <div
-        className={`mt-4 ${sizeSelection.desc} text-text-primary leading-normal`}
-      >
-        {user?.description ?? dashboardStrings.profile.noDescription}
-      </div>
+      {showDesc && (
+        <div
+          className={`${sizeSelection.margin} ${sizeSelection.textSize} text-text-primary leading-normal`}
+        >
+          {user?.description ?? dashboardStrings.profile.noDescription}
+        </div>
+      )}
     </div>
   )
 }
@@ -69,6 +77,7 @@ function ProfileInfo({ user, actions, size = 'md' }) {
 ProfileInfo.propTypes = {
   user: PropTypes.object,
   actions: PropTypes.object,
+  showDesc: PropTypes.bool,
   size: PropTypes.string,
 }
 
