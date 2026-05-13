@@ -95,7 +95,7 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                     customStyling={'text-sm text-text-secondary font-medium'}
                     onClick={async () => {
                       const res = await fetch(
-                        `${process.env.REACT_APP_API_BASE_URL}/api/getParticipants/${selectedRoute.id}`,
+                        `${import.meta.env.VITE_API_BASE_URL}/api/getParticipants/${selectedRoute.id}`,
                         {
                           credentials: 'include',
                         }

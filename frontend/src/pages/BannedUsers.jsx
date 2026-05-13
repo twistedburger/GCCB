@@ -1,4 +1,3 @@
-import { bannedUsersStrings } from '../locales/en/BannedUsersStrings'
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import UserCard from '../components/UserCard'
@@ -7,8 +6,12 @@ import Alert from '../components/Alert'
 import GenericButton from '../components/GenericButton'
 import { useAuth } from '../hooks/Authorization'
 import { ArrowBackIosNew } from '@mui/icons-material'
-
-const baseUrl = import.meta.env.VITE_API_BASE_URL
+import {
+  getIsModerator,
+  getBannedUsersStrings,
+  fetchUsers,
+  removeUser,
+} from '../utils/BannedUsersUtils'
 
 /**
  * Creates the Banned Users page.
@@ -21,49 +24,35 @@ function BannedUsers() {
   const [openModal, setOpenModal] = useState(false)
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
+  const isModerator = getIsModerator(authorization)
+  const strings = getBannedUsersStrings(isModerator)
   const navigate = useNavigate()
-  const strings =
-    authorization === 'moderator'
-      ? bannedUsersStrings.moderator
-      : bannedUsersStrings.user
 
-  const fetchUsers = useCallback(async () => {
+  const handleFetchUsers = useCallback(async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/bannedUsers`, {
-        credentials: 'include',
-      })
-      const bannedUsers = await response.json()
-      setUsers(bannedUsers)
+      const data = await fetchUsers(isModerator)
+      setUsers(data)
     } catch (error) {
       console.error(strings.failedToFetch, error)
     }
-  }, [strings.failedToFetch])
+  }, [isModerator, strings.failedToFetch])
 
-  const unbanUser = async userId => {
-    try {
-      const response = await fetch(`${baseUrl}/api/unbanUser/${userId}`, {
-        method: 'POST',
-        credentials: 'include',
-      })
-      if (response.ok) {
-        fetchUsers()
-        setAlert({
-          message: strings.successMessage(selectedUser.name),
-          type: 'success',
-        })
-      }
-    } catch (error) {
-      console.error(strings.errorMessage, error)
+  const handleRemoveUser = async userId => {
+    const ok = await removeUser(userId, isModerator)
+    if (ok) {
+      handleFetchUsers()
       setAlert({
-        message: strings.errorMessage,
-        type: 'error',
+        message: strings.successMessage(selectedUser.name),
+        type: 'success',
       })
+    } else {
+      setAlert({ message: strings.errorMessage, type: 'error' })
     }
   }
 
   useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
+    handleFetchUsers()
+  }, [handleFetchUsers])
 
   return (
     <div className="px-6 pt-6">
@@ -80,7 +69,7 @@ function BannedUsers() {
           onClose={() => setOpenModal(false)}
           title={strings.confirmTitle}
           onConfirm={() => {
-            unbanUser(selectedUser.id)
+            handleRemoveUser(selectedUser.id)
             setOpenModal(false)
           }}
           variant={'danger'}

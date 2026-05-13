@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Close } from '@mui/icons-material'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
@@ -13,11 +13,12 @@ import { createEventStrings } from '../locales/en/ComponentStrings/CreateEventSt
  * Component to create a new event.
  *
  * @param {Object} initLoc - The initial location for the event.
+ * @param {Object} initLatLng - The initial coordinates for the event.
  * @param {Function} onSubmit - The function to call when the event is submitted.
  * @returns {JSX.Element}
  */
 
-const CreateEvent = ({ initLoc, onSubmit }) => {
+const CreateEvent = ({ initLoc, initLatLng, onSubmit }) => {
   const [addedRoute, setAddedRoute] = useState(null)
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [selectedLatLng, setSelectedLatLng] = useState(null)
@@ -127,6 +128,13 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
     setIsDialogOpen(true)
   }
 
+  useEffect(() => {
+    if (initLoc && initLatLng) {
+      setSelectedPlace(initLoc)
+      setSelectedLatLng(initLatLng)
+    }
+  }, [initLoc, initLatLng])
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">
@@ -171,6 +179,7 @@ const CreateEvent = ({ initLoc, onSubmit }) => {
             className={`w-full flex justify-end rounded-xl bg-gray-50 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             outline-none transition-all text-text-primary placeholder:text-secondary 
             ${errors.location ? 'border border-red-500' : 'focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100'}`}
+            defaultLocation={initLoc}
             onSearch={(location, latitude, longitude, banner, placeId) => {
               setSelectedPlace(location)
               setSelectedLatLng([latitude, longitude])
@@ -287,5 +296,6 @@ export default CreateEvent
 
 CreateEvent.propTypes = {
   initLoc: PropTypes.string,
+  initLatLng: PropTypes.arrayOf(PropTypes.number),
   onSubmit: PropTypes.func.isRequired,
 }

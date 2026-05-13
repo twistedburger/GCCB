@@ -16,7 +16,7 @@ import {
   getConfirmationTitle,
   getConfirmationBody,
   shouldHideReportJoin,
-} from '../utils/myTripsUtils'
+} from '../utils/MyTripsUtils'
 
 /**
  * Display the MyTrips page

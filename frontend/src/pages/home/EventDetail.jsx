@@ -106,13 +106,19 @@ export default function EventDetail() {
     }
   }
 
-  const handleRouteLeaveRequest = route => {
+  const handleRouteLeaveRequest = async route => {
     const isRouteCreator = user?.id === route.creator_id
+    const isCar =
+      route.transportation_mode === 'Car' || route.transportationMode === 'Car'
 
-    if (isRouteCreator) {
+    if (isRouteCreator && isCar) {
       setRouteIdToRemove(route.id)
       setIsRouteRemovalDialogOpen(true)
     } else {
+      await fetch(`${baseURL}/api/routes/${route.id}/leave`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
       updateLocalJoinStatus(route.id, false)
     }
   }
@@ -151,6 +157,7 @@ export default function EventDetail() {
       setAlert({ type: 'error', message: `Delete failed. ${error.message}` })
     } finally {
       setIsRouteRemovalDialogOpen(false)
+      setRouteIdToRemove(null)
     }
   }
 
@@ -390,6 +397,7 @@ export default function EventDetail() {
                               onToggleJoin={() => handleToggleJoin(route)}
                               onReport={data => setReportData(data)}
                               individualView={false}
+                              isDisabled={isAlreadyJoined && !route.isJoined}
                               onSelect={route => {
                                 const fullRoute = {
                                   ...route,

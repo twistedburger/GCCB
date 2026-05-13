@@ -22,6 +22,7 @@ import {
   PersonOutlineOutlined,
   AdminPanelSettingsOutlined,
   PersonOffOutlined,
+  NotificationsNoneOutlined,
 } from '@mui/icons-material'
 import { authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
@@ -63,6 +64,12 @@ const mainNavigation = [
     icon: <PersonOffOutlined />,
     label: sidebarStrings.bannedUsers,
     path: '/bannedusers',
+  },
+  {
+    id: 'Notifications',
+    icon: <NotificationsNoneOutlined />,
+    label: sidebarStrings.notifications,
+    path: '/notifications',
   },
 ]
 
