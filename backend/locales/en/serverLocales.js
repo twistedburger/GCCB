@@ -24,6 +24,7 @@ const serverStrings = {
     routeDeletionFailed: 'Failed to delete route',
     routeCompletionFailed: 'Failed to mark route as complete',
     notMember: 'Not a member of this chatroom',
+    cloudinaryFailed: 'Cloudinary banner upload failed:',
   },
 }
 

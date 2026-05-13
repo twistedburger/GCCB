@@ -11,6 +11,7 @@ import {
 } from '../utils/AnalyticsHelpers.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { analyticsStrings } from '../locales/en/AnalyticsStrings'
+import { Avatar } from '@mui/material'
 
 const dashboardStrings = analyticsStrings.dashboard
 
@@ -28,13 +29,20 @@ function ProfileHeader({ user, onEdit }) {
   const displayRole = user?.role ?? 'user'
   const displayDescription =
     user?.description ?? dashboardStrings.profile.noDescription
+  const avatarUrl = user?.profile_pic ?? ''
   const navigate = useNavigate()
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4">
       <div className="flex items-start gap-4">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-sm text-zinc-500">
-          {dashboardStrings.profile.noImage}
+        <div className="relative h-24 w-24">
+          <Avatar
+            src={avatarUrl}
+            sx={{
+              width: 100,
+              height: 100,
+            }}
+          />
         </div>
 
         <div className="min-w-0 flex-1">
@@ -61,7 +69,7 @@ function ProfileHeader({ user, onEdit }) {
             unstyled={true}
             customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
           >
-            Blocked Users
+            {dashboardStrings.profile.blockedUsers}
           </GenericButton>
         </div>
       </div>
@@ -76,6 +84,7 @@ ProfileHeader.propTypes = {
     nickname: PropTypes.string,
     role: PropTypes.string,
     description: PropTypes.string,
+    profile_pic: PropTypes.string,
   }),
   onEdit: PropTypes.func.isRequired,
 }
@@ -126,13 +135,21 @@ function Dashboard() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async formData => {
+    const data = new FormData()
+
+    data.append('name', formData.name)
+    data.append('email', formData.email)
+    data.append('nickname', formData.nickname)
+    data.append('description', formData.description)
+
+    if (formData.file) {
+      data.append('file', formData.file)
+    }
+
     const updateResponse = await fetch(`${baseURL}/updateProfile`, {
       method: 'PUT',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
+      body: data,
     })
     const updatedUserData = await updateResponse.json()
     setUser(updatedUserData.user)
