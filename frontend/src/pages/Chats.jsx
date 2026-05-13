@@ -3,6 +3,7 @@ import { useChatRoom } from '../hooks/UseChatRoom'
 import GenericCard from '../components/GenericCard'
 import ChatBox from '../components/chats/ChatBox'
 import { chatsStrings } from '../locales/en/ChatsStrings'
+import { useUnreadMessages } from '../../context/UnreadMessagesContext'
 
 /**
  * Provides a split-screen page displaying list of participating chatrooms on the left and active chatbox on the right.
@@ -13,6 +14,7 @@ import { chatsStrings } from '../locales/en/ChatsStrings'
 export default function Chats() {
   const { user } = useUser()
   const chat = useChatRoom(user)
+  const { unreadRoomIds, clearRoomUnread } = useUnreadMessages()
 
   return (
     <div
@@ -35,20 +37,38 @@ export default function Chats() {
           {chat.rooms.map(room => (
             <GenericCard
               key={room.id}
-              onClick={() => chat.openRoom(room)}
-              customStyling={`p-3 md:p-4 shadow-sm border border-light-grey/50 ${chat.activeRoom?.id === room.id ? 'ring-2 ring-blue-primary bg-blue-secondary' : 'bg-white hover:bg-blue-secondary/10'}`}
+              onClick={() => {
+                chat.openRoom(room)
+                clearRoomUnread(room.id)
+              }}
+              customStyling={`p-3 md:p-4 shadow-sm border border-light-grey/50 ${
+                chat.activeRoom?.id === room.id
+                  ? 'ring-2 ring-blue-primary bg-blue-secondary'
+                  : 'bg-white hover:bg-blue-secondary/10'
+              }`}
             >
-              <div className="flex justify-between items-start min-w-0">
-                <span className="font-semibold text-sm truncate mr-2">
+              <div className="flex justify-between items-center mb-2 min-w-0">
+                <span className="font-bold text-sm truncate mr-2 text-text-primary">
                   {room.routeTitle}
                 </span>
-                <div
-                  className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${room.is_closed ? 'bg-medium-grey' : 'bg-green-primary'}`}
-                />
+
+                {unreadRoomIds.has(room.id) && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shrink-0" />
+                )}
               </div>
-              <p className="text-[10px] text-text-secondary mt-1 uppercase tracking-widest font-bold">
-                {room.is_closed ? chatsStrings.archived : chatsStrings.active}
-              </p>
+
+              {/* status pill(active/archived) */}
+              <div className="flex items-center">
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                    room.is_closed
+                      ? 'bg-drawer-background text-medium-grey'
+                      : 'bg-green-primary/10 text-green-primary'
+                  }`}
+                >
+                  {room.is_closed ? chatsStrings.archived : chatsStrings.active}
+                </span>
+              </div>
             </GenericCard>
           ))}
         </div>
