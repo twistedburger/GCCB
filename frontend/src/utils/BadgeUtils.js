@@ -42,15 +42,26 @@ export function progressWidth(progress) {
 }
 
 /**
+ * Maps a camelCase alias to raw DB metric key values.
+
+ * @type {Readonly<Object.<string, string>>}
+ */
+const METRIC_KEYS = Object.freeze({
+  co2SavedKg: 'co2_saved_kg',
+  tripCount: 'trip_count',
+  modeTrips: 'mode_trips',
+  routesCreated: 'routes_created',
+})
+
+/**
  * Maps badge metric keys to their display unit labels.
- * Keys are DB values (snake_case by convention).
  * @type {Readonly<Object.<string, string>>}
  */
 const METRIC_UNITS = Object.freeze({
-  co2_saved_kg: 'kg',
-  trip_count: 'trips',
-  mode_trips: 'trips',
-  routes_created: 'routes',
+  [METRIC_KEYS.co2SavedKg]: 'kg',
+  [METRIC_KEYS.tripCount]: 'trips',
+  [METRIC_KEYS.modeTrips]: 'trips',
+  [METRIC_KEYS.routesCreated]: 'routes',
 })
 
 /**
