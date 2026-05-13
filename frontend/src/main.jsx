@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { UserProvider } from '../context/UserContext'
+import { NotificationProvider } from '../context/NotificationContext'
 import './index.css'
 
 const script = document.createElement('script')
@@ -13,7 +14,9 @@ window.__mapsReady = () => {
   createRoot(document.getElementById('root')).render(
     <StrictMode>
       <UserProvider>
-        <App />
+        <NotificationProvider>
+          <App />
+        </NotificationProvider>
       </UserProvider>
     </StrictMode>
   )

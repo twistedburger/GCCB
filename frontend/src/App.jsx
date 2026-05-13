@@ -17,6 +17,7 @@ import Filter from './pages/home/Filter'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
 import BannedUsers from './pages/BannedUsers'
+import Notifications from './pages/Notifications'
 import { useUser } from '../context/UserContext.jsx'
 
 function App() {
@@ -109,6 +110,7 @@ function App() {
                   />
                   <Route path="/user-guide" element={<UserGuide />} />
                   <Route path="/bannedusers" element={<BannedUsers />} />
+                  <Route path="/notifications" element={<Notifications />} />
                 </Route>
                 <Route
                   element={
