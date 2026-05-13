@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react'
+import { act } from 'react'
 import MapController from '../MapController'
 import { DrawRoute } from '../../utils/MapControllerUtils'
 import { useMap } from '@vis.gl/react-google-maps'
@@ -19,24 +20,34 @@ describe('Test MapController calls expected functions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     useMap.mockReturnValue(mockMap)
+    DrawRoute.mockResolvedValue(undefined)
   })
 
-  test('pans to center when map and center are available', () => {
-    render(<MapController center={mockCenter} route={mockRoute} />)
+  test('pans to center when map and center are available', async () => {
+    await act(async () => {
+      render(<MapController center={mockCenter} route={mockRoute} />)
+    })
     expect(mockMap.panTo).toHaveBeenCalledWith(mockCenter)
   })
 
-  test('calls DrawRoute with map and route', () => {
-    render(<MapController center={mockCenter} route={mockRoute} />)
+  test('calls DrawRoute with map and route', async () => {
+    await act(async () => {
+      render(<MapController center={mockCenter} route={mockRoute} />)
+    })
     expect(DrawRoute).toHaveBeenCalledWith(mockMap, mockRoute)
   })
 
-  test('calls DrawRoute cleanup on unmount', () => {
+  test('calls DrawRoute cleanup on unmount', async () => {
     const cleanup = jest.fn()
-    DrawRoute.mockReturnValue(cleanup)
-    const { unmount } = render(
-      <MapController center={mockCenter} route={mockRoute} />
-    )
+    DrawRoute.mockResolvedValue(cleanup)
+
+    let unmount
+    await act(async () => {
+      ;({ unmount } = render(
+        <MapController center={mockCenter} route={mockRoute} />
+      ))
+    })
+
     unmount()
     expect(cleanup).toHaveBeenCalled()
   })

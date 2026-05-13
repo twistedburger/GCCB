@@ -61,6 +61,7 @@ ProfileHeader.propTypes = {
     nickname: PropTypes.string,
     role: PropTypes.string,
     description: PropTypes.string,
+    profile_pic: PropTypes.string,
   }),
   onEdit: PropTypes.func.isRequired,
 }
@@ -111,13 +112,21 @@ function Dashboard() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async formData => {
+    const data = new FormData()
+
+    data.append('name', formData.name)
+    data.append('email', formData.email)
+    data.append('nickname', formData.nickname)
+    data.append('description', formData.description)
+
+    if (formData.file) {
+      data.append('file', formData.file)
+    }
+
     const updateResponse = await fetch(`${baseURL}/updateProfile`, {
       method: 'PUT',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
+      body: data,
     })
     const updatedUserData = await updateResponse.json()
     setUser(updatedUserData.user)

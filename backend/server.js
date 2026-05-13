@@ -8,9 +8,14 @@ const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
 const axios = require('axios')
+const cloudinary = require('cloudinary').v2
+const { CloudinaryStorage } = require('multer-storage-cloudinary')
+const multer = require('multer')
 const { serverStrings } = require('./locales/en/serverLocales')
+const { createServer } = require('http')
 
 const app = express()
+const httpServer = createServer(app)
 const db = require('./db')
 const pool = db.pool
 const port = 3000
@@ -18,6 +23,8 @@ const port = 3000
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
 const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
+const { initSocket, broadcast } = require('./sockets/ChatSocket')
+const chatService = require('./src/services/ChatServices')
 const { notificationRouter } = require('./src/utils/NotificationEndpoints')
 const { selectUser } = require('./src/utils/UserUtils')
 
@@ -29,6 +36,24 @@ const config = {
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_DOMAIN,
 }
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+})
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'gccb_profile_pics',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+    transformation: [{ width: 500, height: 500, crop: 'limit' }],
+  },
+})
+
+const upload = multer({ storage: storage })
 
 app.use(
   cors({
@@ -50,6 +75,7 @@ app.use(
 )
 
 app.use(express.json())
+app.use('/api/chat', require('./endpoints/ChatEndpoints'))
 
 const analytics = createAnalyticsHelpers({
   db,
@@ -255,7 +281,7 @@ app.get('/sso_list', async (req, res) => {
  *
  * @returns {Object} a json user objet
  */
-app.post('/createNewUser', async (req, res) => {
+app.post('/createNewUser', upload.single('file'), async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -268,7 +294,8 @@ app.post('/createNewUser', async (req, res) => {
     const newUser = await insertUserFromForm(
       req.oidc.user.name,
       req.oidc.user.email,
-      req.body
+      req.body,
+      req.file
     )
     res.json({ user: newUser })
   } catch (error) {
@@ -286,7 +313,7 @@ app.post('/createNewUser', async (req, res) => {
  * @returns {Object} a json user object of the updated user
 
  */
-app.put('/updateProfile', async (req, res) => {
+app.put('/updateProfile', upload.single('file'), async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -294,9 +321,15 @@ app.put('/updateProfile', async (req, res) => {
   try {
     const currentUser = await selectUser(req)
     const { name, nickname, description } = req.body
+
+    let imageUrl = req.body.imageUrl
+    if (req.file) {
+      imageUrl = req.file.path
+    }
+
     const result = await db.query(
-      'UPDATE "user" SET name = $1, nickname = $2, description = $3 WHERE id = $4 RETURNING *',
-      [name, nickname, description, currentUser.id]
+      'UPDATE "user" SET name = $1, nickname = $2, description = $3, profile_pic = $4 WHERE id = $5 RETURNING *',
+      [name, nickname, description, imageUrl, currentUser.id]
     )
     res.json({ user: result.rows[0] })
   } catch (error) {
@@ -311,13 +344,16 @@ app.put('/updateProfile', async (req, res) => {
  * @param {string} name name of the user
  * @param {string} email email of the user
  * @param {Object} formData an object with nickname and description strings
+ * @param {Object} file profile image of the user
  * @returns {Object} the newly inserted user
  */
-async function insertUserFromForm(name, email, formData) {
+async function insertUserFromForm(name, email, formData, file) {
   const { nickname, description } = formData
+  const imageUrl = file ? file.path : null
+
   const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname, description, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [email, 'user', name, nickname, description, new Date()]
+    'INSERT INTO "user" (email, role, name, nickname, description, profile_pic, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [email, 'user', name, nickname, description, imageUrl, new Date()]
   )
   return results.rows[0]
 }
@@ -425,72 +461,6 @@ app.get('/api/events', (req, res) => {
       res.status(200).json(results.rows)
     }
   )
-})
-
-/**
- * Updates the banner_url column in the events table for the given event.
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, or the api call has an error, a 500 status code is sent with an error json {error: string}.
- * If no photo is found, a 404 page not found error is sent with an error json {error: string}.
- *
- * @returns {Object} the new banner_url fetched from the google maps API.
- */
-app.post('/api/refresh-banner', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  const { placeID, eventID } = req.body
-  const eventId = parseInt(eventID, 10)
-
-  try {
-    const response = await axios.get(
-      `https://places.googleapis.com/v1/places/${placeID}`,
-      {
-        headers: {
-          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
-          'X-Goog-FieldMask': 'photos',
-        },
-      }
-    )
-
-    // need the photo name to get the banner url
-    const photoName = response.data.photos?.[0]?.name
-    if (!photoName) {
-      return res.status(404).json({ error: serverStrings.errors.noPhotos })
-    }
-
-    const photoResponse = await axios.get(
-      `https://places.googleapis.com/v1/${photoName}/media`,
-      {
-        params: {
-          maxWidthPx: 800,
-          skipHttpRedirect: true,
-        },
-        headers: {
-          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
-        },
-      }
-    )
-    const newUrl = photoResponse.data.photoUri
-
-    db.query(
-      `UPDATE event SET banner_url = $1 WHERE id = $2;`,
-      [newUrl, eventId],
-      error => {
-        if (error) {
-          console.error('Error updating DB:', error)
-          return res.status(500).send(serverStrings.errors.generic)
-        }
-        res.status(200).json({ bannerUrl: newUrl })
-      }
-    )
-  } catch (err) {
-    const status = err.response?.status ?? 500
-    const message = err.response?.data?.error?.message ?? err.message
-    res.status(status).json({ error: message })
-  }
 })
 
 /**
@@ -628,6 +598,20 @@ app.post('/api/createEvent', async (req, res) => {
       route,
     } = req.body
 
+    let bannerUrl = null
+    if (banner) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(banner, {
+          folder: 'gccb_event_banners',
+          allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+          transformation: [{ width: 1200, height: 400, crop: 'fill' }],
+        })
+        bannerUrl = uploadResult.secure_url
+      } catch (uploadError) {
+        console.error(serverStrings.errors.cloudinaryFailed, uploadError)
+      }
+    }
+
     await client.query('BEGIN')
 
     const eventResult = await client.query(
@@ -645,17 +629,34 @@ app.post('/api/createEvent', async (req, res) => {
         new Date(),
         longitude,
         latitude,
-        banner,
+        bannerUrl,
         placeID,
       ]
     )
 
     const newEvent = eventResult.rows[0]
-
     if (route) {
-      await insertRoute(client, newEvent.id, user.id, route, route.isJoined)
-    }
+      const routeID = await insertRoute(
+        client,
+        newEvent.id,
+        user.id,
+        route,
+        route.isJoined
+      )
 
+      // create chatroom and add creator as first member
+      const chatCloseTime = route.departTime
+      const { rows: chatroomRows } = await client.query(
+        `INSERT INTO chatroom (route_id, close_at, delete_at) VALUES ($1, $2::timestamp, $2::timestamp + interval '2 days') RETURNING id`,
+        [routeID, chatCloseTime]
+      )
+      const chatroomID = chatroomRows[0].id
+
+      await client.query(
+        `INSERT INTO chatroom_member (chatroom_id, user_id) VALUES ($1, $2)`,
+        [chatroomID, user.id]
+      )
+    }
     await client.query('COMMIT')
     res.status(201).json(newEvent)
   } catch (error) {
@@ -669,6 +670,8 @@ app.post('/api/createEvent', async (req, res) => {
 
 /**
  * Adds a route to the database
+ * Also creates a chatroom for the route and adds the creator as the first member of the chatroom.
+ * The chatroom's close_at is set to the route's depart_time, and delete_at is set to 2 days after the depart_time.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -693,6 +696,12 @@ app.post('/api/createRoute', async (req, res) => {
       user.id,
       routeData,
       isJoined
+    )
+    await chatService.createNewRoom(
+      client,
+      routeID,
+      user.id,
+      routeData.departTime
     )
 
     await client.query('COMMIT')
@@ -927,6 +936,7 @@ app.get('/api/routes/:id/isJoined', async (req, res) => {
 
 /**
  * Adds a user to a route by adding a record to the user_route table.
+ * Also adds the user to the associated chatroom and broadcasts a system message to the chatroom that a new member has joined.s
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -939,21 +949,39 @@ app.post('/api/routes/:id/join', async (req, res) => {
       .status(403)
       .json({ error: serverStrings.errors.notAuthenticated })
   }
+
   try {
     const user = await selectUser(req)
+    const routeId = req.params.id
+
     await db.query(
       'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-      [user.id, req.params.id]
+      [user.id, routeId]
     )
+
+    const chatroomRes = await db.query(
+      'SELECT id FROM chatroom WHERE route_id = $1',
+      [routeId]
+    )
+
+    if (chatroomRes.rowCount > 0) {
+      const chatroomId = chatroomRes.rows[0].id
+      const newMember = await chatService.addUserToRoom(chatroomId, user.id)
+      broadcast(chatroomId, 'MEMBER_JOINED', {
+        userId: newMember.data.id,
+        userNickname: newMember.data.nickname,
+      })
+    }
+
     res.json({ success: true })
   } catch (error) {
-    console.error(error)
+    console.error('Error joining route/chat:', error)
     res.status(500).json({ error: serverStrings.errors.joinFailed })
   }
 })
 
 /**
- * Deletes a route.
+ * Deletes a route, removes all associated user_route and event_route records, deletes the associated chatroom and messages.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -973,6 +1001,8 @@ app.delete('/api/routes/:id/delete', async (req, res) => {
     const routeId = req.params.id
 
     await client.query('BEGIN')
+    const chatroomId = await chatService.deleteRoom(client, routeId)
+    broadcast(chatroomId, 'ROOM_DELETED', { chatroomId })
     await client.query('DELETE FROM event_route WHERE route_id = $1', [routeId])
     await client.query('DELETE FROM user_route WHERE route_id = $1', [routeId])
     await client.query('DELETE FROM route WHERE id = $1', [routeId])
@@ -996,16 +1026,35 @@ app.delete('/api/routes/:id/delete', async (req, res) => {
  * @returns {Object} {success:  true}
  */
 app.delete('/api/routes/:id/leave', async (req, res) => {
-  if (!req.oidc.isAuthenticated())
+  if (!req.oidc.isAuthenticated()) {
     return res
       .status(403)
       .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
   try {
     const user = await selectUser(req)
+    const routeId = req.params.id
+
+    const chatroomRes = await db.query(
+      'SELECT id FROM chatroom WHERE route_id = $1',
+      [routeId]
+    )
+
     await db.query(
       'DELETE FROM user_route WHERE user_id = $1 AND route_id = $2',
-      [user.id, req.params.id]
+      [user.id, routeId]
     )
+
+    if (chatroomRes.rowCount > 0) {
+      const chatroomId = chatroomRes.rows[0].id
+      await chatService.removeUserFromRoom(chatroomId, user.id)
+      broadcast(chatroomId, 'MEMBER_LEFT', {
+        userId: user.id,
+        userNickname: user.nickname,
+      })
+    }
+
     res.json({ success: true })
   } catch (error) {
     console.error(error)
@@ -1362,12 +1411,6 @@ app.get('/api/analytics/by-mode', async (req, res) => {
     return res.status(500).send(serverStrings.errors.generic)
   }
 })
-
-if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`GCCB Backend listening on port ${port}`)
-  })
-}
 
 /**
  * Returns reports to be reviewed by the moderator.
@@ -2065,4 +2108,67 @@ app.get('/api/blockStatus/:id', async (req, res) => {
   }
 })
 
-module.exports = app
+/**
+ * Blocks a specific user.
+ *
+ * @param {number} req.body.blocked_user_id - The ID of the user to block.
+ */
+app.post('/api/blockUser/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const blocked_user_id = req.params.userId
+  const currentUser = await selectUser(req)
+  const blocker_id = currentUser.id
+
+  try {
+    await db.query(
+      `INSERT INTO "blocked_user" (blocker_id, blocked_user_id) 
+       VALUES ($1, $2)
+       ON CONFLICT (blocker_id, blocked_user_id) DO NOTHING`,
+      [blocker_id, blocked_user_id]
+    )
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error blocking user:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Checks if a specific user is blocked by the current user.
+ *
+ * @param {number} req.params.id - The ID of the user to check.
+ * @returns {{ isBlocked: boolean }}
+ */
+app.get('/api/blockStatus/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const blocked_user_id = req.params.id
+  const currentUser = await selectUser(req)
+
+  try {
+    const result = await db.query(
+      `SELECT 1 FROM blocked_user WHERE blocker_id = $1 AND blocked_user_id = $2`,
+      [currentUser.id, blocked_user_id]
+    )
+
+    res.json({ isBlocked: result.rows.length > 0 })
+  } catch (error) {
+    console.error('Error checking block status:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+initSocket(httpServer)
+console.log('Sockets initialized')
+
+httpServer.listen(port, () => {
+  console.log(`Server & Sockets integrated on port ${port}`)
+})
+
+module.exports = { app, httpServer }

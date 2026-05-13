@@ -4,10 +4,9 @@ import UserCard from '../components/UserCard'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 import Alert from '../components/Alert'
 import GenericButton from '../components/GenericButton'
-import { useAuth } from '../hooks/Authorization'
+import { useAuth, authLevel } from '../hooks/Authorization'
 import { ArrowBackIosNew } from '@mui/icons-material'
 import {
-  getIsModerator,
   getBannedUsersStrings,
   fetchUsers,
   removeUser,
@@ -24,7 +23,7 @@ function BannedUsers() {
   const [openModal, setOpenModal] = useState(false)
   const [alert, setAlert] = useState(null)
   const { authorization } = useAuth()
-  const isModerator = getIsModerator(authorization)
+  const isModerator = authorization === authLevel.MODERATOR.label
   const strings = getBannedUsersStrings(isModerator)
   const navigate = useNavigate()
 
