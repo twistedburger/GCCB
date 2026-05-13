@@ -1,6 +1,6 @@
 const request = require('supertest')
 const { serverStrings } = require('../../../locales/en/serverLocales')
-const app = require('../../../server')
+const { app } = require('../../../server')
 const { selectUser } = require('../UserUtils')
 const {
   insertNotification,

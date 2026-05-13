@@ -56,7 +56,7 @@ describe('Test insertNotification database query', () => {
     const insertNotificationQuery =
       'INSERT INTO "notification" (notification_type, event_id, metadata) VALUES ($1, $2, $3) RETURNING *'
     const fetchUsersQuery =
-      'SELECT user_route.user_id FROM "user_route" JOIN "event_route" ON user_route.route_id = event_route.route_id WHERE event_route.event_id = $1'
+      'SELECT DISTINCT user_route.user_id FROM "user_route" JOIN "event_route" ON user_route.route_id = event_route.route_id WHERE event_route.event_id = $1'
     const insertUserNotificationQuery =
       'INSERT INTO "user_notification" (user_id, notification_id) VALUES ($2, $1), ($3, $1), ($4, $1) RETURNING *'
     expect(db.query).toHaveBeenCalledTimes(3)
@@ -346,12 +346,34 @@ describe('Test getUserNotifications database query', () => {
   })
 
   test('Query calls with expected query string', async () => {
-    db.query.mockResolvedValue({ rows: [{ type: 'route' }, { type: 'event' }] })
+    db.query.mockResolvedValue({
+      rows: [
+        {
+          badge_id: 1,
+          created_at: '',
+          event_id: 2,
+          metadata: {},
+          notification_id: 1,
+          notification_type: NotificationType.Event,
+          route_id: 3,
+        },
+      ],
+    })
     const results = await getUserNotifications(1)
     // Note that this is due to formatting to make the query readable
     const expectedQuery =
       'SELECT notification.* FROM "notification"\n         JOIN "user_notification" ON notification.notification_id = user_notification.notification_id\n         WHERE user_notification.user_id = $1 AND user_notification.read_at IS NULL\n         ORDER BY notification.created_at DESC'
     expect(db.query).toHaveBeenCalledWith(expectedQuery, [1])
-    expect(results).toEqual([{ type: 'route' }, { type: 'event' }])
+    expect(results).toEqual([
+      {
+        badgeID: 1,
+        createdAt: '',
+        eventID: 2,
+        metadata: {},
+        notificationID: 1,
+        notificationType: NotificationType.Event,
+        routeID: 3,
+      },
+    ])
   })
 })

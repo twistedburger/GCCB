@@ -2048,8 +2048,10 @@ app.post('/api/unblockUser/:userId', async (req, res) => {
 initSocket(httpServer)
 console.log('Sockets initialized')
 
-httpServer.listen(port, () => {
-  console.log(`Server & Sockets integrated on port ${port}`)
-})
+if (require.main === module) {
+  httpServer.listen(port, () => {
+    console.log(`Server & Sockets integrated on port ${port}`)
+  })
+}
 
 module.exports = { app, httpServer }
