@@ -40,7 +40,7 @@ const BADGE_ICONS = {
   globe: Public,
   footprint: Place,
   map: Map,
-  'plus-circle': AddCircleOutline,
+  plusCircle: AddCircleOutline,
   network: Groups,
   crown: EmojiEvents,
   repeat: Repeat,

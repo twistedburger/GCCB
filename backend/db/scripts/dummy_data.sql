@@ -229,7 +229,7 @@ VALUES
   ('trek_titan',       'Trek Titan',       'modes', 'walking', 'mode_trips', 'walk', 25, 3),
 
   -- Social Badges
-  ('route_rookie',       'Route Rookie',       'social', 'plus-circle', 'routes_created', NULL, 1,  1),
+  ('route_rookie',       'Route Rookie',       'social', 'plusCircle',  'routes_created', NULL, 1,  1),
   ('reliable_router',    'Reliable Router',    'social', 'map',         'routes_created', NULL, 10, 2),
   ('community_champion', 'Community Champion', 'social', 'users',       'routes_created', NULL, 25, 3);
 
