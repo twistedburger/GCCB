@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Drawer,
   List,
@@ -29,7 +29,7 @@ import {
 import { authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
 import { sidebarStrings } from '../locales/en/ComponentStrings/SidebarStrings'
-import { useUnreadMessages } from '../hooks/useUnreadMessages'
+import { useUnreadMessages } from '../../context/UnreadMessagesContext'
 /**
  * An array of navigation items for the main sidebar.
  *
@@ -93,9 +93,8 @@ const mainNavigation = [
 export default function Sidebar({ userData }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
   const userRole = userData?.role || 'USER'
-  const { hasUnread, clearUnread } = useUnreadMessages(userData?.id)
+  const { hasUnread } = useUnreadMessages(userData?.id)
 
   const navItems = mainNavigation.filter(item => {
     const isModeratorItem = item.id === 'Moderate' || item.id === 'Banned Users'
@@ -107,10 +106,6 @@ export default function Sidebar({ userData }) {
   const handleClose = () => {
     if (open) setOpen(false)
   }
-
-  useEffect(() => {
-    if (location.pathname.startsWith('/chats')) clearUnread()
-  }, [location.pathname])
 
   return (
     <Drawer
@@ -201,7 +196,6 @@ export default function Sidebar({ userData }) {
                 <ListItemButton
                   onClick={() => {
                     navigate(path)
-                    if (id === 'Chats') clearUnread()
                     setOpen(false)
                   }}
                   sx={{
