@@ -11,17 +11,19 @@ import Badges from './pages/dashboard/Badges'
 import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import UserGuide from './pages/UserGuide'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { authLevel, AuthProvider } from './hooks/Authorization'
 import ProtectedRoute from './components/ProtectedRoute'
 import Filter from './pages/home/Filter'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
 import BannedUsers from './pages/BannedUsers'
+import Chats from './pages/Chats'
+import Notifications from './pages/Notifications'
+import { useUser } from '../context/UserContext.jsx'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
   const [ssoProfile, setSsoProfile] = useState(null)
 
   const baseURL = import.meta.env.VITE_API_BASE_URL
@@ -30,12 +32,9 @@ function App() {
   const [bannedError] = useState(
     new URLSearchParams(window.location.search).get('error') === 'banned'
   )
+  const { user, setUser } = useUser()
 
-  useEffect(() => {
-    authenticateUser()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function authenticateUser() {
+  const authenticateUser = useCallback(async () => {
     try {
       const response = await fetch(`${baseURL}/authenticateUser`, {
         credentials: 'include',
@@ -53,13 +52,17 @@ function App() {
       }
       if (data) {
         setUserAuthenticated(data.isAuthenticated)
-        setCurrentUser(data.user)
+        setUser(data.user)
         setSsoProfile(data.ssoProfile)
       }
     } catch (err) {
       console.error(err.message)
     }
-  }
+  }, [setUser])
+
+  useEffect(() => {
+    authenticateUser()
+  }, [authenticateUser])
 
   return (
     <Router>
@@ -67,9 +70,7 @@ function App() {
         <div className="app-container min-h-screen">
           {/* pages */}
           <div className="relative w-full min-h-screen flex bg-background-off-white">
-            {userAuthenticated && currentUser && (
-              <Sidebar userData={currentUser} />
-            )}{' '}
+            {userAuthenticated && user && <Sidebar userData={user} />}{' '}
             <main className="flex-1 overflow-y-auto">
               <Routes>
                 <Route
@@ -77,10 +78,13 @@ function App() {
                   element={
                     !userAuthenticated ? (
                       <Login error={bannedError} />
-                    ) : !currentUser ? (
+                    ) : !user ? (
                       <CreateUser
                         ssoUser={ssoProfile}
-                        onUserCreated={setCurrentUser}
+                        onUserCreated={newUser => {
+                          setUser(newUser)
+                          setUserAuthenticated(true)
+                        }}
                       />
                     ) : (
                       <Home />
@@ -109,6 +113,8 @@ function App() {
                   <Route path="/dashboard/badges" element={<Badges />} />
                   <Route path="/user-guide" element={<UserGuide />} />
                   <Route path="/bannedusers" element={<BannedUsers />} />
+                  <Route path="/chat/*" element={<Chats />} />
+                  <Route path="/notifications" element={<Notifications />} />
                 </Route>
                 <Route
                   element={

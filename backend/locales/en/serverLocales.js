@@ -4,6 +4,8 @@ const serverStrings = {
     accessDenied: 'Access Denied',
     userExists: 'User already exists',
     noUser: 'No logged in user',
+    notificationError: 'Unknown notification type:',
+    notificationSendError: 'Notification failed to send',
     inactiveUser:
       'Your account has been inactive for a while. Please contact support to reactivate your account.',
     google: 'Could not fetch from google maps api',
@@ -22,6 +24,8 @@ const serverStrings = {
     routeDeletionFailed: 'Failed to delete route',
     routeCompletionFailed: 'Failed to mark route as complete',
     badgeEvaluationFailed: 'Failed to evaluate badges.',
+    notMember: 'Not a member of this chatroom',
+    cloudinaryFailed: 'Cloudinary banner upload failed:',
   },
 }
 

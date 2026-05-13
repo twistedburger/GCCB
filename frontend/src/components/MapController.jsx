@@ -10,9 +10,9 @@ import { DrawRoute } from '../utils/MapControllerUtils'
  * @param {Object} route - The route information for the map.
  * @returns {JSX.Element}
  */
-
 export default function MapController({ center, route }) {
   const map = useMap()
+
   useEffect(() => {
     if (map && center) {
       map.panTo(center)
@@ -20,7 +20,22 @@ export default function MapController({ center, route }) {
   }, [map, center])
 
   useEffect(() => {
-    return DrawRoute(map, route)
+    let cleanup = () => {}
+    let cancelled = false
+
+    DrawRoute(map, route).then(cleanupFn => {
+      if (cancelled) {
+        // component unmounted before the promise resolved -> clean up immediately
+        cleanupFn?.()
+      } else {
+        cleanup = cleanupFn ?? (() => {})
+      }
+    })
+
+    return () => {
+      cancelled = true
+      cleanup()
+    }
   }, [map, route])
 
   return null
