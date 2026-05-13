@@ -46,8 +46,8 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
     }
   }
 
-  const handleImageUpload = e => {
-    const file = e.target.files[0]
+  const handleImageUpload = image => {
+    const file = image.target.files[0]
     if (!file) return
 
     setFormData(prev => ({
@@ -57,8 +57,8 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
     }))
   }
 
-  const handleChange = e => {
-    const { name, value } = e.target
+  const handleChange = change => {
+    const { name, value } = change.target
     if (name !== 'name' && name !== 'email') {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
@@ -73,8 +73,8 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
     }
   }
 
-  const handleSubmit = e => {
-    e.preventDefault()
+  const handleSubmit = submit => {
+    submit.preventDefault()
     onSubmit(formData)
   }
 
@@ -136,7 +136,7 @@ const ProfileForm = ({ user, isNew, onSubmit, onCancel }) => {
             placeholder={profileFormStrings.nicknamePlaceholder}
             error={nicknameError}
             value={formData.nickname}
-            onBlur={e => checkNickname(e.target.value)}
+            onBlur={check => checkNickname(check.target.value)}
             onChange={handleChange}
           />
 
