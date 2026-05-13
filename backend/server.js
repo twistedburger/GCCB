@@ -675,6 +675,10 @@ app.post('/api/createEvent', async (req, res) => {
         await badgeEvaluator.evaluateBadges(user.id, summary)
       } catch (err) {
         console.error('Badge evaluation failed (createEvent):', err)
+        // 500 error here would mean that badge evaluation failed, not that the route itself was lost.
+        return res
+          .status(500)
+          .json({ error: serverStrings.errors.badgeEvaluationFailed })
       }
     }
 
@@ -724,6 +728,10 @@ app.post('/api/createRoute', async (req, res) => {
       await badgeEvaluator.evaluateBadges(user.id, summary)
     } catch (err) {
       console.error('Badge evaluation failed (createRoute):', err)
+      // 500 error here would mean that badge evaluation failed, not that the route itself was lost.
+      return res
+        .status(500)
+        .json({ error: serverStrings.errors.badgeEvaluationFailed })
     }
 
     res.status(201).json({ success: true, routeID })
