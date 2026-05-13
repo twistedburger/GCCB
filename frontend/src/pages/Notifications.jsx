@@ -46,6 +46,12 @@ export default function Notifications() {
             'Route Title',
             'Notification Message'
           )
+          sendNotification(
+            NotificationType.Badge,
+            23,
+            'Badge Title',
+            'Notification Message'
+          )
         }}
       >
         Send Notification
