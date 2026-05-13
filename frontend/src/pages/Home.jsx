@@ -89,29 +89,52 @@ function Home() {
     }
   }
 
-  const fetchCards = useCallback(() => {
+  const fetchCards = useCallback(async () => {
     if (!userLocation) return
     setLoading(true)
-    const apiMainEvents = isArriving ? filters.mainEventsOnly : false
-    const url = buildSearchURL(
-      { ...filters, mainEventsOnly: apiMainEvents },
-      userLocation,
-      isArriving,
-      import.meta.env.VITE_API_BASE_URL
-    )
-    fetch(url, { credentials: 'include' })
-      .then(response => {
-        if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
-        return response.json()
+
+    try {
+      const apiMainEvents = isArriving ? filters.mainEventsOnly : false
+      const searchUrl = buildSearchURL(
+        { ...filters, mainEventsOnly: apiMainEvents },
+        userLocation,
+        isArriving,
+        import.meta.env.VITE_API_BASE_URL
+      )
+      const searchRes = await fetch(searchUrl, { credentials: 'include' })
+      const searchData = await searchRes.json()
+
+      const myTripsRes = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/myTrips`,
+        {
+          credentials: 'include',
+        }
+      )
+      const myTripsData = await myTripsRes.json()
+      const joinedIds = new Set(myTripsData.map(t => t.id))
+
+      const processedData = searchData.map(item => {
+        if (item.routes) {
+          return {
+            ...item,
+            routes: item.routes.map(r => ({
+              ...r,
+              isJoined: joinedIds.has(r.id),
+            })),
+          }
+        }
+        return {
+          ...item,
+          isJoined: joinedIds.has(item.id),
+        }
       })
-      .then(data => {
-        setCardsToDisplay(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Failed to fetch:', err)
-        setLoading(false)
-      })
+
+      setCardsToDisplay(processedData)
+      setLoading(false)
+    } catch (err) {
+      console.error('Failed to fetch:', err)
+      setLoading(false)
+    }
   }, [filters, userLocation, isArriving])
 
   const handleRouteClick = route => {
@@ -142,6 +165,58 @@ function Home() {
     if (!userLocation) return
     setFilters(DEFAULT_FILTERS)
   }, [userLocation])
+
+  const handleToggleJoin = async item => {
+    const isJoining = !item.isJoined
+    const endpoint = isJoining
+      ? `/api/routes/${item.id}/join`
+      : `/api/routes/${item.id}/leave`
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}${endpoint}`,
+        {
+          method: isJoining ? 'POST' : 'DELETE',
+          credentials: 'include',
+        }
+      )
+
+      if (response.ok) {
+        setCardsToDisplay(prev =>
+          prev.map(card => {
+            if (card.id === item.id) {
+              return {
+                ...card,
+                isJoined: isJoining,
+                people_going: isJoining
+                  ? (parseInt(card.people_going) || 0) + 1
+                  : Math.max(0, (parseInt(card.people_going) || 0) - 1),
+              }
+            }
+            if (card.routes) {
+              return {
+                ...card,
+                routes: card.routes.map(r =>
+                  r.id === item.id
+                    ? {
+                        ...r,
+                        isJoined: isJoining,
+                        people_going: isJoining
+                          ? (parseInt(r.people_going) || 0) + 1
+                          : Math.max(0, (parseInt(r.people_going) || 0) - 1),
+                      }
+                    : r
+                ),
+              }
+            }
+            return card
+          })
+        )
+      }
+    } catch (error) {
+      console.error('Toggle failed:', error)
+    }
+  }
 
   return (
     <div
@@ -334,6 +409,7 @@ function Home() {
                         <RouteCard
                           key={item.id}
                           route={item}
+                          onToggleJoin={() => handleToggleJoin(item)}
                           individualView={true}
                           onSelect={handleRouteClick}
                         />
@@ -346,7 +422,12 @@ function Home() {
           </Drawer.Portal>
         </Drawer.Root>
         <RouteDetail
-          selectedRoute={isEventDetail ? null : selectedRoute}
+          selectedRoute={
+            cardsToDisplay
+              .flatMap(item => (item.routes ? item.routes : [item]))
+              .find(r => r.id === selectedRoute?.id) || selectedRoute
+          }
+          onToggleJoin={handleToggleJoin}
           onClose={() => {
             setSelectedRoute(null)
             setSnapPoint(1)
