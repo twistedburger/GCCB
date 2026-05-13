@@ -8,6 +8,9 @@ const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
 const axios = require('axios')
+const cloudinary = require('cloudinary').v2
+const { CloudinaryStorage } = require('multer-storage-cloudinary')
+const multer = require('multer')
 const { serverStrings } = require('./locales/en/serverLocales')
 
 const app = express()
@@ -29,6 +32,24 @@ const config = {
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_DOMAIN,
 }
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+})
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'gccb_profile_pics',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+    transformation: [{ width: 500, height: 500, crop: 'limit' }],
+  },
+})
+
+const upload = multer({ storage: storage })
 
 app.use(
   cors({
@@ -255,7 +276,7 @@ app.get('/sso_list', async (req, res) => {
  *
  * @returns {Object} a json user objet
  */
-app.post('/createNewUser', async (req, res) => {
+app.post('/createNewUser', upload.single('file'), async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -268,7 +289,8 @@ app.post('/createNewUser', async (req, res) => {
     const newUser = await insertUserFromForm(
       req.oidc.user.name,
       req.oidc.user.email,
-      req.body
+      req.body,
+      req.file
     )
     res.json({ user: newUser })
   } catch (error) {
@@ -286,7 +308,7 @@ app.post('/createNewUser', async (req, res) => {
  * @returns {Object} a json user object of the updated user
 
  */
-app.put('/updateProfile', async (req, res) => {
+app.put('/updateProfile', upload.single('file'), async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -294,9 +316,15 @@ app.put('/updateProfile', async (req, res) => {
   try {
     const currentUser = await selectUser(req)
     const { name, nickname, description } = req.body
+
+    let imageUrl = req.body.imageUrl
+    if (req.file) {
+      imageUrl = req.file.path
+    }
+
     const result = await db.query(
-      'UPDATE "user" SET name = $1, nickname = $2, description = $3 WHERE id = $4 RETURNING *',
-      [name, nickname, description, currentUser.id]
+      'UPDATE "user" SET name = $1, nickname = $2, description = $3, profile_pic = $4 WHERE id = $5 RETURNING *',
+      [name, nickname, description, imageUrl, currentUser.id]
     )
     res.json({ user: result.rows[0] })
   } catch (error) {
@@ -311,13 +339,16 @@ app.put('/updateProfile', async (req, res) => {
  * @param {string} name name of the user
  * @param {string} email email of the user
  * @param {Object} formData an object with nickname and description strings
+ * @param {Object} file profile image of the user
  * @returns {Object} the newly inserted user
  */
-async function insertUserFromForm(name, email, formData) {
+async function insertUserFromForm(name, email, formData, file) {
   const { nickname, description } = formData
+  const imageUrl = file ? file.path : null
+
   const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname, description, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [email, 'user', name, nickname, description, new Date()]
+    'INSERT INTO "user" (email, role, name, nickname, description, profile_pic, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [email, 'user', name, nickname, description, imageUrl, new Date()]
   )
   return results.rows[0]
 }
@@ -425,72 +456,6 @@ app.get('/api/events', (req, res) => {
       res.status(200).json(results.rows)
     }
   )
-})
-
-/**
- * Updates the banner_url column in the events table for the given event.
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, or the api call has an error, a 500 status code is sent with an error json {error: string}.
- * If no photo is found, a 404 page not found error is sent with an error json {error: string}.
- *
- * @returns {Object} the new banner_url fetched from the google maps API.
- */
-app.post('/api/refresh-banner', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  const { placeID, eventID } = req.body
-  const eventId = parseInt(eventID, 10)
-
-  try {
-    const response = await axios.get(
-      `https://places.googleapis.com/v1/places/${placeID}`,
-      {
-        headers: {
-          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
-          'X-Goog-FieldMask': 'photos',
-        },
-      }
-    )
-
-    // need the photo name to get the banner url
-    const photoName = response.data.photos?.[0]?.name
-    if (!photoName) {
-      return res.status(404).json({ error: serverStrings.errors.noPhotos })
-    }
-
-    const photoResponse = await axios.get(
-      `https://places.googleapis.com/v1/${photoName}/media`,
-      {
-        params: {
-          maxWidthPx: 800,
-          skipHttpRedirect: true,
-        },
-        headers: {
-          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
-        },
-      }
-    )
-    const newUrl = photoResponse.data.photoUri
-
-    db.query(
-      `UPDATE event SET banner_url = $1 WHERE id = $2;`,
-      [newUrl, eventId],
-      error => {
-        if (error) {
-          console.error('Error updating DB:', error)
-          return res.status(500).send(serverStrings.errors.generic)
-        }
-        res.status(200).json({ bannerUrl: newUrl })
-      }
-    )
-  } catch (err) {
-    const status = err.response?.status ?? 500
-    const message = err.response?.data?.error?.message ?? err.message
-    res.status(status).json({ error: message })
-  }
 })
 
 /**
@@ -628,6 +593,20 @@ app.post('/api/createEvent', async (req, res) => {
       route,
     } = req.body
 
+    let bannerUrl = null
+    if (banner) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(banner, {
+          folder: 'gccb_event_banners',
+          allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+          transformation: [{ width: 1200, height: 400, crop: 'fill' }],
+        })
+        bannerUrl = uploadResult.secure_url
+      } catch (uploadError) {
+        console.error(serverStrings.errors.cloudinaryFailed, uploadError)
+      }
+    }
+
     await client.query('BEGIN')
 
     const eventResult = await client.query(
@@ -645,7 +624,7 @@ app.post('/api/createEvent', async (req, res) => {
         new Date(),
         longitude,
         latitude,
-        banner,
+        bannerUrl,
         placeID,
       ]
     )
