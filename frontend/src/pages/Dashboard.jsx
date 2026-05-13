@@ -124,6 +124,10 @@ function Dashboard() {
       }
     }
 
+    /**
+     * Fetches the badges earned by the user with the three most recently earned badges.
+     * Filters badges to include only earned ones, sorts them by the date earned in descending order
+     */
     async function fetchRecentBadges() {
       try {
         const res = await fetch(`${baseURL}/api/badges`, {
