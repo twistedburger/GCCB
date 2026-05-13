@@ -8,7 +8,6 @@ import {
   Logout,
   DateRangeRounded,
 } from '@mui/icons-material'
-import { useState, useEffect } from 'react'
 import { routeCardStrings as routeStrings } from '../locales/en/ComponentStrings/RouteCardStrings.js'
 
 // TODO: standardize transportation mode naming
@@ -37,81 +36,22 @@ export default function RouteCard({
 }) {
   const routeCardStrings = routeStrings.routeCard
   const dateObj = new Date(route.depart_time)
-  const [peopleGoing, setPeopleGoing] = useState(0)
-  const [isJoined, setIsJoined] = useState(false)
+  const peopleGoing = parseInt(route.people_going, 10) || 0
+  const isJoined = !!route.isJoined
+  const activeJoinedState = isJoined
   const isFull =
     (route.transportation_mode === 'Car' ||
       route.transportationMode === 'Car') &&
     peopleGoing >= route.max_ppl
-  const activeJoinedState = isDraft ? route.isJoined : isJoined
-  const baseURL = import.meta.env.VITE_API_BASE_URL
 
-  useEffect(() => {
-    setPeopleGoing(parseInt(route.people_going, 10) || 0)
-  }, [route.people_going])
-
-  useEffect(() => {
-    if (isDraft) return
-
-    const checkJoined = async () => {
-      const result = await fetch(`${baseURL}/api/routes/${route.id}/isJoined`, {
-        credentials: 'include',
-      })
-      const data = await result.json()
-      setIsJoined(data.isJoined)
-    }
-    checkJoined()
-  }, [route.id, isDraft]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (isDraft || route.isJoined === undefined) return
-    setIsJoined(route.isJoined)
-  }, [route.isJoined, isDraft])
-
-  const handleJoin = async e => {
+  const handleJoin = e => {
     e.stopPropagation()
-    if (isDraft) {
-      onToggleJoin(route.id)
-      setPeopleGoing(prev => prev + 1)
-      return
-    }
-
-    await fetch(`${baseURL}/api/routes/${route.id}/join`, {
-      method: 'POST',
-      credentials: 'include',
-    })
-    setIsJoined(true)
-    setPeopleGoing(prev => prev + 1)
     if (onToggleJoin) onToggleJoin(route)
-  }
-
-  const handleLeave = async e => {
-    e.stopPropagation()
-    if (isDraft) {
-      onToggleJoin(route.id)
-      setPeopleGoing(prev => prev - 1)
-      return
-    }
-
-    await fetch(`${baseURL}/api/routes/${route.id}/leave`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
-    setIsJoined(false)
-    setPeopleGoing(prev => prev - 1)
   }
 
   const handleClick = async e => {
     e.stopPropagation()
-    if (isDraft) {
-      handleLeave(e)
-      return
-    }
-    if (onToggleJoin) {
-      onToggleJoin(route)
-    } else {
-      handleLeave(e)
-    }
+    if (onToggleJoin) onToggleJoin(route)
   }
 
   return (

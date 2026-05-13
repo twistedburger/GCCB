@@ -98,14 +98,6 @@ export default function EventDetail() {
     }
   }
 
-  const handleToggleJoin = async route => {
-    if (route.isJoined) {
-      handleRouteLeaveRequest(route)
-    } else {
-      updateLocalJoinStatus(route.id, true)
-    }
-  }
-
   const handleRouteLeaveRequest = async route => {
     const isRouteCreator = user?.id === route.creator_id
     const isCar =
@@ -123,16 +115,39 @@ export default function EventDetail() {
     }
   }
 
+  const handleToggleJoin = async route => {
+    if (route.isJoined) {
+      await handleRouteLeaveRequest(route)
+    } else {
+      await fetch(`${baseURL}/api/routes/${route.id}/join`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      updateLocalJoinStatus(route.id, true)
+    }
+  }
+
   const updateLocalJoinStatus = (routeId, joined) => {
     setEvent(prev => ({
       ...prev,
-      routes: prev.routes.map(routeItem =>
-        routeItem.id === routeId
-          ? { ...routeItem, isJoined: joined }
-          : routeItem
-      ),
+      routes: prev.routes.map(routeItem => {
+        if (routeItem.id === routeId) {
+          const currentCount = parseInt(routeItem.people_going, 10) || 0
+          return {
+            ...routeItem,
+            isJoined: joined,
+            people_going: joined
+              ? currentCount + 1
+              : Math.max(0, currentCount - 1),
+          }
+        }
+        return routeItem
+      }),
     }))
   }
+
+  const liveSelectedRoute =
+    event?.routes?.find(r => r.id === selectedRoute?.id) || selectedRoute
 
   const handleConfirmRouteRemoval = async () => {
     try {
@@ -514,7 +529,8 @@ export default function EventDetail() {
         </Drawer.Portal>
       </Drawer.Root>
       <RouteDetail
-        selectedRoute={selectedRoute}
+        selectedRoute={liveSelectedRoute}
+        onToggleJoin={handleToggleJoin}
         onClose={() => {
           setSelectedRoute(null)
           setHomeSelectedRoute(null)
