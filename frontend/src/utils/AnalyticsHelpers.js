@@ -21,7 +21,7 @@ export function getMostUsedMode(modes = {}) {
   const labels = {
     walk: 'Walk',
     bicycle: 'Bicycle',
-    bus: 'Bus',
+    transit: 'Transit',
     rail: 'Rail',
     car: 'Car',
     other: 'Other',

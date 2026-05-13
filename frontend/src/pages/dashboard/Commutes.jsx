@@ -68,7 +68,7 @@ function Commutes() {
       return 'bicycle'
     }
     if (['bus', 'transit', 'intercity_bus', 'trolleybus'].includes(value)) {
-      return 'bus'
+      return 'transit'
     }
     if (
       [
@@ -202,7 +202,7 @@ function Commutes() {
         return commuteStrings.route.modes.walk
       case 'bicycle':
         return commuteStrings.route.modes.bicycle
-      case 'bus':
+      case 'transit':
         return commuteStrings.route.modes.bus
       case 'rail':
         return commuteStrings.route.modes.rail
@@ -263,7 +263,7 @@ function Commutes() {
                   'all',
                   'walk',
                   'bicycle',
-                  'bus',
+                  'transit',
                   'rail',
                   'car',
                   'other',
@@ -276,7 +276,7 @@ function Commutes() {
                         ? commuteStrings.route.modes.walk
                         : modeOption === 'bicycle'
                           ? commuteStrings.route.modes.bicycle
-                          : modeOption === 'bus'
+                          : modeOption === 'transit'
                             ? commuteStrings.route.modes.bus
                             : modeOption === 'rail'
                               ? commuteStrings.route.modes.rail
