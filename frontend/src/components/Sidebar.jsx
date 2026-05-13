@@ -22,6 +22,7 @@ import {
   PersonOutlineOutlined,
   AdminPanelSettingsOutlined,
   PersonOffOutlined,
+  ForumOutlined,
   NotificationsNoneOutlined,
 } from '@mui/icons-material'
 import { authLevel } from '../hooks/Authorization'
@@ -64,6 +65,12 @@ const mainNavigation = [
     icon: <PersonOffOutlined />,
     label: sidebarStrings.bannedUsers,
     path: '/bannedusers',
+  },
+  {
+    id: 'Chats',
+    icon: <ForumOutlined />,
+    label: sidebarStrings.chats,
+    path: '/chat',
   },
   {
     id: 'Notifications',
@@ -191,7 +198,7 @@ export default function Sidebar({ userData }) {
                     setOpen(false)
                   }}
                   sx={{
-                    minHeight: 48,
+                    height: 52,
                     px: 2.5,
                     justifyContent: open ? 'initial' : 'center',
                   }}
