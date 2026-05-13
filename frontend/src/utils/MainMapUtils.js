@@ -5,15 +5,23 @@ import { useEffect } from 'react'
 /**
  * Converts a PostGIS hex string to a lat/lng object.
  *
- * @param {String} hexString - The geometry string from PostGIS.
+ * @param {String} point - The geometry string from PostGIS.
  * @returns {Object} The lat/lng coordinate object for google maps.
  */
-export const postGISToLatLng = hexString => {
-  const buf = new Uint8Array(hexString.match(/../g).map(b => parseInt(b, 16)))
-  const view = new DataView(buf.buffer)
-  const lng = view.getFloat64(9, true)
-  const lat = view.getFloat64(17, true)
-  return { lat, lng }
+export const postGISToLatLng = point => {
+  if (!point || typeof point !== 'string') return null
+
+  try {
+    const buf = new Uint8Array(point.match(/../g).map(b => parseInt(b, 16)))
+    const view = new DataView(buf.buffer)
+    const lng = view.getFloat64(9, true)
+    const lat = view.getFloat64(17, true)
+
+    return { lat, lng }
+  } catch (error) {
+    console.error('Error parsing PostGIS hex string:', error)
+    return null
+  }
 }
 
 /**
