@@ -106,23 +106,29 @@ export async function getNotificationDetails(notification, navigate) {
 
   switch (notification.notificationType) {
     case NotificationType.Route.type: {
-      details.onClick = async () => {
-        navigate(`/mytrip/${notification.routeID}`)
-      }
+      details.onClick = notification.metadata.isDeleted
+        ? async () => {
+            navigate(`/mytrip/${notification.routeID}`)
+          }
+        : async () => {}
       break
     }
 
     case NotificationType.Event.type: {
-      details.onClick = async () => {
-        navigate(`/event/${notification.eventID}`)
-      }
+      details.onClick = notification.metadata.isDeleted
+        ? async () => {
+            navigate(`/event/${notification.eventID}`)
+          }
+        : async () => {}
       break
     }
 
     case NotificationType.Badge.type: {
-      details.onClick = async () => {
-        navigate(`/dashboard/badges/${notification.badgeID}`)
-      }
+      details.onClick = notification.metadata.isDeleted
+        ? async () => {
+            navigate(`/dashboard/badges/${notification.badgeID}`)
+          }
+        : async () => {}
       break
     }
 
