@@ -1,5 +1,5 @@
 const { selectUser } = require('../UserUtils')
-const { getUserNotifications } = require('../NotificationQueries')
+const { getUserNotifications } = require('../../services/NotificationServices')
 const { handleNotifications } = require('../NotificationUtils')
 const { serverStrings } = require('../../../locales/en/serverLocales')
 
@@ -7,7 +7,7 @@ jest.mock('../UserUtils', () => ({
   selectUser: jest.fn(),
 }))
 
-jest.mock('../NotificationQueries', () => ({
+jest.mock('../../services/NotificationServices', () => ({
   getUserNotifications: jest.fn(),
 }))
 

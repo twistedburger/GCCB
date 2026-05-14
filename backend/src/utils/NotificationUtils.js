@@ -1,5 +1,5 @@
 const { serverStrings } = require('../../locales/en/serverLocales')
-const { getUserNotifications } = require('./NotificationQueries')
+const { getUserNotifications } = require('../services/NotificationServices')
 const { selectUser } = require('./UserUtils')
 
 /**

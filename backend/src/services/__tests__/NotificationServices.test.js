@@ -5,7 +5,7 @@ const {
   viewUserNotification,
   viewAllUserNotifications,
   getUserNotifications,
-} = require('../NotificationQueries')
+} = require('../NotificationServices')
 
 jest.mock('../../../db', () => ({
   query: jest.fn(),

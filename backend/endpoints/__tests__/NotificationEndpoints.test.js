@@ -1,15 +1,16 @@
 const request = require('supertest')
-const { serverStrings } = require('../../../locales/en/serverLocales')
-const { app } = require('../../../server')
-const { selectUser } = require('../UserUtils')
+const { serverStrings } = require('../../locales/en/serverLocales')
+const { app } = require('../../server')
+const { selectUser } = require('../../src/utils/UserUtils')
 const {
   insertNotification,
   viewUserNotification,
   viewAllUserNotifications,
   getUserNotifications,
-} = require('../NotificationQueries')
+} = require('../../src/services/NotificationServices')
+
+const { NotificationType } = require('../../../shared/NotificationTypes')
 const { notificationEmitter } = require('../NotificationEndpoints')
-const { NotificationType } = require('../../../../shared/NotificationTypes')
 
 global.fetch = jest.fn()
 
@@ -26,11 +27,11 @@ jest.mock('express-openid-connect', () => ({
   }),
 }))
 
-jest.mock('../UserUtils', () => ({
+jest.mock('../../src/utils/UserUtils', () => ({
   selectUser: jest.fn(),
 }))
 
-jest.mock('../NotificationQueries', () => ({
+jest.mock('../../src/services/NotificationServices', () => ({
   insertNotification: jest.fn(),
   viewUserNotification: jest.fn(),
   viewAllUserNotifications: jest.fn(),

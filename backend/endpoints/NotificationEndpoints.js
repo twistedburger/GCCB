@@ -1,15 +1,15 @@
 const express = require('express')
 const notificationRouter = express.Router()
-const { serverStrings } = require('../../locales/en/serverLocales')
 const {
   insertNotification,
   viewUserNotification,
   viewAllUserNotifications,
   getUserNotifications,
-} = require('./NotificationQueries')
+} = require('../src/services/NotificationServices')
 const { EventEmitter } = require('events')
-const { selectUser } = require('./UserUtils')
-const { handleNotifications } = require('./NotificationUtils')
+const { selectUser } = require('../src/utils/UserUtils')
+const { handleNotifications } = require('../src/utils/NotificationUtils')
+const { serverStrings } = require('../locales/en/serverLocales')
 
 const notificationEmitter = new EventEmitter()
 

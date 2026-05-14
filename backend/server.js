@@ -27,8 +27,8 @@ const { BadgeQueries } = require('./src/utils/BadgeQueries')
 const { BadgeEvaluator } = require('./src/utils/BadgeEvaluator')
 const { initSocket, broadcast } = require('./sockets/ChatSocket')
 const chatService = require('./src/services/ChatServices')
-const { notificationRouter } = require('./src/utils/NotificationEndpoints')
 const { selectUser } = require('./src/utils/UserUtils')
+const { notificationRouter } = require('./endpoints/NotificationEndpoints')
 
 const config = {
   authRequired: false,
