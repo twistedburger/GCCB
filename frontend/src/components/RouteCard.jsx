@@ -7,6 +7,7 @@ import {
   GroupsOutlined,
   Logout,
   DateRangeRounded,
+  ChatOutlined,
 } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import { routeCardStrings as routeStrings } from '../locales/en/ComponentStrings/RouteCardStrings.js'
@@ -20,6 +21,7 @@ import { routeCardStrings as routeStrings } from '../locales/en/ComponentStrings
  * @param {boolean} [hideReportJoin=false] - Flag to hide the report and join buttons.
  * @param {boolean} [isDraft=false] - Flag indicating if the route is a draft from a form.
  * @param {boolean} [individualView] - Flag indicating if the card is displayed in individual view mode.
+ * @param {Function} [onOpenChat] - Callback to open the chat room for this route.
  * @returns {JSX.Element}
  */
 
@@ -34,6 +36,7 @@ export default function RouteCard({
   isDisabled = false,
   onToggleJoin,
   onReport,
+  onOpenChat,
 }) {
   const routeCardStrings = routeStrings.routeCard
   const dateObj = new Date(route.depart_time)
@@ -136,9 +139,11 @@ export default function RouteCard({
           </span>
           <div className="flex flex-col ml-4 text-left">
             {individualView && (
-              <span className="text-text-primary font-medium mb-1">
-                {route.title || route.route_name || route.name}
-              </span>
+              <div className="flex flex-row items-center gap-1.5 mb-1">
+                <span className="text-text-primary font-medium">
+                  {route.title || route.route_name || route.name}
+                </span>
+              </div>
             )}
             <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
               <PlaceOutlined className="mr-1 -ml-1" fontSize="small" />
@@ -193,6 +198,21 @@ export default function RouteCard({
 
         {!hideReportJoin && (
           <div className="flex flex-col gap-1">
+            <div className="flex justify-center m-2">
+              {onOpenChat && (
+                <GenericButton
+                  unstyled
+                  onClick={e => {
+                    e.stopPropagation()
+                    onOpenChat()
+                  }}
+                  customStyling="flex border border-1 items-center justify-center w-10 h-10 rounded-full text-blue-primary bg-blue-secondary hover:opacity-80 transition-opacity"
+                  aria-label="Open chat for this route"
+                >
+                  <ChatOutlined style={{ fontSize: 25 }} />
+                </GenericButton>
+              )}
+            </div>
             {((!isDraft && onToggleJoin) || !individualView) && (
               <GenericButton
                 unstyled
@@ -252,4 +272,5 @@ RouteCard.propTypes = {
   onReport: PropTypes.func,
   isDisabled: PropTypes.bool,
   routeDetailView: PropTypes.bool,
+  onOpenChat: PropTypes.func,
 }
