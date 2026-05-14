@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import { useMap } from '@vis.gl/react-google-maps'
 import { useEffect } from 'react'
+import { mainMapStrings } from '../locales/en/ComponentStrings/MainMapStrings'
 
 /**
  * Converts a PostGIS hex string to a lat/lng object.
@@ -19,7 +20,7 @@ export const postGISToLatLng = point => {
 
     return { lat, lng }
   } catch (error) {
-    console.error('Error parsing PostGIS hex string:', error)
+    console.error(mainMapStrings.error.parsePostGIS, error)
     return null
   }
 }
