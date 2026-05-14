@@ -27,6 +27,7 @@ const serverStrings = {
     notMember: 'Not a member of this chatroom',
     cloudinaryFailed: 'Cloudinary banner upload failed:',
   },
+  badgeEarned: 'You have recieved a new badge!',
 }
 
 module.exports = { serverStrings }

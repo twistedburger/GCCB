@@ -1,6 +1,11 @@
 const { serverStrings } = require('../../locales/en/serverLocales')
-const { getUserNotifications } = require('../services/NotificationServices')
+const {
+  getUserNotifications,
+  insertNotification,
+} = require('../services/NotificationServices')
 const { selectUser } = require('./UserUtils')
+const { EventEmitter } = require('events')
+const notificationEmitter = new EventEmitter()
 
 /**
  * creates a handler which handles the notifications when the notification event is recieved
@@ -24,5 +29,46 @@ const handleNotifications = (req, res) => async notifications => {
     )
   }
 }
+/**
+ * Sends a notification.
+ *
+ * @param {NotificationType} notificationType - The type of the notification
+ * @param {number} itemID - The Database ID of the item the notification is about
+ * @param {string} itemTitle - The title of the item the notification is about (EG. "Hackathon", "Bus to BCIT")
+ * @param {number} userID - The user ID
+ * @param {string} message - The message relevant to the notification (EG. "Route deleted")
+ * @param {bool} isDeleted - boolean if the item has been deleted. Default false
+ * @param {bool} sendToUser - boolean if the notification should be sent to the user
+ * @returns {bool} success
+ */
+const sendNotification = async (
+  notificationType,
+  itemID,
+  itemTitle,
+  userID,
+  message,
+  isDeleted = false,
+  sendToUser = false
+) => {
+  const notification = {
+    type: notificationType,
+    id: itemID,
+    userID: userID,
+    metadata: { message: message, title: itemTitle, isDeleted: isDeleted },
+  }
+  try {
+    const notifications = await insertNotification(notification, sendToUser)
+    notificationEmitter.emit('notification', notifications)
+    return true
+  } catch (error) {
+    const message = error.message.includes(
+      serverStrings.errors.notificationError
+    )
+      ? serverStrings.errors.notificationSendError
+      : serverStrings.errors.generic
+    console.log(error + ' - ' + message)
+    return false
+  }
+}
 
-module.exports = { handleNotifications }
+module.exports = { handleNotifications, sendNotification, notificationEmitter }

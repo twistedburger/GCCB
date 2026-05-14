@@ -27,13 +27,14 @@ const NotificationType = Object.freeze({
 /**
  * Add a notification to the notification table, and collects all approrpriate user id's and updates the user_notification table.
  *
- * @param {Object} notification object to insert into database. Ensure the type is of
+ * @param {Object} notification object to insert into database.
  * @param {bool} sendToCurrentUser default false, indicating if current user should recieve notification (i.e. badge)
  * @throws {Error} if notification type is not a NotificationType object
  * @returns {Array<Object>} the users who recieved the notificaion, with the notification id
  */
 async function insertNotification(notification, sendToCurrentUser = false) {
   const notificationType = notification.type
+
   if (!notificationType?.idType)
     throw new Error(
       `${serverStrings.errors.notificationError} ${typeof notification.type}`
