@@ -26,10 +26,8 @@ import { UnreadMessagesProvider } from '../context/UnreadMessagesContext'
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [ssoProfile, setSsoProfile] = useState(null)
-
   const baseURL = import.meta.env.VITE_API_BASE_URL
   const frontendUrl = import.meta.env.VITE_FRONTEND_URL
-
   const [bannedError] = useState(
     new URLSearchParams(window.location.search).get('error') === 'banned'
   )
@@ -69,19 +67,16 @@ function App() {
     <Router>
       <AuthProvider>
         <div className="app-container min-h-screen">
-          {/* pages */}
           <div className="relative w-full min-h-screen flex bg-background-off-white">
-            {userAuthenticated && user && (
+            {userAuthenticated ? (
               <UnreadMessagesProvider>
-                <Sidebar userData={user} />
+                {user && <Sidebar userData={user} />}
                 <main className="flex-1 overflow-y-auto">
                   <Routes>
                     <Route
                       path="/"
                       element={
-                        !userAuthenticated ? (
-                          <Login error={bannedError} />
-                        ) : !user ? (
+                        !user ? (
                           <CreateUser
                             ssoUser={ssoProfile}
                             onUserCreated={newUser => {
@@ -156,6 +151,12 @@ function App() {
                   </Routes>
                 </main>
               </UnreadMessagesProvider>
+            ) : (
+              <main className="flex-1 overflow-y-auto">
+                <Routes>
+                  <Route path="*" element={<Login error={bannedError} />} />
+                </Routes>
+              </main>
             )}
           </div>
         </div>
