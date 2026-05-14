@@ -7,6 +7,8 @@ import RouteCard from '../components/RouteCard'
 import Alert from '../components/Alert'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 import { useUser } from '../../context/UserContext'
+import { useChatRoom } from '../hooks/UseChatRoom'
+import { useNavigate } from 'react-router-dom'
 import { myTripsStrings } from '../locales/en/MyTripsStrings'
 import {
   fetchMyTrips,
@@ -39,6 +41,8 @@ export default function MyTrips() {
     useState(false)
   const [routeIdToRemove, setRouteIdToRemove] = useState(null)
   const { user } = useUser()
+  const chat = useChatRoom(user)
+  const navigate = useNavigate()
   const { id } = useParams()
   const cardRefs = useRef({})
 
@@ -72,6 +76,12 @@ export default function MyTrips() {
   }, [])
 
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
+
+  const handleOpenChat = trip => {
+    const room = chat.rooms.find(r => r.route_id === trip.id)
+    if (!room) return
+    navigate('/chats', { state: { openRoomId: room.id } })
+  }
 
   const handleRouteLeaveRequest = route => {
     const isRouteCreator = user?.id === route.creator_id
@@ -193,6 +203,7 @@ export default function MyTrips() {
                       setShowReport(true)
                     }}
                     hideReportJoin={shouldHideReportJoin(trip.depart_time)}
+                    onOpenChat={() => handleOpenChat(trip)}
                   />
                 </div>
               </RouteCardWrapper>

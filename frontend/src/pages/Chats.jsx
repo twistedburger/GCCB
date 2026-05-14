@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useUser } from '../../context/UserContext'
 import { useChatRoom } from '../hooks/UseChatRoom'
 import GenericCard from '../components/GenericCard'
@@ -15,6 +17,19 @@ export default function Chats() {
   const { user } = useUser()
   const chat = useChatRoom(user)
   const { unreadRoomIds, clearRoomUnread } = useUnreadMessages()
+  const location = useLocation()
+
+  useEffect(() => {
+    const openRoomId = location.state?.openRoomId
+    if (!openRoomId || !chat.rooms.length) return
+
+    const room = chat.rooms.find(r => r.id === openRoomId)
+    if (!room) return
+
+    chat.openRoom(room)
+    clearRoomUnread(room.id)
+    window.history.replaceState({}, '')
+  }, [chat.rooms, location.state?.openRoomId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div
@@ -33,6 +48,7 @@ export default function Chats() {
           {chatsStrings.sidebarTitle}
         </div>
 
+        {/* chat rooms list */}
         <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
           {chat.rooms.map(room => (
             <GenericCard
