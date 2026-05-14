@@ -74,7 +74,6 @@ function App() {
             {userAuthenticated && user && (
               <UnreadMessagesProvider>
                 <Sidebar userData={user} />
-
                 <main className="flex-1 overflow-y-auto">
                   <Routes>
                     <Route
