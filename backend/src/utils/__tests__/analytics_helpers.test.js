@@ -1,6 +1,6 @@
-const { createAnalyticsHelpers } = require('../src/utils/analytics_helpers')
-const { Co2Calculator } = require('../src/utils/co2_calculator')
-const { EMISSIONS_G_PER_KM } = require('../src/constants/emissions')
+const { createAnalyticsHelpers } = require('../analytics_helpers')
+const { Co2Calculator } = require('../co2_calculator')
+const { EMISSIONS_G_PER_KM } = require('../../constants/emissions')
 
 const mockDb = { query: jest.fn() }
 
