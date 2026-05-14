@@ -7,6 +7,7 @@ import Co2Savings from './pages/dashboard/Co2Savings'
 import Commutes from './pages/dashboard/Commutes'
 import TripFrequency from './pages/dashboard/TripFrequency'
 import Activity from './pages/dashboard/Activity'
+import Badges from './pages/dashboard/Badges'
 import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import UserGuide from './pages/UserGuide'
@@ -105,6 +106,7 @@ function App() {
                       }
                     >
                       <Route path="/mytrip" element={<MyTrip />} />
+                      <Route path="/mytrip/:id" element={<MyTrip />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route
                         path="/dashboard/co2-savings"
@@ -117,6 +119,11 @@ function App() {
                       <Route
                         path="/dashboard/trip-frequency"
                         element={<TripFrequency />}
+                      />
+                      <Route path="/dashboard/badges" element={<Badges />} />
+                      <Route
+                        path="/dashboard/badges/:id"
+                        element={<Badges />}
                       />
                       <Route path="/user-guide" element={<UserGuide />} />
                       <Route path="/bannedusers" element={<BannedUsers />} />

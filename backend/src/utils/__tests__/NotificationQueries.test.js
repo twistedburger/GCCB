@@ -102,7 +102,7 @@ describe('Test insertNotification database query', () => {
     const insertNotificationQuery =
       'INSERT INTO "notification" (notification_type, route_id, metadata) VALUES ($1, $2, $3) RETURNING *'
     const fetchUsersQuery =
-      'SELECT user_id FROM "user_route" WHERE route_id = $1'
+      'SELECT DISTINCT user_id FROM "user_route" WHERE route_id = $1'
     const insertUserNotificationQuery =
       'INSERT INTO "user_notification" (user_id, notification_id) VALUES ($2, $1), ($3, $1), ($4, $1) RETURNING *'
     expect(db.query).toHaveBeenCalledTimes(3)
@@ -148,7 +148,7 @@ describe('Test insertNotification database query', () => {
     const insertNotificationQuery =
       'INSERT INTO "notification" (notification_type, badge_id, metadata) VALUES ($1, $2, $3) RETURNING *'
     const fetchUsersQuery =
-      'SELECT user_id FROM "user_badge" WHERE badge_id = $1'
+      'SELECT DISTINCT user_id FROM "user_badge" WHERE badge_id = $1'
     const insertUserNotificationQuery =
       'INSERT INTO "user_notification" (user_id, notification_id) VALUES ($2, $1), ($3, $1), ($4, $1) RETURNING *'
     expect(db.query).toHaveBeenCalledTimes(3)
@@ -194,7 +194,7 @@ describe('Test insertNotification database query', () => {
     const insertNotificationQuery =
       'INSERT INTO "notification" (notification_type, message_id, metadata) VALUES ($1, $2, $3) RETURNING *'
     const fetchUsersQuery =
-      'SELECT user_id FROM "user_message" WHERE message_id = $1'
+      'SELECT DISTINCT user_id FROM "user_message" WHERE message_id = $1'
     const insertUserNotificationQuery =
       'INSERT INTO "user_notification" (user_id, notification_id) VALUES ($2, $1), ($3, $1), ($4, $1) RETURNING *'
     expect(db.query).toHaveBeenCalledTimes(3)
@@ -273,7 +273,7 @@ describe('Test insertNotification database query', () => {
     const insertNotificationQuery =
       'INSERT INTO "notification" (notification_type, message_id, metadata) VALUES ($1, $2, $3) RETURNING *'
     const fetchUsersQuery =
-      'SELECT user_id FROM "user_message" WHERE message_id = $1'
+      'SELECT DISTINCT user_id FROM "user_message" WHERE message_id = $1'
     const insertUserNotificationQuery =
       'INSERT INTO "user_notification" (user_id, notification_id) VALUES ($2, $1), ($3, $1) RETURNING *'
     expect(db.query).toHaveBeenCalledTimes(3)

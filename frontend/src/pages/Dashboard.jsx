@@ -4,6 +4,7 @@ import ProfileForm from '../components/ProfileForm'
 import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Star } from '@mui/icons-material'
 import {
   formatKg,
   formatKm,
@@ -100,6 +101,7 @@ function Dashboard() {
   const [summary, setSummary] = useState(null)
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [summaryError, setSummaryError] = useState('')
+  const [recentBadges, setRecentBadges] = useState([])
 
   const { user, loadingUser, userError, setUser } = useUser()
   const navigate = useNavigate()
@@ -131,7 +133,32 @@ function Dashboard() {
       }
     }
 
+    /**
+     * Fetches the badges earned by the user with the three most recently earned badges.
+     * Filters badges to include only earned ones, sorts them by the date earned in descending order
+     */
+    async function fetchRecentBadges() {
+      try {
+        const res = await fetch(`${baseURL}/api/badges`, {
+          credentials: 'include',
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        const earned = (data.badges ?? [])
+          .filter(badge => badge.earned)
+          .sort(
+            (badgeA, badgeB) =>
+              new Date(badgeB.dateEarned) - new Date(badgeA.dateEarned)
+          )
+          .slice(0, 3)
+        setRecentBadges(earned)
+      } catch (err) {
+        console.error('Failed to load recent badges', err)
+      }
+    }
+
     fetchSummary()
+    fetchRecentBadges()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async formData => {
@@ -222,8 +249,8 @@ function Dashboard() {
         },
         {
           title: dashboardStrings.metrics.user.badges.title,
-          value: '0',
-          subtitle: 'Coming soonTM',
+          value: String(recentBadges.length),
+          onClick: () => navigate('/dashboard/badges'),
         },
       ]
 
@@ -268,6 +295,25 @@ function Dashboard() {
               </div>
             ) : (
               <ProfileHeader user={user} onEdit={() => setIsEditing(true)} />
+            )}
+
+            {recentBadges.length > 0 && (
+              <div className="flex items-center justify-between rounded-xl bg-white border border-zinc-100 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  {recentBadges.map(badge => (
+                    <div
+                      key={badge.id}
+                      title={badge.title}
+                      className="w-8 h-8 rounded-full bg-blue-secondary flex items-center justify-center"
+                    >
+                      <Star
+                        sx={{ fontSize: 18 }}
+                        className="text-blue-primary"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
             {summaryError ? (
