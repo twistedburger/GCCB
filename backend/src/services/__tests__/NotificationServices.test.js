@@ -293,6 +293,55 @@ describe('Test insertNotification database query', () => {
       { notification_id: 1, user_id: 3 },
     ])
   })
+
+  test('Insert to user_notification called with user who sent notification, if specified', async () => {
+    db.query
+      .mockResolvedValueOnce({ rows: [{ notification_id: 1 }] })
+      .mockResolvedValueOnce({
+        rows: [{ user_id: 1 }, { user_id: 2 }, { user_id: 3 }],
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          { notification_id: 1, user_id: 1 },
+          { notification_id: 1, user_id: 2 },
+          { notification_id: 1, user_id: 3 },
+        ],
+      })
+
+    const result = await insertNotification(
+      {
+        type: NotificationType.Message,
+        id: 10,
+        metadata: { message: 'test' },
+        userID: 1,
+      },
+      true
+    )
+
+    const insertNotificationQuery =
+      'INSERT INTO "notification" (notification_type, message_id, metadata) VALUES ($1, $2, $3) RETURNING *'
+    const fetchUsersQuery =
+      'SELECT DISTINCT user_id FROM "user_message" WHERE message_id = $1'
+    const insertUserNotificationQuery =
+      'INSERT INTO "user_notification" (user_id, notification_id) VALUES ($2, $1), ($3, $1), ($4, $1) RETURNING *'
+    expect(db.query).toHaveBeenCalledTimes(3)
+    expect(db.query).toHaveBeenNthCalledWith(1, insertNotificationQuery, [
+      NotificationType.Message.type,
+      10,
+      { message: 'test' },
+    ])
+    expect(db.query).toHaveBeenNthCalledWith(2, fetchUsersQuery, [10])
+    expect(db.query).toHaveBeenNthCalledWith(
+      3,
+      insertUserNotificationQuery,
+      [1, 1, 2, 3]
+    )
+    expect(result).toEqual([
+      { notification_id: 1, user_id: 1 },
+      { notification_id: 1, user_id: 2 },
+      { notification_id: 1, user_id: 3 },
+    ])
+  })
 })
 
 describe('Test viewUserNotification database query', () => {
