@@ -17,6 +17,8 @@ import GenericCard from './GenericCard.jsx'
  * @param {string} secondaryButtonStyling - Custom styling for the secondary button.
  * @param {Function} setAlert - The function to set the alert message.
  * @param {boolean} showDescription - Whether to show the user's description or not in their profile information.
+ * @param {boolean} isClickable - If the user card should be clickable or not.
+ * @param {string} profileInfoSize - The size of the profile information, sm or md.
  */
 function UserCard({
   user,
@@ -29,6 +31,8 @@ function UserCard({
   className,
   setAlert,
   showDescription = true,
+  isClickable = true,
+  profileInfoSize = 'sm',
 }) {
   const [openModal, setOpenModal] = useState(false)
 
@@ -40,16 +44,21 @@ function UserCard({
         onClose={() => setOpenModal(false)}
         setAlert={setAlert}
       />
-      <GenericCard onClick={() => setOpenModal(true)} customStyling={className}>
+      <GenericCard
+        onClick={isClickable ? () => setOpenModal(true) : undefined}
+        customStyling={`${className} ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+      >
         <div className="flex p-4 pt-4 gap-4">
-          <div className="shrink-0 flex items-start justify-center">
-            <ProfileInfo
-              user={user}
-              size={'sm'}
-              showDesc={showDescription}
-            ></ProfileInfo>
+          <div className="flex flex-wrap items-start w-full gap-4">
+            <div className="min-w-0 flex-1">
+              <ProfileInfo
+                user={user}
+                size={profileInfoSize}
+                showDesc={showDescription}
+              />
+            </div>
             {(primaryActionLabel || secondaryActionLabel) && (
-              <div className="flex flex-col gap-2 ml-4 shrink-0">
+              <div className="flex flex-col gap-2 ml-auto max-[500px]:w-full">
                 {primaryActionLabel && (
                   <GenericButton
                     onClick={onPrimaryAction}
@@ -100,6 +109,8 @@ UserCard.propTypes = {
 
   setAlert: PropTypes.func,
   showDescription: PropTypes.bool,
+  isClickable: PropTypes.bool,
+  profileInfoSize: PropTypes.string,
 }
 
 export default UserCard
