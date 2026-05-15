@@ -20,11 +20,9 @@ const db = require('./db')
 const pool = db.pool
 const port = 3000
 
-const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
-const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
-const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
-const { BadgeQueries } = require('./src/utils/BadgeQueries')
-const { BadgeEvaluator } = require('./src/utils/BadgeEvaluator')
+const { analyticsServices } = require('./src/services/AnalyticsServices')
+const { BadgeServices } = require('./src/services/BadgeServices')
+const { BadgeEvaluator } = require('./src/services/BadgeEvaluator')
 const { initSocket, broadcast } = require('./sockets/ChatSocket')
 const chatService = require('./src/services/ChatServices')
 const { notificationRouter } = require('./src/utils/NotificationEndpoints')
@@ -78,15 +76,11 @@ app.use(
 
 app.use(express.json())
 app.use('/api/chat', require('./endpoints/ChatEndpoints'))
+app.use('/api', require('./endpoints/AnalyticsEndpoints'))
+app.use('/api', require('./endpoints/ActivityEndpoints'))
 
-const analytics = createAnalyticsHelpers({
-  db,
-  co2Calculator: defaultCo2Calculator,
-  emissions: { EMISSIONS_G_PER_KM },
-})
-
-const badgeQueries = new BadgeQueries({ db })
-const badgeEvaluator = new BadgeEvaluator({ badgeQueries })
+const badgeServices = new BadgeServices({ db })
+const badgeEvaluator = new BadgeEvaluator({ badgeQueries: badgeServices })
 setInterval(async () => {
   await db.query(`
     UPDATE route
@@ -669,7 +663,10 @@ app.post('/api/createEvent', async (req, res) => {
     // Evaluate Social badges if a route was created with this event
     if (route) {
       try {
-        const summary = await analytics.buildAnalyticsSummary(user.id, false)
+        const summary = await analyticsServices.buildAnalyticsSummary(
+          user.id,
+          false
+        )
         await badgeEvaluator.evaluateBadges(user.id, summary)
       } catch (err) {
         console.error('Badge evaluation failed (createEvent):', err)
@@ -730,7 +727,10 @@ app.post('/api/createRoute', async (req, res) => {
 
     // Await badge evaluation so Social badges reflect the new route immediately
     try {
-      const summary = await analytics.buildAnalyticsSummary(user.id, false)
+      const summary = await analyticsServices.buildAnalyticsSummary(
+        user.id,
+        false
+      )
       await badgeEvaluator.evaluateBadges(user.id, summary)
     } catch (err) {
       console.error('Badge evaluation failed (createRoute):', err)
@@ -1147,235 +1147,6 @@ app.post('/api/report', async (req, res) => {
 })
 
 /**
- * Retrieves the commute history for the authenticated user.
- * - Regular users get only their participated completed routes.
- * - Admins, superadmins, moderators do not have access to detailed user commute history.
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- * If user authentication is not "user", a 403 status code is sent with an error json {error: string}.
- *
- * @returns {Object} JSON response containing commute history
- */
-app.get('/api/commute-history', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    if (user.role !== 'user') {
-      return res.status(403).json({
-        error: serverStrings.errors.analyticsUserOnly,
-      })
-    }
-
-    const routes = await analytics.fetchCompletedRoutes(user.id, false, {
-      orderByDepartTime: true,
-    })
-
-    const commuteHistory = []
-
-    for (const route of routes) {
-      const savings = await analytics.computeRouteSavings(route)
-      const contributions = await analytics.toAnalyticsContributions(
-        route,
-        false
-      )
-
-      // Total distance now from segments
-      const totalDistanceKm = contributions.reduce(
-        (sum, contribution) => sum + contribution.distanceKm,
-        0
-      )
-
-      // Dominant mode
-      const totalsByMode = {}
-      for (const contribution of contributions) {
-        totalsByMode[contribution.mode] =
-          (totalsByMode[contribution.mode] || 0) + contribution.distanceKm
-      }
-
-      let dominantMode = 'other'
-      let maxDistance = -1
-
-      for (const [mode, dist] of Object.entries(totalsByMode)) {
-        if (dist > maxDistance) {
-          dominantMode = mode
-          maxDistance = dist
-        }
-      }
-
-      commuteHistory.push({
-        id: route.id,
-        title: route.title,
-        creatorId: route.creatorId,
-        transportationMode: dominantMode,
-        distance: analytics.roundToTwoDecimals(totalDistanceKm),
-
-        origin: route.origin,
-        destination: route.destination,
-        departTime: route.departTime,
-        completed: route.completed,
-        maxPpl: route.maxPpl,
-        description: route.description,
-        path: route.path,
-
-        savedKgUser: savings.savedKgUser,
-        savedKgSystem: savings.savedKgSystem,
-        context: savings.context,
-      })
-    }
-
-    return res.status(200).json({
-      scope: 'user',
-      userId: user.id,
-      count: commuteHistory.length,
-      routes: commuteHistory,
-    })
-  } catch (error) {
-    console.error('Error in /api/commute-history:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-/**
- * Returns a summary of trips, distances, CO2 savings, and trip counts,
- * filtered based on user role (admin or user).
- * - One completed route still counts as one trip
- * - Distance and CO2 savings are distributed across multiple modes
- *   when detailed route path data exists
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- *
- * @returns {Object} JSON response with analytics summary
- */
-app.get('/api/analytics/summary', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    const isAdmin = user.role === 'admin'
-    const summary = await analytics.buildAnalyticsSummary(user.id, isAdmin)
-
-    return res.status(200).json(summary)
-  } catch (error) {
-    console.error('Error in /api/analytics/summary:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-/**
- * Returns analytics grouped by transportation mode (chart-friendly array).
- * - Admins receive system-wide data across all completed routes.
- * - Users receive data only for their completed routes they participated in.
- * - A single completed route contributes distance/CO2 to multiple modes
- * - Trip count remains route-based and is assigned to the most dominant mode
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- *
- * @returns {Object} JSON response with analytics data grouped by commute type
- */
-app.get('/api/analytics/by-mode', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    const isAdmin = user.role === 'admin'
-    const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin)
-
-    const aggregates = {
-      walk: {
-        mode: 'walk',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      bicycle: {
-        mode: 'bicycle',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      transit: {
-        mode: 'transit',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      rail: {
-        mode: 'rail',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      car: {
-        mode: 'car',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      other: {
-        mode: 'other',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-    }
-
-    for (const route of routes) {
-      const contributions = await analytics.toAnalyticsContributions(
-        route,
-        isAdmin
-      )
-
-      for (const item of contributions) {
-        const modeStats = aggregates[item.mode] || aggregates.other
-        modeStats.tripCount += item.tripCount
-        modeStats.totalDistanceKm += item.distanceKm
-        modeStats.totalCo2SavedKg += item.savedKg
-      }
-    }
-
-    const data = ['walk', 'bicycle', 'transit', 'rail', 'car', 'other'].map(
-      key => {
-        const item = aggregates[key]
-        return {
-          mode: item.mode,
-          tripCount: item.tripCount,
-          totalDistanceKm: analytics.roundToTwoDecimals(item.totalDistanceKm),
-          totalCo2SavedKg: analytics.roundToTwoDecimals(item.totalCo2SavedKg),
-        }
-      }
-    )
-
-    return res.status(200).json({
-      scope: isAdmin ? 'system' : 'user',
-      userId: user.id,
-      data,
-    })
-  } catch (error) {
-    console.error('Error in /api/analytics/by-mode:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-/**
  * Returns reports to be reviewed by the moderator.
  *
  * If the database has an error, a 500 status code is sent with an error message.
@@ -1587,238 +1358,6 @@ app.get('/api/pendingVerifications', async (req, res) => {
 })
 
 /**
- * Returns platform activity summary for the admin dashboard.
- * Admin-only. Returns KPIs and route status/rejection breakdowns.
- * Arbitrary rolling time frames used:
- * - # of routes created within 7 days
- * - # of routes completed within 30 days
- * - # of routes rejected within 30 days
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- * If user authentication is not "admin", a 403 status code is sent with an error message.
- *
- * @returns {Object} kpis, statusBreakdown, rejectionReasons
- */
-app.get('/api/activity/summary', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  const client = await pool.connect()
-
-  try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    if (user.role !== 'admin') {
-      return res.status(403).send(serverStrings.errors.accessDenied)
-    }
-
-    const [
-      creatorsRes,
-      completionRes,
-      rejectedRes,
-      statusRes,
-      rejectionRes,
-      groupSizeRes,
-    ] = await Promise.all([
-      client.query(`
-        SELECT COUNT(DISTINCT creator_id)::int AS count
-        FROM route
-        WHERE created_at >= NOW() - INTERVAL '7 days'
-      `),
-      client.query(`
-        SELECT
-          COUNT(*)::int AS total,
-          COUNT(*) FILTER (WHERE completed = true)::int AS completed
-        FROM route
-        WHERE created_at >= NOW() - INTERVAL '30 days'
-      `),
-      client.query(`
-        SELECT COUNT(*)::int AS count
-        FROM route
-        WHERE rejection_reason IS NOT NULL
-          AND created_at >= NOW() - INTERVAL '30 days'
-      `),
-      client.query(`
-        SELECT
-          COUNT(*) FILTER (
-            WHERE completed = false
-              AND rejection_reason IS NULL
-              AND depart_time > NOW()
-          )::int AS upcoming,
-          COUNT(*) FILTER (WHERE completed = true)::int AS completed,
-          COUNT(*) FILTER (WHERE rejection_reason IS NOT NULL)::int AS rejected
-        FROM route
-      `),
-      client.query(`
-        SELECT
-          rejection_reason AS reason,
-          COUNT(*)::int AS count
-        FROM route
-        WHERE rejection_reason IS NOT NULL
-        GROUP BY rejection_reason
-        ORDER BY count DESC
-      `),
-      client.query(`
-        SELECT ROUND(AVG(participant_count)::numeric, 1) AS avg_group_size
-        FROM (
-          SELECT route_id, COUNT(*)::int AS participant_count
-          FROM user_route
-          WHERE route_id IN (SELECT id FROM route WHERE completed = true)
-          GROUP BY route_id
-        ) counts
-      `),
-    ])
-
-    const { total: total30d, completed: completed30d } = completionRes.rows[0]
-
-    return res.status(200).json({
-      kpis: {
-        activeCreators7d: creatorsRes.rows[0]?.count ?? 0,
-        completionRate30d:
-          total30d > 0 ? Math.round((completed30d / total30d) * 100) : 0,
-        rejectedRoutes30d: rejectedRes.rows[0]?.count ?? 0,
-        avgGroupSize: Number(groupSizeRes.rows[0]?.avg_group_size ?? 0),
-      },
-      statusBreakdown: {
-        upcoming: statusRes.rows[0]?.upcoming ?? 0,
-        completed: statusRes.rows[0]?.completed ?? 0,
-        rejected: statusRes.rows[0]?.rejected ?? 0,
-      },
-      rejectionReasons: rejectionRes.rows.map(row => ({
-        reason: row.reason,
-        count: row.count,
-      })),
-    })
-  } catch (error) {
-    console.error('Error in /api/activity/summary:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  } finally {
-    client.release()
-  }
-})
-
-/**
- * Returns CO₂e baseline vs actual emissions grouped by time period.
- * Admin-only. Used for the time-series chart on the Activity page.
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- * If user authentication is not "admin", a 403 status code is sent with an error message.
- *
- * @returns {Object} granularity and array of { period, baselineKg, actualKg, savedKg }
- */
-app.get('/api/activity/co2-timeseries', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  const client = await pool.connect()
-
-  try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    if (user.role !== 'admin') {
-      return res.status(403).send(serverStrings.errors.accessDenied)
-    }
-
-    const granularity = ['daily', 'monthly', 'quarterly'].includes(
-      req.query.granularity
-    )
-      ? req.query.granularity
-      : 'daily'
-
-    const routes = await analytics.fetchCompletedRoutes(user.id, true)
-
-    if (routes.length === 0) {
-      return res.status(200).json({ granularity, data: [] })
-    }
-
-    const routeIds = routes.map(r => r.id)
-    const participantRes = await client.query(
-      `SELECT
-         ur.route_id,
-         COUNT(*)::int AS participant_count,
-         BOOL_OR(ur.user_id = r.creator_id) AS creator_included
-       FROM user_route ur
-       JOIN route r ON r.id = ur.route_id
-       WHERE ur.route_id = ANY($1)
-       GROUP BY ur.route_id, r.creator_id`,
-      [routeIds]
-    )
-
-    const participantMap = {}
-    for (const row of participantRes.rows) {
-      const count = row.creator_included
-        ? row.participant_count
-        : row.participant_count + 1
-      participantMap[row.route_id] = count
-    }
-
-    function getPeriodKey(date) {
-      const calendarDate = new Date(date)
-      const year = calendarDate.getFullYear()
-      const month = String(calendarDate.getMonth() + 1).padStart(2, '0')
-      const day = String(calendarDate.getDate()).padStart(2, '0')
-
-      if (granularity === 'daily') return `${year}-${month}-${day}`
-      if (granularity === 'monthly') return `${year}-${month}`
-      const quarter = Math.ceil((calendarDate.getMonth() + 1) / 3)
-      return `${year}-Q${quarter}`
-    }
-
-    const periodMap = {}
-
-    for (const route of routes) {
-      const savings = await analytics.computeRouteSavings(route)
-      const participants = participantMap[route.id] ?? 1
-      const distanceKm = Number(route.distance) || 0
-
-      const baselineKg = analytics.roundToTwoDecimals(
-        (participants * distanceKm * EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL) /
-          1000
-      )
-      const savedKg = savings.savedKgSystem
-      const actualKg = analytics.roundToTwoDecimals(
-        Math.max(0, baselineKg - savedKg)
-      )
-
-      const key = getPeriodKey(route.departTime)
-
-      if (!periodMap[key]) {
-        periodMap[key] = { period: key, baselineKg: 0, actualKg: 0, savedKg: 0 }
-      }
-
-      periodMap[key].baselineKg = analytics.roundToTwoDecimals(
-        periodMap[key].baselineKg + baselineKg
-      )
-      periodMap[key].actualKg = analytics.roundToTwoDecimals(
-        periodMap[key].actualKg + actualKg
-      )
-      periodMap[key].savedKg = analytics.roundToTwoDecimals(
-        periodMap[key].savedKg + savedKg
-      )
-    }
-
-    const data = Object.values(periodMap).sort((a, b) =>
-      a.period.localeCompare(b.period)
-    )
-
-    return res.status(200).json({ granularity, data })
-  } catch (error) {
-    console.error('Error in /api/activity/co2-timeseries:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  } finally {
-    client.release()
-  }
-})
-
-/**
  * Returns the joined participants for a selected route.
  *
  * If the database has an error, a 500 status code is sent with an error message.
@@ -1874,7 +1413,7 @@ app.post('/api/completeRoute', async (req, res) => {
       [user.id, routeID]
     )
 
-    analytics
+    analyticsServices
       .buildAnalyticsSummary(user.id, false)
       .then(summary => badgeEvaluator.evaluateBadges(user.id, summary))
       .catch(err => console.error('Badge evaluation failed:', err))
