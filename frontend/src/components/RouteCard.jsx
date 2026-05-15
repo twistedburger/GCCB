@@ -82,13 +82,7 @@ export default function RouteCard({
             )}
             <div className="flex flex-row text-text-secondary text-xs items-center leading-none">
               <PlaceOutlined className="mr-1 -ml-1" fontSize="small" />
-              <p>
-                {route.origin || route.start_point}{' '}
-                {!routeDetailView &&
-                  route.depart_time &&
-                  !isCompleted &&
-                  `${routeCardStrings.at} ${dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
-              </p>
+              <p>{route.origin || route.start_point}</p>
             </div>
             {(individualView || routeDetailView) && (
               <div className="flex flex-row text-text-secondary text-xs items-center leading-none">

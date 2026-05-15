@@ -28,6 +28,7 @@ import { CircularProgress } from '@mui/material'
 import { homeStrings } from '../locales/en/HomeStrings'
 import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
 import { postGISToLatLng } from '../utils/MainMapUtils'
+import { useRouteActions } from '../../context/RouteActionsContext'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -76,6 +77,7 @@ function Home() {
   const [createEventLatLng, setCreateEventLatLng] = useState(null)
   const [mapCenter, setMapCenter] = useState(null)
   const [hasPanned, setHasPanned] = useState(false)
+  const { toggleJoin } = useRouteActions()
 
   const { authorizeUser } = useAuth()
   authorizeUser()
@@ -166,57 +168,61 @@ function Home() {
     setFilters(DEFAULT_FILTERS)
   }, [userLocation])
 
-  const handleToggleJoin = async item => {
-    const isJoining = !item.isJoined
-    const endpoint = isJoining
-      ? `/api/routes/${item.id}/join`
-      : `/api/routes/${item.id}/leave`
+  const handleToggleJoin = trip =>
+    toggleJoin(trip, ({ routeId, joined, deleted }) => {
+      if (deleted) {
+        setCardsToDisplay(prev => prev.filter(card => card.id !== routeId))
 
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}${endpoint}`,
-        {
-          method: isJoining ? 'POST' : 'DELETE',
-          credentials: 'include',
-        }
+        setSelectedRoute(prev =>
+          Number(prev?.id) === Number(routeId) ? null : prev
+        )
+
+        return
+      }
+
+      setCardsToDisplay(prev =>
+        prev.map(card => {
+          if (card.id === routeId) {
+            return {
+              ...card,
+              isJoined: joined,
+              people_going: joined
+                ? (parseInt(card.people_going) || 0) + 1
+                : Math.max(0, (parseInt(card.people_going) || 0) - 1),
+            }
+          }
+
+          if (card.routes) {
+            return {
+              ...card,
+              routes: card.routes.map(route =>
+                route.id === routeId
+                  ? {
+                      ...route,
+                      isJoined: joined,
+                      people_going: joined
+                        ? (parseInt(route.people_going) || 0) + 1
+                        : Math.max(0, (parseInt(route.people_going) || 0) - 1),
+                    }
+                  : route
+              ),
+            }
+          }
+
+          return card
+        })
       )
 
-      if (response.ok) {
-        setCardsToDisplay(prev =>
-          prev.map(card => {
-            if (card.id === item.id) {
-              return {
-                ...card,
-                isJoined: isJoining,
-                people_going: isJoining
-                  ? (parseInt(card.people_going) || 0) + 1
-                  : Math.max(0, (parseInt(card.people_going) || 0) - 1),
-              }
-            }
-            if (card.routes) {
-              return {
-                ...card,
-                routes: card.routes.map(r =>
-                  r.id === item.id
-                    ? {
-                        ...r,
-                        isJoined: isJoining,
-                        people_going: isJoining
-                          ? (parseInt(r.people_going) || 0) + 1
-                          : Math.max(0, (parseInt(r.people_going) || 0) - 1),
-                      }
-                    : r
-                ),
-              }
-            }
-            return card
-          })
-        )
+      if (selectedRoute && Number(selectedRoute.id) === Number(routeId)) {
+        setSelectedRoute(prev => ({
+          ...prev,
+          isJoined: joined,
+          people_going: joined
+            ? (parseInt(prev.people_going) || 0) + 1
+            : Math.max(0, (parseInt(prev.people_going) || 0) - 1),
+        }))
       }
-    } catch (error) {
-      console.error('Toggle failed:', error)
-    }
-  }
+    })
 
   return (
     <div
