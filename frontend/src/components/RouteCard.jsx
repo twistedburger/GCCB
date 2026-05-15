@@ -73,8 +73,8 @@ export default function RouteCard({
     setIsJoined(route.isJoined)
   }, [route.isJoined, isDraft])
 
-  const handleJoin = async e => {
-    e.stopPropagation()
+  const handleJoin = async event => {
+    event.stopPropagation()
     if (isDraft) {
       onToggleJoin(route.id)
       setPeopleGoing(prev => prev + 1)
@@ -90,8 +90,8 @@ export default function RouteCard({
     if (onToggleJoin) onToggleJoin(route)
   }
 
-  const handleLeave = async e => {
-    e.stopPropagation()
+  const handleLeave = async event => {
+    event.stopPropagation()
     if (isDraft) {
       onToggleJoin(route.id)
       setPeopleGoing(prev => prev - 1)
@@ -106,16 +106,16 @@ export default function RouteCard({
     setPeopleGoing(prev => prev - 1)
   }
 
-  const handleClick = async e => {
-    e.stopPropagation()
+  const handleClick = async event => {
+    event.stopPropagation()
     if (isDraft) {
-      handleLeave(e)
+      handleLeave(event)
       return
     }
     if (onToggleJoin) {
       onToggleJoin(route)
     } else {
-      handleLeave(e)
+      handleLeave(event)
     }
   }
 
@@ -202,8 +202,8 @@ export default function RouteCard({
             {onOpenChat && isChatVisible && (
               <GenericButton
                 unstyled
-                onClick={e => {
-                  e.stopPropagation()
+                onClick={event => {
+                  event.stopPropagation()
                   onOpenChat()
                 }}
                 customStyling="flex border border-1 items-center justify-center w-10 h-10 rounded-full text-blue-primary bg-blue-secondary hover:scale-110 active:scale-100 cursor-pointer transition-opacity"
@@ -218,8 +218,8 @@ export default function RouteCard({
                 <GenericButton
                   unstyled
                   customStyling="cursor-pointer w-full py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs text-center"
-                  onClick={e => {
-                    e.stopPropagation()
+                  onClick={event => {
+                    event.stopPropagation()
                     if (onReport) {
                       onReport({
                         type: 'route',

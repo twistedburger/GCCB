@@ -78,7 +78,7 @@ export default function MyTrips() {
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
 
   const handleOpenChat = trip => {
-    const room = chat.rooms.find(r => r.route_id === trip.id)
+    const room = chat.rooms.find(room => room.route_id === trip.id)
     if (!room) return
     navigate('/chats', { state: { openRoomId: room.id } })
   }
