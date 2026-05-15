@@ -537,16 +537,7 @@ export default function EventDetail() {
           setEventSnapPoint(1)
           setSnapPoint(1)
         }}
-        setAlert={reportAlert => {
-          if (!reportAlert?.type) return
-          setAlert({
-            ...reportAlert,
-            message:
-              reportAlert.type === 'success'
-                ? reportStrings.reportSuccess
-                : reportStrings.reportFailed,
-          })
-        }}
+        setAlert={setAlert}
       />
     </div>
   )
