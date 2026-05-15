@@ -115,8 +115,9 @@ function Dashboard() {
      * Filters badges to include only earned ones, sorts them by the date earned in descending order
      */
     async function fetchRecentBadges() {
+      if (!user?.id) return
       try {
-        const res = await fetch(`${baseURL}/api/badges`, {
+        const res = await fetch(`${baseURL}/api/badges/${user.id}`, {
           credentials: 'include',
         })
         if (!res.ok) return
@@ -135,7 +136,9 @@ function Dashboard() {
     }
 
     fetchSummary()
-    fetchRecentBadges()
+    if (user?.id) {
+      fetchRecentBadges()
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async formData => {

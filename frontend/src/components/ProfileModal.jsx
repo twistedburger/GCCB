@@ -3,9 +3,10 @@ import { useState, useEffect, useCallback } from 'react'
 import Modal from './Modal'
 import ProfileInfo from './ProfileInfo'
 import GenericButton from './GenericButton.jsx'
-import { userCardStrings } from '../locales/en/ComponentStrings/UserCardStrings.js'
+import { profileModalStrings } from '../locales/en/ComponentStrings/ProfileModalStrings.js'
 import { authLevel } from '../hooks/Authorization.jsx'
 import { useUser } from '../../context/UserContext.jsx'
+import BadgeCard from './BadgeCard.jsx'
 
 /**
  * A modal component that displays detailed user profile information and
@@ -21,12 +22,42 @@ import { useUser } from '../../context/UserContext.jsx'
 function ProfileModal({ user, isOpen, onClose, setAlert }) {
   const baseURL = import.meta.env.VITE_API_BASE_URL
   const [isBlocked, setIsBlocked] = useState(false)
+  const [recentBadges, setRecentBadges] = useState([])
   const { user: currentUser } = useUser()
 
   const isSelf = currentUser && Number(currentUser.id) === Number(user.id)
   const canBlock =
     !isSelf &&
     authLevel[user.role?.toUpperCase()]?.value <= authLevel.USER.value
+
+  async function fetchRecentBadges() {
+    try {
+      const res = await fetch(`${baseURL}/api/badges/${user.id}`, {
+        credentials: 'include',
+      })
+
+      if (!res.ok) return
+      const data = await res.json()
+
+      const earned = (data.badges ?? [])
+        .filter(badge => badge.earned)
+        .sort(
+          (badgeA, badgeB) =>
+            new Date(badgeB.dateEarned) - new Date(badgeA.dateEarned)
+        )
+        .slice(0, 3)
+
+      setRecentBadges(earned)
+    } catch (err) {
+      console.error('Failed to load recent badges', err)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      fetchRecentBadges()
+    }
+  }, [isOpen, user?.id])
 
   const checkBlockStatus = useCallback(async () => {
     try {
@@ -61,19 +92,18 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
         setAlert?.({
           type: 'success',
           message: isBlocked
-            ? userCardStrings.errors.successfulUnblock
-            : userCardStrings.errors.successfulBlock,
+            ? profileModalStrings.errors.successfulUnblock
+            : profileModalStrings.errors.successfulBlock,
         })
       } else {
         throw new Error(data.error)
       }
     } catch {
-      // Removed 'err' since it was unused
       setAlert?.({
         type: 'error',
         message: isBlocked
-          ? userCardStrings.errors.failedUnblocked
-          : userCardStrings.errors.failedBlocked,
+          ? profileModalStrings.errors.failedUnblocked
+          : profileModalStrings.errors.failedBlocked,
       })
     }
   }
@@ -93,11 +123,30 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
                   : 'text-red-500 border-red-500'
               }`}
             >
-              {isBlocked ? userCardStrings.unblock : userCardStrings.block}
+              {isBlocked
+                ? profileModalStrings.unblock
+                : profileModalStrings.block}
             </GenericButton>
           )
         }
       />
+      <div className="pt-4">
+        <h4 className="text-xs font-bold text-text-primary mb-2">
+          {profileModalStrings.recentBadges}
+        </h4>
+
+        {recentBadges.length > 0 ? (
+          <div className="flex flex-row gap-3">
+            {recentBadges.map(badge => (
+              <BadgeCard key={badge.id} badge={badge} showLocked={true} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-text-secondary italic">
+            {profileModalStrings.noBadges}
+          </p>
+        )}
+      </div>
     </Modal>
   )
 }

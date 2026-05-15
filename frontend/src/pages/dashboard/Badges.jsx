@@ -6,6 +6,7 @@ import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
 import { VIEWS, CATEGORY_ORDER, filterForView } from '../../utils/BadgeUtils'
 import { badgesStrings } from '../../locales/en/ComponentStrings/BadgeStrings'
 import HighlightCard from '../../components/HighlightCard'
+import { useUser } from '../../../context/UserContext'
 
 /**
  * Badge display page.
@@ -21,13 +22,15 @@ export default function Badges() {
   const [view, setView] = useState(VIEWS.ALL)
   const { id } = useParams()
   const cardRefs = useRef({})
+  const { user, loadingUser } = useUser()
 
   useEffect(() => {
     async function fetchBadges() {
+      if (loadingUser || !user?.id) return
       try {
         setLoading(true)
         setError(null)
-        const res = await fetch(`${baseURL}/api/badges`, {
+        const res = await fetch(`${baseURL}/api/badges/${user.id}`, {
           credentials: 'include',
         })
         if (!res.ok) throw new Error(badgesStrings.error)
@@ -41,7 +44,7 @@ export default function Badges() {
       }
     }
     fetchBadges()
-  }, [baseURL])
+  }, [baseURL, user?.id, loadingUser])
 
   const earnedCount = badges.filter(badgeFilter => badgeFilter.earned).length
   const viewBadges = filterForView(badges, view)
