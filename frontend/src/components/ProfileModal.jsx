@@ -154,7 +154,9 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={handleToggleBlock}
         title={
-          isBlocked ? profileModalStrings.unblock : profileModalStrings.block
+          isBlocked
+            ? profileModalStrings.confirmation.unblockTitle
+            : profileModalStrings.confirmation.blockTitle
         }
         confirmText={
           isBlocked ? profileModalStrings.unblock : profileModalStrings.block
@@ -162,8 +164,14 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
         variant="danger"
       >
         {isBlocked
-          ? `Are you sure you want to unblock ${user.name}?`
-          : `Are you sure you want to block ${user.name}?`}
+          ? profileModalStrings.confirmation.unblockMessage.replace(
+              '{name}',
+              user.name
+            )
+          : profileModalStrings.confirmation.blockMessage.replace(
+              '{name}',
+              user.name
+            )}
       </ConfirmationDialog>
     </>
   )

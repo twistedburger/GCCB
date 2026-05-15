@@ -9,4 +9,10 @@ export const profileModalStrings = {
     successfulUnblock: 'User unblocked successfully',
     failedUnblocked: 'Failed to unblock user',
   },
+  confirmation: {
+    blockTitle: 'Block',
+    unblockTitle: 'Unblock',
+    blockMessage: 'Are you sure you want to block {name}?',
+    unblockMessage: 'Are you sure you want to unblock {name}?',
+  },
 }
