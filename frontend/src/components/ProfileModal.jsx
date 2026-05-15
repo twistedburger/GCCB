@@ -1,12 +1,12 @@
 import PropTypes from 'prop-types'
 import { useState, useEffect, useCallback } from 'react'
 import Modal from './Modal'
-import ProfileInfo from './ProfileInfo'
-import GenericButton from './GenericButton.jsx'
+import UserCard from './UserCard'
 import { profileModalStrings } from '../locales/en/ComponentStrings/ProfileModalStrings.js'
 import { authLevel } from '../hooks/Authorization.jsx'
 import { useUser } from '../../context/UserContext.jsx'
 import BadgeCard from './BadgeCard.jsx'
+import ConfirmationDialog from './ConfirmationDialog.jsx'
 
 /**
  * A modal component that displays detailed user profile information and
@@ -23,6 +23,7 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
   const baseURL = import.meta.env.VITE_API_BASE_URL
   const [isBlocked, setIsBlocked] = useState(false)
   const [recentBadges, setRecentBadges] = useState([])
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const { user: currentUser } = useUser()
 
   const isSelf = currentUser && Number(currentUser.id) === Number(user.id)
@@ -109,45 +110,62 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ProfileInfo
-        user={user}
-        actions={
-          canBlock && (
-            <GenericButton
-              onClick={handleToggleBlock}
-              unstyled
-              customStyling={`text-xs font-medium border rounded-2xl px-4 py-1 mr-6 ${
-                isBlocked
-                  ? 'text-gray-500 border-gray-500'
-                  : 'text-red-500 border-red-500'
-              }`}
-            >
-              {isBlocked
+    <>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <UserCard
+          user={user}
+          className="shadow-white border-none -ml-4"
+          isClickable={false}
+          profileInfoSize={'md'}
+          primaryActionLabel={
+            canBlock
+              ? isBlocked
                 ? profileModalStrings.unblock
-                : profileModalStrings.block}
-            </GenericButton>
-          )
-        }
-      />
-      <div className="pt-4">
-        <h4 className="text-xs font-bold text-text-primary mb-2">
-          {profileModalStrings.recentBadges}
-        </h4>
+                : profileModalStrings.block
+              : undefined
+          }
+          onPrimaryAction={() => setShowConfirmDialog(true)}
+          primaryButtonStyling={`text-xs font-medium border rounded-2xl px-4 py-1 ${
+            isBlocked
+              ? 'text-gray-500 border-gray-500'
+              : 'text-red-500 border-red-500'
+          }`}
+        />
+        <div className="pt-4">
+          <h4 className="text-xs font-bold text-text-primary mb-2">
+            {profileModalStrings.recentBadges}
+          </h4>
 
-        {recentBadges.length > 0 ? (
-          <div className="flex flex-row gap-3">
-            {recentBadges.map(badge => (
-              <BadgeCard key={badge.id} badge={badge} showLocked={true} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-text-secondary italic">
-            {profileModalStrings.noBadges}
-          </p>
-        )}
-      </div>
-    </Modal>
+          {recentBadges.length > 0 ? (
+            <div className="flex flex-row gap-3">
+              {recentBadges.map(badge => (
+                <BadgeCard key={badge.id} badge={badge} showLocked={true} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-text-secondary italic">
+              {profileModalStrings.noBadges}
+            </p>
+          )}
+        </div>
+      </Modal>
+      <ConfirmationDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleToggleBlock}
+        title={
+          isBlocked ? profileModalStrings.unblock : profileModalStrings.block
+        }
+        confirmText={
+          isBlocked ? profileModalStrings.unblock : profileModalStrings.block
+        }
+        variant="danger"
+      >
+        {isBlocked
+          ? `Are you sure you want to unblock ${user.name}?`
+          : `Are you sure you want to block ${user.name}?`}
+      </ConfirmationDialog>
+    </>
   )
 }
 
