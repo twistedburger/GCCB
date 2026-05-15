@@ -206,7 +206,7 @@ export default function RouteCard({
                   e.stopPropagation()
                   onOpenChat()
                 }}
-                customStyling="flex border border-1 items-center justify-center w-10 h-10 rounded-full text-blue-primary bg-blue-secondary hover:opacity-80 transition-opacity"
+                customStyling="flex border border-1 items-center justify-center w-10 h-10 rounded-full text-blue-primary bg-blue-secondary hover:scale-110 active:scale-100 cursor-pointer transition-opacity"
               >
                 <ChatOutlined style={{ fontSize: 25 }} />
               </GenericButton>
@@ -217,7 +217,7 @@ export default function RouteCard({
               {((!isDraft && onToggleJoin) || !individualView) && (
                 <GenericButton
                   unstyled
-                  customStyling="w-full py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs text-center"
+                  customStyling="cursor-pointer w-full py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs text-center"
                   onClick={e => {
                     e.stopPropagation()
                     if (onReport) {
@@ -237,7 +237,7 @@ export default function RouteCard({
                 (activeJoinedState ? (
                   <GenericButton
                     unstyled
-                    customStyling="w-full py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs text-center"
+                    customStyling="cursor-pointer w-full py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs text-center"
                     onClick={handleClick}
                   >
                     <div className="flex flex-row items-center justify-center gap-1">
