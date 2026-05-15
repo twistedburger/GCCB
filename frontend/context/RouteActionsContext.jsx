@@ -3,6 +3,7 @@ import { useUser } from './UserContext'
 import ConfirmationDialog from '../src/components/ConfirmationDialog'
 import Alert from '../src/components/Alert'
 import PropTypes from 'prop-types'
+import { routeStrings } from '../src/locales/en/RouteStrings'
 
 const RouteActionsContext = createContext(null)
 
@@ -11,6 +12,7 @@ export function RouteActionsProvider({ children }) {
   const [pendingLeave, setPendingLeave] = useState(null)
   const [alert, setAlert] = useState(null)
   const baseURL = import.meta.env.VITE_API_BASE_URL
+  const strings = routeStrings.routeActionStrings
 
   const toggleJoin = async (route, onSuccess) => {
     if (route.isJoined) {
@@ -28,7 +30,7 @@ export function RouteActionsProvider({ children }) {
         method: 'POST',
         credentials: 'include',
       })
-      setAlert({ type: 'success', message: 'Successfully joined the trip!' })
+      setAlert({ type: 'success', message: strings.alert.successJoin })
       onSuccess?.({ routeId: route.id, joined: true })
     }
   }
@@ -48,7 +50,9 @@ export function RouteActionsProvider({ children }) {
           onClose={() => setPendingLeave(null)}
           variant={pendingLeave?.isCreatorDelete ? 'danger' : 'primary'}
           title={
-            pendingLeave?.isCreatorDelete ? 'Delete Route?' : 'Leave Trip?'
+            pendingLeave?.isCreatorDelete
+              ? strings.dialog.deleteTitle
+              : strings.dialog.leaveTitle
           }
           onConfirm={async () => {
             const { route, isCreatorDelete, onSuccess } = pendingLeave
@@ -61,8 +65,8 @@ export function RouteActionsProvider({ children }) {
               setAlert({
                 type: 'success',
                 message: isCreatorDelete
-                  ? 'Route deleted.'
-                  : 'Successfully left the trip.',
+                  ? strings.alert.successDelete
+                  : strings.alert.successLeave,
               })
               onSuccess?.({
                 routeId: route.id,
@@ -70,14 +74,14 @@ export function RouteActionsProvider({ children }) {
                 deleted: isCreatorDelete,
               })
             } else {
-              setAlert({ type: 'error', message: 'Something went wrong.' })
+              setAlert({ type: 'error', message: strings.alert.errorGeneral })
             }
             setPendingLeave(null)
           }}
         >
           {pendingLeave?.isCreatorDelete
-            ? 'As the creator of this route, leaving will delete it for everyone currently joined. Are you sure?'
-            : 'Are you sure you want to leave this trip?'}
+            ? strings.dialog.deleteBody
+            : strings.dialog.leaveBody}
         </ConfirmationDialog>
       </div>
       {children}
