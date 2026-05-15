@@ -26,14 +26,15 @@ function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [ssoProfile, setSsoProfile] = useState(null)
 
+  const baseURL = import.meta.env.VITE_API_BASE_URL
+  const frontendUrl = import.meta.env.VITE_FRONTEND_URL
+
   const [bannedError] = useState(
     new URLSearchParams(window.location.search).get('error') === 'banned'
   )
   const { user, setUser } = useUser()
 
   const authenticateUser = useCallback(async () => {
-    const baseURL = import.meta.env.VITE_API_BASE_URL
-    const frontendUrl = import.meta.env.VITE_FRONTEND_URL
     try {
       const response = await fetch(`${baseURL}/authenticateUser`, {
         credentials: 'include',

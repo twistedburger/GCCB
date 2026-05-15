@@ -1,11 +1,8 @@
 import PropTypes from 'prop-types'
 import GenericButton from './GenericButton.jsx'
-import Modal from './Modal'
 import ProfileInfo from './ProfileInfo'
 import { useState } from 'react'
-import { userCardStrings } from '../locales/en/ComponentStrings/UserCardStrings.js'
-import { useUser } from '../../context/UserContext.jsx'
-import { authLevel } from '../hooks/Authorization.jsx'
+import ProfileModal from './ProfileModal.jsx'
 
 /**
  * Component to display a user card.
@@ -20,7 +17,6 @@ import { authLevel } from '../hooks/Authorization.jsx'
  * @param {Function} setAlert - The function to set the alert message.
  * @param {boolean} showDescription - Whether to show the user's description or not in their profile information.
  */
-
 function UserCard({
   user,
   primaryActionLabel,
@@ -33,126 +29,20 @@ function UserCard({
   setAlert,
   showDescription = true,
 }) {
-  const baseURL = import.meta.env.VITE_API_BASE_URL
   const [openModal, setOpenModal] = useState(false)
-  const [isBlocked, setIsBlocked] = useState(false)
-  const { user: currentUser } = useUser()
-
-  const handleBlockUser = async () => {
-    try {
-      const response = await fetch(`${baseURL}/api/blockUser/${user.id}`, {
-        credentials: 'include',
-        method: 'POST',
-      })
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsBlocked(true)
-        setOpenModal(false)
-        setAlert?.({
-          type: 'success',
-          message: userCardStrings.errors.successfulBlock,
-        })
-      } else {
-        setAlert?.({
-          type: 'error',
-          message: data.error ?? userCardStrings.errors.failedBlocked,
-        })
-      }
-    } catch (err) {
-      console.error(err)
-      setAlert?.({
-        type: 'error',
-        message: userCardStrings.errors.failedBlocked,
-      })
-    }
-  }
-
-  const handleUnblockUser = async () => {
-    try {
-      const response = await fetch(`${baseURL}/api/unblockUser/${user.id}`, {
-        credentials: 'include',
-        method: 'POST',
-      })
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsBlocked(false)
-        setOpenModal(false)
-        setAlert?.({
-          type: 'success',
-          message: userCardStrings.errors.successfulUnblock,
-        })
-      } else {
-        setAlert?.({
-          type: 'error',
-          message: data.error ?? userCardStrings.errors.failedUnblocked,
-        })
-      }
-    } catch (err) {
-      console.error(err)
-      setAlert?.({
-        type: 'error',
-        message: userCardStrings.errors.failedUnblocked,
-      })
-    }
-  }
-
-  const handleOpenModal = async () => {
-    setOpenModal(true)
-    if (isSelf) return
-    try {
-      const response = await fetch(`${baseURL}/api/blockStatus/${user.id}`, {
-        credentials: 'include',
-      })
-      const data = await response.json()
-      setIsBlocked(data.isBlocked)
-    } catch (err) {
-      console.error(err)
-      setAlert?.({
-        type: 'error',
-        message: userCardStrings.errors.failedBlockStatus,
-      })
-    }
-  }
-
-  const isSelf = currentUser && Number(currentUser.id) === Number(user.id)
-  // prevent user from blocking themselves, or anyone above users (moderators, etc.)
-  const canBlock =
-    !isSelf &&
-    authLevel[user.role?.toUpperCase()]?.value <= authLevel.USER.value
 
   return (
     <div>
-      <Modal
+      <ProfileModal
+        user={user}
         isOpen={openModal}
-        onClose={() => {
-          setOpenModal(false)
-        }}
-      >
-        <ProfileInfo
-          user={user}
-          actions={
-            canBlock && (
-              <GenericButton
-                onClick={isBlocked ? handleUnblockUser : handleBlockUser}
-                unstyled
-                customStyling={`text-xs font-medium border rounded-2xl px-4 py-1 mr-6 ${
-                  isBlocked
-                    ? 'text-gray-500 border-gray-500'
-                    : 'text-red-500 border-red-500'
-                }`}
-              >
-                {isBlocked ? userCardStrings.unblock : userCardStrings.block}
-              </GenericButton>
-            )
-          }
-        ></ProfileInfo>
-      </Modal>
+        onClose={() => setOpenModal(false)}
+        setAlert={setAlert}
+      />
       <GenericButton
         unstyled
         customStyling={'w-full'}
-        onClick={handleOpenModal}
+        onClick={() => setOpenModal(true)}
       >
         <div
           className={`flex flex-col rounded-xl shadow-md shadow-medium-grey bg-white ${className || ''}`}
