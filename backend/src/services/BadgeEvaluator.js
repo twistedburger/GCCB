@@ -1,3 +1,7 @@
+const { NotificationType } = require('../../../shared/NotificationTypes')
+const { serverStrings } = require('../../locales/en/serverLocales')
+const { sendNotification } = require('./NotificationUtils')
+
 /**
  * Contains the logic for evaluating user badges based on analytics data.
  * Handles badge achievement checks, progress updates, and retrieval of badge details.
@@ -79,6 +83,16 @@ class BadgeEvaluator {
 
       if (current >= badge.threshold) {
         await this.#badgeQueries.awardBadge(userId, badge.id)
+
+        sendNotification(
+          NotificationType.Badge,
+          badge.id,
+          badge.title,
+          serverStrings.badgeEarned,
+          false,
+          true
+        )
+
         newlyAwarded.push(badge.key)
       } else {
         await this.#badgeQueries.upsertBadgeProgress(userId, badge.id, current)

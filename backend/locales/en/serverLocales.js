@@ -27,6 +27,11 @@ const serverStrings = {
     notMember: 'Not a member of this chatroom',
     cloudinaryFailed: 'Cloudinary banner upload failed:',
   },
+  badgeEarned: 'You have recieved a new badge!',
+  routeDepartSoon: 'Your route is departing soon!',
+  userJoined: 'has joined your route!',
+  userLeft: 'has left your route.',
+  routeDeleted: 'Route has been deleted',
 }
 
 module.exports = { serverStrings }

@@ -16,6 +16,8 @@ export const createEventStrings = {
     'Leaving this route will remove it from the event. Are you sure you want to proceed?',
   confirmCreationMessage: (eventName, routeName) =>
     `Are you sure you want to create "${eventName}" with route "${routeName}"?`,
+  confirmCreationNoRouteMessage: eventName =>
+    `Are you sure you want to create event "${eventName}" with no routes?`,
   nameLabel: 'Event Name',
   locationLabel: 'Location',
   eventLocationPlaceholder: 'Enter event location',

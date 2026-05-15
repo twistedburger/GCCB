@@ -1,14 +1,22 @@
 const { selectUser } = require('../UserUtils')
-const { getUserNotifications } = require('../NotificationQueries')
-const { handleNotifications } = require('../NotificationUtils')
+const {
+  getUserNotifications,
+  insertNotification,
+} = require('../../services/NotificationServices')
+const {
+  handleNotifications,
+  sendNotification,
+  notificationEmitter,
+} = require('../NotificationUtils')
 const { serverStrings } = require('../../../locales/en/serverLocales')
 
 jest.mock('../UserUtils', () => ({
   selectUser: jest.fn(),
 }))
 
-jest.mock('../NotificationQueries', () => ({
+jest.mock('../../services/NotificationServices', () => ({
   getUserNotifications: jest.fn(),
+  insertNotification: jest.fn(),
 }))
 
 describe('Notification handler utils', () => {
@@ -67,5 +75,66 @@ describe('Notification handler utils', () => {
     expect(mockRes.write).toHaveBeenCalledWith(
       `data: ${JSON.stringify({ error: serverStrings.errors.generic })}\n\n`
     )
+  })
+})
+
+describe('Test sendNotification', () => {
+  const emitSpy = jest.spyOn(notificationEmitter, 'emit')
+
+  beforeEach(() => {
+    insertNotification.mockReset()
+  })
+
+  test('returns false if insertNotification throws a notification error', async () => {
+    insertNotification.mockRejectedValue(
+      new Error(serverStrings.errors.notificationError)
+    )
+
+    const result = await sendNotification(
+      'event',
+      1,
+      'title',
+      1,
+      'message',
+      true,
+      true
+    )
+    expect(result).toEqual(false)
+
+    expect(emitSpy).toHaveBeenCalledTimes(0)
+  })
+
+  test('returns false if insertNotification throws a general error', async () => {
+    insertNotification.mockRejectedValue(new Error('oops'))
+
+    const result = await sendNotification(
+      'event',
+      1,
+      'title',
+      1,
+      'message',
+      true,
+      true
+    )
+    expect(result).toEqual(false)
+
+    expect(emitSpy).toHaveBeenCalledTimes(0)
+  })
+
+  test('returns true and emits notification on valid notification', async () => {
+    insertNotification.mockResolvedValue([{ user_id: 1 }])
+
+    const result = await sendNotification(
+      'event',
+      1,
+      'title',
+      1,
+      'message',
+      true,
+      true
+    )
+    expect(result).toEqual(true)
+
+    expect(emitSpy).toHaveBeenCalledWith('notification', [{ user_id: 1 }])
   })
 })
