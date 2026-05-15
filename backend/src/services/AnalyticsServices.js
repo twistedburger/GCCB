@@ -224,7 +224,8 @@ class AnalyticsServices {
       let carpoolOptions = {}
 
       const hasCarSegment = segments.some(
-        s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR.key
+        segment =>
+          toAnalyticsMode(segment.transportationMode) === TransportMode.CAR.key
       )
 
       if (hasCarSegment) {
@@ -280,7 +281,8 @@ class AnalyticsServices {
       let carpoolOptions = {}
 
       const hasCarSegment = segments.some(
-        s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR.key
+        segment =>
+          toAnalyticsMode(segment.transportationMode) === TransportMode.CAR.key
       )
 
       if (hasCarSegment) {
@@ -359,7 +361,9 @@ class AnalyticsServices {
       const segments = extractRouteSegments(route)
       return segments.length > 0
         ? segments.some(
-            s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR.key
+            segment =>
+              toAnalyticsMode(segment.transportationMode) ===
+              TransportMode.CAR.key
           )
         : toAnalyticsMode(route.transportationMode) === TransportMode.CAR.key
     })
