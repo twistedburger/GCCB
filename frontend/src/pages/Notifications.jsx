@@ -1,11 +1,7 @@
 import GenericButton from '../components/GenericButton'
-import { NotificationType } from '../../../shared/NotificationTypes'
 import { useNotifications } from '../../context/NotificationContext'
 import { notificationStrings } from '../locales/en/NotificationStrings'
-import {
-  clearAllNotifications,
-  sendNotification,
-} from '../utils/NotificationUtils'
+import { clearAllNotifications } from '../utils/NotificationUtils'
 import NotificationCard from '../components/NotificationCard'
 
 /**
@@ -18,7 +14,7 @@ export default function Notifications() {
 
   return (
     <div>
-      <p>{notificationStrings.title}</p>
+      <h1 className="m-3 text-2xl">{notificationStrings.title}</h1>
       <GenericButton
         onClick={async () => {
           const cleared = await clearAllNotifications()
@@ -31,37 +27,15 @@ export default function Notifications() {
       >
         {notificationStrings.clearAll}
       </GenericButton>
-      {/* This button is temporary and will be removed when notification sending works*/}
-      <GenericButton
-        onClick={() => {
-          sendNotification(
-            NotificationType.Event,
-            2,
-            'Event Title',
-            'Notification Message'
-          )
-          sendNotification(
-            NotificationType.Route,
-            2,
-            'Route Title',
-            'Notification Message'
-          )
-          sendNotification(
-            NotificationType.Badge,
-            23,
-            'Badge Title',
-            'Notification Message'
-          )
-        }}
-      >
-        Send Notification
-      </GenericButton>
-      {notifications.map(notification => (
-        <NotificationCard
-          key={notification.notificationID}
-          notification={notification}
-        ></NotificationCard>
-      ))}
+      <div className="flex flex-col gap-1.5 m-1.5">
+        {notifications.map(notification => (
+          <NotificationCard
+            key={notification.notificationID}
+            notification={notification}
+            className="m-3"
+          ></NotificationCard>
+        ))}
+      </div>
     </div>
   )
 }
