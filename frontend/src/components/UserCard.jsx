@@ -3,6 +3,7 @@ import GenericButton from './GenericButton.jsx'
 import ProfileInfo from './ProfileInfo'
 import { useState } from 'react'
 import ProfileModal from './ProfileModal.jsx'
+import GenericCard from './GenericCard.jsx'
 
 /**
  * Component to display a user card.
@@ -39,47 +40,39 @@ function UserCard({
         onClose={() => setOpenModal(false)}
         setAlert={setAlert}
       />
-      <GenericButton
-        unstyled
-        customStyling={'w-full'}
-        onClick={() => setOpenModal(true)}
-      >
-        <div
-          className={`flex flex-col rounded-xl shadow-md shadow-medium-grey bg-white ${className || ''}`}
-        >
-          <div className="flex p-4 pt-4 gap-4">
-            <div className="shrink-0 flex items-start justify-center">
-              <ProfileInfo
-                user={user}
-                size={'sm'}
-                showDesc={showDescription}
-              ></ProfileInfo>
-              {(primaryActionLabel || secondaryActionLabel) && (
-                <div className="flex flex-col gap-2 ml-4 shrink-0">
-                  {primaryActionLabel && (
-                    <GenericButton
-                      onClick={onPrimaryAction}
-                      unstyled
-                      customStyling={primaryButtonStyling}
-                    >
-                      {primaryActionLabel}
-                    </GenericButton>
-                  )}
-                  {secondaryActionLabel && (
-                    <GenericButton
-                      onClick={onSecondaryAction}
-                      unstyled
-                      customStyling={secondaryButtonStyling}
-                    >
-                      {secondaryActionLabel}
-                    </GenericButton>
-                  )}
-                </div>
-              )}
-            </div>
+      <GenericCard onClick={() => setOpenModal(true)} customStyling={className}>
+        <div className="flex p-4 pt-4 gap-4">
+          <div className="shrink-0 flex items-start justify-center">
+            <ProfileInfo
+              user={user}
+              size={'sm'}
+              showDesc={showDescription}
+            ></ProfileInfo>
+            {(primaryActionLabel || secondaryActionLabel) && (
+              <div className="flex flex-col gap-2 ml-4 shrink-0">
+                {primaryActionLabel && (
+                  <GenericButton
+                    onClick={onPrimaryAction}
+                    unstyled
+                    customStyling={primaryButtonStyling}
+                  >
+                    {primaryActionLabel}
+                  </GenericButton>
+                )}
+                {secondaryActionLabel && (
+                  <GenericButton
+                    onClick={onSecondaryAction}
+                    unstyled
+                    customStyling={secondaryButtonStyling}
+                  >
+                    {secondaryActionLabel}
+                  </GenericButton>
+                )}
+              </div>
+            )}
           </div>
         </div>
-      </GenericButton>
+      </GenericCard>
     </div>
   )
 }
