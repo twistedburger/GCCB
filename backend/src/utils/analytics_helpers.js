@@ -22,10 +22,10 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     bicycling: 'bicycle',
     cycle: 'bicycle',
 
-    bus: 'bus',
-    intercity_bus: 'bus',
-    trolleybus: 'bus',
-    share_taxi: 'bus',
+    bus: 'transit',
+    intercity_bus: 'transit',
+    trolleybus: 'transit',
+    share_taxi: 'transit',
 
     rail: 'rail',
     subway: 'rail',
@@ -39,7 +39,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     long_distance_train: 'rail',
     monorail: 'rail',
 
-    transit: 'bus',
+    transit: 'transit',
 
     drive: 'car',
     driving: 'car',
@@ -85,11 +85,11 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     )
 
     if (!vehicleType) {
-      return 'bus'
+      return 'transit'
     }
 
     const analyticsMode = toAnalyticsMode(vehicleType)
-    return analyticsMode === 'other' ? 'bus' : analyticsMode
+    return analyticsMode === 'other' ? 'transit' : analyticsMode
   }
 
   /**
@@ -353,29 +353,6 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
   }
 
   /**
-   * Converts a route row into a normalized analytics record for aggregation.
-   *
-   * @param {Object} routeRow Route row from DB.
-   * @param {boolean} isAdmin True if admin (system scope).
-   *
-   * @returns {Promise<{
-   *   mode: string,
-   *   distanceKm: number,
-   *   savedKg: number,
-   *   savings: { savedKgUser: number, savedKgSystem: number, context: Object }
-   * }>}
-   */
-  async function toAnalyticsRecord(routeRow, isAdmin) {
-    const distanceKm = Number(routeRow.distance) || 0
-    const mode = toAnalyticsMode(routeRow.transportationMode)
-
-    const savings = await computeRouteSavings(routeRow)
-    const savedKg = isAdmin ? savings.savedKgSystem : savings.savedKgUser
-
-    return { mode, distanceKm, savedKg, savings }
-  }
-
-  /**
    * Converts a route row into one or more analytics contributions for aggregation.
    *
    * @param {Object} routeRow Route row from DB.
@@ -465,6 +442,78 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     ]
   }
 
+  /**
+   * Builds an analytics summary object for a given user.
+   * Used by the analytics summary route and badge evaluation hooks.
+   *
+   * @param {number}  userId
+   * @param {boolean} isAdmin
+   * @returns {Promise<Object>} Analytics summary object.
+   */
+  async function buildAnalyticsSummary(userId, isAdmin) {
+    const routes = await fetchCompletedRoutes(userId, isAdmin)
+
+    const summary = {
+      scope: isAdmin ? 'system' : 'user',
+      userId,
+      tripCount: 0,
+      totalDistanceKm: 0,
+      totalCo2SavedKg: 0,
+      tripFrequenciesByMode: {
+        walk: 0,
+        bicycle: 0,
+        transit: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
+      distanceByModeKm: {
+        walk: 0,
+        bicycle: 0,
+        transit: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
+      co2SavedByModeKg: {
+        walk: 0,
+        bicycle: 0,
+        transit: 0,
+        rail: 0,
+        car: 0,
+        other: 0,
+      },
+    }
+
+    for (const route of routes) {
+      const contributions = await toAnalyticsContributions(route, isAdmin)
+      summary.tripCount += 1
+
+      for (const item of contributions) {
+        const mode =
+          item.mode in summary.tripFrequenciesByMode ? item.mode : 'other'
+        summary.totalDistanceKm += item.distanceKm
+        summary.totalCo2SavedKg += item.savedKg
+        summary.tripFrequenciesByMode[mode] += item.tripCount
+        summary.distanceByModeKm[mode] += item.distanceKm
+        summary.co2SavedByModeKg[mode] += item.savedKg
+      }
+    }
+
+    summary.totalDistanceKm = roundToTwoDecimals(summary.totalDistanceKm)
+    summary.totalCo2SavedKg = roundToTwoDecimals(summary.totalCo2SavedKg)
+    for (const key of Object.keys(summary.distanceByModeKm)) {
+      summary.distanceByModeKm[key] = roundToTwoDecimals(
+        summary.distanceByModeKm[key]
+      )
+      summary.co2SavedByModeKg[key] = roundToTwoDecimals(
+        summary.co2SavedByModeKg[key]
+      )
+    }
+
+    return summary
+  }
+
   return {
     MODE_MAPPING,
     normalizeMode,
@@ -477,8 +526,8 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     getRoutePathObject,
     extractRouteSegments,
     computeRouteSavings,
-    toAnalyticsRecord,
     toAnalyticsContributions,
+    buildAnalyticsSummary,
   }
 }
 

@@ -18,7 +18,7 @@ export const THEME_COLORS = {
 export const MODE_COLORS = {
   walk: THEME_COLORS.blue,
   bicycle: THEME_COLORS.purple,
-  bus: THEME_COLORS.orange,
+  transit: THEME_COLORS.orange,
   rail: THEME_COLORS.teal,
   car: THEME_COLORS.green,
   other: THEME_COLORS.grey,
@@ -27,7 +27,7 @@ export const MODE_COLORS = {
 export const MODE_LABELS = {
   walk: 'Walk',
   bicycle: 'Bicycle',
-  bus: 'Bus',
+  transit: 'Transit',
   rail: 'Rail',
   car: 'Car / Carpool',
   other: 'Other',

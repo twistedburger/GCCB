@@ -23,6 +23,8 @@ const port = 3000
 const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
 const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
 const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
+const { BadgeQueries } = require('./src/utils/BadgeQueries')
+const { BadgeEvaluator } = require('./src/utils/BadgeEvaluator')
 const { initSocket, broadcast } = require('./sockets/ChatSocket')
 const chatService = require('./src/services/ChatServices')
 const { notificationRouter } = require('./src/utils/NotificationEndpoints')
@@ -83,6 +85,8 @@ const analytics = createAnalyticsHelpers({
   emissions: { EMISSIONS_G_PER_KM },
 })
 
+const badgeQueries = new BadgeQueries({ db })
+const badgeEvaluator = new BadgeEvaluator({ badgeQueries })
 setInterval(async () => {
   await db.query(`
     UPDATE route
@@ -523,6 +527,9 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
     description,
   } = routeData
 
+  // Frontend sends distance in metres; convert to km for backend analytics
+  const distanceKm = Number(distance) / 1000
+
   const routeResult = await client.query(
     `INSERT INTO route (
       title, creator_id, transportation_mode, origin, destination,
@@ -539,7 +546,7 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
       destination,
       departTime,
       maxPpl,
-      distance,
+      distanceKm,
       path,
       completed,
       description,
@@ -658,6 +665,21 @@ app.post('/api/createEvent', async (req, res) => {
       )
     }
     await client.query('COMMIT')
+
+    // Evaluate Social badges if a route was created with this event
+    if (route) {
+      try {
+        const summary = await analytics.buildAnalyticsSummary(user.id, false)
+        await badgeEvaluator.evaluateBadges(user.id, summary)
+      } catch (err) {
+        console.error('Badge evaluation failed (createEvent):', err)
+        // 500 error here would mean that badge evaluation failed, not that the route itself was lost.
+        return res
+          .status(500)
+          .json({ error: serverStrings.errors.badgeEvaluationFailed })
+      }
+    }
+
     res.status(201).json(newEvent)
   } catch (error) {
     await client.query('ROLLBACK')
@@ -705,6 +727,19 @@ app.post('/api/createRoute', async (req, res) => {
     )
 
     await client.query('COMMIT')
+
+    // Await badge evaluation so Social badges reflect the new route immediately
+    try {
+      const summary = await analytics.buildAnalyticsSummary(user.id, false)
+      await badgeEvaluator.evaluateBadges(user.id, summary)
+    } catch (err) {
+      console.error('Badge evaluation failed (createRoute):', err)
+      // 500 error here would mean that badge evaluation failed, not that the route itself was lost.
+      return res
+        .status(500)
+        .json({ error: serverStrings.errors.badgeEvaluationFailed })
+    }
+
     res.status(201).json({ success: true, routeID })
   } catch (error) {
     await client.query('ROLLBACK')
@@ -1232,79 +1267,7 @@ app.get('/api/analytics/summary', async (req, res) => {
     if (!user) return res.status(404).send(serverStrings.errors.noUser)
 
     const isAdmin = user.role === 'admin'
-    const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin)
-
-    const summary = {
-      scope: isAdmin ? 'system' : 'user',
-      userId: user.id,
-
-      tripCount: 0,
-      totalDistanceKm: 0,
-      totalCo2SavedKg: 0,
-
-      tripFrequenciesByMode: {
-        walk: 0,
-        bicycle: 0,
-        bus: 0,
-        rail: 0,
-        car: 0,
-        other: 0,
-      },
-      distanceByModeKm: {
-        walk: 0,
-        bicycle: 0,
-        bus: 0,
-        rail: 0,
-        car: 0,
-        other: 0,
-      },
-      co2SavedByModeKg: {
-        walk: 0,
-        bicycle: 0,
-        bus: 0,
-        rail: 0,
-        car: 0,
-        other: 0,
-      },
-    }
-
-    for (const route of routes) {
-      const contributions = await analytics.toAnalyticsContributions(
-        route,
-        isAdmin
-      )
-
-      // One completed route still counts as one trip
-      summary.tripCount += 1
-
-      for (const item of contributions) {
-        const mode =
-          item.mode in summary.tripFrequenciesByMode ? item.mode : 'other'
-
-        summary.totalDistanceKm += item.distanceKm
-        summary.totalCo2SavedKg += item.savedKg
-
-        summary.tripFrequenciesByMode[mode] += item.tripCount
-        summary.distanceByModeKm[mode] += item.distanceKm
-        summary.co2SavedByModeKg[mode] += item.savedKg
-      }
-    }
-
-    summary.totalDistanceKm = analytics.roundToTwoDecimals(
-      summary.totalDistanceKm
-    )
-    summary.totalCo2SavedKg = analytics.roundToTwoDecimals(
-      summary.totalCo2SavedKg
-    )
-
-    for (const key of Object.keys(summary.distanceByModeKm)) {
-      summary.distanceByModeKm[key] = analytics.roundToTwoDecimals(
-        summary.distanceByModeKm[key]
-      )
-      summary.co2SavedByModeKg[key] = analytics.roundToTwoDecimals(
-        summary.co2SavedByModeKg[key]
-      )
-    }
+    const summary = await analytics.buildAnalyticsSummary(user.id, isAdmin)
 
     return res.status(200).json(summary)
   } catch (error) {
@@ -1351,8 +1314,8 @@ app.get('/api/analytics/by-mode', async (req, res) => {
         totalDistanceKm: 0,
         totalCo2SavedKg: 0,
       },
-      bus: {
-        mode: 'bus',
+      transit: {
+        mode: 'transit',
         tripCount: 0,
         totalDistanceKm: 0,
         totalCo2SavedKg: 0,
@@ -1391,15 +1354,17 @@ app.get('/api/analytics/by-mode', async (req, res) => {
       }
     }
 
-    const data = ['walk', 'bicycle', 'bus', 'rail', 'car', 'other'].map(key => {
-      const item = aggregates[key]
-      return {
-        mode: item.mode,
-        tripCount: item.tripCount,
-        totalDistanceKm: analytics.roundToTwoDecimals(item.totalDistanceKm),
-        totalCo2SavedKg: analytics.roundToTwoDecimals(item.totalCo2SavedKg),
+    const data = ['walk', 'bicycle', 'transit', 'rail', 'car', 'other'].map(
+      key => {
+        const item = aggregates[key]
+        return {
+          mode: item.mode,
+          tripCount: item.tripCount,
+          totalDistanceKm: analytics.roundToTwoDecimals(item.totalDistanceKm),
+          totalCo2SavedKg: analytics.roundToTwoDecimals(item.totalCo2SavedKg),
+        }
       }
-    })
+    )
 
     return res.status(200).json({
       scope: isAdmin ? 'system' : 'user',
@@ -1887,6 +1852,8 @@ app.get('/api/getParticipants/:routeId', async (req, res) => {
 
 /**
  * Sets completed column to true for a user_route row.
+ * Evaluates badge progress (once route marked completed) for the user
+ * and awards any newly earned badges; upserts progress for the rest.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -1908,6 +1875,12 @@ app.post('/api/completeRoute', async (req, res) => {
       'UPDATE user_route SET completed = true WHERE user_id = $1 AND route_id = $2',
       [user.id, routeID]
     )
+
+    analytics
+      .buildAnalyticsSummary(user.id, false)
+      .then(summary => badgeEvaluator.evaluateBadges(user.id, summary))
+      .catch(err => console.error('Badge evaluation failed:', err))
+
     res.json({ success: true })
   } catch (error) {
     console.error(error)
@@ -1916,6 +1889,28 @@ app.post('/api/completeRoute', async (req, res) => {
 })
 
 /**
+ * Returns all badges for the authenticated user with earned status and progress.
+ *
+ * @returns {{ badges: Object[] }}
+ */
+app.get('/api/badges', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
+  }
+  try {
+    const user = await selectUser(req)
+    const badges = await badgeEvaluator.getBadgesForUser(user.id)
+    res.json({ badges })
+  } catch (error) {
+    console.error('Error fetching badges:', error)
+    res.status(500).json({ error: serverStrings.errors.generic })
+  }
+})
+
+/**
+ * Returns banned users or blocked users depending on user's role.
  * Returns banned users, users reported more than 3 times. Moderator access only.
  *
  * If the database has an error, a 500 status code is sent with an error message.
