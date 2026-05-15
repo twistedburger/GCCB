@@ -301,23 +301,10 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
         </label>
         <input
           id="depart-time"
-          type="time"
-          value={departTime ? departTime.slice(11, 16) : ''}
+          type="datetime-local"
+          value={departTime || ''}
           onChange={change => {
-            const selectedTime = change.target.value
-
-            if (!eventTime) return
-
-            const eventDate = new Date(eventTime)
-
-            const [hours, minutes] = selectedTime.split(':')
-
-            eventDate.setHours(Number(hours))
-            eventDate.setMinutes(Number(minutes))
-            eventDate.setSeconds(0)
-            eventDate.setMilliseconds(0)
-
-            setDepartTime(formatDateTimeInput(eventDate))
+            setDepartTime(change.target.value)
           }}
           className={`w-full px-4 py-3 rounded-xl transition-all duration-200 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
              bg-gray-50 text-text-primary outline-none border
