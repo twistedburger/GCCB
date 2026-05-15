@@ -1,17 +1,17 @@
 const express = require('express')
 const notificationRouter = express.Router()
-const { serverStrings } = require('../../locales/en/serverLocales')
 const {
-  insertNotification,
   viewUserNotification,
   viewAllUserNotifications,
   getUserNotifications,
-} = require('./NotificationQueries')
-const { EventEmitter } = require('events')
-const { selectUser } = require('./UserUtils')
-const { handleNotifications } = require('./NotificationUtils')
-
-const notificationEmitter = new EventEmitter()
+} = require('../src/services/NotificationServices')
+const { selectUser } = require('../src/utils/UserUtils')
+const {
+  handleNotifications,
+  sendNotification,
+  notificationEmitter,
+} = require('../src/utils/NotificationUtils')
+const { serverStrings } = require('../locales/en/serverLocales')
 
 /**
  * Creates a notification to add to the database, and adds a reference to all users relevant to the notification
@@ -29,19 +29,23 @@ notificationRouter.post('/notify', async (req, res) => {
   try {
     const user = await selectUser(req)
     const notification = req.body
-    notification.userID = user.id
-    const notifications = await insertNotification(notification)
-    notificationEmitter.emit('notification', notifications)
-
-    return res.status(200).json({ success: true })
+    const result = await sendNotification(
+      notification.type,
+      notification.id,
+      notification.metadata.title,
+      user.id,
+      notification.metadata.message,
+      notification.metadata.isDeleted
+    )
+    if (result) {
+      return res.status(200).json({ success: true })
+    }
+    return res
+      .status(500)
+      .json({ error: serverStrings.errors.notificationSendError })
   } catch (error) {
     console.log(error)
-    const message = error.message.includes(
-      serverStrings.errors.notificationError
-    )
-      ? serverStrings.errors.notificationSendError
-      : serverStrings.errors.generic
-    return res.status(500).json({ error: message })
+    return res.status(500).json({ error: serverStrings.errors.generic })
   }
 })
 
@@ -119,4 +123,4 @@ notificationRouter.get('/getNotifications', async (req, res) => {
   }
 })
 
-module.exports = { notificationRouter, notificationEmitter }
+module.exports = { notificationRouter }

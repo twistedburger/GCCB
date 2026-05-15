@@ -13,6 +13,7 @@ import {
   Avatar,
   Typography,
   Box,
+  Badge,
 } from '@mui/material'
 import {
   Menu as MenuIcon,
@@ -28,7 +29,7 @@ import {
 import { authLevel } from '../hooks/Authorization'
 import PropTypes from 'prop-types'
 import { sidebarStrings } from '../locales/en/ComponentStrings/SidebarStrings'
-
+import { useUnreadMessages } from '../../context/UnreadMessagesContext'
 /**
  * An array of navigation items for the main sidebar.
  *
@@ -70,7 +71,7 @@ const mainNavigation = [
     id: 'Chats',
     icon: <ForumOutlined />,
     label: sidebarStrings.chats,
-    path: '/chat',
+    path: '/chats',
   },
   {
     id: 'Notifications',
@@ -92,8 +93,8 @@ const mainNavigation = [
 export default function Sidebar({ userData }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-
   const userRole = userData?.role || 'USER'
+  const { hasUnread } = useUnreadMessages(userData?.id) ?? { hasUnread: false }
 
   const navItems = mainNavigation.filter(item => {
     const isModeratorItem = item.id === 'Moderate' || item.id === 'Banned Users'
@@ -210,7 +211,13 @@ export default function Sidebar({ userData }) {
                       justifyContent: 'center',
                     }}
                   >
-                    {icon}
+                    {id === 'Chats' ? (
+                      <Badge color="error" variant="dot" invisible={!hasUnread}>
+                        {icon}
+                      </Badge>
+                    ) : (
+                      icon
+                    )}
                   </ListItemIcon>
                   <ListItemText
                     primary={label}

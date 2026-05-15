@@ -4,6 +4,24 @@ const {
 } = require('../../locales/en/services/ChatServicesLocales.js')
 
 /**
+ * Fetches all members of a chatroom.
+ */
+const getRoomMembers = async chatroomId => {
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.nickname FROM "user" u
+       JOIN chatroom_member cm ON u.id = cm.user_id
+       WHERE cm.chatroom_id = $1`,
+      [chatroomId]
+    )
+    return { success: true, data: result.rows }
+  } catch (err) {
+    console.error(chatServiceStrings.errors.fetchRooms, err)
+    return { success: false, error: chatServiceStrings.errors.fetchRooms }
+  }
+}
+
+/**
  * Closes expired rooms and deletes archived ones.
  */
 const performRoomCleanup = async () => {
@@ -284,4 +302,5 @@ module.exports = {
   createNewRoom,
   deleteRoom,
   saveMessage,
+  getRoomMembers,
 }

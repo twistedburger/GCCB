@@ -146,10 +146,12 @@ const CreateEvent = ({ initLoc, initLatLng, onSubmit }) => {
         onConfirm={handleConfirmSubmit}
         title={createEventStrings.confirmCreationTitle}
       >
-        {createEventStrings.confirmCreationMessage(
-          eventName,
-          addedRoute?.title
-        )}
+        {addedRoute
+          ? createEventStrings.confirmCreationMessage(
+              eventName,
+              addedRoute.title
+            )
+          : createEventStrings.confirmCreationNoRouteMessage(eventName)}
       </ConfirmationDialog>
 
       <ConfirmationDialog

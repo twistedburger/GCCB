@@ -20,15 +20,14 @@ import Moderate from './pages/moderate/Moderate'
 import BannedUsers from './pages/BannedUsers'
 import Chats from './pages/Chats'
 import Notifications from './pages/Notifications'
-import { useUser } from '../context/UserContext.jsx'
+import { useUser } from '../context/UserContext'
+import { UnreadMessagesProvider } from '../context/UnreadMessagesContext'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
   const [ssoProfile, setSsoProfile] = useState(null)
-
   const baseURL = import.meta.env.VITE_API_BASE_URL
   const frontendUrl = import.meta.env.VITE_FRONTEND_URL
-
   const [bannedError] = useState(
     new URLSearchParams(window.location.search).get('error') === 'banned'
   )
@@ -58,7 +57,7 @@ function App() {
     } catch (err) {
       console.error(err.message)
     }
-  }, [setUser, baseURL])
+  }, [setUser]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     authenticateUser()
@@ -68,74 +67,97 @@ function App() {
     <Router>
       <AuthProvider>
         <div className="app-container min-h-screen">
-          {/* pages */}
           <div className="relative w-full min-h-screen flex bg-background-off-white">
-            {userAuthenticated && user && <Sidebar userData={user} />}{' '}
-            <main className="flex-1 overflow-y-auto">
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    !userAuthenticated ? (
-                      <Login error={bannedError} />
-                    ) : !user ? (
-                      <CreateUser
-                        ssoUser={ssoProfile}
-                        onUserCreated={newUser => {
-                          setUser(newUser)
-                          setUserAuthenticated(true)
-                        }}
+            {userAuthenticated ? (
+              <UnreadMessagesProvider>
+                {user && <Sidebar userData={user} />}
+                <main className="flex-1 overflow-y-auto">
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        !user ? (
+                          <CreateUser
+                            ssoUser={ssoProfile}
+                            onUserCreated={newUser => {
+                              setUser(newUser)
+                              setUserAuthenticated(true)
+                            }}
+                          />
+                        ) : (
+                          <Home />
+                        )
+                      }
+                    >
+                      <Route path="filter" element={<Filter />} />
+                      <Route path="event/:id" element={<EventDetail />} />
+                    </Route>
+                    <Route
+                      element={
+                        <ProtectedRoute
+                          requiredAuthorization={authLevel.USER}
+                        />
+                      }
+                    >
+                      <Route path="/mytrip" element={<MyTrip />} />
+                      <Route path="/mytrip/:id" element={<MyTrip />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route
+                        path="/dashboard/co2-savings"
+                        element={<Co2Savings />}
                       />
-                    ) : (
-                      <Home />
-                    )
-                  }
-                >
-                  <Route path="filter" element={<Filter />} />
-                  <Route path="event/:id" element={<EventDetail />} />
-                </Route>
-                <Route
-                  element={
-                    <ProtectedRoute requiredAuthorization={authLevel.USER} />
-                  }
-                >
-                  <Route path="/mytrip" element={<MyTrip />} />
-                  <Route path="/mytrip/:id" element={<MyTrip />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route
-                    path="/dashboard/co2-savings"
-                    element={<Co2Savings />}
-                  />
-                  <Route path="/dashboard/commutes" element={<Commutes />} />
-                  <Route
-                    path="/dashboard/trip-frequency"
-                    element={<TripFrequency />}
-                  />
-                  <Route path="/dashboard/badges" element={<Badges />} />
-                  <Route path="/dashboard/badges/:id" element={<Badges />} />
-                  <Route path="/user-guide" element={<UserGuide />} />
-                  <Route path="/bannedusers" element={<BannedUsers />} />
-                  <Route path="/chat/*" element={<Chats />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                </Route>
-                <Route
-                  element={
-                    <ProtectedRoute requiredAuthorization={authLevel.ADMIN} />
-                  }
-                >
-                  <Route path="/dashboard/activity" element={<Activity />} />
-                </Route>
-                <Route
-                  element={
-                    <ProtectedRoute
-                      requiredAuthorization={authLevel.MODERATOR}
-                    />
-                  }
-                >
-                  <Route path="/moderate" element={<Moderate />} />
-                </Route>
-              </Routes>
-            </main>
+                      <Route
+                        path="/dashboard/commutes"
+                        element={<Commutes />}
+                      />
+                      <Route
+                        path="/dashboard/trip-frequency"
+                        element={<TripFrequency />}
+                      />
+                      <Route path="/dashboard/badges" element={<Badges />} />
+                      <Route
+                        path="/dashboard/badges/:id"
+                        element={<Badges />}
+                      />
+                      <Route path="/user-guide" element={<UserGuide />} />
+                      <Route path="/bannedusers" element={<BannedUsers />} />
+                      <Route path="/chats/*" element={<Chats />} />
+                      <Route
+                        path="/notifications"
+                        element={<Notifications />}
+                      />
+                    </Route>
+                    <Route
+                      element={
+                        <ProtectedRoute
+                          requiredAuthorization={authLevel.ADMIN}
+                        />
+                      }
+                    >
+                      <Route
+                        path="/dashboard/activity"
+                        element={<Activity />}
+                      />
+                    </Route>
+                    <Route
+                      element={
+                        <ProtectedRoute
+                          requiredAuthorization={authLevel.MODERATOR}
+                        />
+                      }
+                    >
+                      <Route path="/moderate" element={<Moderate />} />
+                    </Route>
+                  </Routes>
+                </main>
+              </UnreadMessagesProvider>
+            ) : (
+              <main className="flex-1 overflow-y-auto">
+                <Routes>
+                  <Route path="*" element={<Login error={bannedError} />} />
+                </Routes>
+              </main>
+            )}
           </div>
         </div>
       </AuthProvider>

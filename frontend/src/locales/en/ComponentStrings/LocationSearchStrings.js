@@ -1,3 +1,3 @@
 export const locationSearchStrings = {
-  searchPlaceholder: 'Search location...',
+  searchPlaceholder: 'Search for a location to find nearby events...',
 }
