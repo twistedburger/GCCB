@@ -4,7 +4,7 @@ import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
-import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
+import { formatKg, formatKm } from '../../utils/AnalyticsUtils'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
 import { TransportMode } from '../../../../shared/TransportModes'
 

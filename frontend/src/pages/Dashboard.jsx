@@ -5,11 +5,7 @@ import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Star } from '@mui/icons-material'
-import {
-  formatKg,
-  formatKm,
-  getMostUsedMode,
-} from '../utils/AnalyticsHelpers.js'
+import { formatKg, formatKm, getMostUsedMode } from '../utils/AnalyticsUtils.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { analyticsStrings } from '../locales/en/AnalyticsStrings'
 import { Avatar } from '@mui/material'
