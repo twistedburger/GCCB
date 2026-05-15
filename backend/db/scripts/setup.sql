@@ -254,9 +254,9 @@ CREATE ROLE main_user WITH LOGIN PASSWORD '';
 
 GRANT SELECT, INSERT, UPDATE         ON TABLE "user"             TO :app_role;
 GRANT SELECT, INSERT, UPDATE         ON TABLE event              TO :app_role;
-GRANT SELECT, INSERT, UPDATE         ON TABLE route              TO :app_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE route              TO :app_role;
 GRANT SELECT, INSERT, DELETE, UPDATE ON TABLE user_route         TO :app_role;
-GRANT SELECT, INSERT                 ON TABLE event_route        TO :app_role;
+GRANT SELECT, INSERT, DELETE         ON TABLE event_route        TO :app_role;
 GRANT SELECT, INSERT, UPDATE         ON TABLE report             TO :app_role;
 GRANT SELECT, UPDATE                 ON TABLE event_verification TO :app_role;
 GRANT SELECT                         ON TABLE sso                TO :app_role;

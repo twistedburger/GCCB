@@ -29,6 +29,8 @@ const { initSocket, broadcast } = require('./sockets/ChatSocket')
 const chatService = require('./src/services/ChatServices')
 const { selectUser } = require('./src/utils/UserUtils')
 const { notificationRouter } = require('./endpoints/NotificationEndpoints')
+const { sendNotification } = require('./src/utils/NotificationUtils')
+const { NotificationType } = require('../shared/NotificationTypes')
 
 const config = {
   authRequired: false,
@@ -1032,10 +1034,21 @@ app.delete('/api/routes/:id/delete', async (req, res) => {
 
   try {
     const routeId = req.params.id
-
+    const user = await selectUser(req)
     await client.query('BEGIN')
     const chatroomId = await chatService.deleteRoom(client, routeId)
     broadcast(chatroomId, 'ROOM_DELETED', { chatroomId })
+    const result = await client.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      'Route has been deleted',
+      true
+    )
     await client.query('DELETE FROM event_route WHERE route_id = $1', [routeId])
     await client.query('DELETE FROM user_route WHERE route_id = $1', [routeId])
     await client.query('DELETE FROM route WHERE id = $1', [routeId])
