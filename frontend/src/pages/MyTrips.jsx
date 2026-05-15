@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import GenericToggle from '../components/GenericToggle'
 import RouteCardWrapper from '../components/RouteCardWrapper'
 import Modal from '../components/Modal'
@@ -17,6 +17,8 @@ import {
   getConfirmationBody,
   shouldHideReportJoin,
 } from '../utils/MyTripsUtils'
+import { useParams } from 'react-router-dom'
+import HighlightCard from '../components/HighlightCard'
 
 /**
  * Display the MyTrips page
@@ -37,6 +39,19 @@ export default function MyTrips() {
     useState(false)
   const [routeIdToRemove, setRouteIdToRemove] = useState(null)
   const { user } = useUser()
+  const { id } = useParams()
+  const cardRefs = useRef({})
+
+  useEffect(() => {
+    if (!id) return
+
+    if (cardRefs.current[parseInt(id)]) {
+      cardRefs.current[parseInt(id)].scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    }
+  }, [id, activeTrips])
 
   useEffect(() => {
     if (window.google?.maps) {
@@ -151,34 +166,39 @@ export default function MyTrips() {
         </div>
         <div className="flex flex-col gap-4">
           {tripsToDisplay.map(trip => (
-            <RouteCardWrapper
+            <HighlightCard
               key={trip.id}
-              route={trip}
-              mapsReady={mapsReady}
-              onReport={trip => {
-                setReportData(trip)
-                setShowReport(true)
-              }}
-              onComplete={() => setPendingAction({ type: 'complete', trip })}
-              onIncomplete={() =>
-                setPendingAction({ type: 'incomplete', trip })
-              }
+              ref={element => (cardRefs.current[trip.id] = element)}
+              shouldFlash={trip.id === parseInt(id)}
             >
-              <div className="*:shadow-white">
-                <RouteCard
-                  route={trip}
-                  individualView={true}
-                  routeDetailView={true}
-                  isCompleted={trip.completed}
-                  onToggleJoin={() => handleRouteLeaveRequest(trip)}
-                  onReport={data => {
-                    setReportData(data)
-                    setShowReport(true)
-                  }}
-                  hideReportJoin={shouldHideReportJoin(trip.depart_time)}
-                />
-              </div>
-            </RouteCardWrapper>
+              <RouteCardWrapper
+                route={trip}
+                mapsReady={mapsReady}
+                onReport={trip => {
+                  setReportData(trip)
+                  setShowReport(true)
+                }}
+                onComplete={() => setPendingAction({ type: 'complete', trip })}
+                onIncomplete={() =>
+                  setPendingAction({ type: 'incomplete', trip })
+                }
+              >
+                <div className="*:shadow-white">
+                  <RouteCard
+                    route={trip}
+                    individualView={true}
+                    routeDetailView={true}
+                    isCompleted={trip.completed}
+                    onToggleJoin={() => handleRouteLeaveRequest(trip)}
+                    onReport={data => {
+                      setReportData(data)
+                      setShowReport(true)
+                    }}
+                    hideReportJoin={shouldHideReportJoin(trip.depart_time)}
+                  />
+                </div>
+              </RouteCardWrapper>
+            </HighlightCard>
           ))}
         </div>
       </div>

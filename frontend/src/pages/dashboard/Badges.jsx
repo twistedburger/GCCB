@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import GenericButton from '../../components/GenericButton'
 import BadgeCard from '../../components/BadgeCard'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
 import { VIEWS, CATEGORY_ORDER, filterForView } from '../../utils/BadgeUtils'
 import { badgesStrings } from '../../locales/en/ComponentStrings/BadgeStrings'
+import HighlightCard from '../../components/HighlightCard'
 
 /**
  * Badge display page.
@@ -18,6 +19,8 @@ export default function Badges() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [view, setView] = useState(VIEWS.ALL)
+  const { id } = useParams()
+  const cardRefs = useRef({})
 
   useEffect(() => {
     async function fetchBadges() {
@@ -38,10 +41,23 @@ export default function Badges() {
       }
     }
     fetchBadges()
-  }, [])
+  }, [baseURL])
 
-  const earnedCount = badges.filter(b => b.earned).length
+  const earnedCount = badges.filter(badgeFilter => badgeFilter.earned).length
   const viewBadges = filterForView(badges, view)
+
+  useEffect(() => {
+    if (!id) return
+
+    setView(VIEWS.EARNED)
+
+    if (cardRefs.current[parseInt(id)]) {
+      cardRefs.current[parseInt(id)].scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    }
+  }, [id, viewBadges])
 
   return (
     <div className="relative mx-auto w-full max-w-5xl p-4">
@@ -64,19 +80,19 @@ export default function Badges() {
       </div>
 
       <div className="mb-6 flex w-fit rounded-2xl border border-zinc-200 bg-white overflow-hidden text-sm">
-        {Object.entries(VIEWS).map(([, v]) => (
+        {Object.entries(VIEWS).map(([, viewEntry]) => (
           <GenericButton
-            key={v}
+            key={viewEntry}
             type="button"
-            onClick={() => setView(v)}
+            onClick={() => setView(viewEntry)}
             unstyled
             customStyling={`px-4 py-2 font-medium transition-colors ${
-              view === v
+              view === viewEntry
                 ? 'bg-blue-primary text-white'
                 : 'text-text-secondary hover:bg-zinc-50'
             }`}
           >
-            {badgesStrings.views[v]}
+            {badgesStrings.views[viewEntry]}
           </GenericButton>
         ))}
       </div>
@@ -120,7 +136,13 @@ export default function Badges() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {viewBadges.map(badge => (
-                  <BadgeCard key={badge.id} badge={badge} />
+                  <HighlightCard
+                    key={badge.id}
+                    ref={element => (cardRefs.current[badge.id] = element)}
+                    shouldFlash={badge.id === parseInt(id)}
+                  >
+                    <BadgeCard badge={badge} />
+                  </HighlightCard>
                 ))}
               </div>
             ))}

@@ -57,7 +57,7 @@ function App() {
     } catch (err) {
       console.error(err.message)
     }
-  }, [setUser])
+  }, [setUser, baseURL])
 
   useEffect(() => {
     authenticateUser()
@@ -99,6 +99,7 @@ function App() {
                   }
                 >
                   <Route path="/mytrip" element={<MyTrip />} />
+                  <Route path="/mytrip/:id" element={<MyTrip />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route
                     path="/dashboard/co2-savings"
@@ -110,6 +111,7 @@ function App() {
                     element={<TripFrequency />}
                   />
                   <Route path="/dashboard/badges" element={<Badges />} />
+                  <Route path="/dashboard/badges/:id" element={<Badges />} />
                   <Route path="/user-guide" element={<UserGuide />} />
                   <Route path="/bannedusers" element={<BannedUsers />} />
                   <Route path="/chat/*" element={<Chats />} />
