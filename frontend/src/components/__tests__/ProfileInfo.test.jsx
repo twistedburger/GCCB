@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import ProfileInfo from '../ProfileInfo'
-import PropTypes from 'prop-types'
 
 jest.mock('@mui/material', () => {
+  const PropTypes = require('prop-types')
+
   const MockAvatar = ({ src, sx }) => (
     <img
       data-testid="avatar"
