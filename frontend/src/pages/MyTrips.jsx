@@ -6,19 +6,17 @@ import Report from '../components/Report'
 import RouteCard from '../components/RouteCard'
 import Alert from '../components/Alert'
 import ConfirmationDialog from '../components/ConfirmationDialog'
-import { useUser } from '../../context/UserContext'
 import { myTripsStrings } from '../locales/en/MyTripsStrings'
 import {
   fetchMyTrips,
   confirmTripAction,
-  confirmRouteRemoval,
-  leaveRoute,
   getConfirmationTitle,
   getConfirmationBody,
   shouldHideReportJoin,
 } from '../utils/MyTripsUtils'
 import { useParams } from 'react-router-dom'
 import HighlightCard from '../components/HighlightCard'
+import { useRouteActions } from '../../context/RouteActionsContext'
 
 /**
  * Display the MyTrips page
@@ -34,13 +32,9 @@ export default function MyTrips() {
   const [showReport, setShowReport] = useState(false)
   const [pendingAction, setPendingAction] = useState({ type: null, trip: null })
   const [alert, setAlert] = useState(null)
-  const [confirmLeave, setConfirmLeave] = useState(null)
-  const [isRouteRemovalDialogOpen, setIsRouteRemovalDialogOpen] =
-    useState(false)
-  const [routeIdToRemove, setRouteIdToRemove] = useState(null)
-  const { user } = useUser()
   const { id } = useParams()
   const cardRefs = useRef({})
+  const { toggleJoin } = useRouteActions()
 
   useEffect(() => {
     if (!id) return
@@ -73,18 +67,27 @@ export default function MyTrips() {
 
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
 
-  const handleRouteLeaveRequest = route => {
-    const isRouteCreator = user?.id === route.creator_id
-    const isCar =
-      route.transportation_mode === 'Car' || route.transportationMode === 'Car'
-
-    if (isRouteCreator && isCar) {
-      setRouteIdToRemove(route.id)
-      setIsRouteRemovalDialogOpen(true)
-    } else {
-      setConfirmLeave(route)
-    }
-  }
+  const handleToggleJoin = trip =>
+    toggleJoin(trip, ({ routeId, joined, deleted }) => {
+      if (deleted || !joined) {
+        fetchMyTrips(setActiveTrips, setCompletedTrips).catch(console.error)
+      } else {
+        const updater = trips =>
+          trips.map(t =>
+            t.id === routeId
+              ? {
+                  ...t,
+                  isJoined: joined,
+                  people_going: joined
+                    ? (parseInt(t.people_going) || 0) + 1
+                    : Math.max(0, (parseInt(t.people_going) || 0) - 1),
+                }
+              : t
+          )
+        setActiveTrips(updater)
+        setCompletedTrips(updater)
+      }
+    })
 
   const handleConfirm = async () => {
     try {
@@ -105,39 +108,6 @@ export default function MyTrips() {
     <div>
       <div className="fixed inset-y-0 right-0 left-13.75 z-50 pointer-events-none">
         <div className="pointer-events-auto">
-          <ConfirmationDialog
-            variant="danger"
-            isOpen={isRouteRemovalDialogOpen}
-            onClose={() => setIsRouteRemovalDialogOpen(false)}
-            onConfirm={() =>
-              confirmRouteRemoval(
-                routeIdToRemove,
-                setActiveTrips,
-                setAlert,
-                setIsRouteRemovalDialogOpen,
-                setRouteIdToRemove
-              )
-            }
-            title={myTripsStrings.deleteRoute}
-          >
-            {myTripsStrings.creatorLeave}
-          </ConfirmationDialog>
-          <ConfirmationDialog
-            isOpen={confirmLeave !== null}
-            onConfirm={() =>
-              leaveRoute(
-                confirmLeave,
-                setActiveTrips,
-                setCompletedTrips,
-                setConfirmLeave
-              )
-            }
-            onClose={() => setConfirmLeave(null)}
-            title={myTripsStrings.leaveRoute}
-            variant="primary"
-          >
-            {myTripsStrings.confirmationLeave}
-          </ConfirmationDialog>
           <ConfirmationDialog
             isOpen={pendingAction.type !== null}
             onConfirm={handleConfirm}
@@ -189,7 +159,7 @@ export default function MyTrips() {
                     individualView={true}
                     routeDetailView={true}
                     isCompleted={trip.completed}
-                    onToggleJoin={() => handleRouteLeaveRequest(trip)}
+                    onToggleJoin={() => handleToggleJoin(trip)}
                     onReport={data => {
                       setReportData(data)
                       setShowReport(true)

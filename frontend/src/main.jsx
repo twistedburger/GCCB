@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import { UserProvider } from '../context/UserContext'
 import { NotificationProvider } from '../context/NotificationContext'
+import { RouteActionsProvider } from '../context/RouteActionsContext'
+
 import './index.css'
 
 const script = document.createElement('script')
@@ -15,7 +17,9 @@ window.__mapsReady = () => {
     <StrictMode>
       <UserProvider>
         <NotificationProvider>
-          <App />
+          <RouteActionsProvider>
+            <App />
+          </RouteActionsProvider>
         </NotificationProvider>
       </UserProvider>
     </StrictMode>

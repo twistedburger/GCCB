@@ -15,10 +15,9 @@ import { Drawer } from 'vaul'
 import CreateRoute from '../../components/CreateRoute'
 import Alert from '../../components/Alert'
 import Report from '../../components/Report'
-import { useUser } from '../../../context/UserContext'
-import ConfirmationDialog from '../../components/ConfirmationDialog'
 import { createEventStrings } from '../../locales/en/ComponentStrings/CreateEventStrings'
 import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
+import { useRouteActions } from '../../../context/RouteActionsContext'
 
 /**
  * Displays the event detail drawer
@@ -42,10 +41,7 @@ export default function EventDetail() {
 
   const [reportData, setReportData] = useState(null)
   const baseURL = import.meta.env.VITE_API_BASE_URL
-  const { user } = useUser()
-  const [isRouteRemovalDialogOpen, setIsRouteRemovalDialogOpen] =
-    useState(false)
-  const [routeIdToRemove, setRouteIdToRemove] = useState(null)
+  const { toggleJoin, user } = useRouteActions()
 
   const isAlreadyJoined =
     event?.routes?.some(route => route.isJoined === true) || false
@@ -83,6 +79,7 @@ export default function EventDetail() {
           transportation_mode: routeData.transportationMode,
           created_at: new Date(),
           isJoined: true,
+          creator_id: user?.id,
         }
         setEvent(prevEvent => ({
           ...prevEvent,
@@ -98,34 +95,17 @@ export default function EventDetail() {
     }
   }
 
-  const handleRouteLeaveRequest = async route => {
-    const isRouteCreator = user?.id === route.creator_id
-    const isCar =
-      route.transportation_mode === 'Car' || route.transportationMode === 'Car'
-
-    if (isRouteCreator && isCar) {
-      setRouteIdToRemove(route.id)
-      setIsRouteRemovalDialogOpen(true)
-    } else {
-      await fetch(`${baseURL}/api/routes/${route.id}/leave`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-      updateLocalJoinStatus(route.id, false)
-    }
-  }
-
-  const handleToggleJoin = async route => {
-    if (route.isJoined) {
-      await handleRouteLeaveRequest(route)
-    } else {
-      await fetch(`${baseURL}/api/routes/${route.id}/join`, {
-        method: 'POST',
-        credentials: 'include',
-      })
-      updateLocalJoinStatus(route.id, true)
-    }
-  }
+  const handleToggleJoin = route =>
+    toggleJoin(route, ({ routeId, joined, deleted }) => {
+      if (deleted) {
+        setEvent(prev => ({
+          ...prev,
+          routes: prev.routes.filter(r => r.id !== routeId),
+        }))
+      } else {
+        updateLocalJoinStatus(routeId, joined)
+      }
+    })
 
   const updateLocalJoinStatus = (routeId, joined) => {
     setEvent(prev => ({
@@ -149,33 +129,6 @@ export default function EventDetail() {
   const liveSelectedRoute =
     event?.routes?.find(r => r.id === selectedRoute?.id) || selectedRoute
 
-  const handleConfirmRouteRemoval = async () => {
-    try {
-      const response = await fetch(
-        `${baseURL}/api/routes/${routeIdToRemove}/delete`,
-        {
-          method: 'DELETE',
-          credentials: 'include',
-        }
-      )
-
-      if (response.ok) {
-        setEvent(prev => ({
-          ...prev,
-          routes: prev.routes.filter(
-            routeItem => routeItem.id !== routeIdToRemove
-          ),
-        }))
-        setAlert({ type: 'success', message: 'Route deleted.' })
-      }
-    } catch (error) {
-      setAlert({ type: 'error', message: `Delete failed. ${error.message}` })
-    } finally {
-      setIsRouteRemovalDialogOpen(false)
-      setRouteIdToRemove(null)
-    }
-  }
-
   useEffect(() => {
     const fetchEvent = async () => {
       const response = await fetch(`${baseURL}/api/eventdetail/${id}`, {
@@ -189,16 +142,6 @@ export default function EventDetail() {
 
   return (
     <div>
-      <ConfirmationDialog
-        variant="danger"
-        isOpen={isRouteRemovalDialogOpen}
-        onClose={() => setIsRouteRemovalDialogOpen(false)}
-        onConfirm={handleConfirmRouteRemoval}
-        title="Delete Route?"
-      >
-        As the creator of this route, leaving will delete it for everyone
-        currently joined. Are you sure?
-      </ConfirmationDialog>
       {alert && (
         <Alert
           message={alert.message}
