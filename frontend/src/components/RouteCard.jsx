@@ -49,6 +49,8 @@ export default function RouteCard({
   const activeJoinedState = isDraft ? route.isJoined : isJoined
   const baseURL = import.meta.env.VITE_API_BASE_URL
 
+  const isChatVisible = Date.now() < dateObj.getTime() + 2 * 24 * 60 * 60 * 1000
+
   useEffect(() => {
     setPeopleGoing(parseInt(route.people_going, 10) || 0)
   }, [route.people_going])
@@ -195,67 +197,67 @@ export default function RouteCard({
             )}
           </div>
         </div>
-
-        {!hideReportJoin && (
-          <div className="flex flex-col gap-1">
-            <div className="flex justify-center m-2">
-              {onOpenChat && (
-                <GenericButton
-                  unstyled
-                  onClick={e => {
-                    e.stopPropagation()
-                    onOpenChat()
-                  }}
-                  customStyling="flex border border-1 items-center justify-center w-10 h-10 rounded-full text-blue-primary bg-blue-secondary hover:opacity-80 transition-opacity"
-                  aria-label="Open chat for this route"
-                >
-                  <ChatOutlined style={{ fontSize: 25 }} />
-                </GenericButton>
-              )}
-            </div>
-            {((!isDraft && onToggleJoin) || !individualView) && (
+        <div className="flex flex-col items-center gap-2">
+          <div className={`w-10 h-10 ${hideReportJoin ? 'mr-5' : ''}`}>
+            {onOpenChat && isChatVisible && (
               <GenericButton
                 unstyled
-                customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
                 onClick={e => {
                   e.stopPropagation()
-                  if (onReport) {
-                    onReport({
-                      type: 'route',
-                      targetId: route.id,
-                      title: route.title || route.route_name || '',
-                    })
-                  }
+                  onOpenChat()
                 }}
+                customStyling="flex border border-1 items-center justify-center w-10 h-10 rounded-full text-blue-primary bg-blue-secondary hover:opacity-80 transition-opacity"
               >
-                <span>{routeStrings.common.report}</span>
+                <ChatOutlined style={{ fontSize: 25 }} />
               </GenericButton>
             )}
-            {!isCompleted &&
-              !isDisabled &&
-              (activeJoinedState ? (
-                <GenericButton
-                  unstyled
-                  customStyling="py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs ml-2"
-                  onClick={handleClick}
-                >
-                  <div className="flex flex-row items-center gap-1">
-                    <Logout fontSize="12px" />
-                    <span>{routeCardStrings.leave}</span>
-                  </div>
-                </GenericButton>
-              ) : (
-                <GenericButton
-                  unstyled
-                  disabled={isFull}
-                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
-                  onClick={handleJoin}
-                >
-                  {routeCardStrings.join}
-                </GenericButton>
-              ))}
           </div>
-        )}
+          {!hideReportJoin && (
+            <div className="flex flex-col gap-1 items-center">
+              {((!isDraft && onToggleJoin) || !individualView) && (
+                <GenericButton
+                  unstyled
+                  customStyling="w-full py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs text-center"
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (onReport) {
+                      onReport({
+                        type: 'route',
+                        targetId: route.id,
+                        title: route.title || route.route_name || '',
+                      })
+                    }
+                  }}
+                >
+                  <span>{routeStrings.common.report}</span>
+                </GenericButton>
+              )}
+              {!isCompleted &&
+                !isDisabled &&
+                (activeJoinedState ? (
+                  <GenericButton
+                    unstyled
+                    customStyling="w-full py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs text-center"
+                    onClick={handleClick}
+                  >
+                    <div className="flex flex-row items-center justify-center gap-1">
+                      <Logout fontSize="12px" />
+                      <span>{routeCardStrings.leave}</span>
+                    </div>
+                  </GenericButton>
+                ) : (
+                  <GenericButton
+                    unstyled
+                    disabled={isFull}
+                    customStyling={`w-full py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs text-center ${isFull ? 'opacity-50' : ''}`}
+                    onClick={handleJoin}
+                  >
+                    {routeCardStrings.join}
+                  </GenericButton>
+                ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
