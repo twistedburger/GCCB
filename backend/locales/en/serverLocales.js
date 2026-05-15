@@ -28,6 +28,10 @@ const serverStrings = {
     cloudinaryFailed: 'Cloudinary banner upload failed:',
   },
   badgeEarned: 'You have recieved a new badge!',
+  routeDepartSoon: 'Your route is departing soon!',
+  userJoined: 'has joined your route!',
+  userLeft: 'has left your route.',
+  routeDeleted: 'Rotue has been deleted',
 }
 
 module.exports = { serverStrings }

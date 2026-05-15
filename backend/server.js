@@ -114,7 +114,7 @@ setInterval(async () => {
       route.id,
       route.title,
       null,
-      'Your route is departing soon!',
+      serverStrings.routeDepartSoon,
       false,
       true
     )
@@ -1012,6 +1012,17 @@ app.post('/api/routes/:id/join', async (req, res) => {
     const user = await selectUser(req)
     const routeId = req.params.id
 
+    const result = await db.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      `${user.nickname} ${serverStrings.userJoined}`
+    )
+
     await db.query(
       'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
       [user.id, routeId]
@@ -1069,7 +1080,7 @@ app.delete('/api/routes/:id/delete', async (req, res) => {
       routeId,
       result.rows[0]?.title,
       user.id,
-      'Route has been deleted',
+      serverStrings.routeDeleted,
       true
     )
     await client.query('DELETE FROM event_route WHERE route_id = $1', [routeId])
@@ -1108,6 +1119,17 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
     const chatroomRes = await db.query(
       'SELECT id FROM chatroom WHERE route_id = $1',
       [routeId]
+    )
+
+    const result = await db.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      `${user.nickname} ${serverStrings.userLeft}`
     )
 
     await db.query(
