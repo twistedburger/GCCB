@@ -27,8 +27,10 @@ const { BadgeQueries } = require('./src/utils/BadgeQueries')
 const { BadgeEvaluator } = require('./src/utils/BadgeEvaluator')
 const { initSocket, broadcast } = require('./sockets/ChatSocket')
 const chatService = require('./src/services/ChatServices')
-const { notificationRouter } = require('./src/utils/NotificationEndpoints')
 const { selectUser } = require('./src/utils/UserUtils')
+const { notificationRouter } = require('./endpoints/NotificationEndpoints')
+const { sendNotification } = require('./src/utils/NotificationUtils')
+const { NotificationType } = require('../shared/NotificationTypes')
 
 const config = {
   authRequired: false,
@@ -94,6 +96,29 @@ setInterval(async () => {
     WHERE completed = FALSE
     AND depart_time < NOW()
   `)
+
+  const upcomingRoutes = await db.query(`
+    SELECT id, title FROM route
+    WHERE completed = FALSE
+    AND depart_time BETWEEN NOW() AND NOW() + INTERVAL '15 minutes'
+    AND NOT EXISTS (
+      SELECT 1 FROM notification
+      WHERE notification.route_id = route.id
+      AND notification.metadata->>'message' ILIKE '%depart%'
+    )
+  `)
+
+  for (const route of upcomingRoutes.rows) {
+    await sendNotification(
+      NotificationType.Route,
+      route.id,
+      route.title,
+      null,
+      serverStrings.routeDepartSoon,
+      false,
+      true
+    )
+  }
 }, 60 * 1000)
 
 app.use('/notifications', notificationRouter)
@@ -987,6 +1012,17 @@ app.post('/api/routes/:id/join', async (req, res) => {
     const user = await selectUser(req)
     const routeId = req.params.id
 
+    const result = await db.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      `${user.nickname} ${serverStrings.userJoined}`
+    )
+
     await db.query(
       'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
       [user.id, routeId]
@@ -1032,10 +1068,21 @@ app.delete('/api/routes/:id/delete', async (req, res) => {
 
   try {
     const routeId = req.params.id
-
+    const user = await selectUser(req)
     await client.query('BEGIN')
     const chatroomId = await chatService.deleteRoom(client, routeId)
     broadcast(chatroomId, 'ROOM_DELETED', { chatroomId })
+    const result = await client.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      serverStrings.routeDeleted,
+      true
+    )
     await client.query('DELETE FROM event_route WHERE route_id = $1', [routeId])
     await client.query('DELETE FROM user_route WHERE route_id = $1', [routeId])
     await client.query('DELETE FROM route WHERE id = $1', [routeId])
@@ -1072,6 +1119,17 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
     const chatroomRes = await db.query(
       'SELECT id FROM chatroom WHERE route_id = $1',
       [routeId]
+    )
+
+    const result = await db.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      `${user.nickname} ${serverStrings.userLeft}`
     )
 
     await db.query(
@@ -2048,8 +2106,10 @@ app.post('/api/unblockUser/:userId', async (req, res) => {
 initSocket(httpServer)
 console.log('Sockets initialized')
 
-httpServer.listen(port, () => {
-  console.log(`Server & Sockets integrated on port ${port}`)
-})
+if (require.main === module) {
+  httpServer.listen(port, () => {
+    console.log(`Server & Sockets integrated on port ${port}`)
+  })
+}
 
 module.exports = { app, httpServer }

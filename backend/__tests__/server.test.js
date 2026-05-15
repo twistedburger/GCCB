@@ -29,7 +29,7 @@ jest.mock('../db', () => ({
   },
 }))
 
-let app = require('../server')
+let { app } = require('../server')
 
 describe('GET /api/events', () => {
   test('should return list of events with creator names', async () => {
