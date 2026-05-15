@@ -96,6 +96,29 @@ setInterval(async () => {
     WHERE completed = FALSE
     AND depart_time < NOW()
   `)
+
+  const upcomingRoutes = await db.query(`
+    SELECT id, title FROM route
+    WHERE completed = FALSE
+    AND depart_time BETWEEN NOW() AND NOW() + INTERVAL '15 minutes'
+    AND NOT EXISTS (
+      SELECT 1 FROM notification
+      WHERE notification.route_id = route.id
+      AND notification.metadata->>'message' ILIKE '%depart%'
+    )
+  `)
+
+  for (const route of upcomingRoutes.rows) {
+    await sendNotification(
+      NotificationType.Route,
+      route.id,
+      route.title,
+      null,
+      'Your route is departing soon!',
+      false,
+      true
+    )
+  }
 }, 60 * 1000)
 
 app.use('/notifications', notificationRouter)

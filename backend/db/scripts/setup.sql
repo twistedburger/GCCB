@@ -270,5 +270,6 @@ GRANT SELECT, INSERT, DELETE         ON TABLE chatroom_member    TO :app_role;
 GRANT SELECT, INSERT, DELETE         ON TABLE chat_message       TO :app_role;
 GRANT SELECT, INSERT                 ON TABLE notification       TO :app_role;
 GRANT SELECT, INSERT, UPDATE         ON TABLE user_notification  TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE vehicle            TO :app_role;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO :app_role;
