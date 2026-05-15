@@ -45,12 +45,7 @@ notificationRouter.post('/notify', async (req, res) => {
       .json({ error: serverStrings.errors.notificationSendError })
   } catch (error) {
     console.log(error)
-    const message = error.message.includes(
-      serverStrings.errors.notificationError
-    )
-      ? serverStrings.errors.notificationSendError
-      : serverStrings.errors.generic
-    return res.status(500).json({ error: message })
+    return res.status(500).json({ error: serverStrings.errors.generic })
   }
 })
 

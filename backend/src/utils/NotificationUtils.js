@@ -29,6 +29,7 @@ const handleNotifications = (req, res) => async notifications => {
     )
   }
 }
+
 /**
  * Sends a notification.
  *

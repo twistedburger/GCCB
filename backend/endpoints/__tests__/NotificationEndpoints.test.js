@@ -3,14 +3,13 @@ const { serverStrings } = require('../../locales/en/serverLocales')
 const { app } = require('../../server')
 const { selectUser } = require('../../src/utils/UserUtils')
 const {
-  insertNotification,
   viewUserNotification,
   viewAllUserNotifications,
   getUserNotifications,
 } = require('../../src/services/NotificationServices')
 
 const { NotificationType } = require('../../../shared/NotificationTypes')
-const { notificationEmitter } = require('../NotificationEndpoints')
+const { sendNotification } = require('../../src/utils/NotificationUtils')
 
 global.fetch = jest.fn()
 
@@ -31,8 +30,11 @@ jest.mock('../../src/utils/UserUtils', () => ({
   selectUser: jest.fn(),
 }))
 
+jest.mock('../../src/utils/NotificationUtils', () => ({
+  sendNotification: jest.fn(),
+}))
+
 jest.mock('../../src/services/NotificationServices', () => ({
-  insertNotification: jest.fn(),
   viewUserNotification: jest.fn(),
   viewAllUserNotifications: jest.fn(),
   getUserNotifications: jest.fn(),
@@ -54,13 +56,13 @@ describe('/notifications/notify endpoint', () => {
   const notificationToSend = {
     type: NotificationType.Route,
     id: 2,
-    metadata: { message: 'test' },
+    metadata: { message: 'test', title: 'test', isDeleted: false },
   }
 
   beforeEach(() => {
     mockIsAuthenticated.mockClear()
     selectUser.mockReset()
-    insertNotification.mockReset()
+    sendNotification.mockReset()
   })
 
   test('Return 403 if user is not authenticated', async () => {
@@ -70,7 +72,7 @@ describe('/notifications/notify endpoint', () => {
       .send(notificationToSend)
 
     expect(response.status).toBe(403)
-    expect(insertNotification).toHaveBeenCalledTimes(0)
+    expect(sendNotification).toHaveBeenCalledTimes(0)
     expect(response.body).toEqual(accessDeniedError)
   })
 
@@ -82,7 +84,7 @@ describe('/notifications/notify endpoint', () => {
       .send(notificationToSend)
 
     expect(response.status).toBe(500)
-    expect(insertNotification).toHaveBeenCalledTimes(0)
+    expect(sendNotification).toHaveBeenCalledTimes(0)
     expect(response.body).toEqual(genericServerError)
   })
 
@@ -94,43 +96,27 @@ describe('/notifications/notify endpoint', () => {
       .send(notificationToSend)
 
     expect(response.status).toBe(500)
-    expect(insertNotification).toHaveBeenCalledTimes(0)
+    expect(sendNotification).toHaveBeenCalledTimes(0)
     expect(response.body).toEqual(genericServerError)
   })
 
-  test('Return 500 if insertNotification throws a notification error', async () => {
+  test('Return 500 if sendNotification returns false', async () => {
     mockIsAuthenticated.mockReturnValue(true)
     selectUser.mockResolvedValue(expectedAuthorizedUser)
-    insertNotification.mockRejectedValue(
-      new Error(serverStrings.errors.notificationError)
-    )
+    sendNotification.mockResolvedValue(false)
     const response = await request(app)
       .post('/notifications/notify')
       .send(notificationToSend)
 
     expect(response.status).toBe(500)
-    expect(insertNotification).toHaveBeenCalledTimes(1)
+    expect(sendNotification).toHaveBeenCalledTimes(1)
     expect(response.body).toEqual(notificationSendError)
   })
 
-  test('Return 500 if insertNotification throws a generic error', async () => {
+  test('Return 200 on sendNotification success', async () => {
     mockIsAuthenticated.mockReturnValue(true)
     selectUser.mockResolvedValue(expectedAuthorizedUser)
-    insertNotification.mockRejectedValue(new Error('oops'))
-    const response = await request(app)
-      .post('/notifications/notify')
-      .send(notificationToSend)
-
-    expect(response.status).toBe(500)
-    expect(insertNotification).toHaveBeenCalledTimes(1)
-    expect(response.body).toEqual(genericServerError)
-  })
-
-  test('Return 200 on success and emits notifications', async () => {
-    mockIsAuthenticated.mockReturnValue(true)
-    selectUser.mockResolvedValue(expectedAuthorizedUser)
-    insertNotification.mockResolvedValue([{ user_id: 123456 }])
-    const emitSpy = jest.spyOn(notificationEmitter, 'emit')
+    sendNotification.mockResolvedValue(true)
 
     const response = await request(app)
       .post('/notifications/notify')
@@ -138,7 +124,14 @@ describe('/notifications/notify endpoint', () => {
 
     expect(response.status).toBe(200)
     expect(response.body).toEqual({ success: true })
-    expect(emitSpy).toHaveBeenCalledWith('notification', [{ user_id: 123456 }])
+    expect(sendNotification).toHaveBeenCalledWith(
+      notificationToSend.type,
+      notificationToSend.id,
+      notificationToSend.metadata.title,
+      expectedAuthorizedUser.id,
+      notificationToSend.metadata.message,
+      notificationToSend.metadata.isDeleted
+    )
   })
 })
 
