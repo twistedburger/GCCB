@@ -1,4 +1,4 @@
-const { TransportMode } = require('../../../../shared/TransportModes')
+const { TransportMode } = require('../../../shared/TransportModes')
 
 /**
  * Maps raw Google Maps vehicle type strings to analytics mode categories.
