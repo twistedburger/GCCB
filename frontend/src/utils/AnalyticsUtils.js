@@ -22,7 +22,7 @@ export function getMostUsedMode(modes = {}) {
 
   const labels = {
     ...Object.fromEntries(
-      Object.values(TransportMode).map(m => [m.key, m.label])
+      Object.values(TransportMode).map(mode => [mode.key, mode.label])
     ),
     [TransportMode.CAR.key]: 'Car', // shorter label for this context
   }

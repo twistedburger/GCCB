@@ -1,4 +1,4 @@
-const { TransportMode } = require('../constants/TransportModes')
+const { TransportMode } = require('../../../shared/TransportModes')
 const { EMISSIONS_G_PER_KM } = require('../constants/Emissions')
 const {
   toAnalyticsMode,
@@ -377,13 +377,13 @@ class AnalyticsServices {
       totalDistanceKm: 0,
       totalCo2SavedKg: 0,
       tripFrequenciesByMode: Object.fromEntries(
-        Object.values(TransportMode).map(m => [m, 0])
+        Object.values(TransportMode).map(mode => [mode.key, 0])
       ),
       distanceByModeKm: Object.fromEntries(
-        Object.values(TransportMode).map(m => [m, 0])
+        Object.values(TransportMode).map(mode => [mode.key, 0])
       ),
       co2SavedByModeKg: Object.fromEntries(
-        Object.values(TransportMode).map(m => [m, 0])
+        Object.values(TransportMode).map(mode => [mode.key, 0])
       ),
     }
 

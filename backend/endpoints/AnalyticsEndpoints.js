@@ -3,7 +3,7 @@ const router = express.Router()
 const requireAuth = require('../middleware/RequireAuth')
 const { analyticsServices } = require('../src/services/AnalyticsServices')
 const { roundToTwoDecimals } = require('../src/utils/AnalyticsUtils')
-const { TransportMode } = require('../src/constants/TransportModes')
+const { TransportMode } = require('../../shared/TransportModes')
 const { selectUser } = require('../src/utils/UserUtils')
 const { serverStrings } = require('../locales/en/serverLocales')
 
@@ -42,14 +42,15 @@ router.get('/commute-history', requireAuth, async (req, res) => {
       )
 
       const totalDistanceKm = contributions.reduce(
-        (sum, c) => sum + c.distanceKm,
+        (sum, contribution) => sum + contribution.distanceKm,
         0
       )
 
       // Dominant mode by distance
       const totalsByMode = {}
-      for (const c of contributions) {
-        totalsByMode[c.mode] = (totalsByMode[c.mode] || 0) + c.distanceKm
+      for (const contribution of contributions) {
+        totalsByMode[contribution.mode] =
+          (totalsByMode[contribution.mode] || 0) + contribution.distanceKm
       }
 
       let dominantMode = TransportMode.OTHER.key
@@ -153,10 +154,10 @@ router.get('/analytics/by-mode', requireAuth, async (req, res) => {
       await analyticsServices.fetchCarpoolContextsBatch(carRoutes)
 
     const aggregates = Object.fromEntries(
-      Object.values(TransportMode).map(m => [
-        m,
+      Object.values(TransportMode).map(mode => [
+        mode.key,
         {
-          mode: m,
+          mode: mode.key,
           tripCount: 0,
           totalDistanceKm: 0,
           totalCo2SavedKg: 0,
@@ -170,17 +171,17 @@ router.get('/analytics/by-mode', requireAuth, async (req, res) => {
         isAdmin,
         carpoolContextMap
       )
-      for (const item of contributions) {
+      for (const contribution of contributions) {
         const modeStats =
-          aggregates[item.mode] ?? aggregates[TransportMode.OTHER.key]
-        modeStats.tripCount += item.tripCount
-        modeStats.totalDistanceKm += item.distanceKm
-        modeStats.totalCo2SavedKg += item.savedKg
+          aggregates[contribution.mode] ?? aggregates[TransportMode.OTHER.key]
+        modeStats.tripCount += contribution.tripCount
+        modeStats.totalDistanceKm += contribution.distanceKm
+        modeStats.totalCo2SavedKg += contribution.savedKg
       }
     }
 
-    const data = Object.values(TransportMode).map(({ key }) => {
-      const item = aggregates[key]
+    const data = Object.values(TransportMode).map(mode => {
+      const item = aggregates[mode.key]
       return {
         mode: item.mode,
         tripCount: item.tripCount,

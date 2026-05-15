@@ -18,12 +18,12 @@ export const THEME_COLORS = {
 
 /** @type {Object.<string, string>} */
 export const MODE_COLORS = Object.fromEntries(
-  Object.values(TransportMode).map(m => [m.key, m.themeColor])
+  Object.values(TransportMode).map(mode => [mode.key, mode.themeColor])
 )
 
 /** @type {Object.<string, string>} */
 export const MODE_LABELS = Object.fromEntries(
-  Object.values(TransportMode).map(m => [m.key, m.label])
+  Object.values(TransportMode).map(mode => [mode.key, mode.label])
 )
 
 export const AXIS_TICK_STYLE = {

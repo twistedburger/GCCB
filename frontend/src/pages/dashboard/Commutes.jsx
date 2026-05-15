@@ -263,7 +263,7 @@ function Commutes() {
               <Select
                 options={[
                   'all',
-                  ...Object.values(TransportMode).map(m => m.key),
+                  ...Object.values(TransportMode).map(mode => mode.key),
                 ].map(modeOption => ({
                   value: modeOption,
                   label:

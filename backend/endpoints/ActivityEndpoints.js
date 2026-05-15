@@ -141,7 +141,7 @@ router.get('/activity/co2-timeseries', requireAuth, async (req, res) => {
     }
 
     // Batch participant counts for all routes
-    const routeIds = routes.map(r => r.id)
+    const routeIds = routes.map(route => route.id)
     const participantRes = await client.query(
       `SELECT
          ur.route_id,
@@ -168,14 +168,14 @@ router.get('/activity/co2-timeseries', requireAuth, async (req, res) => {
      * @returns {string}
      */
     function getPeriodKey(date) {
-      const d = new Date(date)
-      const year = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
+      const parsedDate = new Date(date)
+      const year = parsedDate.getFullYear()
+      const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(parsedDate.getDate()).padStart(2, '0')
 
       if (granularity === 'daily') return `${year}-${month}-${day}`
       if (granularity === 'monthly') return `${year}-${month}`
-      return `${year}-Q${Math.ceil((d.getMonth() + 1) / 3)}`
+      return `${year}-Q${Math.ceil((parsedDate.getMonth() + 1) / 3)}`
     }
 
     // Batch carpool context for car routes before the loop
@@ -183,7 +183,7 @@ router.get('/activity/co2-timeseries', requireAuth, async (req, res) => {
       extractRouteSegments,
       toAnalyticsMode,
     } = require('../src/utils/AnalyticsUtils')
-    const { TransportMode } = require('../src/constants/TransportModes')
+    const { TransportMode } = require('../../shared/TransportModes')
 
     const carRoutes = routes.filter(route => {
       const segments = extractRouteSegments(route)
