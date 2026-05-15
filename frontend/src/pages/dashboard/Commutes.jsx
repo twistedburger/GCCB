@@ -6,6 +6,7 @@ import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
 import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
+import { TransportMode } from '../../utils/TransportMode'
 
 const commuteStrings = analyticsStrings.commutes
 
@@ -59,16 +60,16 @@ function Commutes() {
    * "bus", "rail", "car", or "other".
    */
   function normalizeMode(rawMode) {
-    if (!rawMode) return 'other'
+    if (!rawMode) return TransportMode.OTHER
 
     const value = String(rawMode).trim().toLowerCase()
 
-    if (['walk', 'walking'].includes(value)) return 'walk'
+    if (['walk', 'walking'].includes(value)) return TransportMode.WALK
     if (['bicycle', 'bike', 'cycling', 'cycle', 'bicycling'].includes(value)) {
-      return 'bicycle'
+      return TransportMode.BICYCLE
     }
     if (['bus', 'transit', 'intercity_bus', 'trolleybus'].includes(value)) {
-      return 'transit'
+      return TransportMode.TRANSIT
     }
     if (
       [
@@ -86,11 +87,12 @@ function Commutes() {
         'monorail',
       ].includes(value)
     ) {
-      return 'rail'
+      return TransportMode.RAIL
     }
-    if (['car', 'carpool', 'drive', 'driving'].includes(value)) return 'car'
+    if (['car', 'carpool', 'drive', 'driving'].includes(value))
+      return TransportMode.CAR
 
-    return 'other'
+    return TransportMode.OTHER
   }
 
   /**
@@ -198,15 +200,15 @@ function Commutes() {
     const normalized = normalizeMode(modeValue)
 
     switch (normalized) {
-      case 'walk':
+      case TransportMode.WALK:
         return commuteStrings.route.modes.walk
-      case 'bicycle':
+      case TransportMode.BICYCLE:
         return commuteStrings.route.modes.bicycle
-      case 'transit':
+      case TransportMode.TRANSIT:
         return commuteStrings.route.modes.bus
-      case 'rail':
+      case TransportMode.RAIL:
         return commuteStrings.route.modes.rail
-      case 'car':
+      case TransportMode.CAR:
         return commuteStrings.route.modes.car
       default:
         return commuteStrings.route.modes.other
@@ -259,31 +261,25 @@ function Commutes() {
                 {commuteStrings.blocks.filters.modeLabel}
               </label>
               <Select
-                options={[
-                  'all',
-                  'walk',
-                  'bicycle',
-                  'transit',
-                  'rail',
-                  'car',
-                  'other',
-                ].map(modeOption => ({
-                  value: modeOption,
-                  label:
-                    modeOption === 'all'
-                      ? commuteStrings.route.modes.all
-                      : modeOption === 'walk'
-                        ? commuteStrings.route.modes.walk
-                        : modeOption === 'bicycle'
-                          ? commuteStrings.route.modes.bicycle
-                          : modeOption === 'transit'
-                            ? commuteStrings.route.modes.bus
-                            : modeOption === 'rail'
-                              ? commuteStrings.route.modes.rail
-                              : modeOption === 'car'
-                                ? commuteStrings.route.modes.car
-                                : commuteStrings.route.modes.other,
-                }))}
+                options={['all', ...Object.values(TransportMode)].map(
+                  modeOption => ({
+                    value: modeOption,
+                    label:
+                      modeOption === 'all'
+                        ? commuteStrings.route.modes.all
+                        : modeOption === TransportMode.WALK
+                          ? commuteStrings.route.modes.walk
+                          : modeOption === TransportMode.BICYCLE
+                            ? commuteStrings.route.modes.bicycle
+                            : modeOption === TransportMode.TRANSIT
+                              ? commuteStrings.route.modes.bus
+                              : modeOption === TransportMode.RAIL
+                                ? commuteStrings.route.modes.rail
+                                : modeOption === TransportMode.CAR
+                                  ? commuteStrings.route.modes.car
+                                  : commuteStrings.route.modes.other,
+                  })
+                )}
                 value={{ value: mode, label: mode }}
                 onChange={e => setMode(e.value)}
               />

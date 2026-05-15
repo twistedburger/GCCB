@@ -11,39 +11,42 @@
  */
 function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
   const { EMISSIONS_G_PER_KM } = emissions
+  const { TransportMode } = require('../constants/TransportModes')
 
   // Open for expansion and chart simplification
+  // Keys => raw Google Maps strings
+  // Values => Analytic Categories
   const MODE_MAPPING = {
-    walk: 'walk',
-    walking: 'walk',
+    walk: TransportMode.WALK,
+    walking: TransportMode.WALK,
 
-    bicycle: 'bicycle',
-    bike: 'bicycle',
-    bicycling: 'bicycle',
-    cycle: 'bicycle',
+    bicycle: TransportMode.BICYCLE,
+    bike: TransportMode.BICYCLE,
+    bicycling: TransportMode.BICYCLE,
+    cycle: TransportMode.BICYCLE,
 
-    bus: 'transit',
-    intercity_bus: 'transit',
-    trolleybus: 'transit',
-    share_taxi: 'transit',
+    bus: TransportMode.TRANSIT,
+    intercity_bus: TransportMode.TRANSIT,
+    trolleybus: TransportMode.TRANSIT,
+    share_taxi: TransportMode.TRANSIT,
 
-    rail: 'rail',
-    subway: 'rail',
-    train: 'rail',
-    light_rail: 'rail',
-    tram: 'rail',
-    metro_rail: 'rail',
-    commuter_train: 'rail',
-    heavy_rail: 'rail',
-    high_speed_train: 'rail',
-    long_distance_train: 'rail',
-    monorail: 'rail',
+    rail: TransportMode.RAIL,
+    subway: TransportMode.RAIL,
+    train: TransportMode.RAIL,
+    light_rail: TransportMode.RAIL,
+    tram: TransportMode.RAIL,
+    metro_rail: TransportMode.RAIL,
+    commuter_train: TransportMode.RAIL,
+    heavy_rail: TransportMode.RAIL,
+    high_speed_train: TransportMode.RAIL,
+    long_distance_train: TransportMode.RAIL,
+    monorail: TransportMode.RAIL,
 
-    transit: 'transit',
+    transit: TransportMode.TRANSIT,
 
-    drive: 'car',
-    driving: 'car',
-    car: 'car',
+    drive: TransportMode.CAR,
+    driving: TransportMode.CAR,
+    car: TransportMode.CAR,
   }
 
   /**
@@ -69,7 +72,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
    */
   function toAnalyticsMode(mode) {
     const normalizedMode = normalizeMode(mode)
-    return MODE_MAPPING[normalizedMode] || 'other'
+    return MODE_MAPPING[normalizedMode] || TransportMode.OTHER
   }
 
   /**
@@ -85,11 +88,13 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     )
 
     if (!vehicleType) {
-      return 'transit'
+      return TransportMode.TRANSIT
     }
 
     const analyticsMode = toAnalyticsMode(vehicleType)
-    return analyticsMode === 'other' ? 'transit' : analyticsMode
+    return analyticsMode === TransportMode.OTHER
+      ? TransportMode.TRANSIT
+      : analyticsMode
   }
 
   /**
@@ -101,7 +106,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
   function getStepTransportationMode(step) {
     const travelMode = normalizeMode(step?.travelMode)
 
-    if (travelMode === 'transit') {
+    if (travelMode === TransportMode.TRANSIT) {
       return getTransitStepMode(step)
     }
 
@@ -279,7 +284,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
         const rawMode = getStepTransportationMode(step)
         const distanceKm = Number(step?.distanceMeters || 0) / 1000
 
-        if (!rawMode || rawMode === 'other' || distanceKm <= 0) {
+        if (!rawMode || rawMode === TransportMode.OTHER || distanceKm <= 0) {
           continue
         }
 
@@ -316,7 +321,8 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
       let carpoolOptions = {}
 
       const hasCarSegment = segments.some(
-        segment => toAnalyticsMode(segment.transportationMode) === 'car'
+        segment =>
+          toAnalyticsMode(segment.transportationMode) === TransportMode.CAR
       )
 
       if (hasCarSegment) {
@@ -329,7 +335,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
 
       return co2Calculator.calculateSavedFromSegments(segments, segment => {
         const analyticsMode = toAnalyticsMode(segment.transportationMode)
-        return analyticsMode === 'car' ? carpoolOptions : {}
+        return analyticsMode === TransportMode.CAR ? carpoolOptions : {}
       })
     }
 
@@ -337,7 +343,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
     const distanceKm = Number(routeRow.distance) || 0
 
     let options = {}
-    if (toAnalyticsMode(mode) === 'car') {
+    if (toAnalyticsMode(mode) === TransportMode.CAR) {
       const { passengers, vehicleFactor } = await getCarpoolContext(
         routeRow.id,
         routeRow.creatorId
@@ -372,7 +378,8 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
       let carpoolOptions = {}
 
       const hasCarSegment = segments.some(
-        segment => toAnalyticsMode(segment.transportationMode) === 'car'
+        segment =>
+          toAnalyticsMode(segment.transportationMode) === TransportMode.CAR
       )
 
       if (hasCarSegment) {
@@ -390,7 +397,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
         const savings = co2Calculator.calculateSaved(
           distanceKm,
           mode,
-          mode === 'car' ? carpoolOptions : {}
+          mode === TransportMode.CAR ? carpoolOptions : {}
         )
 
         return {
@@ -407,7 +414,7 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
           (totalsByMode[contribution.mode] || 0) + contribution.distanceKm
       }
 
-      let dominantMode = 'other'
+      let dominantMode = TransportMode.OTHER
       let maxDistance = -1
 
       for (const [mode, totalDistance] of Object.entries(totalsByMode)) {
@@ -491,7 +498,9 @@ function createAnalyticsHelpers({ db, co2Calculator, emissions }) {
 
       for (const item of contributions) {
         const mode =
-          item.mode in summary.tripFrequenciesByMode ? item.mode : 'other'
+          item.mode in summary.tripFrequenciesByMode
+            ? item.mode
+            : TransportMode.OTHER
         summary.totalDistanceKm += item.distanceKm
         summary.totalCo2SavedKg += item.savedKg
         summary.tripFrequenciesByMode[mode] += item.tripCount

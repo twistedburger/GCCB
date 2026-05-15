@@ -1,3 +1,5 @@
+import { TransportMode } from './TransportMode'
+
 export function formatKg(value) {
   return `${Number(value ?? 0).toFixed(2)} kg`
 }
@@ -19,12 +21,12 @@ export function getMostUsedMode(modes = {}) {
   if (count <= 0) return 'N/A'
 
   const labels = {
-    walk: 'Walk',
-    bicycle: 'Bicycle',
-    transit: 'Transit',
-    rail: 'Rail',
-    car: 'Car',
-    other: 'Other',
+    [TransportMode.WALK]: 'Walk',
+    [TransportMode.BICYCLE]: 'Bicycle',
+    [TransportMode.TRANSIT]: 'Transit',
+    [TransportMode.RAIL]: 'Rail',
+    [TransportMode.CAR]: 'Car',
+    [TransportMode.OTHER]: 'Other',
   }
 
   return labels[mode] ?? 'N/A'
