@@ -205,7 +205,7 @@ function Commutes() {
       case TransportMode.BICYCLE:
         return commuteStrings.route.modes.bicycle
       case TransportMode.TRANSIT:
-        return commuteStrings.route.modes.bus
+        return commuteStrings.route.modes.transit
       case TransportMode.RAIL:
         return commuteStrings.route.modes.rail
       case TransportMode.CAR:
@@ -272,7 +272,7 @@ function Commutes() {
                           : modeOption === TransportMode.BICYCLE
                             ? commuteStrings.route.modes.bicycle
                             : modeOption === TransportMode.TRANSIT
-                              ? commuteStrings.route.modes.bus
+                              ? commuteStrings.route.modes.transit
                               : modeOption === TransportMode.RAIL
                                 ? commuteStrings.route.modes.rail
                                 : modeOption === TransportMode.CAR
