@@ -1,5 +1,5 @@
 const { TransportMode } = require('../constants/TransportModes')
-const { EMISSIONS_G_PER_KM } = require('../constants/emissions')
+const { EMISSIONS_G_PER_KM } = require('../constants/Emissions')
 const {
   toAnalyticsMode,
   normalizeMode,

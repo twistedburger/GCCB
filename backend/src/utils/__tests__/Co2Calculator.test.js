@@ -1,5 +1,5 @@
-const { Co2Calculator } = require('../co2_calculator')
-const { EMISSIONS_G_PER_KM } = require('../../constants/emissions')
+const { Co2Calculator } = require('../Co2Calculator')
+const { EMISSIONS_G_PER_KM } = require('../../constants/Emissions')
 
 // Using current constants; if any of them change, refer to src/constants/emissions.js
 const calc = new Co2Calculator({

@@ -1,5 +1,5 @@
 const { AnalyticsServices } = require('../AnalyticsServices')
-const { EMISSIONS_G_PER_KM } = require('../../constants/emissions')
+const { EMISSIONS_G_PER_KM } = require('../../constants/Emissions')
 const mockDb = { query: jest.fn() }
 
 const mockCo2Calculator = {
