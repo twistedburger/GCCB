@@ -1,4 +1,4 @@
-const { TransportMode } = require('../constants/TransportModes')
+const { TransportMode } = require('../../../../shared/TransportModes')
 
 /**
  * Maps raw Google Maps vehicle type strings to analytics mode categories.
@@ -10,35 +10,35 @@ const { TransportMode } = require('../constants/TransportModes')
  * @type {Object.<string, string>}
  */
 const MODE_MAPPING = {
-  walk: TransportMode.WALK,
-  walking: TransportMode.WALK,
+  walk: TransportMode.WALK.key,
+  walking: TransportMode.WALK.key,
 
-  bicycle: TransportMode.BICYCLE,
-  bike: TransportMode.BICYCLE,
-  bicycling: TransportMode.BICYCLE,
-  cycle: TransportMode.BICYCLE,
+  bicycle: TransportMode.BICYCLE.key,
+  bike: TransportMode.BICYCLE.key,
+  bicycling: TransportMode.BICYCLE.key,
+  cycle: TransportMode.BICYCLE.key,
 
-  bus: TransportMode.TRANSIT,
-  intercity_bus: TransportMode.TRANSIT,
-  trolleybus: TransportMode.TRANSIT,
-  share_taxi: TransportMode.TRANSIT,
-  transit: TransportMode.TRANSIT,
+  bus: TransportMode.TRANSIT.key,
+  intercity_bus: TransportMode.TRANSIT.key,
+  trolleybus: TransportMode.TRANSIT.key,
+  share_taxi: TransportMode.TRANSIT.key,
+  transit: TransportMode.TRANSIT.key,
 
-  rail: TransportMode.RAIL,
-  subway: TransportMode.RAIL,
-  train: TransportMode.RAIL,
-  light_rail: TransportMode.RAIL,
-  tram: TransportMode.RAIL,
-  metro_rail: TransportMode.RAIL,
-  commuter_train: TransportMode.RAIL,
-  heavy_rail: TransportMode.RAIL,
-  high_speed_train: TransportMode.RAIL,
-  long_distance_train: TransportMode.RAIL,
-  monorail: TransportMode.RAIL,
+  rail: TransportMode.RAIL.key,
+  subway: TransportMode.RAIL.key,
+  train: TransportMode.RAIL.key,
+  light_rail: TransportMode.RAIL.key,
+  tram: TransportMode.RAIL.key,
+  metro_rail: TransportMode.RAIL.key,
+  commuter_train: TransportMode.RAIL.key,
+  heavy_rail: TransportMode.RAIL.key,
+  high_speed_train: TransportMode.RAIL.key,
+  long_distance_train: TransportMode.RAIL.key,
+  monorail: TransportMode.RAIL.key,
 
-  drive: TransportMode.CAR,
-  driving: TransportMode.CAR,
-  car: TransportMode.CAR,
+  drive: TransportMode.CAR.key,
+  driving: TransportMode.CAR.key,
+  car: TransportMode.CAR.key,
 }
 
 /**
@@ -58,16 +58,16 @@ function normalizeMode(mode) {
  * Used to convert Google Maps vehicle types into dashboard chart categories.
  *
  * @param {string} mode
- * @returns {string} One of TransportMode values, or TransportMode.OTHER as fallback.
+ * @returns {string} One of TransportMode values, or TransportMode.OTHER.key as fallback.
  */
 function toAnalyticsMode(mode) {
   const normalizedMode = normalizeMode(mode)
-  return MODE_MAPPING[normalizedMode] || TransportMode.OTHER
+  return MODE_MAPPING[normalizedMode] || TransportMode.OTHER.key
 }
 
 /**
  * Resolves a transit step's vehicle type into a specific analytics mode.
- * Falls back to TransportMode.TRANSIT when the vehicle type is unknown or unmapped.
+ * Falls back to TransportMode.TRANSIT.key when the vehicle type is unknown or unmapped.
  *
  * @param {Object} step A route step object from route.path.
  * @returns {string} One of TransportMode values.
@@ -77,11 +77,11 @@ function getTransitStepMode(step) {
     step?.transitDetails?.transitLine?.vehicle?.type
   )
 
-  if (!vehicleType) return TransportMode.TRANSIT
+  if (!vehicleType) return TransportMode.TRANSIT.key
 
   const analyticsMode = toAnalyticsMode(vehicleType)
-  return analyticsMode === TransportMode.OTHER
-    ? TransportMode.TRANSIT
+  return analyticsMode === TransportMode.OTHER.key
+    ? TransportMode.TRANSIT.key
     : analyticsMode
 }
 
@@ -95,7 +95,7 @@ function getTransitStepMode(step) {
 function getStepTransportationMode(step) {
   const travelMode = normalizeMode(step?.travelMode)
 
-  if (travelMode === TransportMode.TRANSIT) {
+  if (travelMode === TransportMode.TRANSIT.key) {
     return getTransitStepMode(step)
   }
 
@@ -149,7 +149,7 @@ function extractRouteSegments(routeRow) {
       const rawMode = getStepTransportationMode(step)
       const distanceKm = Number(step?.distanceMeters || 0) / 1000
 
-      if (!rawMode || rawMode === TransportMode.OTHER || distanceKm <= 0)
+      if (!rawMode || rawMode === TransportMode.OTHER.key || distanceKm <= 0)
         continue
 
       segments.push({ transportationMode: rawMode, distanceKm })

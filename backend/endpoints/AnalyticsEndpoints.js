@@ -52,7 +52,7 @@ router.get('/commute-history', requireAuth, async (req, res) => {
         totalsByMode[c.mode] = (totalsByMode[c.mode] || 0) + c.distanceKm
       }
 
-      let dominantMode = TransportMode.OTHER
+      let dominantMode = TransportMode.OTHER.key
       let maxDistance = -1
       for (const [mode, dist] of Object.entries(totalsByMode)) {
         if (dist > maxDistance) {
@@ -143,9 +143,11 @@ router.get('/analytics/by-mode', requireAuth, async (req, res) => {
       const segments = extractRouteSegments(route)
       return segments.length > 0
         ? segments.some(
-            s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR
+            segment =>
+              toAnalyticsMode(segment.transportationMode) ===
+              TransportMode.CAR.key
           )
-        : toAnalyticsMode(route.transportationMode) === TransportMode.CAR
+        : toAnalyticsMode(route.transportationMode) === TransportMode.CAR.key
     })
     const carpoolContextMap =
       await analyticsServices.fetchCarpoolContextsBatch(carRoutes)
@@ -170,14 +172,14 @@ router.get('/analytics/by-mode', requireAuth, async (req, res) => {
       )
       for (const item of contributions) {
         const modeStats =
-          aggregates[item.mode] ?? aggregates[TransportMode.OTHER]
+          aggregates[item.mode] ?? aggregates[TransportMode.OTHER.key]
         modeStats.tripCount += item.tripCount
         modeStats.totalDistanceKm += item.distanceKm
         modeStats.totalCo2SavedKg += item.savedKg
       }
     }
 
-    const data = Object.values(TransportMode).map(key => {
+    const data = Object.values(TransportMode).map(({ key }) => {
       const item = aggregates[key]
       return {
         mode: item.mode,

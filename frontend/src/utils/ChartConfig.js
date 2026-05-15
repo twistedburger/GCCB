@@ -3,7 +3,7 @@
  * Note for future dev use:
  * -Recharts reads colours as JS strings, so CSS variables cannot be used directly.
  */
-import { TransportMode } from './TransportMode'
+import { TransportMode } from '../../../shared/TransportModes'
 
 export const THEME_COLORS = {
   blue: '#6fa4ea',
@@ -16,23 +16,15 @@ export const THEME_COLORS = {
   lightGrey: '#e2e2e2',
 }
 
-export const MODE_COLORS = {
-  [TransportMode.WALK]: THEME_COLORS.blue,
-  [TransportMode.BICYCLE]: THEME_COLORS.purple,
-  [TransportMode.TRANSIT]: THEME_COLORS.orange,
-  [TransportMode.RAIL]: THEME_COLORS.teal,
-  [TransportMode.CAR]: THEME_COLORS.green,
-  [TransportMode.OTHER]: THEME_COLORS.grey,
-}
+/** @type {Object.<string, string>} */
+export const MODE_COLORS = Object.fromEntries(
+  Object.values(TransportMode).map(m => [m.key, m.themeColor])
+)
 
-export const MODE_LABELS = {
-  [TransportMode.WALK]: 'Walk',
-  [TransportMode.BICYCLE]: 'Bicycle',
-  [TransportMode.TRANSIT]: 'Transit',
-  [TransportMode.RAIL]: 'Rail',
-  [TransportMode.CAR]: 'Car / Carpool',
-  [TransportMode.OTHER]: 'Other',
-}
+/** @type {Object.<string, string>} */
+export const MODE_LABELS = Object.fromEntries(
+  Object.values(TransportMode).map(m => [m.key, m.label])
+)
 
 export const AXIS_TICK_STYLE = {
   fontSize: 12,

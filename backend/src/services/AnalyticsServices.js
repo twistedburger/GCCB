@@ -224,7 +224,7 @@ class AnalyticsServices {
       let carpoolOptions = {}
 
       const hasCarSegment = segments.some(
-        s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR
+        s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR.key
       )
 
       if (hasCarSegment) {
@@ -238,7 +238,7 @@ class AnalyticsServices {
         segments,
         segment => {
           const analyticsMode = toAnalyticsMode(segment.transportationMode)
-          return analyticsMode === TransportMode.CAR ? carpoolOptions : {}
+          return analyticsMode === TransportMode.CAR.key ? carpoolOptions : {}
         }
       )
     }
@@ -247,7 +247,7 @@ class AnalyticsServices {
     const distanceKm = Number(routeRow.distance) || 0
     let options = {}
 
-    if (toAnalyticsMode(mode) === TransportMode.CAR) {
+    if (toAnalyticsMode(mode) === TransportMode.CAR.key) {
       const context =
         carpoolContextMap?.get(routeRow.id) ??
         (await this.getCarpoolContext(routeRow.id, routeRow.creatorId))
@@ -280,7 +280,7 @@ class AnalyticsServices {
       let carpoolOptions = {}
 
       const hasCarSegment = segments.some(
-        s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR
+        s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR.key
       )
 
       if (hasCarSegment) {
@@ -296,7 +296,7 @@ class AnalyticsServices {
         const savings = this.#co2Calculator.calculateSaved(
           distanceKm,
           mode,
-          mode === TransportMode.CAR ? carpoolOptions : {}
+          mode === TransportMode.CAR.key ? carpoolOptions : {}
         )
 
         return {
@@ -313,7 +313,7 @@ class AnalyticsServices {
         totalsByMode[c.mode] = (totalsByMode[c.mode] || 0) + c.distanceKm
       }
 
-      let dominantMode = TransportMode.OTHER
+      let dominantMode = TransportMode.OTHER.key
       let maxDistance = -1
       for (const [mode, totalDistance] of Object.entries(totalsByMode)) {
         if (totalDistance > maxDistance) {
@@ -359,9 +359,9 @@ class AnalyticsServices {
       const segments = extractRouteSegments(route)
       return segments.length > 0
         ? segments.some(
-            s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR
+            s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR.key
           )
-        : toAnalyticsMode(route.transportationMode) === TransportMode.CAR
+        : toAnalyticsMode(route.transportationMode) === TransportMode.CAR.key
     })
 
     const carpoolContextMap = await this.fetchCarpoolContextsBatch(carRoutes)
@@ -395,7 +395,7 @@ class AnalyticsServices {
         const mode =
           item.mode in summary.tripFrequenciesByMode
             ? item.mode
-            : TransportMode.OTHER
+            : TransportMode.OTHER.key
         summary.totalDistanceKm += item.distanceKm
         summary.totalCo2SavedKg += item.savedKg
         summary.tripFrequenciesByMode[mode] += item.tripCount

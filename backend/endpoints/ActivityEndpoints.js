@@ -189,9 +189,11 @@ router.get('/activity/co2-timeseries', requireAuth, async (req, res) => {
       const segments = extractRouteSegments(route)
       return segments.length > 0
         ? segments.some(
-            s => toAnalyticsMode(s.transportationMode) === TransportMode.CAR
+            segment =>
+              toAnalyticsMode(segment.transportationMode) ===
+              TransportMode.CAR.key
           )
-        : toAnalyticsMode(route.transportationMode) === TransportMode.CAR
+        : toAnalyticsMode(route.transportationMode) === TransportMode.CAR.key
     })
     const carpoolContextMap =
       await analyticsServices.fetchCarpoolContextsBatch(carRoutes)
