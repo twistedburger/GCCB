@@ -34,7 +34,7 @@ function ProfileInfo({ user, actions, showDesc = true, size = 'md' }) {
   return (
     <div className="w-full text-left">
       <div
-        className={`flex flex-row justify-between items-start ${sizeSelection.gap}`}
+        className={`flex flex-row flex-wrap justify-between items-start ${sizeSelection.gap}`}
       >
         <div
           className={`flex flex-row ${sizeSelection.gap} items-center justify-center`}
