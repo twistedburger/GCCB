@@ -117,7 +117,7 @@ export default function RouteCard({
   return (
     <div
       data-testid={`route-card-${route.id}`}
-      className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden"
+      className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white"
     >
       <div
         className={`flex flex-row items-center p-4 justify-between ${individualView ? 'py-2' : 'py-4'} ${onSelect ? 'cursor-pointer' : ''}`}
@@ -228,7 +228,7 @@ export default function RouteCard({
                 <GenericButton
                   unstyled
                   disabled={isFull}
-                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-text-primary text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
+                  customStyling={`py-1 px-4 rounded-lg font-medium bg-blue-primary text-white text-xs ml-2 ${isFull ? 'opacity-50' : ''}`}
                   onClick={handleJoin}
                 >
                   {routeCardStrings.join}

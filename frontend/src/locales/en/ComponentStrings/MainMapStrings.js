@@ -3,4 +3,7 @@ export const mainMapStrings = {
   createEvent: 'Create Event Here',
   seeMore: 'See More',
   geocodingFailed: 'Geocoding Failed',
+  error: {
+    parsePostGIS: 'Error parsing PostGIS hex string:',
+  },
 }

@@ -27,6 +27,7 @@ export const analyticsStrings = {
       noDescription: 'No profile description added yet.',
       noImage: 'No Image',
       editProfile: 'Edit Profile',
+      blockedUsers: 'Blocked Users',
     },
 
     metrics: {
@@ -61,6 +62,7 @@ export const analyticsStrings = {
         },
         badges: {
           title: 'Badges',
+          viewAll: 'View all',
         },
       },
     },
@@ -137,7 +139,7 @@ export const analyticsStrings = {
             basis: 'Solo occupant',
           },
           {
-            mode: 'Bus / Transit',
+            mode: 'Transit',
             factor: '97 g / passenger-km',
             basis: 'Per passenger',
           },
@@ -162,7 +164,7 @@ export const analyticsStrings = {
           note: 'Full baseline avoided; zero emissions produced.',
         },
         transit: {
-          label: 'Bus / Rail',
+          label: 'Transit',
           formula: 'Savings = distance * (170 - transit_factor) ÷ 1000',
           note: 'Partial saving; transit still emits, but far less than the solo-car baseline per passenger.',
         },
@@ -277,7 +279,7 @@ export const analyticsStrings = {
         all: 'All',
         walk: 'Walk',
         bicycle: 'Bicycle',
-        bus: 'Bus',
+        transit: 'Transit',
         rail: 'Rail',
         car: 'Car / Carpool',
         other: 'Other',
