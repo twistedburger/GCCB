@@ -17,6 +17,10 @@ const initSocket = httpServer => {
   })
 
   io.on('connection', socket => {
+    socket.on('LISTEN_NOTIFICATIONS', ({ userId }) => {
+      if (userId) socket.join(`user_${userId}`)
+    })
+
     socket.on('AUTH', async ({ userId, chatroomId }) => {
       try {
         socket.userId = parseInt(userId, 10)
@@ -60,6 +64,16 @@ const initSocket = httpServer => {
           io.to(`room_${chatroomId}`).emit('NEW_MESSAGE', {
             message: savedMessage.data,
           })
+          const membersResult = await chatService.getRoomMembers(chatroomId)
+          if (membersResult.success) {
+            membersResult.data.forEach(member => {
+              if (member.id !== userId) {
+                io.to(`user_${member.id}`).emit('NEW_MESSAGE_NOTIFICATION', {
+                  chatroomId,
+                })
+              }
+            })
+          }
         }
       } catch (err) {
         console.error(chatSocketStrings.socketMessageError, err)

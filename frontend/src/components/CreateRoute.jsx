@@ -291,7 +291,6 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
         </div>
       )}
 
-      {/*TODO: ensure departure time doesn't exceed event time */}
       <div>
         <label
           className="text-sm font-semibold text-text-primary ml-1 mb-1.5 block"
