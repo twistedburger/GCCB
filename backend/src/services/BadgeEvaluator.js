@@ -3,7 +3,7 @@
  * Handles badge achievement checks, progress updates, and retrieval of badge details.
  */
 class BadgeEvaluator {
-  /** @type {import('../services/BadgeServices').BadgeQueries} */
+  /** @type {import('./BadgeServices').BadgeQueries} */
   #badgeQueries
 
   // defined metrics constants from db
@@ -31,7 +31,7 @@ class BadgeEvaluator {
 
   /**
    * @param {Object} params
-   * @param {import('../services/BadgeServices').BadgeQueries} params.badgeQueries
+   * @param {import('./BadgeServices').BadgeQueries} params.badgeQueries
    */
   constructor({ badgeQueries }) {
     this.#badgeQueries = badgeQueries
