@@ -14,25 +14,26 @@ export default function Notifications() {
 
   return (
     <div>
-      <h1 className="m-3 text-2xl">{notificationStrings.title}</h1>
-      <GenericButton
-        onClick={async () => {
-          const cleared = await clearAllNotifications()
-          if (cleared) {
-            setNotifications([])
-          } else {
-            console.log(notificationStrings.errorClearingNotifications)
-          }
-        }}
-      >
-        {notificationStrings.clearAll}
-      </GenericButton>
-      <div className="flex flex-col gap-1.5 m-1.5">
+      <h1 className="m-3 text-xl font-semibold">{notificationStrings.title}</h1>
+      <div className="flex justify-end mx-8">
+        <GenericButton
+          onClick={async () => {
+            const cleared = await clearAllNotifications()
+            if (cleared) {
+              setNotifications([])
+            } else {
+              console.log(notificationStrings.errorClearingNotifications)
+            }
+          }}
+        >
+          {notificationStrings.clearAll}
+        </GenericButton>
+      </div>
+      <div className="flex flex-col gap-1.5 m-3 mx-8">
         {notifications.map(notification => (
           <NotificationCard
             key={notification.notificationID}
             notification={notification}
-            className="m-3"
           ></NotificationCard>
         ))}
       </div>
