@@ -73,12 +73,14 @@ export default function MainMap({
         onLoad={onLoad}
         onUnmount={onUnmount}
         onClick={async mapClick => {
-          setSelectedEvent(null)
-          setSelectedRoute(null)
-          const { lat, lng } = mapClick.detail.latLng
-          setClickedLocation({ lat, lng, address: null, loading: true })
-          const address = await reverseGeocode({ lat, lng })
-          setClickedLocation({ lat, lng, address, loading: false })
+          if (!route) {
+            setSelectedEvent(null)
+            setSelectedRoute(null)
+            const { lat, lng } = mapClick.detail.latLng
+            setClickedLocation({ lat, lng, address: null, loading: true })
+            const address = await reverseGeocode({ lat, lng })
+            setClickedLocation({ lat, lng, address, loading: false })
+          }
         }}
         onDragend={drag => {
           if (onCenterChanged) {
@@ -105,25 +107,26 @@ export default function MainMap({
         )}
 
         {children}
-        {events?.map(event => {
-          if (!event.lat || !event.lng) return null
-          const isRoute =
-            Array.isArray(event.origin_coords) ||
-            Array.isArray(event.destination_coords)
+        {!route &&
+          events?.map(event => {
+            if (!event.lat || !event.lng) return null
+            const isRoute =
+              Array.isArray(event.origin_coords) ||
+              Array.isArray(event.destination_coords)
 
-          return (
-            <AdvancedMarker
-              key={event.id}
-              position={{ lat: event.lat, lng: event.lng }}
-              onClick={() => {
-                if (isRoute) setSelectedRoute(event)
-                else setSelectedEvent(event)
-              }}
-            >
-              <Pin scale={0.75} />
-            </AdvancedMarker>
-          )
-        })}
+            return (
+              <AdvancedMarker
+                key={event.id}
+                position={{ lat: event.lat, lng: event.lng }}
+                onClick={() => {
+                  if (isRoute) setSelectedRoute(event)
+                  else setSelectedEvent(event)
+                }}
+              >
+                <Pin scale={0.75} />
+              </AdvancedMarker>
+            )
+          })}
 
         {clickedLocation && (
           <InfoWindow
@@ -212,7 +215,10 @@ export default function MainMap({
                 <GenericButton
                   unstyled
                   customStyling="text-xs text-blue-primary font-medium flex items-center gap-0.5"
-                  onClick={() => navigate(`/event/${selectedEvent.id}`)}
+                  onClick={() => {
+                    setSelectedEvent(null)
+                    navigate(`/event/${selectedEvent.id}`)
+                  }}
                 >
                   {mainMapStrings.seeMore}
                   <East style={{ fontSize: 14 }} />
