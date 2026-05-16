@@ -1,7 +1,7 @@
 const { Co2Calculator } = require('../Co2Calculator')
 const { EMISSIONS_G_PER_KM } = require('../../constants/Emissions')
 
-// Using current constants; if any of them change, refer to src/constants/emissions.js
+// Using current constants; if any of them change, refer to src/constants/Emissions.js
 const calc = new Co2Calculator({
   baselineCarFactor: 170,
   busFactor: 97,
@@ -69,29 +69,35 @@ describe('Walk and bicycle savings', () => {
   })
 })
 
-describe('Bus savings', () => {
-  test('bus savings equals baseline minus bus factor per km', () => {
-    const result = calc.calculateSaved(10, 'bus')
+describe('Transit savings', () => {
+  test('transit savings equals baseline minus bus factor per km', () => {
+    const result = calc.calculateSaved(10, 'transit')
     const expected = ((170 - 97) * 10) / 1000
     expect(result.savedKgSystem).toBe(Math.round(expected * 100) / 100)
   })
 
-  test('bus savedKgUser equals savedKgSystem', () => {
-    const result = calc.calculateSaved(10, 'bus')
+  test('transit savedKgUser equals savedKgSystem', () => {
+    const result = calc.calculateSaved(10, 'transit')
     expect(result.savedKgUser).toBe(result.savedKgSystem)
   })
 
-  test('bus context includes transitMode', () => {
-    const result = calc.calculateSaved(10, 'bus')
+  test('transit context includes transitMode as bus', () => {
+    const result = calc.calculateSaved(10, 'transit')
     expect(result.context.transitMode).toBe('bus')
+  })
+
+  test('bus alias produces same result as transit', () => {
+    const transit = calc.calculateSaved(10, 'transit')
+    const bus = calc.calculateSaved(10, 'bus')
+    expect(bus.savedKgSystem).toBe(transit.savedKgSystem)
   })
 })
 
 describe('Rail savings', () => {
-  test('rail savings are higher than bus savings for same distance', () => {
-    const bus = calc.calculateSaved(10, 'bus')
+  test('rail savings are higher than transit savings for same distance', () => {
+    const transit = calc.calculateSaved(10, 'transit')
     const rail = calc.calculateSaved(10, 'rail')
-    expect(rail.savedKgSystem).toBeGreaterThan(bus.savedKgSystem)
+    expect(rail.savedKgSystem).toBeGreaterThan(transit.savedKgSystem)
   })
 
   test('rail context includes transitMode', () => {
@@ -100,7 +106,7 @@ describe('Rail savings', () => {
   })
 })
 
-describe('Carpool savings & details', () => {
+describe('Carpool savings', () => {
   test('car with 2 passengers: system savings split evenly', () => {
     const result = calc.calculateSaved(10, 'car', { passengers: 2 })
     expect(result.savedKgUser).toBe(
@@ -114,18 +120,6 @@ describe('Carpool savings & details', () => {
     expect(four.savedKgSystem).toBeGreaterThan(two.savedKgSystem)
   })
 
-  test('ev cars should have higher savings than standard petrol', () => {
-    const petrol = calc.calculateSaved(10, 'car', {
-      passengers: 2,
-      vehicleFactor: 170,
-    })
-    const ev = calc.calculateSaved(10, 'car', {
-      passengers: 2,
-      vehicleFactor: 47,
-    })
-    expect(ev.savedKgSystem).toBeGreaterThan(petrol.savedKgSystem)
-  })
-
   test('car context includes passengers and vehicleFactor', () => {
     const result = calc.calculateSaved(10, 'car', { passengers: 3 })
     expect(result.context.passengers).toBe(3)
@@ -135,6 +129,48 @@ describe('Carpool savings & details', () => {
   test('car with invalid passengers should fall back to defaultPassengers', () => {
     const result = calc.calculateSaved(10, 'car', { passengers: 0 })
     expect(result.context.passengers).toBe(2)
+  })
+})
+
+describe('EV vs petrol savings', () => {
+  test('EV carpool should save more than petrol carpool', () => {
+    const petrol = calc.calculateSaved(10, 'car', {
+      passengers: 2,
+      vehicleFactor: EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL,
+    })
+    const ev = calc.calculateSaved(10, 'car', {
+      passengers: 2,
+      vehicleFactor: EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC,
+    })
+    expect(ev.savedKgSystem).toBeGreaterThan(petrol.savedKgSystem)
+  })
+
+  test('EV solo driver saves more emissions vs petrol baseline', () => {
+    const result = calc.calculateSaved(10, 'car', {
+      passengers: 1,
+      vehicleFactor: EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC,
+    })
+    expect(result.savedKgSystem).toBeGreaterThan(0)
+  })
+
+  test('petrol solo driver saves 0 vs petrol baseline', () => {
+    const result = calc.calculateSaved(10, 'car', {
+      passengers: 1,
+      vehicleFactor: EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL,
+    })
+    expect(result.savedKgSystem).toBe(0)
+  })
+
+  test('EV savings scale correctly with distance', () => {
+    const short = calc.calculateSaved(5, 'car', {
+      passengers: 2,
+      vehicleFactor: EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC,
+    })
+    const long = calc.calculateSaved(10, 'car', {
+      passengers: 2,
+      vehicleFactor: EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC,
+    })
+    expect(long.savedKgSystem).toBeGreaterThan(short.savedKgSystem)
   })
 })
 
@@ -158,13 +194,13 @@ describe('Calculating from segments', () => {
   test('should sum savings across multiple segments', () => {
     const segments = [
       { transportationMode: 'walk', distanceKm: 2 },
-      { transportationMode: 'bus', distanceKm: 10 },
+      { transportationMode: 'transit', distanceKm: 10 },
     ]
     const walk = calc.calculateSaved(2, 'walk')
-    const bus = calc.calculateSaved(10, 'bus')
+    const transit = calc.calculateSaved(10, 'transit')
     const result = calc.calculateSavedFromSegments(segments)
     const expected =
-      Math.round((walk.savedKgSystem + bus.savedKgSystem) * 100) / 100
+      Math.round((walk.savedKgSystem + transit.savedKgSystem) * 100) / 100
     expect(result.savedKgSystem).toBe(expected)
   })
 
