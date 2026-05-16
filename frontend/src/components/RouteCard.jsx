@@ -148,7 +148,7 @@ export default function RouteCard({
           </div>
           {!hideReportJoin && (
             <div className="flex flex-col gap-1 items-center">
-              {((!isDraft && onToggleJoin) || !individualView) && (
+              {!individualView && !isDraft && onToggleJoin && (
                 <GenericButton
                   unstyled
                   customStyling="cursor-pointer w-full py-1 px-4 rounded-lg font-medium bg-light-grey text-text-primary text-xs text-center"
