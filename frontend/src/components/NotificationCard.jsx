@@ -34,9 +34,21 @@ export default function NotificationCard({ notification }) {
         notificationDetails.onClick()
       }}
     >
-      <h1>{notificationDetails.title}</h1>
-      <p>{notificationDetails.message}</p>
-      <p>Received at : {notificationDetails.time}</p>
+      <div className="flex flex-col justify-start m-4 gap-2">
+        <div className="flex flex-row items-center justify-start gap-4">
+          <h1 className="font-bold text-lg">{notificationDetails.title}</h1>
+          <p className="text-gray-600 text-sm">
+            {new Date(notificationDetails.time).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+            })}
+          </p>
+        </div>
+        <p className="text-left">{notificationDetails.message}</p>
+      </div>
     </GenericCard>
   ) : (
     <GenericCard>{notificationStrings.loading}</GenericCard>
