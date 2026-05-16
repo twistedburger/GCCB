@@ -4,8 +4,9 @@ import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
-import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
+import { formatKg, formatKm } from '../../utils/AnalyticsUtils'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
+import { TransportMode } from '../../../../shared/TransportModes'
 
 const commuteStrings = analyticsStrings.commutes
 
@@ -59,16 +60,16 @@ function Commutes() {
    * "bus", "rail", "car", or "other".
    */
   function normalizeMode(rawMode) {
-    if (!rawMode) return 'other'
+    if (!rawMode) return TransportMode.OTHER.key
 
     const value = String(rawMode).trim().toLowerCase()
 
-    if (['walk', 'walking'].includes(value)) return 'walk'
+    if (['walk', 'walking'].includes(value)) return TransportMode.WALK.key
     if (['bicycle', 'bike', 'cycling', 'cycle', 'bicycling'].includes(value)) {
-      return 'bicycle'
+      return TransportMode.BICYCLE.key
     }
     if (['bus', 'transit', 'intercity_bus', 'trolleybus'].includes(value)) {
-      return 'transit'
+      return TransportMode.TRANSIT.key
     }
     if (
       [
@@ -86,11 +87,12 @@ function Commutes() {
         'monorail',
       ].includes(value)
     ) {
-      return 'rail'
+      return TransportMode.RAIL.key
     }
-    if (['car', 'carpool', 'drive', 'driving'].includes(value)) return 'car'
+    if (['car', 'carpool', 'drive', 'driving'].includes(value))
+      return TransportMode.CAR.key
 
-    return 'other'
+    return TransportMode.OTHER.key
   }
 
   /**
@@ -198,15 +200,15 @@ function Commutes() {
     const normalized = normalizeMode(modeValue)
 
     switch (normalized) {
-      case 'walk':
+      case TransportMode.WALK.key:
         return commuteStrings.route.modes.walk
-      case 'bicycle':
+      case TransportMode.BICYCLE.key:
         return commuteStrings.route.modes.bicycle
-      case 'transit':
-        return commuteStrings.route.modes.bus
-      case 'rail':
+      case TransportMode.TRANSIT.key:
+        return commuteStrings.route.modes.transit
+      case TransportMode.RAIL.key:
         return commuteStrings.route.modes.rail
-      case 'car':
+      case TransportMode.CAR.key:
         return commuteStrings.route.modes.car
       default:
         return commuteStrings.route.modes.other
@@ -261,26 +263,21 @@ function Commutes() {
               <Select
                 options={[
                   'all',
-                  'walk',
-                  'bicycle',
-                  'transit',
-                  'rail',
-                  'car',
-                  'other',
+                  ...Object.values(TransportMode).map(mode => mode.key),
                 ].map(modeOption => ({
                   value: modeOption,
                   label:
                     modeOption === 'all'
                       ? commuteStrings.route.modes.all
-                      : modeOption === 'walk'
+                      : modeOption === TransportMode.WALK.key
                         ? commuteStrings.route.modes.walk
-                        : modeOption === 'bicycle'
+                        : modeOption === TransportMode.BICYCLE.key
                           ? commuteStrings.route.modes.bicycle
-                          : modeOption === 'transit'
-                            ? commuteStrings.route.modes.bus
-                            : modeOption === 'rail'
+                          : modeOption === TransportMode.TRANSIT.key
+                            ? commuteStrings.route.modes.transit
+                            : modeOption === TransportMode.RAIL.key
                               ? commuteStrings.route.modes.rail
-                              : modeOption === 'car'
+                              : modeOption === TransportMode.CAR.key
                                 ? commuteStrings.route.modes.car
                                 : commuteStrings.route.modes.other,
                 }))}

@@ -14,7 +14,7 @@ import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import ChartCard from '../../components/analytics/ChartCard'
 import GenericButton from '../../components/GenericButton'
-import { formatKm, getMostUsedMode } from '../../utils/AnalyticsHelpers'
+import { formatKm, getMostUsedMode } from '../../utils/AnalyticsUtils'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
 
 const tripStrings = analyticsStrings.tripFrequency

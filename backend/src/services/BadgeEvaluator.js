@@ -1,13 +1,13 @@
 const { NotificationType } = require('../../../shared/NotificationTypes')
 const { serverStrings } = require('../../locales/en/serverLocales')
-const { sendNotification } = require('./NotificationUtils')
+const { sendNotification } = require('../utils/NotificationUtils')
 
 /**
  * Contains the logic for evaluating user badges based on analytics data.
  * Handles badge achievement checks, progress updates, and retrieval of badge details.
  */
 class BadgeEvaluator {
-  /** @type {import('./BadgeQueries').BadgeQueries} */
+  /** @type {import('./BadgeServices').BadgeServices} */
   #badgeQueries
 
   // defined metrics constants from db
@@ -35,7 +35,7 @@ class BadgeEvaluator {
 
   /**
    * @param {Object} params
-   * @param {import('./BadgeQueries').BadgeQueries} params.badgeQueries
+   * @param {import('./BadgeServices').BadgeServices} params.badgeQueries
    */
   constructor({ badgeQueries }) {
     this.#badgeQueries = badgeQueries

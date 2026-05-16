@@ -1,4 +1,4 @@
-const { BadgeEvaluator } = require('../src/utils/BadgeEvaluator')
+const { BadgeEvaluator } = require('../BadgeEvaluator')
 
 const mockBadgeQueries = {
   fetchUnearnedBadges: jest.fn(),
