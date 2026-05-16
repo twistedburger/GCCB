@@ -17,7 +17,7 @@ import {
   PlaceOutlined,
   OutlinedFlagRounded,
 } from '@mui/icons-material'
-import { RadiusCircle } from '../utils/MainMapUtils'
+import { RadiusCircle, reverseGeocode } from '../utils/MainMapUtils'
 import { mainMapStrings } from '../locales/en/ComponentStrings/MainMapStrings'
 
 /**
@@ -49,6 +49,7 @@ export default function MainMap({
 }) {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [selectedRoute, setSelectedRoute] = useState(null)
+  const [clickedLocation, setClickedLocation] = useState(null)
   const navigate = useNavigate()
 
   const isDeparting = route?.path?.departing
@@ -71,13 +72,13 @@ export default function MainMap({
         disableDefaultUI={true}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        onClick={mapClick => {
+        onClick={async mapClick => {
           setSelectedEvent(null)
           setSelectedRoute(null)
-          if (onMapClick) {
-            const { lat, lng } = mapClick.detail.latLng
-            onMapClick({ lat, lng })
-          }
+          const { lat, lng } = mapClick.detail.latLng
+          setClickedLocation({ lat, lng, address: null, loading: true })
+          const address = await reverseGeocode({ lat, lng })
+          setClickedLocation({ lat, lng, address, loading: false })
         }}
         onDragend={drag => {
           if (onCenterChanged) {
@@ -123,6 +124,55 @@ export default function MainMap({
             </AdvancedMarker>
           )
         })}
+
+        {clickedLocation && (
+          <InfoWindow
+            position={{ lat: clickedLocation.lat, lng: clickedLocation.lng }}
+            onCloseClick={() => setClickedLocation(null)}
+            disableAutoPan
+            shouldFocus={false}
+            headerDisabled
+            pixelOffset={[0, -8]}
+          >
+            <div className="pl-1 pb-3 pr-2 flex flex-col items-center w-full">
+              <div className="flex justify-between items-start gap-4">
+                <p className="text-xs text-text-primary mt-1">
+                  {clickedLocation.loading
+                    ? mainMapStrings.loading
+                    : clickedLocation.address.map((line, i) => (
+                        <span key={i} className="block">
+                          {line}
+                        </span>
+                      ))}
+                </p>
+                <GenericButton
+                  unstyled
+                  customStyling="text-text-secondary shrink-0"
+                  onClick={e => {
+                    e.stopPropagation()
+                    setClickedLocation(null)
+                  }}
+                >
+                  <Close />
+                </GenericButton>
+              </div>
+
+              <GenericButton
+                customStyling="flex items-center gap-1 text-xs"
+                onClick={() => {
+                  if (onMapClick)
+                    onMapClick({
+                      lat: clickedLocation.lat,
+                      lng: clickedLocation.lng,
+                    })
+                  setClickedLocation(null)
+                }}
+              >
+                {mainMapStrings.createEvent}
+              </GenericButton>
+            </div>
+          </InfoWindow>
+        )}
 
         {/* Event info window */}
         {selectedEvent && (
