@@ -34,6 +34,8 @@ export default function RouteDetail({
   const [participants, setParticipants] = useState([])
   const [reportData, setReportData] = useState(null)
 
+  const creator = participants.find(person => person.is_creator)
+
   const handleClose = () => {
     if (onClose) onClose()
     else setTimeout(() => navigate(-1), 300)
@@ -182,23 +184,25 @@ export default function RouteDetail({
                   <p className="font-semibold pb-2 text-text-primary shrink-0">
                     {routeDetailStrings.organizer}
                   </p>
-                  <UserCard
-                    user={{
-                      id: selectedRoute?.creator_id,
-                      name: selectedRoute?.creator_name,
-                      nickname: selectedRoute?.nickname,
-                      profile_pic: selectedRoute?.profile_pic,
-                      role: selectedRoute?.role,
-                      description: selectedRoute?.creator_description,
-                      active: true,
-                    }}
-                  />
+                  {creator ? (
+                    <UserCard user={creator} />
+                  ) : (
+                    <p className="text-text-secondary text-sm">
+                      {routeDetailStrings.creatorNotJoined}
+                    </p>
+                  )}
                   <p className="font-semibold pt-4 pb-2 text-text-primary shrink-0">
                     {routeDetailStrings.participants}
                   </p>
-                  {participants.map(participant => (
-                    <UserCard key={participant.id} user={participant} />
-                  ))}
+                  {participants.length === 0 ? (
+                    <p className="text-text-secondary text-sm">
+                      {routeDetailStrings.noParticipants}
+                    </p>
+                  ) : (
+                    participants.map(participant => (
+                      <UserCard key={participant.id} user={participant} />
+                    ))
+                  )}
                 </div>
               </Drawer.Content>
             </Drawer.Portal>

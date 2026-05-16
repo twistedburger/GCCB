@@ -1435,10 +1435,12 @@ app.get('/api/getParticipants/:routeId', async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT u.id, u.name, u.nickname, u.profile_pic, u.role, u.description, u.active
-       FROM user_route ur
-       JOIN "user" u ON u.id = ur.user_id
-       WHERE ur.route_id = $1`,
+      `SELECT u.id, u.name, u.nickname, u.profile_pic, u.role, u.description, u.active,
+        u.id = r.creator_id AS is_creator
+      FROM user_route ur
+      JOIN "user" u ON u.id = ur.user_id
+      JOIN route r ON r.id = ur.route_id
+      WHERE ur.route_id = $1`,
       [routeId]
     )
 
