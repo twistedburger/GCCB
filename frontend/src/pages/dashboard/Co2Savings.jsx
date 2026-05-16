@@ -15,7 +15,7 @@ import KpiGrid from '../../components/analytics/KpiGrid'
 import ChartCard from '../../components/analytics/ChartCard'
 import Modal from '../../components/Modal'
 import GenericButton from '../../components/GenericButton'
-import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
+import { formatKg, formatKm } from '../../utils/AnalyticsUtils'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
 
 const co2Strings = analyticsStrings.co2

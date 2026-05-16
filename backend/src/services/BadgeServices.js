@@ -2,7 +2,7 @@
  * Provides methods for querying and updating badge-related data in the database.
  * Handles fetching badges, awarding badges, updating progress, and retrieving user badge details.
  */
-class BadgeQueries {
+class BadgeServices {
   /** @type {import('pg').Pool} */
   #db
 
@@ -131,4 +131,4 @@ class BadgeQueries {
   }
 }
 
-module.exports = { BadgeQueries }
+module.exports = { BadgeServices }
