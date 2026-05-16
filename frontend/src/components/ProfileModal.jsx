@@ -29,6 +29,8 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
   const isSelf = currentUser && Number(currentUser.id) === Number(user.id)
   const canBlock =
     !isSelf &&
+    authLevel[currentUser?.role?.toUpperCase()]?.value <=
+      authLevel.USER.value &&
     authLevel[user.role?.toUpperCase()]?.value <= authLevel.USER.value
 
   async function fetchRecentBadges() {
