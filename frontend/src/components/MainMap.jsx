@@ -176,55 +176,50 @@ export default function MainMap({
 
         {/* Event info window */}
         {selectedEvent && (
-          <GenericButton
-            unstyled
-            onClick={() => navigate(`/event/${selectedEvent.id}`)}
+          <InfoWindow
+            position={{ lat: selectedEvent.lat, lng: selectedEvent.lng }}
+            onCloseClick={() => setSelectedEvent(null)}
+            disableAutoPan
+            shouldFocus={false}
+            headerDisabled
+            pixelOffset={[0, -32]}
           >
-            <InfoWindow
-              position={{ lat: selectedEvent.lat, lng: selectedEvent.lng }}
-              onCloseClick={() => setSelectedEvent(null)}
-              disableAutoPan
-              shouldFocus={false}
-              headerDisabled
-              pixelOffset={[0, -32]}
-            >
-              <div className="pl-1 pr-3 pb-2">
-                <div className="flex justify-between items-start gap-4">
-                  <p className="font-semibold text-sm text-text-primary">
-                    {selectedEvent.title}
-                  </p>
-                  <GenericButton
-                    unstyled
-                    customStyling="text-text-secondary shrink-0"
-                    onClick={click => {
-                      click.stopPropagation()
-                      setSelectedEvent(null)
-                    }}
-                  >
-                    <Close />
-                  </GenericButton>
-                </div>
-                <p className="text-xs text-text-primary mt-1 flex items-center gap-0.5">
-                  <PlaceOutlined style={{ fontSize: 14 }} />
-                  {selectedEvent.location}
+            <div className="pl-1 pr-3 pb-2">
+              <div className="flex justify-between items-start gap-4">
+                <p className="font-semibold text-sm text-text-primary">
+                  {selectedEvent.title}
                 </p>
-                <p className="text-xs text-text-primary mt-0.5 flex items-center gap-0.5">
-                  <DateRangeRounded style={{ fontSize: 14 }} />
-                  {new Date(selectedEvent.event_time).toLocaleString()}
-                </p>
-                <div className="flex justify-end mt-2">
-                  <GenericButton
-                    unstyled
-                    customStyling="text-xs text-blue-primary font-medium flex items-center gap-0.5"
-                    onClick={() => navigate(`/event/${selectedEvent.id}`)}
-                  >
-                    {mainMapStrings.seeMore}
-                    <East style={{ fontSize: 14 }} />
-                  </GenericButton>
-                </div>
+                <GenericButton
+                  unstyled
+                  customStyling="text-text-secondary shrink-0"
+                  onClick={click => {
+                    click.stopPropagation()
+                    setSelectedEvent(null)
+                  }}
+                >
+                  <Close />
+                </GenericButton>
               </div>
-            </InfoWindow>
-          </GenericButton>
+              <p className="text-xs text-text-primary mt-1 flex items-center gap-0.5">
+                <PlaceOutlined style={{ fontSize: 14 }} />
+                {selectedEvent.location}
+              </p>
+              <p className="text-xs text-text-primary mt-0.5 flex items-center gap-0.5">
+                <DateRangeRounded style={{ fontSize: 14 }} />
+                {new Date(selectedEvent.event_time).toLocaleString()}
+              </p>
+              <div className="flex justify-end mt-2">
+                <GenericButton
+                  unstyled
+                  customStyling="text-xs text-blue-primary font-medium flex items-center gap-0.5"
+                  onClick={() => navigate(`/event/${selectedEvent.id}`)}
+                >
+                  {mainMapStrings.seeMore}
+                  <East style={{ fontSize: 14 }} />
+                </GenericButton>
+              </div>
+            </div>
+          </InfoWindow>
         )}
 
         {/* Route info window */}
