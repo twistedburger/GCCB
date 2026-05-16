@@ -58,6 +58,7 @@ class AnalyticsServices {
            r.description,
            r.rejection_reason    AS "rejectionReason",
            r.path,
+           r.is_ev               AS "isEv",
            r.created_at          AS "createdAt"
          FROM route r
          WHERE EXISTS (
@@ -84,6 +85,7 @@ class AnalyticsServices {
          r.description,
          r.rejection_reason    AS "rejectionReason",
          r.path,
+         r.is_ev               AS "isEv",
          r.created_at          AS "createdAt"
        FROM route r
        INNER JOIN user_route ur ON ur.route_id = r.id
@@ -110,7 +112,7 @@ class AnalyticsServices {
    * @param {number} creatorId
    * @returns {Promise<{ passengers: number, vehicleFactor: number }>}
    */
-  async getCarpoolContext(routeId, creatorId) {
+  async getCarpoolContext(routeId, creatorId, isEv = false) {
     const passengerRes = await this.#db.query(
       `SELECT
          COUNT(*)::int AS participant_count,
@@ -124,17 +126,6 @@ class AnalyticsServices {
     const participantCount = passengerRes.rows[0]?.participant_count ?? 0
     const creatorIncluded = passengerRes.rows[0]?.creator_included === true
     const passengers = creatorIncluded ? participantCount : participantCount + 1
-
-    const vehicleRes = await this.#db.query(
-      `SELECT e_v
-       FROM vehicle
-       WHERE driver_id = $1
-       ORDER BY id DESC
-       LIMIT 1`,
-      [creatorId]
-    )
-
-    const isEv = vehicleRes.rowCount !== 0 && vehicleRes.rows[0].e_v === true
     const vehicleFactor = isEv
       ? EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC
       : EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL
@@ -152,55 +143,34 @@ class AnalyticsServices {
   async fetchCarpoolContextsBatch(carRoutes) {
     if (carRoutes.length === 0) return new Map()
 
-    const routeIds = carRoutes.map(r => r.id)
-    const creatorIds = [...new Set(carRoutes.map(r => r.creatorId))]
+    const routeIds = carRoutes.map(route => route.id)
 
-    const [passengerRes, vehicleRes] = await Promise.all([
-      this.#db.query(
-        `SELECT
-           ur.route_id,
-           COUNT(*)::int AS participant_count,
-           BOOL_OR(ur.user_id = r.creator_id) AS creator_included
-         FROM user_route ur
-         JOIN route r ON r.id = ur.route_id
-         WHERE ur.route_id  = ANY($1)
-           AND ur.completed = true
-         GROUP BY ur.route_id`,
-        [routeIds]
-      ),
-      this.#db.query(
-        `SELECT DISTINCT ON (driver_id)
-           driver_id,
-           e_v
-         FROM vehicle
-         WHERE driver_id = ANY($1)
-         ORDER BY driver_id, id DESC`,
-        [creatorIds]
-      ),
-    ])
-
-    // Build vehicle factor map keyed by creator id
-    const vehicleMap = new Map(
-      vehicleRes.rows.map(row => [
-        row.driver_id,
-        row.e_v
-          ? EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC
-          : EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL,
-      ])
+    const passengerRes = await this.#db.query(
+      `SELECT
+         ur.route_id,
+         COUNT(*)::int AS participant_count,
+         BOOL_OR(ur.user_id = r.creator_id) AS creator_included
+       FROM user_route ur
+       JOIN route r ON r.id = ur.route_id
+       WHERE ur.route_id  = ANY($1)
+         AND ur.completed = true
+       GROUP BY ur.route_id`,
+      [routeIds]
     )
 
-    // Build route creator map from the already fetched route rows
-    const routeCreatorMap = new Map(carRoutes.map(r => [r.id, r.creatorId]))
+    const isEvMap = new Map(
+      carRoutes.map(route => [route.id, route.isEv ?? false])
+    )
 
     // Context map keyed by route id
     const contextMap = new Map()
     for (const row of passengerRes.rows) {
-      const creatorId = routeCreatorMap.get(row.route_id)
       const passengers = row.creator_included
         ? row.participant_count
         : row.participant_count + 1
-      const vehicleFactor =
-        vehicleMap.get(creatorId) ?? EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL
+      const vehicleFactor = isEvMap.get(row.route_id)
+        ? EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC
+        : EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL
 
       contextMap.set(row.route_id, { passengers, vehicleFactor })
     }
@@ -231,7 +201,11 @@ class AnalyticsServices {
       if (hasCarSegment) {
         const context =
           carpoolContextMap?.get(routeRow.id) ??
-          (await this.getCarpoolContext(routeRow.id, routeRow.creatorId))
+          (await this.getCarpoolContext(
+            routeRow.id,
+            routeRow.creatorId,
+            routeRow.isEv
+          ))
         carpoolOptions = context
       }
 
@@ -251,7 +225,11 @@ class AnalyticsServices {
     if (toAnalyticsMode(mode) === TransportMode.CAR.key) {
       const context =
         carpoolContextMap?.get(routeRow.id) ??
-        (await this.getCarpoolContext(routeRow.id, routeRow.creatorId))
+        (await this.getCarpoolContext(
+          routeRow.id,
+          routeRow.creatorId,
+          routeRow.isEv
+        ))
       options = context
     }
 
@@ -288,7 +266,11 @@ class AnalyticsServices {
       if (hasCarSegment) {
         const context =
           carpoolContextMap?.get(routeRow.id) ??
-          (await this.getCarpoolContext(routeRow.id, routeRow.creatorId))
+          (await this.getCarpoolContext(
+            routeRow.id,
+            routeRow.creatorId,
+            routeRow.isEv
+          ))
         carpoolOptions = context
       }
 
