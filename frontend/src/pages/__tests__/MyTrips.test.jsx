@@ -3,11 +3,7 @@ import '@testing-library/jest-dom'
 import MyTrips from '../MyTrips'
 import { myTripsStrings } from '../../locales/en/MyTripsStrings'
 import { routeCardStrings as routeStrings } from '../../locales/en/ComponentStrings/RouteCardStrings'
-import {
-  fetchMyTrips,
-  confirmTripAction,
-  leaveRoute,
-} from '../../utils/myTripsUtils'
+import { fetchMyTrips, confirmTripAction } from '../../utils/myTripsUtils'
 
 global.fetch = jest.fn().mockResolvedValue({
   ok: true,
@@ -18,23 +14,25 @@ jest.mock('../../utils/myTripsUtils', () => ({
   ...jest.requireActual('../../utils/myTripsUtils'),
   fetchMyTrips: jest.fn(),
   confirmTripAction: jest.fn(),
-  confirmRouteRemoval: jest.fn(),
-  leaveRoute: jest.fn(),
   getConfirmationTitle: jest.fn(),
   getConfirmationBody: jest.fn(),
 }))
 
-const mockSetUser = jest.fn()
-const mockUser = {
-  id: 1,
-  name: 'Dylan Reimer',
-  nickname: 'dylanBustaReimez',
-  role: 'user',
-  description: 'goat',
-}
-
 jest.mock('../../../context/UserContext', () => ({
   useUser: jest.fn(),
+}))
+
+jest.mock('../../../context/RouteActionsContext', () => ({
+  useRouteActions: () => ({
+    toggleJoin: jest.fn(),
+    user: {
+      id: 1,
+      name: 'Dylan Reimer',
+      nickname: 'dylanBustaReimez',
+      role: 'user',
+      description: 'goat',
+    },
+  }),
 }))
 
 // mock trip data
@@ -99,6 +97,14 @@ const getWrapper = id =>
 
 describe('MyTrips', () => {
   const { useUser } = require('../../../context/UserContext')
+
+  const mockUser = {
+    id: 1,
+    name: 'Dylan Reimer',
+    nickname: 'dylanBustaReimez',
+    role: 'user',
+  }
+  const mockSetUser = jest.fn()
 
   beforeEach(() => {
     useUser.mockReturnValue({ user: mockUser, setUser: mockSetUser })
@@ -203,25 +209,6 @@ describe('MyTrips', () => {
     )
 
     expect(screen.getByText(myTripsStrings.reportTitle)).toBeInTheDocument()
-  })
-
-  test('calls leaveRoute when non-creator leaves route', async () => {
-    await act(async () => render(<MyTrips />))
-    fireEvent.click(
-      within(getCard(1)).queryByRole('button', { name: routeCardStrings.leave })
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
-
-    expect(leaveRoute).toHaveBeenCalled()
-  })
-
-  test('opens route delete dialog for creator', async () => {
-    await act(async () => render(<MyTrips />))
-    fireEvent.click(
-      within(getCard(3)).queryByRole('button', { name: routeCardStrings.leave })
-    )
-
-    expect(screen.getByText(myTripsStrings.creatorLeave)).toBeInTheDocument()
   })
 
   test('calls confirmTripAction on action confirm', async () => {

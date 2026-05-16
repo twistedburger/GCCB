@@ -94,7 +94,7 @@ export default function Sidebar({ userData }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const userRole = userData?.role || 'USER'
-  const { hasUnread } = useUnreadMessages(userData?.id)
+  const { hasUnread } = useUnreadMessages(userData?.id) ?? { hasUnread: false }
 
   const navItems = mainNavigation.filter(item => {
     const isModeratorItem = item.id === 'Moderate' || item.id === 'Banned Users'

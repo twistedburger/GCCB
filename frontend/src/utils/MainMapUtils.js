@@ -84,6 +84,7 @@ export const RadiusCircle = ({ center, radius }) => {
       strokeWeight: 2,
       fillColor: '#6fa4ea',
       fillOpacity: 0.08,
+      clickable: false,
     })
     return () => circle.setMap(null)
   }, [map, center, radius])

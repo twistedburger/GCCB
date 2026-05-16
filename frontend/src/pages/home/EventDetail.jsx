@@ -15,10 +15,9 @@ import { Drawer } from 'vaul'
 import CreateRoute from '../../components/CreateRoute'
 import Alert from '../../components/Alert'
 import Report from '../../components/Report'
-import { useUser } from '../../../context/UserContext'
-import ConfirmationDialog from '../../components/ConfirmationDialog'
 import { createEventStrings } from '../../locales/en/ComponentStrings/CreateEventStrings'
 import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
+import { useRouteActions } from '../../../context/RouteActionsContext'
 
 /**
  * Displays the event detail drawer
@@ -42,10 +41,7 @@ export default function EventDetail() {
 
   const [reportData, setReportData] = useState(null)
   const baseURL = import.meta.env.VITE_API_BASE_URL
-  const { user } = useUser()
-  const [isRouteRemovalDialogOpen, setIsRouteRemovalDialogOpen] =
-    useState(false)
-  const [routeIdToRemove, setRouteIdToRemove] = useState(null)
+  const { toggleJoin, user } = useRouteActions()
 
   const isAlreadyJoined =
     event?.routes?.some(route => route.isJoined === true) || false
@@ -83,6 +79,7 @@ export default function EventDetail() {
           transportation_mode: routeData.transportationMode,
           created_at: new Date(),
           isJoined: true,
+          creator_id: user?.id,
         }
         setEvent(prevEvent => ({
           ...prevEvent,
@@ -98,68 +95,39 @@ export default function EventDetail() {
     }
   }
 
-  const handleToggleJoin = async route => {
-    if (route.isJoined) {
-      handleRouteLeaveRequest(route)
-    } else {
-      updateLocalJoinStatus(route.id, true)
-    }
-  }
-
-  const handleRouteLeaveRequest = async route => {
-    const isRouteCreator = user?.id === route.creator_id
-    const isCar =
-      route.transportation_mode === 'Car' || route.transportationMode === 'Car'
-
-    if (isRouteCreator && isCar) {
-      setRouteIdToRemove(route.id)
-      setIsRouteRemovalDialogOpen(true)
-    } else {
-      await fetch(`${baseURL}/api/routes/${route.id}/leave`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-      updateLocalJoinStatus(route.id, false)
-    }
-  }
+  const handleToggleJoin = route =>
+    toggleJoin(route, ({ routeId, joined, deleted }) => {
+      if (deleted) {
+        setEvent(prev => ({
+          ...prev,
+          routes: prev.routes.filter(r => r.id !== routeId),
+        }))
+      } else {
+        updateLocalJoinStatus(routeId, joined)
+      }
+    })
 
   const updateLocalJoinStatus = (routeId, joined) => {
     setEvent(prev => ({
       ...prev,
-      routes: prev.routes.map(routeItem =>
-        routeItem.id === routeId
-          ? { ...routeItem, isJoined: joined }
-          : routeItem
-      ),
+      routes: prev.routes.map(routeItem => {
+        if (routeItem.id === routeId) {
+          const currentCount = parseInt(routeItem.people_going, 10) || 0
+          return {
+            ...routeItem,
+            isJoined: joined,
+            people_going: joined
+              ? currentCount + 1
+              : Math.max(0, currentCount - 1),
+          }
+        }
+        return routeItem
+      }),
     }))
   }
 
-  const handleConfirmRouteRemoval = async () => {
-    try {
-      const response = await fetch(
-        `${baseURL}/api/routes/${routeIdToRemove}/delete`,
-        {
-          method: 'DELETE',
-          credentials: 'include',
-        }
-      )
-
-      if (response.ok) {
-        setEvent(prev => ({
-          ...prev,
-          routes: prev.routes.filter(
-            routeItem => routeItem.id !== routeIdToRemove
-          ),
-        }))
-        setAlert({ type: 'success', message: 'Route deleted.' })
-      }
-    } catch (error) {
-      setAlert({ type: 'error', message: `Delete failed. ${error.message}` })
-    } finally {
-      setIsRouteRemovalDialogOpen(false)
-      setRouteIdToRemove(null)
-    }
-  }
+  const liveSelectedRoute =
+    event?.routes?.find(r => r.id === selectedRoute?.id) || selectedRoute
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -174,16 +142,6 @@ export default function EventDetail() {
 
   return (
     <div>
-      <ConfirmationDialog
-        variant="danger"
-        isOpen={isRouteRemovalDialogOpen}
-        onClose={() => setIsRouteRemovalDialogOpen(false)}
-        onConfirm={handleConfirmRouteRemoval}
-        title="Delete Route?"
-      >
-        As the creator of this route, leaving will delete it for everyone
-        currently joined. Are you sure?
-      </ConfirmationDialog>
       {alert && (
         <Alert
           message={alert.message}
@@ -514,23 +472,15 @@ export default function EventDetail() {
         </Drawer.Portal>
       </Drawer.Root>
       <RouteDetail
-        selectedRoute={selectedRoute}
+        selectedRoute={liveSelectedRoute}
+        onToggleJoin={handleToggleJoin}
         onClose={() => {
           setSelectedRoute(null)
           setHomeSelectedRoute(null)
           setEventSnapPoint(1)
           setSnapPoint(1)
         }}
-        setAlert={reportAlert => {
-          if (!reportAlert?.type) return
-          setAlert({
-            ...reportAlert,
-            message:
-              reportAlert.type === 'success'
-                ? reportStrings.reportSuccess
-                : reportStrings.reportFailed,
-          })
-        }}
+        setAlert={setAlert}
       />
     </div>
   )

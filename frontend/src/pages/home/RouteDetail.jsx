@@ -21,7 +21,12 @@ import { routeDetailStrings } from '../../locales/en/RouteDetailStrings'
  * @param {func} setAlert Callback function for setting an alert
  * @returns {JSX.Element}
  */
-export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
+export default function RouteDetail({
+  selectedRoute,
+  onClose,
+  setAlert,
+  onToggleJoin,
+}) {
   const [snapPoint, setSnapPoint] = useState(0.25)
   const navigate = useNavigate()
   const [showReport, setShowReport] = useState(false)
@@ -111,6 +116,7 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                   <RouteCard
                     route={selectedRoute}
                     routeDetailView={true}
+                    onToggleJoin={() => onToggleJoin(selectedRoute)}
                     onReport={data => {
                       setReportData(data)
                       setShowReport(true)
@@ -264,7 +270,9 @@ RouteDetail.propTypes = {
     profile_pic: PropTypes.string,
     role: PropTypes.string,
     creator_description: PropTypes.string,
+    isJoined: PropTypes.bool,
   }),
   onClose: PropTypes.func,
   setAlert: PropTypes.func,
+  onToggleJoin: PropTypes.func,
 }
