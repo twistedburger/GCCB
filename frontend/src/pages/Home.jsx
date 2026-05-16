@@ -247,10 +247,31 @@ function Home() {
           }
           defaultCenter={userLocation || DEFAULT_COORDINATES}
           route={selectedRoute}
-          events={cardsToDisplay.map(event => ({
-            ...event,
-            ...postGISToLatLng(event.location_geog),
-          }))}
+          events={cardsToDisplay.flatMap(item => {
+            if (item.origin_coords) {
+              const coords = isArriving
+                ? item.destination_coords
+                : item.origin_coords
+              if (!coords) return []
+              return [
+                {
+                  ...item,
+                  lat: coords[1],
+                  lng: coords[0],
+                },
+              ]
+            }
+            return [
+              {
+                ...item,
+                ...postGISToLatLng(item.location_geog),
+              },
+            ]
+          })}
+          onRouteClick={route => {
+            setSelectedRoute(route)
+            setSnapPoint(0.085)
+          }}
           onMapClick={async ({ lat, lng }) => {
             const address = await reverseGeocode({ lat, lng })
             setCreateEventLocation(address)

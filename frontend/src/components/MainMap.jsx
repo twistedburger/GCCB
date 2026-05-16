@@ -12,11 +12,12 @@ import GenericButton from './GenericButton'
 import { useNavigate } from 'react-router-dom'
 import {
   Close,
-  LocationOnOutlined,
   DateRangeRounded,
   East,
+  PlaceOutlined,
+  OutlinedFlagRounded,
 } from '@mui/icons-material'
-import { RadiusCircle, reverseGeocode } from '../utils/MainMapUtils'
+import { RadiusCircle } from '../utils/MainMapUtils'
 import { mainMapStrings } from '../locales/en/ComponentStrings/MainMapStrings'
 
 /**
@@ -43,11 +44,16 @@ export default function MainMap({
   events,
   onMapClick,
   onCenterChanged,
+  onRouteClick,
   searchRadius = 2000,
 }) {
   const [selectedEvent, setSelectedEvent] = useState(null)
-  const [clickedLocation, setClickedLocation] = useState(null)
+  const [selectedRoute, setSelectedRoute] = useState(null)
   const navigate = useNavigate()
+
+  const isDeparting = route?.path?.departing
+  const showOrigin = isDeparting && route?.path?.origin
+  const showDestination = !isDeparting && route?.path?.destination
 
   return (
     <APIProvider
@@ -63,15 +69,15 @@ export default function MainMap({
         defaultZoom={13}
         gestureHandling="greedy"
         disableDefaultUI={true}
-        clickableIcons={false}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        onClick={async mapClick => {
+        onClick={mapClick => {
           setSelectedEvent(null)
-          const { lat, lng } = mapClick.detail.latLng
-          setClickedLocation({ lat, lng, address: null, loading: true })
-          const address = await reverseGeocode({ lat, lng })
-          setClickedLocation({ lat, lng, address, loading: false })
+          setSelectedRoute(null)
+          if (onMapClick) {
+            const { lat, lng } = mapClick.detail.latLng
+            onMapClick({ lat, lng })
+          }
         }}
         onDragend={drag => {
           if (onCenterChanged) {
@@ -82,122 +88,147 @@ export default function MainMap({
       >
         <RadiusCircle center={defaultCenter} radius={searchRadius} />
         {route && <MapController center={defaultCenter} route={route} />}
+
+        {/* Origin marker for departing from a location */}
+        {showOrigin && (
+          <AdvancedMarker position={route.path.origin}>
+            <Pin scale={0.75} />
+          </AdvancedMarker>
+        )}
+
+        {/* Destination marker for arriving near a location */}
+        {showDestination && (
+          <AdvancedMarker position={route.path.destination}>
+            <Pin scale={0.75} />
+          </AdvancedMarker>
+        )}
+
         {children}
-        {events?.map(
-          event =>
-            event.lat &&
-            event.lng && (
-              <AdvancedMarker
-                key={event.id}
-                position={{ lat: event.lat, lng: event.lng }}
-                onClick={() => {
-                  setClickedLocation(null)
-                  setSelectedEvent(event)
-                }}
-              >
-                <Pin scale={0.75} />
-              </AdvancedMarker>
-            )
-        )}
+        {events?.map(event => {
+          if (!event.lat || !event.lng) return null
+          const isRoute =
+            Array.isArray(event.origin_coords) ||
+            Array.isArray(event.destination_coords)
 
-        {/* Info Window for Clicked Location (to create an event) */}
-        {clickedLocation && (
-          <InfoWindow
-            position={{ lat: clickedLocation.lat, lng: clickedLocation.lng }}
-            onCloseClick={() => setClickedLocation(null)}
-            disableAutoPan
-            shouldFocus={false}
-            headerDisabled
-            pixelOffset={[0, -8]}
-          >
-            <div className="pl-1 pb-3 pr-2 flex flex-col items-center w-full">
-              <div className="flex justify-between items-start gap-4">
-                <p className="text-xs text-text-primary mt-1">
-                  {clickedLocation.loading
-                    ? mainMapStrings.loading
-                    : clickedLocation.address.map((line, i) => (
-                        <span key={i} className="block">
-                          {line}
-                        </span>
-                      ))}
-                </p>
-                <GenericButton
-                  unstyled
-                  customStyling="text-text-secondary shrink-0"
-                  onClick={e => {
-                    e.stopPropagation()
-                    setClickedLocation(null)
-                  }}
-                >
-                  <Close />
-                </GenericButton>
-              </div>
+          return (
+            <AdvancedMarker
+              key={event.id}
+              position={{ lat: event.lat, lng: event.lng }}
+              onClick={() => {
+                if (isRoute) setSelectedRoute(event)
+                else setSelectedEvent(event)
+              }}
+            >
+              <Pin scale={0.75} />
+            </AdvancedMarker>
+          )
+        })}
 
-              <GenericButton
-                customStyling="flex items-center gap-1 text-xs"
-                onClick={() => {
-                  if (onMapClick)
-                    onMapClick({
-                      lat: clickedLocation.lat,
-                      lng: clickedLocation.lng,
-                    })
-                  setClickedLocation(null)
-                }}
-              >
-                {mainMapStrings.createEvent}
-              </GenericButton>
-            </div>
-          </InfoWindow>
-        )}
-
-        {/* Info Window for Existing Event */}
+        {/* Event info window */}
         {selectedEvent && (
+          <GenericButton
+            unstyled
+            onClick={() => navigate(`/event/${selectedEvent.id}`)}
+          >
+            <InfoWindow
+              position={{ lat: selectedEvent.lat, lng: selectedEvent.lng }}
+              onCloseClick={() => setSelectedEvent(null)}
+              disableAutoPan
+              shouldFocus={false}
+              headerDisabled
+              pixelOffset={[0, -32]}
+            >
+              <div className="pl-1 pr-3 pb-2">
+                <div className="flex justify-between items-start gap-4">
+                  <p className="font-semibold text-sm text-text-primary">
+                    {selectedEvent.title}
+                  </p>
+                  <GenericButton
+                    unstyled
+                    customStyling="text-text-secondary shrink-0"
+                    onClick={click => {
+                      click.stopPropagation()
+                      setSelectedEvent(null)
+                    }}
+                  >
+                    <Close />
+                  </GenericButton>
+                </div>
+                <p className="text-xs text-text-primary mt-1 flex items-center gap-0.5">
+                  <PlaceOutlined style={{ fontSize: 14 }} />
+                  {selectedEvent.location}
+                </p>
+                <p className="text-xs text-text-primary mt-0.5 flex items-center gap-0.5">
+                  <DateRangeRounded style={{ fontSize: 14 }} />
+                  {new Date(selectedEvent.event_time).toLocaleString()}
+                </p>
+                <div className="flex justify-end mt-2">
+                  <GenericButton
+                    unstyled
+                    customStyling="text-xs text-blue-primary font-medium flex items-center gap-0.5"
+                    onClick={() => navigate(`/event/${selectedEvent.id}`)}
+                  >
+                    {mainMapStrings.seeMore}
+                    <East style={{ fontSize: 14 }} />
+                  </GenericButton>
+                </div>
+              </div>
+            </InfoWindow>
+          </GenericButton>
+        )}
+
+        {/* Route info window */}
+        {selectedRoute && (
           <InfoWindow
-            position={{ lat: selectedEvent.lat, lng: selectedEvent.lng }}
-            onCloseClick={() => setSelectedEvent(null)}
+            position={{ lat: selectedRoute.lat, lng: selectedRoute.lng }}
+            onCloseClick={() => setSelectedRoute(null)}
             disableAutoPan
             shouldFocus={false}
             headerDisabled
             pixelOffset={[0, -32]}
           >
-            <div className="pl-1 pb-3 pr-3">
+            <div className="pl-3 pb-3 pr-5">
               <div className="flex justify-between items-start gap-4">
                 <p className="font-semibold text-sm text-text-primary">
-                  {selectedEvent.title}
+                  {selectedRoute.title}
                 </p>
                 <GenericButton
                   unstyled
                   customStyling="text-text-secondary shrink-0"
                   onClick={click => {
                     click.stopPropagation()
-                    setSelectedEvent(null)
+                    setSelectedRoute(null)
                   }}
                 >
                   <Close />
                 </GenericButton>
               </div>
-              <div className="flex flex-row gap-1 text-dark-grey">
-                <LocationOnOutlined fontSize="small" />
-                <p className="text-xs text-text-primary mt-1">
-                  {selectedEvent.location}
+              <div className="mt-1">
+                <p className="text-xs text-text-primary flex items-center gap-0.5">
+                  <PlaceOutlined style={{ fontSize: 14 }} />
+                  {selectedRoute.origin}
+                </p>
+                <p className="text-xs text-text-primary flex items-center gap-0.5">
+                  <OutlinedFlagRounded style={{ fontSize: 14 }} />
+                  {selectedRoute.destination}
                 </p>
               </div>
-              <div className="flex flex-row gap-1 text-dark-grey">
-                <DateRangeRounded fontSize="small" />
-                <p className="text-xs text-text-primary mt-0.5">
-                  {new Date(selectedEvent.event_time).toLocaleString()}
-                </p>
-              </div>
-              <GenericButton
-                unstyled
-                customStyling="text-blue-primary text-xs font-medium mt-1 w-full"
-                onClick={() => navigate(`/event/${selectedEvent.id}`)}
-              >
-                <div className="flex flex-row gap-1 items-center justify-end">
+              <p className="text-xs text-text-primary mt-0.5">
+                {new Date(selectedRoute.depart_time).toLocaleString()}
+              </p>
+              <div className="flex justify-end mt-2">
+                <GenericButton
+                  unstyled
+                  customStyling="text-xs text-blue-primary font-medium flex items-center gap-0.5"
+                  onClick={() => {
+                    setSelectedRoute(null)
+                    onRouteClick?.(selectedRoute)
+                  }}
+                >
                   {mainMapStrings.seeMore}
-                  <East fontSize="xsmall" />
-                </div>
-              </GenericButton>
+                  <East style={{ fontSize: 14 }} />
+                </GenericButton>
+              </div>
             </div>
           </InfoWindow>
         )}
@@ -213,9 +244,19 @@ MainMap.propTypes = {
     lng: PropTypes.number.isRequired,
   }).isRequired,
   route: PropTypes.shape({
-    path: PropTypes.object.isRequired,
+    path: PropTypes.shape({
+      departing: PropTypes.bool,
+      origin: PropTypes.shape({
+        lat: PropTypes.number.isRequired,
+        lng: PropTypes.number.isRequired,
+      }),
+      destination: PropTypes.shape({
+        lat: PropTypes.number.isRequired,
+        lng: PropTypes.number.isRequired,
+      }),
+    }).isRequired,
     transportationMode: PropTypes.string.isRequired,
-  }).isRequired,
+  }),
   onLoad: PropTypes.func,
   onUnmount: PropTypes.func,
   mapKey: PropTypes.string,
@@ -228,7 +269,8 @@ MainMap.propTypes = {
   ),
   onMapClick: PropTypes.func,
   onCenterChanged: PropTypes.func,
-  searchRadius: PropTypes.Number,
+  onRouteClick: PropTypes.func,
+  searchRadius: PropTypes.number,
 }
 
 MainMap.defaultProps = {
@@ -238,5 +280,6 @@ MainMap.defaultProps = {
   events: [],
   onMapClick: undefined,
   onCenterChanged: undefined,
+  onRouteClick: undefined,
   searchRadius: 0,
 }

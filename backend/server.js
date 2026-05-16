@@ -861,18 +861,20 @@ app.get('/api/routes', async (req, res) => {
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   db.query(
-    `SELECT DISTINCT r.*,
+    `SELECT DISTINCT ON (r.id) r.*,
       u.id as creator_id,
       u.name as creator_name,
       u.nickname,
       u.profile_pic,
       er.event_id,   
+      ST_AsGeoJSON(r.origin_geog)::json->'coordinates' AS origin_coords,
+      ST_AsGeoJSON(e.location_geog)::json->'coordinates' AS destination_coords,
       (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
     FROM route r
     LEFT JOIN "user" u ON u.id = r.creator_id
     LEFT JOIN event_route er ON er.route_id = r.id
     LEFT JOIN event e ON e.id = er.event_id
-    ${where}`,
+    ${where} ORDER BY r.id`,
     values,
     (error, results) => {
       if (error) {
