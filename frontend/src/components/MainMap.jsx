@@ -20,20 +20,6 @@ import {
 import { RadiusCircle, reverseGeocode } from '../utils/MainMapUtils'
 import { mainMapStrings } from '../locales/en/ComponentStrings/MainMapStrings'
 
-/**
- * Component to display the main map.
- *
- * @param {React.ReactNode} children - The child nodes to render inside the map.
- * @param {Object} defaultCenter - The default center position for the map.
- * @param {Object} route - The route information for the map.
- * @param {Function} onLoad - The function to call when the map is loaded.
- * @param {Function} onUnmount - The function to call when the map is unmounted.
- * @param {Array} events - The events to map as markers on the map.
- * @param {Function} onMapClick - The function to call when the map is clicked.
- * @param {Number} searchRadius - The radius of the current search to draw a circle.
- * @returns {JSX.Element}
- */
-
 export default function MainMap({
   children,
   defaultCenter,
@@ -47,9 +33,7 @@ export default function MainMap({
   onRouteClick,
   searchRadius = 2000,
 }) {
-  const [selectedEvent, setSelectedEvent] = useState(null)
-  const [selectedRoute, setSelectedRoute] = useState(null)
-  const [clickedLocation, setClickedLocation] = useState(null)
+  const [activeWindow, setActiveWindow] = useState({ type: null, data: null })
   const navigate = useNavigate()
 
   const isDeparting = route?.path?.departing
@@ -74,12 +58,17 @@ export default function MainMap({
         onUnmount={onUnmount}
         onClick={async mapClick => {
           if (!route) {
-            setSelectedEvent(null)
-            setSelectedRoute(null)
             const { lat, lng } = mapClick.detail.latLng
-            setClickedLocation({ lat, lng, address: null, loading: true })
+            setActiveWindow({
+              type: 'clicked',
+              data: { lat, lng, address: null, loading: true },
+            })
+
             const address = await reverseGeocode({ lat, lng })
-            setClickedLocation({ lat, lng, address, loading: false })
+            setActiveWindow({
+              type: 'clicked',
+              data: { lat, lng, address, loading: false },
+            })
           }
         }}
         onDragend={drag => {
@@ -88,6 +77,7 @@ export default function MainMap({
             onCenterChanged({ lat: center.lat(), lng: center.lng() })
           }
         }}
+        clickableIcons={false}
       >
         <RadiusCircle center={defaultCenter} radius={searchRadius} />
         {route && <MapController center={defaultCenter} route={route} />}
@@ -119,8 +109,11 @@ export default function MainMap({
                 key={event.id}
                 position={{ lat: event.lat, lng: event.lng }}
                 onClick={() => {
-                  if (isRoute) setSelectedRoute(event)
-                  else setSelectedEvent(event)
+                  if (isRoute) {
+                    setActiveWindow({ type: 'route', data: event })
+                  } else {
+                    setActiveWindow({ type: 'event', data: event })
+                  }
                 }}
               >
                 <Pin scale={0.75} />
@@ -128,10 +121,13 @@ export default function MainMap({
             )
           })}
 
-        {clickedLocation && (
+        {activeWindow.type === 'clicked' && (
           <InfoWindow
-            position={{ lat: clickedLocation.lat, lng: clickedLocation.lng }}
-            onCloseClick={() => setClickedLocation(null)}
+            position={{
+              lat: activeWindow.data.lat,
+              lng: activeWindow.data.lng,
+            }}
+            onCloseClick={() => setActiveWindow({ type: null, data: null })}
             disableAutoPan
             shouldFocus={false}
             headerDisabled
@@ -140,9 +136,9 @@ export default function MainMap({
             <div className="pl-1 pb-3 pr-2 flex flex-col items-center w-full">
               <div className="flex justify-between items-start gap-4">
                 <p className="text-xs text-text-primary mt-1">
-                  {clickedLocation.loading
+                  {activeWindow.data.loading
                     ? mainMapStrings.loading
-                    : clickedLocation.address.map((line, i) => (
+                    : activeWindow.data.address?.map((line, i) => (
                         <span key={i} className="block">
                           {line}
                         </span>
@@ -153,7 +149,7 @@ export default function MainMap({
                   customStyling="text-text-secondary shrink-0"
                   onClick={e => {
                     e.stopPropagation()
-                    setClickedLocation(null)
+                    setActiveWindow({ type: null, data: null })
                   }}
                 >
                   <Close />
@@ -165,10 +161,10 @@ export default function MainMap({
                 onClick={() => {
                   if (onMapClick)
                     onMapClick({
-                      lat: clickedLocation.lat,
-                      lng: clickedLocation.lng,
+                      lat: activeWindow.data.lat,
+                      lng: activeWindow.data.lng,
                     })
-                  setClickedLocation(null)
+                  setActiveWindow({ type: null, data: null })
                 }}
               >
                 {mainMapStrings.createEvent}
@@ -177,11 +173,13 @@ export default function MainMap({
           </InfoWindow>
         )}
 
-        {/* Event info window */}
-        {selectedEvent && (
+        {activeWindow.type === 'event' && (
           <InfoWindow
-            position={{ lat: selectedEvent.lat, lng: selectedEvent.lng }}
-            onCloseClick={() => setSelectedEvent(null)}
+            position={{
+              lat: activeWindow.data.lat,
+              lng: activeWindow.data.lng,
+            }}
+            onCloseClick={() => setActiveWindow({ type: null, data: null })}
             disableAutoPan
             shouldFocus={false}
             headerDisabled
@@ -190,14 +188,14 @@ export default function MainMap({
             <div className="pl-1 pr-3 pb-2">
               <div className="flex justify-between items-start gap-4">
                 <p className="font-semibold text-sm text-text-primary">
-                  {selectedEvent.title}
+                  {activeWindow.data.title}
                 </p>
                 <GenericButton
                   unstyled
                   customStyling="text-text-secondary shrink-0"
                   onClick={click => {
                     click.stopPropagation()
-                    setSelectedEvent(null)
+                    setActiveWindow({ type: null, data: null })
                   }}
                 >
                   <Close />
@@ -205,19 +203,20 @@ export default function MainMap({
               </div>
               <p className="text-xs text-text-primary mt-1 flex items-center gap-0.5">
                 <PlaceOutlined style={{ fontSize: 14 }} />
-                {selectedEvent.location}
+                {activeWindow.data.location}
               </p>
               <p className="text-xs text-text-primary mt-0.5 flex items-center gap-0.5">
                 <DateRangeRounded style={{ fontSize: 14 }} />
-                {new Date(selectedEvent.event_time).toLocaleString()}
+                {new Date(activeWindow.data.event_time).toLocaleString()}
               </p>
               <div className="flex justify-end mt-2">
                 <GenericButton
                   unstyled
                   customStyling="text-xs text-blue-primary font-medium flex items-center gap-0.5"
                   onClick={() => {
-                    setSelectedEvent(null)
-                    navigate(`/event/${selectedEvent.id}`)
+                    const id = activeWindow.data.id
+                    setActiveWindow({ type: null, data: null })
+                    navigate(`/event/${id}`)
                   }}
                 >
                   {mainMapStrings.seeMore}
@@ -228,11 +227,13 @@ export default function MainMap({
           </InfoWindow>
         )}
 
-        {/* Route info window */}
-        {selectedRoute && (
+        {activeWindow.type === 'route' && (
           <InfoWindow
-            position={{ lat: selectedRoute.lat, lng: selectedRoute.lng }}
-            onCloseClick={() => setSelectedRoute(null)}
+            position={{
+              lat: activeWindow.data.lat,
+              lng: activeWindow.data.lng,
+            }}
+            onCloseClick={() => setActiveWindow({ type: null, data: null })}
             disableAutoPan
             shouldFocus={false}
             headerDisabled
@@ -241,14 +242,14 @@ export default function MainMap({
             <div className="pl-3 pb-3 pr-5">
               <div className="flex justify-between items-start gap-4">
                 <p className="font-semibold text-sm text-text-primary">
-                  {selectedRoute.title}
+                  {activeWindow.data.title}
                 </p>
                 <GenericButton
                   unstyled
                   customStyling="text-text-secondary shrink-0"
                   onClick={click => {
                     click.stopPropagation()
-                    setSelectedRoute(null)
+                    setActiveWindow({ type: null, data: null })
                   }}
                 >
                   <Close />
@@ -257,23 +258,24 @@ export default function MainMap({
               <div className="mt-1">
                 <p className="text-xs text-text-primary flex items-center gap-0.5">
                   <PlaceOutlined style={{ fontSize: 14 }} />
-                  {selectedRoute.origin}
+                  {activeWindow.data.origin}
                 </p>
                 <p className="text-xs text-text-primary flex items-center gap-0.5">
                   <OutlinedFlagRounded style={{ fontSize: 14 }} />
-                  {selectedRoute.destination}
+                  {activeWindow.data.destination}
                 </p>
               </div>
               <p className="text-xs text-text-primary mt-0.5">
-                {new Date(selectedRoute.depart_time).toLocaleString()}
+                {new Date(activeWindow.data.depart_time).toLocaleString()}
               </p>
               <div className="flex justify-end mt-2">
                 <GenericButton
                   unstyled
                   customStyling="text-xs text-blue-primary font-medium flex items-center gap-0.5"
                   onClick={() => {
-                    setSelectedRoute(null)
-                    onRouteClick?.(selectedRoute)
+                    const currentRouteData = activeWindow.data
+                    setActiveWindow({ type: null, data: null })
+                    onRouteClick?.(currentRouteData)
                   }}
                 >
                   {mainMapStrings.seeMore}

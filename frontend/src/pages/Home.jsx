@@ -448,19 +448,21 @@ function Home() {
             </Drawer.Content>
           </Drawer.Portal>
         </Drawer.Root>
-        <RouteDetail
-          selectedRoute={
-            cardsToDisplay
-              .flatMap(item => (item.routes ? item.routes : [item]))
-              .find(r => r.id === selectedRoute?.id) || selectedRoute
-          }
-          onToggleJoin={handleToggleJoin}
-          onClose={() => {
-            setSelectedRoute(null)
-            setSnapPoint(1)
-          }}
-          setAlert={setAlert}
-        />
+        {!isEventDetail && location.pathname === '/' && (
+          <RouteDetail
+            selectedRoute={
+              cardsToDisplay
+                .flatMap(item => (item.routes ? item.routes : [item]))
+                .find(r => r.id === selectedRoute?.id) || selectedRoute
+            }
+            onToggleJoin={handleToggleJoin}
+            onClose={() => {
+              setSelectedRoute(null)
+              setSnapPoint(1)
+            }}
+            setAlert={setAlert}
+          />
+        )}
         <Outlet
           context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
         />
