@@ -119,9 +119,9 @@ function Home() {
         if (item.routes) {
           return {
             ...item,
-            routes: item.routes.map(r => ({
-              ...r,
-              isJoined: joinedIds.has(r.id),
+            routes: item.routes.map(route => ({
+              ...route,
+              isJoined: joinedIds.has(route.id),
             })),
           }
         }
@@ -453,7 +453,7 @@ function Home() {
             selectedRoute={
               cardsToDisplay
                 .flatMap(item => (item.routes ? item.routes : [item]))
-                .find(r => r.id === selectedRoute?.id) || selectedRoute
+                .find(route => route.id === selectedRoute?.id) || selectedRoute
             }
             onToggleJoin={handleToggleJoin}
             onClose={() => {

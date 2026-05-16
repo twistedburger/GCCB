@@ -85,16 +85,16 @@ export default function MyTrips() {
         fetchMyTrips(setActiveTrips, setCompletedTrips).catch(console.error)
       } else {
         const updater = trips =>
-          trips.map(t =>
-            t.id === routeId
+          trips.map(trip =>
+            trip.id === routeId
               ? {
-                  ...t,
+                  ...trip,
                   isJoined: joined,
                   people_going: joined
-                    ? (parseInt(t.people_going) || 0) + 1
-                    : Math.max(0, (parseInt(t.people_going) || 0) - 1),
+                    ? (parseInt(trip.people_going) || 0) + 1
+                    : Math.max(0, (parseInt(trip.people_going) || 0) - 1),
                 }
-              : t
+              : trip
           )
         setActiveTrips(updater)
         setCompletedTrips(updater)
