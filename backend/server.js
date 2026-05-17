@@ -1494,15 +1494,16 @@ app.post('/api/completeRoute', async (req, res) => {
  *
  * @returns {{ badges: Object[] }}
  */
-app.get('/api/badges', async (req, res) => {
+app.get('/api/badges/:userId', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res
       .status(403)
       .json({ error: serverStrings.errors.notAuthenticated })
   }
+
+  const { userId } = req.params
   try {
-    const user = await selectUser(req)
-    const badges = await badgeEvaluator.getBadgesForUser(user.id)
+    const badges = await badgeEvaluator.getBadgesForUser(userId)
     res.json({ badges })
   } catch (error) {
     console.error('Error fetching badges:', error)
@@ -1658,16 +1659,16 @@ app.post('/api/blockUser/:userId', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const blocked_user_id = req.params.userId
+  const blockedUserId = req.params.userId
   const currentUser = await selectUser(req)
-  const blocker_id = currentUser.id
+  const blockerId = currentUser.id
 
   try {
     await db.query(
       `INSERT INTO "blocked_user" (blocker_id, blocked_user_id) 
        VALUES ($1, $2)
        ON CONFLICT (blocker_id, blocked_user_id) DO NOTHING`,
-      [blocker_id, blocked_user_id]
+      [blockerId, blockedUserId]
     )
 
     res.json({ success: true })
@@ -1688,69 +1689,13 @@ app.get('/api/blockStatus/:id', async (req, res) => {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const blocked_user_id = req.params.id
+  const blockedUserId = req.params.id
   const currentUser = await selectUser(req)
 
   try {
     const result = await db.query(
       `SELECT 1 FROM blocked_user WHERE blocker_id = $1 AND blocked_user_id = $2`,
-      [currentUser.id, blocked_user_id]
-    )
-
-    res.json({ isBlocked: result.rows.length > 0 })
-  } catch (error) {
-    console.error('Error checking block status:', error)
-    res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-/**
- * Blocks a specific user.
- *
- * @param {number} req.body.blocked_user_id - The ID of the user to block.
- */
-app.post('/api/blockUser/:userId', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  const blocked_user_id = req.params.userId
-  const currentUser = await selectUser(req)
-  const blocker_id = currentUser.id
-
-  try {
-    await db.query(
-      `INSERT INTO "blocked_user" (blocker_id, blocked_user_id) 
-       VALUES ($1, $2)
-       ON CONFLICT (blocker_id, blocked_user_id) DO NOTHING`,
-      [blocker_id, blocked_user_id]
-    )
-
-    res.json({ success: true })
-  } catch (error) {
-    console.error('Error blocking user:', error)
-    res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-/**
- * Checks if a specific user is blocked by the current user.
- *
- * @param {number} req.params.id - The ID of the user to check.
- * @returns {{ isBlocked: boolean }}
- */
-app.get('/api/blockStatus/:id', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  const blocked_user_id = req.params.id
-  const currentUser = await selectUser(req)
-
-  try {
-    const result = await db.query(
-      `SELECT 1 FROM blocked_user WHERE blocker_id = $1 AND blocked_user_id = $2`,
-      [currentUser.id, blocked_user_id]
+      [currentUser.id, blockedUserId]
     )
 
     res.json({ isBlocked: result.rows.length > 0 })

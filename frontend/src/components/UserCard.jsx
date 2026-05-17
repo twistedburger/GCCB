@@ -1,12 +1,9 @@
 import PropTypes from 'prop-types'
 import GenericButton from './GenericButton.jsx'
-import Modal from './Modal'
 import ProfileInfo from './ProfileInfo'
 import { useState } from 'react'
-import { userCardStrings } from '../locales/en/ComponentStrings/UserCardStrings.js'
-import { useUser } from '../../context/UserContext.jsx'
-import { authLevel } from '../hooks/Authorization.jsx'
-import ConfirmationDialog from './ConfirmationDialog'
+import ProfileModal from './ProfileModal.jsx'
+import GenericCard from './GenericCard.jsx'
 
 /**
  * Component to display a user card.
@@ -20,8 +17,9 @@ import ConfirmationDialog from './ConfirmationDialog'
  * @param {string} secondaryButtonStyling - Custom styling for the secondary button.
  * @param {Function} setAlert - The function to set the alert message.
  * @param {boolean} showDescription - Whether to show the user's description or not in their profile information.
+ * @param {boolean} isClickable - If the user card should be clickable or not.
+ * @param {string} profileInfoSize - The size of the profile information, sm or md.
  */
-
 function UserCard({
   user,
   primaryActionLabel,
@@ -33,186 +31,57 @@ function UserCard({
   className,
   setAlert,
   showDescription = true,
+  isClickable = true,
+  profileInfoSize = 'sm',
 }) {
-  const baseURL = import.meta.env.VITE_API_BASE_URL
   const [openModal, setOpenModal] = useState(false)
-  const [isBlocked, setIsBlocked] = useState(false)
-  const [confirmAction, setConfirmAction] = useState(null)
-  const { user: currentUser } = useUser()
-
-  const handleBlockUser = async () => {
-    try {
-      const response = await fetch(`${baseURL}/api/blockUser/${user.id}`, {
-        credentials: 'include',
-        method: 'POST',
-      })
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsBlocked(true)
-        setOpenModal(false)
-        setConfirmAction(null)
-        setAlert?.({
-          type: 'success',
-          message: userCardStrings.errors.successfulBlock,
-        })
-      } else {
-        setAlert?.({
-          type: 'error',
-          message: data.error ?? userCardStrings.errors.failedBlocked,
-        })
-      }
-    } catch (err) {
-      console.error(err)
-      setAlert?.({
-        type: 'error',
-        message: userCardStrings.errors.failedBlocked,
-      })
-    }
-  }
-
-  const handleUnblockUser = async () => {
-    try {
-      const response = await fetch(`${baseURL}/api/unblockUser/${user.id}`, {
-        credentials: 'include',
-        method: 'POST',
-      })
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsBlocked(false)
-        setOpenModal(false)
-        setConfirmAction(null)
-        setAlert?.({
-          type: 'success',
-          message: userCardStrings.errors.successfulUnblock,
-        })
-      } else {
-        setAlert?.({
-          type: 'error',
-          message: data.error ?? userCardStrings.errors.failedUnblocked,
-        })
-      }
-    } catch (err) {
-      console.error(err)
-      setAlert?.({
-        type: 'error',
-        message: userCardStrings.errors.failedUnblocked,
-      })
-    }
-  }
-
-  const handleOpenModal = async () => {
-    setOpenModal(true)
-    if (isSelf) return
-    try {
-      const response = await fetch(`${baseURL}/api/blockStatus/${user.id}`, {
-        credentials: 'include',
-      })
-      const data = await response.json()
-      setIsBlocked(data.isBlocked)
-    } catch (err) {
-      console.error(err)
-      setAlert?.({
-        type: 'error',
-        message: userCardStrings.errors.failedBlockStatus,
-      })
-    }
-  }
-
-  const isSelf = currentUser && Number(currentUser.id) === Number(user.id)
-  // prevent user from blocking themselves, or anyone above users (moderators, etc.)
-  const canBlock =
-    !isSelf &&
-    authLevel[user.role?.toUpperCase()]?.value <= authLevel.USER.value
 
   return (
     <div>
-      <Modal
+      <ProfileModal
+        user={user}
         isOpen={openModal}
-        onClose={() => {
-          setOpenModal(false)
-        }}
+        onClose={() => setOpenModal(false)}
+        setAlert={setAlert}
+      />
+      <GenericCard
+        onClick={isClickable ? () => setOpenModal(true) : undefined}
+        customStyling={`${className} ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
       >
-        <ProfileInfo
-          user={user}
-          actions={
-            canBlock && (
-              <GenericButton
-                onClick={() =>
-                  setConfirmAction(isBlocked ? 'unblock' : 'block')
-                }
-                unstyled
-                customStyling={`text-xs font-medium border rounded-2xl px-4 py-1 mr-6 ${
-                  isBlocked
-                    ? 'text-gray-500 border-gray-500'
-                    : 'text-red-500 border-red-500'
-                }`}
-              >
-                {isBlocked ? userCardStrings.unblock : userCardStrings.block}
-              </GenericButton>
-            )
-          }
-        ></ProfileInfo>
-      </Modal>
-      <ConfirmationDialog
-        isOpen={!!confirmAction}
-        onClose={() => setConfirmAction(null)}
-        onConfirm={
-          confirmAction === 'block' ? handleBlockUser : handleUnblockUser
-        }
-        variant={confirmAction === 'block' ? 'danger' : 'primary'}
-        title={
-          confirmAction === 'block'
-            ? userCardStrings.blockTitle
-            : userCardStrings.unblockTitle
-        }
-      >
-        {confirmAction === 'block'
-          ? userCardStrings.blockConfirm
-          : userCardStrings.unblockConfirm}
-      </ConfirmationDialog>
-      <GenericButton
-        unstyled
-        customStyling={'w-full'}
-        onClick={handleOpenModal}
-      >
-        <div
-          className={`flex flex-col rounded-xl shadow-md shadow-medium-grey bg-white ${className || ''}`}
-        >
-          <div className="flex p-4 gap-4">
-            <div className="shrink-0 flex items-start justify-center">
+        <div className="flex p-4 pt-4 gap-4">
+          <div className="flex flex-wrap items-start w-full gap-4">
+            <div className="min-w-0 flex-1">
               <ProfileInfo
                 user={user}
-                size={'sm'}
+                size={profileInfoSize}
                 showDesc={showDescription}
-              ></ProfileInfo>
-              {(primaryActionLabel || secondaryActionLabel) && (
-                <div className="flex flex-col gap-2 ml-4 shrink-0">
-                  {primaryActionLabel && (
-                    <GenericButton
-                      onClick={onPrimaryAction}
-                      unstyled
-                      customStyling={primaryButtonStyling}
-                    >
-                      {primaryActionLabel}
-                    </GenericButton>
-                  )}
-                  {secondaryActionLabel && (
-                    <GenericButton
-                      onClick={onSecondaryAction}
-                      unstyled
-                      customStyling={secondaryButtonStyling}
-                    >
-                      {secondaryActionLabel}
-                    </GenericButton>
-                  )}
-                </div>
-              )}
+              />
             </div>
+            {(primaryActionLabel || secondaryActionLabel) && (
+              <div className="flex flex-col gap-2 ml-auto max-[500px]:w-full">
+                {primaryActionLabel && (
+                  <GenericButton
+                    onClick={onPrimaryAction}
+                    unstyled
+                    customStyling={primaryButtonStyling}
+                  >
+                    {primaryActionLabel}
+                  </GenericButton>
+                )}
+                {secondaryActionLabel && (
+                  <GenericButton
+                    onClick={onSecondaryAction}
+                    unstyled
+                    customStyling={secondaryButtonStyling}
+                  >
+                    {secondaryActionLabel}
+                  </GenericButton>
+                )}
+              </div>
+            )}
           </div>
         </div>
-      </GenericButton>
+      </GenericCard>
     </div>
   )
 }
@@ -240,6 +109,8 @@ UserCard.propTypes = {
 
   setAlert: PropTypes.func,
   showDescription: PropTypes.bool,
+  isClickable: PropTypes.bool,
+  profileInfoSize: PropTypes.string,
 }
 
 export default UserCard

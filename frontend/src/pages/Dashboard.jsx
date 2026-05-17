@@ -1,5 +1,4 @@
 import GenericButton from '../components/GenericButton'
-import PropTypes from 'prop-types'
 import ProfileForm from '../components/ProfileForm'
 import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
@@ -8,60 +7,9 @@ import { Star } from '@mui/icons-material'
 import { formatKg, formatKm, getMostUsedMode } from '../utils/AnalyticsUtils.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { analyticsStrings } from '../locales/en/AnalyticsStrings'
-import ProfileInfo from '../components/ProfileInfo'
+import UserCard from '../components/UserCard.jsx'
 
 const dashboardStrings = analyticsStrings.dashboard
-
-/**
- * Component for the profile header.
- *
- * @param {Object} user Current user
- * @param {func} onEdit Callback function for when edit button is clicked
- * @returns {JSX.Element}
- */
-function ProfileHeader({ user, onEdit }) {
-  const navigate = useNavigate()
-
-  return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-      <div className="flex items-start gap-4">
-        <ProfileInfo
-          user={user}
-          actions={
-            <div className="flex flex-col gap-1">
-              <GenericButton
-                onClick={onEdit}
-                unstyled={true}
-                customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
-              >
-                {dashboardStrings.profile.editProfile}
-              </GenericButton>
-              <GenericButton
-                onClick={() => navigate('/bannedusers')}
-                unstyled={true}
-                customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
-              >
-                {dashboardStrings.profile.blockedUsers}
-              </GenericButton>
-            </div>
-          }
-        ></ProfileInfo>
-      </div>
-    </div>
-  )
-}
-
-ProfileHeader.propTypes = {
-  user: PropTypes.shape({
-    name: PropTypes.string,
-    email: PropTypes.string,
-    nickname: PropTypes.string,
-    role: PropTypes.string,
-    description: PropTypes.string,
-    profile_pic: PropTypes.string,
-  }),
-  onEdit: PropTypes.func.isRequired,
-}
 
 /**
  * Dashboard page
@@ -111,8 +59,9 @@ function Dashboard() {
      * Filters badges to include only earned ones, sorts them by the date earned in descending order
      */
     async function fetchRecentBadges() {
+      if (!user?.id) return
       try {
-        const res = await fetch(`${baseURL}/api/badges`, {
+        const res = await fetch(`${baseURL}/api/badges/${user.id}`, {
           credentials: 'include',
         })
         if (!res.ok) return
@@ -131,7 +80,9 @@ function Dashboard() {
     }
 
     fetchSummary()
-    fetchRecentBadges()
+    if (user?.id) {
+      fetchRecentBadges()
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async formData => {
@@ -267,7 +218,17 @@ function Dashboard() {
                 {dashboardStrings.loadingProfile}
               </div>
             ) : (
-              <ProfileHeader user={user} onEdit={() => setIsEditing(true)} />
+              <UserCard
+                user={user}
+                isClickable={false}
+                profileInfoSize={'md'}
+                primaryActionLabel={dashboardStrings.profile.editProfile}
+                onPrimaryAction={() => setIsEditing(true)}
+                primaryButtonStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                secondaryActionLabel={dashboardStrings.profile.blockedUsers}
+                onSecondaryAction={() => navigate('/bannedusers')}
+                secondaryButtonStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+              />
             )}
 
             {recentBadges.length > 0 && (

@@ -101,6 +101,7 @@ function BannedUsers() {
           primaryButtonStyling={
             'text-xs font-medium text-red-500 border border-red-500 rounded-2xl px-4 py-1'
           }
+          isClickable={false}
         />
       ))}
     </div>

@@ -111,9 +111,11 @@ function Moderate() {
               {/* User Report, no click/no profile view yet? */}
               {report.report_target == 'user' && (
                 <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
-                  <div className="*:shadow-white">
-                    <UserCard user={report.targetDetails} />
-                  </div>
+                  <UserCard
+                    user={report.targetDetails}
+                    className="shadow-white border-none"
+                    isClickable={false}
+                  />
                   <ModerationActions
                     information={report}
                     onSuccess={fetchReportQueue}

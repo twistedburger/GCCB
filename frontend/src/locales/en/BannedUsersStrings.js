@@ -12,8 +12,7 @@ export const bannedUsersStrings = {
   user: {
     title: 'Blocked Users',
     actionButton: 'Unblock',
-    areYouSure:
-      'Are you sure you want to unblock this user? This action cannot be undone.',
+    areYouSure: 'Are you sure you want to unblock this user?',
     confirmTitle: 'Confirm Unblock',
     successMessage: name => `${name} has been unblocked successfully.`,
     errorMessage: 'Failed to unblock user.',

@@ -9,7 +9,7 @@ import { analyticsStrings } from '../locales/en/AnalyticsStrings'
  * @param {Object} [actions] - Actions to be displayed along with the profile information (blocking, editing, etc.)
  * @returns {JSX.Element}
  */
-function ProfileInfo({ user, actions, showDesc = true, size = 'md' }) {
+function ProfileInfo({ user, showDesc = true, size = 'md' }) {
   const dashboardStrings = analyticsStrings.dashboard
   const sizes = {
     sm: {
@@ -34,12 +34,12 @@ function ProfileInfo({ user, actions, showDesc = true, size = 'md' }) {
   return (
     <div className="w-full text-left">
       <div
-        className={`flex flex-row justify-between items-start ${sizeSelection.gap}`}
+        className={`flex flex-row flex-wrap justify-between items-center ${sizeSelection.gap}`}
       >
         <div
-          className={`flex flex-row ${sizeSelection.gap} items-center justify-center`}
+          className={`flex flex-row ${sizeSelection.gap} items-center flex-1`}
         >
-          <div className={`${sizeSelection.container} ml-auto mt-auto`}>
+          <div className={`${sizeSelection.container}`}>
             <Avatar
               src={user?.profile_pic}
               sx={{ width: sizeSelection.avatar, height: sizeSelection.avatar }}
@@ -61,7 +61,6 @@ function ProfileInfo({ user, actions, showDesc = true, size = 'md' }) {
             </div>
           </div>
         </div>
-        <div className="shrink-0">{actions}</div>
       </div>
       {showDesc && (
         <div
@@ -76,7 +75,6 @@ function ProfileInfo({ user, actions, showDesc = true, size = 'md' }) {
 
 ProfileInfo.propTypes = {
   user: PropTypes.object,
-  actions: PropTypes.object,
   showDesc: PropTypes.bool,
   size: PropTypes.string,
 }
