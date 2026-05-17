@@ -168,61 +168,60 @@ function Home() {
     setFilters(DEFAULT_FILTERS)
   }, [userLocation])
 
-  const handleToggleJoin = trip =>
-    toggleJoin(trip, ({ routeId, joined, deleted }) => {
-      if (deleted) {
-        setCardsToDisplay(prev => prev.filter(card => card.id !== routeId))
-
-        setSelectedRoute(prev =>
-          Number(prev?.id) === Number(routeId) ? null : prev
-        )
-
-        return
-      }
-
-      setCardsToDisplay(prev =>
-        prev.map(card => {
-          if (card.id === routeId) {
-            return {
-              ...card,
-              isJoined: joined,
-              people_going: joined
-                ? (parseInt(card.people_going) || 0) + 1
-                : Math.max(0, (parseInt(card.people_going) || 0) - 1),
-            }
-          }
-
-          if (card.routes) {
-            return {
-              ...card,
-              routes: card.routes.map(route =>
-                route.id === routeId
-                  ? {
-                      ...route,
-                      isJoined: joined,
-                      people_going: joined
-                        ? (parseInt(route.people_going) || 0) + 1
-                        : Math.max(0, (parseInt(route.people_going) || 0) - 1),
-                    }
-                  : route
-              ),
-            }
-          }
-
-          return card
-        })
+  const handleJoinSuccess = useCallback(({ routeId, joined, deleted }) => {
+    if (deleted) {
+      setCardsToDisplay(prev => prev.filter(card => card.id !== routeId))
+      setSelectedRoute(prev =>
+        Number(prev?.id) === Number(routeId) ? null : prev
       )
+      return
+    }
 
-      if (selectedRoute && Number(selectedRoute.id) === Number(routeId)) {
-        setSelectedRoute(prev => ({
-          ...prev,
-          isJoined: joined,
-          people_going: joined
-            ? (parseInt(prev.people_going) || 0) + 1
-            : Math.max(0, (parseInt(prev.people_going) || 0) - 1),
-        }))
-      }
-    })
+    setCardsToDisplay(prev =>
+      prev.map(card => {
+        if (card.id === routeId) {
+          return {
+            ...card,
+            isJoined: joined,
+            people_going: joined
+              ? (parseInt(card.people_going) || 0) + 1
+              : Math.max(0, (parseInt(card.people_going) || 0) - 1),
+          }
+        }
+        if (card.routes) {
+          return {
+            ...card,
+            routes: card.routes.map(route =>
+              Number(route.id) === Number(routeId)
+                ? {
+                    ...route,
+                    isJoined: joined,
+                    people_going: joined
+                      ? (parseInt(route.people_going) || 0) + 1
+                      : Math.max(0, (parseInt(route.people_going) || 0) - 1),
+                  }
+                : route
+            ),
+          }
+        }
+        return card
+      })
+    )
+
+    setSelectedRoute(prev =>
+      prev && Number(prev.id) === Number(routeId)
+        ? {
+            ...prev,
+            isJoined: joined,
+            people_going: joined
+              ? (parseInt(prev.people_going) || 0) + 1
+              : Math.max(0, (parseInt(prev.people_going) || 0) - 1),
+          }
+        : prev
+    )
+  }, [])
+
+  const handleToggleJoin = trip => toggleJoin(trip, handleJoinSuccess)
 
   return (
     <div
@@ -455,7 +454,7 @@ function Home() {
                 .flatMap(item => (item.routes ? item.routes : [item]))
                 .find(route => route.id === selectedRoute?.id) || selectedRoute
             }
-            onToggleJoin={handleToggleJoin}
+            onJoinSuccess={handleJoinSuccess}
             onClose={() => {
               setSelectedRoute(null)
               setSnapPoint(1)

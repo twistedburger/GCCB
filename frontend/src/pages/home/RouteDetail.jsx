@@ -4,7 +4,7 @@ import UserCard from '../../components/UserCard'
 import RouteCard from '../../components/RouteCard'
 import { Cancel } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import TransitLegCard from '../../components/TransitLegCard'
 import { Drawer } from 'vaul'
 import Report from '../../components/Report'
@@ -12,6 +12,7 @@ import { calculateTransitLegs } from '../../utils/RouteUtils'
 import { transitLegCardStrings } from '../../locales/en/ComponentStrings/TransitLegCardStrings'
 import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
 import { routeDetailStrings } from '../../locales/en/RouteDetailStrings'
+import { useRouteActions } from '../../../context/RouteActionsContext'
 
 /**
  * Drawer for displaying a route once selected.
@@ -25,7 +26,7 @@ export default function RouteDetail({
   selectedRoute,
   onClose,
   setAlert,
-  onToggleJoin,
+  onJoinSuccess,
 }) {
   const [snapPoint, setSnapPoint] = useState(0.25)
   const navigate = useNavigate()
@@ -33,6 +34,8 @@ export default function RouteDetail({
   const [showParticipants, setShowParticipants] = useState(false)
   const [participants, setParticipants] = useState([])
   const [reportData, setReportData] = useState(null)
+  const { toggleJoin } = useRouteActions()
+  const [currentRoute, setCurrentRoute] = useState(selectedRoute)
 
   const creator = participants.find(person => person.is_creator)
 
@@ -45,6 +48,10 @@ export default function RouteDetail({
     () => calculateTransitLegs(selectedRoute),
     [selectedRoute]
   )
+
+  useEffect(() => {
+    if (selectedRoute) setCurrentRoute(selectedRoute)
+  }, [selectedRoute])
 
   return (
     <Drawer.Root
@@ -116,9 +123,23 @@ export default function RouteDetail({
                     {selectedRoute.description}
                   </span>
                   <RouteCard
-                    route={selectedRoute}
+                    route={currentRoute}
                     routeDetailView={true}
-                    onToggleJoin={() => onToggleJoin(selectedRoute)}
+                    onToggleJoin={() =>
+                      toggleJoin(currentRoute, result => {
+                        setCurrentRoute(prev => ({
+                          ...prev,
+                          isJoined: result.joined,
+                          people_going: result.joined
+                            ? (parseInt(prev.people_going) || 0) + 1
+                            : Math.max(
+                                0,
+                                (parseInt(prev.people_going) || 0) - 1
+                              ),
+                        }))
+                        onJoinSuccess?.(result)
+                      })
+                    }
                     onReport={data => {
                       setReportData(data)
                       setShowReport(true)
@@ -249,7 +270,17 @@ export default function RouteDetail({
                         type={reportData.type}
                         targetId={reportData.targetId}
                         onClose={() => setShowReport(false)}
-                        setAlert={setAlert}
+                        setAlert={reportAlert => {
+                          if (!reportAlert?.type) return
+
+                          setAlert({
+                            type: reportAlert.type,
+                            message:
+                              reportAlert.type === 'success'
+                                ? reportStrings.reportSuccess
+                                : reportStrings.reportFailed,
+                          })
+                        }}
                       />
                     </>
                   )}
@@ -278,5 +309,5 @@ RouteDetail.propTypes = {
   }),
   onClose: PropTypes.func,
   setAlert: PropTypes.func,
-  onToggleJoin: PropTypes.func,
+  onJoinSuccess: PropTypes.func,
 }
