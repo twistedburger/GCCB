@@ -98,27 +98,31 @@ export default function ModerationActions({
 
       {/* Valid report, confirmation dialog */}
       <div className="*:ml-13.75">
-        <ConfirmationDialog
-          isOpen={confirmReport === 'approve'}
-          onClose={handleCancel}
-          onConfirm={() =>
-            handleSubmit(
-              'approved',
-              isReport,
-              information,
-              rejectionReason,
-              rejectionDetail,
-              setAlert,
-              onSuccess
-            )
-          }
-          title={moderationStrings.approve}
-          confirmText={moderationStrings.ok}
-          cancelText={moderationStrings.cancel}
-          variant="primary"
-        >
-          {moderationStrings.confirmApprove(isReport ? 'report' : 'event')}
-        </ConfirmationDialog>
+        <div className="fixed inset-0 z-9999 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto">
+            <ConfirmationDialog
+              isOpen={confirmReport === 'approve'}
+              onClose={handleCancel}
+              onConfirm={() =>
+                handleSubmit(
+                  'approved',
+                  isReport,
+                  information,
+                  rejectionReason,
+                  rejectionDetail,
+                  setAlert,
+                  onSuccess
+                )
+              }
+              title={moderationStrings.approve}
+              confirmText={moderationStrings.ok}
+              cancelText={moderationStrings.cancel}
+              variant="primary"
+            >
+              {moderationStrings.confirmApprove(isReport ? 'report' : 'event')}
+            </ConfirmationDialog>
+          </div>
+        </div>
       </div>
 
       {/* Invalid, moderator must add a reason (dropdown or other + text) */}

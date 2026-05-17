@@ -186,20 +186,24 @@ export default function MyTrips() {
         </div>
       </div>
       <div className="*:ml-13.75">
-        <Modal
-          isOpen={showReport}
-          onClose={() => setShowReport(false)}
-          title={myTripsStrings.reportTitle}
-        >
-          {reportData && (
-            <Report
-              type={'route'}
-              targetId={reportData?.targetId}
+        <div className="fixed inset-0 z-9999 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto">
+            <Modal
+              isOpen={showReport}
               onClose={() => setShowReport(false)}
-              setAlert={setAlert}
-            />
-          )}
-        </Modal>
+              title={myTripsStrings.reportTitle}
+            >
+              {reportData && (
+                <Report
+                  type={'route'}
+                  targetId={reportData?.targetId}
+                  onClose={() => setShowReport(false)}
+                  setAlert={setAlert}
+                />
+              )}
+            </Modal>
+          </div>
+        </div>
       </div>
     </div>
   )
