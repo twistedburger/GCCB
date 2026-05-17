@@ -16,18 +16,4 @@ async function selectUser(req) {
   return null
 }
 
-/**
- * Select a user by their ID
- *
- * @param {number} id - the ID of the user to select
- * @returns {Object} the user fetched from the DB, or null
- */
-async function selectUserById(id) {
-  const results = await db.query('SELECT * FROM "user" WHERE id = $1', [id])
-  if (results.rowCount !== 0) {
-    return results.rows[0]
-  }
-  return null
-}
-
-module.exports = { selectUser, selectUserById }
+module.exports = { selectUser }

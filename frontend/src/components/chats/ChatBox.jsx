@@ -8,7 +8,7 @@ import PropTypes from 'prop-types'
  * Component for rendering the main chat interface.
  *
  * @param {activeRoom} activeRoom object containing details of the currently active chat room, including routeTitle.
- * @param {messages} Array of message objects to display in the chat, each containing senderNickname, content, sentAt, and isSystem properties.
+ * @param {messages} Array of message objects to display in the chat, each containing sender data, content, sentAt, and isSystem properties.
  * @param {user} User object representing the message creator.
  * @param {members} Array of user objects representing the members of the chat room.
  * @param {isClosed} Boolean indicating if the chat room is closed.

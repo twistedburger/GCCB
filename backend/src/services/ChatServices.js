@@ -98,8 +98,14 @@ const getRoomFullDetails = async chatroomId => {
       m.sender_id AS "senderId",
       m.content,
       m.sent_at AS "sentAt",
-      u.nickname AS "senderNickname",
-      u.profile_pic AS "profilePic"
+      json_build_object(
+        'id', u.id,
+        'name', u.name,
+        'nickname', u.nickname,
+        'profilePic', u.profile_pic,
+        'role', u.role,
+        'description', u.description
+      ) AS "sender"
     FROM chat_message m
     JOIN "user" u ON m.sender_id = u.id
     WHERE m.chatroom_id = $1 
@@ -110,7 +116,8 @@ const getRoomFullDetails = async chatroomId => {
 
     const members = await pool.query(
       `
-      SELECT u.id, u.nickname, u.profile_pic FROM "user" u
+      SELECT u.id, u.nickname, u.profile_pic, u.role, u.description 
+      FROM "user" u
       JOIN chatroom_member cm ON u.id = cm.user_id
       WHERE cm.chatroom_id = $1
     `,
@@ -271,10 +278,9 @@ const saveMessage = async (chatroomId, senderId, content) => {
 
     const newMessage = insertResult.rows[0]
 
-    const userResult = await pool.query(
-      'SELECT nickname, profile_pic FROM "user" WHERE id = $1',
-      [senderId]
-    )
+    const userResult = await pool.query('SELECT * FROM "user" WHERE id = $1', [
+      senderId,
+    ])
 
     return {
       success: true,
@@ -284,8 +290,7 @@ const saveMessage = async (chatroomId, senderId, content) => {
         senderId: newMessage.sender_id,
         content: newMessage.content,
         sentAt: newMessage.sent_at,
-        senderNickname: userResult.rows[0].nickname,
-        profilePic: userResult.rows[0].profile_pic,
+        sender: userResult.rows[0],
       },
     }
   } catch (err) {
