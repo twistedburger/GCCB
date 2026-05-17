@@ -7,6 +7,7 @@ import { authLevel } from '../hooks/Authorization.jsx'
 import { useUser } from '../../context/UserContext.jsx'
 import BadgeCard from './BadgeCard.jsx'
 import ConfirmationDialog from './ConfirmationDialog.jsx'
+import Report from './Report'
 
 /**
  * A modal component that displays detailed user profile information and
@@ -24,6 +25,8 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
   const [isBlocked, setIsBlocked] = useState(false)
   const [recentBadges, setRecentBadges] = useState([])
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [isReported, setIsReported] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
   const { user: currentUser } = useUser()
 
   const isSelf = currentUser && Number(currentUser.id) === Number(user.id)
@@ -32,6 +35,11 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
     authLevel[currentUser?.role?.toUpperCase()]?.value <=
       authLevel.USER.value &&
     authLevel[user.role?.toUpperCase()]?.value <= authLevel.USER.value
+
+  const reportButtonLabel = isReported
+    ? profileModalStrings.reported
+    : profileModalStrings.report
+  const canReport = !isSelf && !isReported
 
   async function fetchRecentBadges() {
     try {
@@ -56,12 +64,6 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
     }
   }
 
-  useEffect(() => {
-    if (isOpen && user?.id) {
-      fetchRecentBadges()
-    }
-  }, [isOpen, user?.id])
-
   const checkBlockStatus = useCallback(async () => {
     try {
       const response = await fetch(`${baseURL}/api/blockStatus/${user.id}`, {
@@ -74,11 +76,27 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
     }
   }, [baseURL, user.id])
 
-  useEffect(() => {
-    if (isOpen && !isSelf) {
-      checkBlockStatus()
+  const checkReportStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`${baseURL}/api/reportStatus/${user.id}`, {
+        credentials: 'include',
+      })
+      const data = await response.json()
+      setIsReported(data.isReported)
+    } catch (err) {
+      console.error('Failed to fetch report status:', err)
     }
-  }, [isOpen, isSelf, checkBlockStatus])
+  }, [baseURL, user.id])
+
+  useEffect(() => {
+    if (isOpen && user?.id) {
+      fetchRecentBadges()
+      if (!isSelf) {
+        checkBlockStatus()
+        checkReportStatus()
+      }
+    }
+  }, [isOpen, isSelf, user?.id, checkBlockStatus, checkReportStatus])
 
   const handleToggleBlock = async () => {
     const endpoint = isBlocked ? 'unblockUser' : 'blockUser'
@@ -119,6 +137,7 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
           className="shadow-white border-none -ml-4"
           isClickable={false}
           profileInfoSize={'md'}
+          // Block
           primaryActionLabel={
             canBlock
               ? isBlocked
@@ -127,12 +146,22 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
               : undefined
           }
           onPrimaryAction={() => setShowConfirmDialog(true)}
-          primaryButtonStyling={`text-xs font-medium border rounded-2xl px-4 py-1 ${
+          primaryButtonStyling={`cursor-pointer text-xs font-medium border rounded-2xl px-4 py-1 ${
             isBlocked
               ? 'text-gray-500 border-gray-500'
               : 'text-red-500 border-red-500'
           }`}
+          // Report
+          secondaryActionLabel={!isSelf ? reportButtonLabel : undefined}
+          onSecondaryAction={() => setShowReportModal(true)}
+          secondaryActionDisabled={!canReport}
+          secondaryButtonStyling={` text-xs font-medium border rounded-2xl px-4 py-1 ${
+            isReported
+              ? ' text-gray-400 border-gray-300'
+              : 'cursor-pointer text-orange-500 border-orange-500'
+          }`}
         />
+
         <div className="pt-4">
           <h4 className="text-xs font-bold text-text-primary mb-2">
             {profileModalStrings.recentBadges}
@@ -151,6 +180,24 @@ function ProfileModal({ user, isOpen, onClose, setAlert }) {
           )}
         </div>
       </Modal>
+
+      {/* Report Modal */}
+      <Modal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        title={profileModalStrings.report}
+      >
+        <Report
+          type="user"
+          targetId={user.id}
+          onClose={() => {
+            setShowReportModal(false)
+            setIsReported(true)
+          }}
+          setAlert={setAlert}
+        />
+      </Modal>
+
       <ConfirmationDialog
         isOpen={showConfirmDialog}
         onClose={() => setShowConfirmDialog(false)}
