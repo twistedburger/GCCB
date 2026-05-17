@@ -1,4 +1,4 @@
-const { EMISSIONS_G_PER_KM } = require('../constants/emissions')
+const { EMISSIONS_G_PER_KM } = require('../constants/Emissions')
 
 const GRAMS_PER_KG = 1000
 const DEFAULT_PASSENGERS = 2

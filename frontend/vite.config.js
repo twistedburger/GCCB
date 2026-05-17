@@ -13,6 +13,13 @@ function cjsShim() {
           export const { NotificationType } = __module.exports
         `
       }
+      if (id.includes('TransportModes.js')) {
+        return `
+          const __module = { exports: {} }
+          ;(function(module) { ${code} })(__module)
+          export const { TransportMode } = __module.exports
+        `
+      }
     },
   }
 }

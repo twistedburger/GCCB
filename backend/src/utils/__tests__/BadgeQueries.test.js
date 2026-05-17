@@ -1,4 +1,4 @@
-const { BadgeQueries } = require('../src/utils/BadgeQueries')
+const { BadgeQueries } = require('../BadgeQueries')
 
 const mockDb = { query: jest.fn() }
 let badgeQueries
