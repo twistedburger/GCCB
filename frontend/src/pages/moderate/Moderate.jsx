@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import EventCard from '../../components/EventCard'
 import RouteCard from '../../components/RouteCard'
-import OrganizerCard from '../../components/OrganizerCard'
+import UserCard from '../../components/UserCard'
 // Disable verification for now.
 // import GenericToggle from '../../components/GenericToggle'
 import { useNavigate } from 'react-router-dom'
@@ -111,9 +111,11 @@ function Moderate() {
               {/* User Report, no click/no profile view yet? */}
               {report.report_target == 'user' && (
                 <div className="flex flex-col w-full rounded-xl shadow-md shadow-medium-grey bg-white overflow-hidden">
-                  <div className="*:shadow-white">
-                    <OrganizerCard user={report.targetDetails} />
-                  </div>
+                  <UserCard
+                    user={report.targetDetails}
+                    className="shadow-white border-none"
+                    isClickable={false}
+                  />
                   <ModerationActions
                     information={report}
                     onSuccess={fetchReportQueue}

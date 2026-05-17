@@ -166,7 +166,7 @@ export function useChatRoom(user) {
     return () => {
       socket.disconnect()
     }
-  }, [activeRoom?.id, user?.id])
+  }, [activeRoom, user?.id])
 
   const handleSendMessage = () => {
     if (!input.trim() || !socketRef.current) return

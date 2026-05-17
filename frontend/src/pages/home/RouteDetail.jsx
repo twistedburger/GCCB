@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import GenericButton from '../../components/GenericButton'
-import OrganizerCard from '../../components/OrganizerCard'
+import UserCard from '../../components/UserCard'
 import RouteCard from '../../components/RouteCard'
 import { Cancel } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
@@ -10,7 +10,6 @@ import { Drawer } from 'vaul'
 import Report from '../../components/Report'
 import { calculateTransitLegs } from '../../utils/RouteUtils'
 import { transitLegCardStrings } from '../../locales/en/ComponentStrings/TransitLegCardStrings'
-import { organizerCardStrings } from '../../locales/en/ComponentStrings/OrganizerCardStrings'
 import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
 import { routeDetailStrings } from '../../locales/en/RouteDetailStrings'
 
@@ -175,16 +174,16 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                 </div>
                 <div className="flex flex-col overflow-y-auto pb-8 px-6 gap-2">
                   <p className="font-semibold pb-2 text-text-primary shrink-0">
-                    {organizerCardStrings.organizer}
+                    {routeDetailStrings.organizer}
                   </p>
-                  <OrganizerCard
+                  <UserCard
                     user={{
                       id: selectedRoute?.creator_id,
                       name: selectedRoute?.creator_name,
                       nickname: selectedRoute?.nickname,
                       profile_pic: selectedRoute?.profile_pic,
-                      role: '',
-                      description: '',
+                      role: selectedRoute?.role,
+                      description: selectedRoute?.creator_description,
                       active: true,
                     }}
                   />
@@ -192,7 +191,7 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                     {routeDetailStrings.participants}
                   </p>
                   {participants.map(participant => (
-                    <OrganizerCard key={participant.id} user={participant} />
+                    <UserCard key={participant.id} user={participant} />
                   ))}
                 </div>
               </Drawer.Content>
@@ -263,6 +262,8 @@ RouteDetail.propTypes = {
     creator_name: PropTypes.string,
     nickname: PropTypes.string,
     profile_pic: PropTypes.string,
+    role: PropTypes.string,
+    creator_description: PropTypes.string,
   }),
   onClose: PropTypes.func,
   setAlert: PropTypes.func,

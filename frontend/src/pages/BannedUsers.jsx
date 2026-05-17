@@ -1,8 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
-import OrganizerCard from '../components/OrganizerCard'
+import { useNavigate } from 'react-router-dom'
+import UserCard from '../components/UserCard'
 import ConfirmationDialog from '../components/ConfirmationDialog'
 import Alert from '../components/Alert'
+import GenericButton from '../components/GenericButton'
 import { useAuth, authLevel } from '../hooks/Authorization'
+import { ArrowBackIosNew } from '@mui/icons-material'
 import {
   getBannedUsersStrings,
   fetchUsers,
@@ -22,6 +25,7 @@ function BannedUsers() {
   const { authorization } = useAuth()
   const isModerator = authorization === authLevel.MODERATOR.label
   const strings = getBannedUsersStrings(isModerator)
+  const navigate = useNavigate()
 
   const handleFetchUsers = useCallback(async () => {
     try {
@@ -72,11 +76,21 @@ function BannedUsers() {
           {strings.areYouSure}
         </ConfirmationDialog>
       </div>
-      <p className="text-2xl text-text-primary font-medium pb-4">
-        {strings.title}
-      </p>
+      <div className="flex flex-row items-center pb-4 gap-2">
+        <GenericButton
+          unstyled
+          onClick={() => {
+            navigate(-1)
+          }}
+        >
+          <ArrowBackIosNew />
+        </GenericButton>
+        <p className="text-2xl text-text-primary font-medium">
+          {strings.title}
+        </p>
+      </div>
       {users.map(user => (
-        <OrganizerCard
+        <UserCard
           key={user.id}
           user={user}
           primaryActionLabel={strings.actionButton}
@@ -87,6 +101,7 @@ function BannedUsers() {
           primaryButtonStyling={
             'text-xs font-medium text-red-500 border border-red-500 rounded-2xl px-4 py-1'
           }
+          isClickable={false}
         />
       ))}
     </div>
