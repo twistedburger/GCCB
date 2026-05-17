@@ -25,7 +25,7 @@ const { BadgeServices } = require('./src/services/BadgeServices')
 const { BadgeEvaluator } = require('./src/services/BadgeEvaluator')
 const { initSocket, broadcast } = require('./sockets/ChatSocket')
 const chatService = require('./src/services/ChatServices')
-const { selectUser } = require('./src/utils/UserUtils')
+const { selectUser, selectUserById } = require('./src/utils/UserUtils')
 const { notificationRouter } = require('./endpoints/NotificationEndpoints')
 const { sendNotification } = require('./src/utils/NotificationUtils')
 const { NotificationType } = require('../shared/NotificationTypes')
@@ -1698,6 +1698,28 @@ app.get('/api/blockStatus/:id', async (req, res) => {
   } catch (error) {
     console.error('Error checking block status:', error)
     res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/*
+ * Fetches the user data by id
+ */
+app.get('/api/user/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const { id } = req.params
+    const user = await selectUserById(id)
+
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+    res.json(user)
+  } catch (error) {
+    console.error('Error fetching user data:', error)
+    res.status(500).json({ error: serverStrings.errors.generic })
   }
 })
 
