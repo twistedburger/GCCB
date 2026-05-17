@@ -1701,6 +1701,33 @@ app.get('/api/blockStatus/:id', async (req, res) => {
   }
 })
 
+/**
+ * Checks if a specific user is reported by the current user.
+ *
+ * @param {number} req.params.id - The ID of the user to check.
+ * @returns {{ isReported: boolean }}
+ */
+app.get('/api/reportStatus/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const blockedUserId = req.params.id
+  const currentUser = await selectUser(req)
+
+  try {
+    const result = await db.query(
+      `SELECT 1 FROM report WHERE reporter_id = $1 AND report_target = 'user' AND target_id = $2`,
+      [currentUser.id, blockedUserId]
+    )
+
+    res.json({ isReported: result.rows.length > 0 })
+  } catch (error) {
+    console.error('Error checking report status:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
 initSocket(httpServer)
 console.log('Sockets initialized')
 
