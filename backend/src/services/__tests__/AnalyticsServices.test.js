@@ -61,6 +61,7 @@ const carRoute = {
   creatorId: 10,
   transportationMode: 'Car',
   distance: '15',
+  isEv: false,
   path: {
     legs: [{ steps: [{ travelMode: 'DRIVING', distanceMeters: 15000 }] }],
   },
@@ -103,11 +104,9 @@ describe('AnalyticsServices.fetchCompletedRoutes', () => {
 
 describe('AnalyticsServices.getCarpoolContext', () => {
   test('should include the creator in passenger count when creator is also a participant', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 3, creator_included: true }],
-      })
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ participant_count: 3, creator_included: true }],
+    })
 
     const { passengers } = await analyticsServices.getCarpoolContext(1, 10)
 
@@ -115,35 +114,33 @@ describe('AnalyticsServices.getCarpoolContext', () => {
   })
 
   test('should add 1 for participant count when creator is not a participant', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 2, creator_included: false }],
-      })
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ participant_count: 2, creator_included: false }],
+    })
 
     const { passengers } = await analyticsServices.getCarpoolContext(1, 10)
 
     expect(passengers).toBe(3)
   })
 
-  test('should use electric factor when creator has EV', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 2, creator_included: true }],
-      })
-      .mockResolvedValueOnce({ rows: [{ e_v: true }], rowCount: 1 })
+  test('should use electric factor when isEv is true', async () => {
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ participant_count: 2, creator_included: true }],
+    })
 
-    const { vehicleFactor } = await analyticsServices.getCarpoolContext(1, 10)
+    const { vehicleFactor } = await analyticsServices.getCarpoolContext(
+      1,
+      10,
+      true
+    )
 
     expect(vehicleFactor).toBe(EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC)
   })
 
   test('should use petrol emission factor by default', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 2, creator_included: true }],
-      })
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ participant_count: 2, creator_included: true }],
+    })
 
     const { vehicleFactor } = await analyticsServices.getCarpoolContext(1, 10)
 
@@ -151,9 +148,7 @@ describe('AnalyticsServices.getCarpoolContext', () => {
   })
 
   test('should default passenger count to 1 when rows are empty', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+    mockDb.query.mockResolvedValueOnce({ rows: [] })
 
     const { passengers } = await analyticsServices.getCarpoolContext(1, 10)
 
@@ -170,11 +165,9 @@ describe('AnalyticsServices.fetchCarpoolContextsBatch', () => {
   })
 
   test('should returns the correct number of passengers for single route', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ route_id: 3, participant_count: 2, creator_included: true }],
-      })
-      .mockResolvedValueOnce({ rows: [] })
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ route_id: 3, participant_count: 2, creator_included: true }],
+    })
 
     const result = await analyticsServices.fetchCarpoolContextsBatch([carRoute])
 
@@ -182,56 +175,38 @@ describe('AnalyticsServices.fetchCarpoolContextsBatch', () => {
   })
 
   test('should add 1 for creator not in participants', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ route_id: 3, participant_count: 2, creator_included: false }],
-      })
-      .mockResolvedValueOnce({ rows: [] })
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ route_id: 3, participant_count: 2, creator_included: false }],
+    })
 
     const result = await analyticsServices.fetchCarpoolContextsBatch([carRoute])
 
     expect(result.get(3).passengers).toBe(3)
   })
 
-  test('should use electric factor for EV creator', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ route_id: 3, participant_count: 2, creator_included: true }],
-      })
-      .mockResolvedValueOnce({
-        rows: [{ driver_id: 10, e_v: true }],
-      })
+  test('should use electric factor when route has isEv true', async () => {
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ route_id: 3, participant_count: 2, creator_included: true }],
+    })
 
-    const result = await analyticsServices.fetchCarpoolContextsBatch([carRoute])
+    const evRoute = { ...carRoute, isEv: true }
+    const result = await analyticsServices.fetchCarpoolContextsBatch([evRoute])
 
     expect(result.get(3).vehicleFactor).toBe(
       EMISSIONS_G_PER_KM.CAR_VEHICLE.ELECTRIC
     )
   })
 
-  test('should use petrol emission factor by default', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ route_id: 3, participant_count: 2, creator_included: true }],
-      })
-      .mockResolvedValueOnce({ rows: [] })
+  test('should use petrol emission factor when isEv is false', async () => {
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ route_id: 3, participant_count: 2, creator_included: true }],
+    })
 
     const result = await analyticsServices.fetchCarpoolContextsBatch([carRoute])
 
     expect(result.get(3).vehicleFactor).toBe(
       EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL
     )
-  })
-
-  test('should make exactly two DB queries regardless of route count', async () => {
-    const routes = [carRoute, { ...carRoute, id: 4, creatorId: 11 }]
-    mockDb.query
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] })
-
-    await analyticsServices.fetchCarpoolContextsBatch(routes)
-
-    expect(mockDb.query).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -244,15 +219,13 @@ describe('AnalyticsServices.computeRouteSavings', () => {
   })
 
   test('should call getCarpoolContext when route has car segment', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 3, creator_included: true }],
-      })
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ participant_count: 3, creator_included: true }],
+    })
 
     await analyticsServices.computeRouteSavings(carRoute)
 
-    expect(mockDb.query).toHaveBeenCalledTimes(2)
+    expect(mockDb.query).toHaveBeenCalledTimes(1)
   })
 
   test('should return zero savings for routes with no distance', async () => {
@@ -289,15 +262,13 @@ describe('AnalyticsServices.toAnalyticsContributions', () => {
   })
 
   test('should fetch carpool context when path contains a car segment', async () => {
-    mockDb.query
-      .mockResolvedValueOnce({
-        rows: [{ participant_count: 3, creator_included: true }],
-      })
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+    mockDb.query.mockResolvedValueOnce({
+      rows: [{ participant_count: 3, creator_included: true }],
+    })
 
     await analyticsServices.toAnalyticsContributions(carRoute, true)
 
-    expect(mockDb.query).toHaveBeenCalledTimes(2)
+    expect(mockDb.query).toHaveBeenCalledTimes(1)
   })
 
   test('should return single contribution for route without path', async () => {
@@ -354,13 +325,12 @@ describe('AnalyticsServices.buildAnalyticsSummary', () => {
       .mockResolvedValueOnce({
         rows: [{ route_id: 3, participant_count: 2, creator_included: true }],
       })
-      .mockResolvedValueOnce({ rows: [] })
 
     const spy = jest.spyOn(analyticsServices, 'getCarpoolContext')
     await analyticsServices.buildAnalyticsSummary(1, false)
 
     expect(spy).not.toHaveBeenCalled()
-    expect(mockDb.query).toHaveBeenCalledTimes(3)
+    expect(mockDb.query).toHaveBeenCalledTimes(2)
   })
 
   test('should set scope to system for admin', async () => {

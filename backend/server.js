@@ -544,6 +544,7 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
     path,
     completed,
     description,
+    isEV,
   } = routeData
 
   // Frontend sends distance in metres; convert to km for backend analytics
@@ -553,9 +554,9 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
     `INSERT INTO route (
       title, creator_id, transportation_mode, origin, destination,
       depart_time, max_ppl, distance, path, completed,
-      description, created_at, origin_geog
+      description, created_at, origin_geog, is_ev
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326), $15)
     RETURNING id`,
     [
       title,
@@ -572,6 +573,7 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
       new Date(),
       originLng,
       originLat,
+      isEV ?? false,
     ]
   )
 
