@@ -18,7 +18,7 @@ const execOptions = {
   stdio: 'inherit',
   env: {
     ...process.env,
-    PGPASSWORD: process.env.DB_PASSWORD,
+    PGPASSWORD: process.env.DB_ADMIN_PASSWORD,
   },
 }
 
@@ -32,7 +32,7 @@ function makeDatabase() {
 
   try {
     execSync(
-      `psql -h ${process.env.DB_HOST} -p ${process.env.DB_PORT} -U ${process.env.DB_USER} -d postgres -c "CREATE DATABASE ${process.env.DB_NAME};"`,
+      `psql -h ${process.env.DB_HOST} -p ${process.env.DB_PORT} -U ${process.env.DB_ADMIN_USER} -d postgres -c "CREATE DATABASE ${process.env.DB_NAME};"`,
       {
         ...execOptions,
         stdio: 'pipe',
@@ -56,7 +56,7 @@ function getPsqlCommand(filePath) {
     return `psql "${process.env.DATABASE_URL}" -f "${filePath}"`
   }
 
-  return `psql -h ${process.env.DB_HOST} -p ${process.env.DB_PORT} -U ${process.env.DB_USER} -d ${process.env.DB_NAME} -f "${filePath}"`
+  return `psql -h ${process.env.DB_HOST} -p ${process.env.DB_PORT} -U ${process.env.DB_ADMIN_USER} -d ${process.env.DB_NAME} -f "${filePath}"`
 }
 
 /**
