@@ -1,11 +1,11 @@
-const { BadgeQueries } = require('../BadgeQueries')
+const { BadgeServices } = require('../BadgeServices')
 
 const mockDb = { query: jest.fn() }
 let badgeQueries
 
 beforeEach(() => {
   mockDb.query.mockReset()
-  badgeQueries = new BadgeQueries({ db: mockDb })
+  badgeQueries = new BadgeServices({ db: mockDb })
 })
 
 describe('BadgeQueries.fetchUnearnedBadges', () => {
