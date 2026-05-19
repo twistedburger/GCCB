@@ -11,16 +11,17 @@ export async function fetchMyTrips(setActiveTrips, setCompletedTrips) {
   const response = await fetch(`${baseUrl}/api/myTrips`, {
     credentials: 'include',
   })
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Failed to fetch trips. ${errorText}`)
-  }
 
   const data = await response.json()
   if (!Array.isArray(data)) return
 
-  setActiveTrips(data.filter(trip => !trip.completed))
-  setCompletedTrips(data.filter(trip => trip.completed))
+  const taggedData = data.map(trip => ({
+    ...trip,
+    isJoined: true,
+  }))
+
+  setActiveTrips(taggedData.filter(trip => !trip.completed))
+  setCompletedTrips(taggedData.filter(trip => trip.completed))
 }
 
 /**
@@ -71,65 +72,6 @@ export async function confirmTripAction(
 
   await fetchMyTrips(setActiveTrips, setCompletedTrips)
   setPendingAction({ type: null, trip: null })
-}
-
-/**
- * Delete a route the current user created and remove it from local state.
- *
- * @param {number} routeIdToRemove The ID of the route to delete
- * @param {Function} setActiveTrips Sets a user's active and to be completed trips
- * @param {Function} setAlert Sets the error or success alert
- * @param {Function} setIsRouteRemovalDialogOpen Opens or closes the route removal confirmation dialog
- * @param {Function} setRouteIdToRemove Clears the route ID staged for removal
- */
-export async function confirmRouteRemoval(
-  routeIdToRemove,
-  setActiveTrips,
-  setAlert,
-  setIsRouteRemovalDialogOpen,
-  setRouteIdToRemove
-) {
-  try {
-    const response = await fetch(
-      `${baseUrl}/api/routes/${routeIdToRemove}/delete`,
-      {
-        method: 'DELETE',
-        credentials: 'include',
-      }
-    )
-
-    if (response.ok) {
-      setActiveTrips(prev => prev.filter(trip => trip.id !== routeIdToRemove))
-      setAlert({ type: 'success', message: 'Route deleted.' })
-    }
-  } catch (error) {
-    setAlert({ type: 'error', message: `Delete failed. ${error.message}` })
-  } finally {
-    setIsRouteRemovalDialogOpen(false)
-    setRouteIdToRemove(null)
-  }
-}
-
-/**
- * Leave a route as a non-creator member and refresh the trips list.
- *
- * @param {object} confirmLeave The route the user is leaving
- * @param {Function} setActiveTrips Sets a user's active and to be completed trips
- * @param {Function} setCompletedTrips Sets a user's completed trips
- * @param {Function} setConfirmLeave Clears the route staged for leaving
- */
-export async function leaveRoute(
-  confirmLeave,
-  setActiveTrips,
-  setCompletedTrips,
-  setConfirmLeave
-) {
-  await fetch(`${baseUrl}/api/routes/${confirmLeave.id}/leave`, {
-    method: 'DELETE',
-    credentials: 'include',
-  })
-  await fetchMyTrips(setActiveTrips, setCompletedTrips)
-  setConfirmLeave(null)
 }
 
 /**

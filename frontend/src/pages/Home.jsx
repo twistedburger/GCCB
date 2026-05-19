@@ -28,6 +28,7 @@ import { CircularProgress } from '@mui/material'
 import { homeStrings } from '../locales/en/HomeStrings'
 import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
 import { postGISToLatLng } from '../utils/MainMapUtils'
+import { useRouteActions } from '../../context/RouteActionsContext'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -76,6 +77,7 @@ function Home() {
   const [createEventLatLng, setCreateEventLatLng] = useState(null)
   const [mapCenter, setMapCenter] = useState(null)
   const [hasPanned, setHasPanned] = useState(false)
+  const { toggleJoin } = useRouteActions()
 
   const { authorizeUser } = useAuth()
   authorizeUser()
@@ -89,29 +91,52 @@ function Home() {
     }
   }
 
-  const fetchCards = useCallback(() => {
+  const fetchCards = useCallback(async () => {
     if (!userLocation) return
     setLoading(true)
-    const apiMainEvents = isArriving ? filters.mainEventsOnly : false
-    const url = buildSearchURL(
-      { ...filters, mainEventsOnly: apiMainEvents },
-      userLocation,
-      isArriving,
-      import.meta.env.VITE_API_BASE_URL
-    )
-    fetch(url, { credentials: 'include' })
-      .then(response => {
-        if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
-        return response.json()
+
+    try {
+      const apiMainEvents = isArriving ? filters.mainEventsOnly : false
+      const searchUrl = buildSearchURL(
+        { ...filters, mainEventsOnly: apiMainEvents },
+        userLocation,
+        isArriving,
+        import.meta.env.VITE_API_BASE_URL
+      )
+      const searchRes = await fetch(searchUrl, { credentials: 'include' })
+      const searchData = await searchRes.json()
+
+      const myTripsRes = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/myTrips`,
+        {
+          credentials: 'include',
+        }
+      )
+      const myTripsData = await myTripsRes.json()
+      const joinedIds = new Set(myTripsData.map(trip => trip.id))
+
+      const processedData = searchData.map(item => {
+        if (item.routes) {
+          return {
+            ...item,
+            routes: item.routes.map(route => ({
+              ...route,
+              isJoined: joinedIds.has(route.id),
+            })),
+          }
+        }
+        return {
+          ...item,
+          isJoined: joinedIds.has(item.id),
+        }
       })
-      .then(data => {
-        setCardsToDisplay(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Failed to fetch:', err)
-        setLoading(false)
-      })
+
+      setCardsToDisplay(processedData)
+      setLoading(false)
+    } catch (err) {
+      console.error('Failed to fetch:', err)
+      setLoading(false)
+    }
   }, [filters, userLocation, isArriving])
 
   const handleRouteClick = route => {
@@ -143,6 +168,61 @@ function Home() {
     setFilters(DEFAULT_FILTERS)
   }, [userLocation])
 
+  const handleJoinSuccess = useCallback(({ routeId, joined, deleted }) => {
+    if (deleted) {
+      setCardsToDisplay(prev => prev.filter(card => card.id !== routeId))
+      setSelectedRoute(prev =>
+        Number(prev?.id) === Number(routeId) ? null : prev
+      )
+      return
+    }
+
+    setCardsToDisplay(prev =>
+      prev.map(card => {
+        if (card.id === routeId) {
+          return {
+            ...card,
+            isJoined: joined,
+            people_going: joined
+              ? (parseInt(card.people_going) || 0) + 1
+              : Math.max(0, (parseInt(card.people_going) || 0) - 1),
+          }
+        }
+        if (card.routes) {
+          return {
+            ...card,
+            routes: card.routes.map(route =>
+              Number(route.id) === Number(routeId)
+                ? {
+                    ...route,
+                    isJoined: joined,
+                    people_going: joined
+                      ? (parseInt(route.people_going) || 0) + 1
+                      : Math.max(0, (parseInt(route.people_going) || 0) - 1),
+                  }
+                : route
+            ),
+          }
+        }
+        return card
+      })
+    )
+
+    setSelectedRoute(prev =>
+      prev && Number(prev.id) === Number(routeId)
+        ? {
+            ...prev,
+            isJoined: joined,
+            people_going: joined
+              ? (parseInt(prev.people_going) || 0) + 1
+              : Math.max(0, (parseInt(prev.people_going) || 0) - 1),
+          }
+        : prev
+    )
+  }, [])
+
+  const handleToggleJoin = trip => toggleJoin(trip, handleJoinSuccess)
+
   return (
     <div
       id="app-container"
@@ -166,10 +246,31 @@ function Home() {
           }
           defaultCenter={userLocation || DEFAULT_COORDINATES}
           route={selectedRoute}
-          events={cardsToDisplay.map(event => ({
-            ...event,
-            ...postGISToLatLng(event.location_geog),
-          }))}
+          events={cardsToDisplay.flatMap(item => {
+            if (item.origin_coords) {
+              const coords = isArriving
+                ? item.destination_coords
+                : item.origin_coords
+              if (!coords) return []
+              return [
+                {
+                  ...item,
+                  lat: coords[1],
+                  lng: coords[0],
+                },
+              ]
+            }
+            return [
+              {
+                ...item,
+                ...postGISToLatLng(item.location_geog),
+              },
+            ]
+          })}
+          onRouteClick={route => {
+            setSelectedRoute(route)
+            setSnapPoint(0.085)
+          }}
           onMapClick={async ({ lat, lng }) => {
             const address = await reverseGeocode({ lat, lng })
             setCreateEventLocation(address)
@@ -334,6 +435,7 @@ function Home() {
                         <RouteCard
                           key={item.id}
                           route={item}
+                          onToggleJoin={() => handleToggleJoin(item)}
                           individualView={true}
                           onSelect={handleRouteClick}
                         />
@@ -345,14 +447,21 @@ function Home() {
             </Drawer.Content>
           </Drawer.Portal>
         </Drawer.Root>
-        <RouteDetail
-          selectedRoute={isEventDetail ? null : selectedRoute}
-          onClose={() => {
-            setSelectedRoute(null)
-            setSnapPoint(1)
-          }}
-          setAlert={setAlert}
-        />
+        {!isEventDetail && location.pathname === '/' && (
+          <RouteDetail
+            selectedRoute={
+              cardsToDisplay
+                .flatMap(item => (item.routes ? item.routes : [item]))
+                .find(route => route.id === selectedRoute?.id) || selectedRoute
+            }
+            onJoinSuccess={handleJoinSuccess}
+            onClose={() => {
+              setSelectedRoute(null)
+              setSnapPoint(1)
+            }}
+            setAlert={setAlert}
+          />
+        )}
         <Outlet
           context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
         />

@@ -4,7 +4,7 @@ import UserCard from '../../components/UserCard'
 import RouteCard from '../../components/RouteCard'
 import { Cancel } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import TransitLegCard from '../../components/TransitLegCard'
 import { Drawer } from 'vaul'
 import Report from '../../components/Report'
@@ -12,6 +12,7 @@ import { calculateTransitLegs } from '../../utils/RouteUtils'
 import { transitLegCardStrings } from '../../locales/en/ComponentStrings/TransitLegCardStrings'
 import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
 import { routeDetailStrings } from '../../locales/en/RouteDetailStrings'
+import { useRouteActions } from '../../../context/RouteActionsContext'
 
 /**
  * Drawer for displaying a route once selected.
@@ -21,13 +22,22 @@ import { routeDetailStrings } from '../../locales/en/RouteDetailStrings'
  * @param {func} setAlert Callback function for setting an alert
  * @returns {JSX.Element}
  */
-export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
+export default function RouteDetail({
+  selectedRoute,
+  onClose,
+  setAlert,
+  onJoinSuccess,
+}) {
   const [snapPoint, setSnapPoint] = useState(0.25)
   const navigate = useNavigate()
   const [showReport, setShowReport] = useState(false)
   const [showParticipants, setShowParticipants] = useState(false)
   const [participants, setParticipants] = useState([])
   const [reportData, setReportData] = useState(null)
+  const { toggleJoin } = useRouteActions()
+  const [currentRoute, setCurrentRoute] = useState(selectedRoute)
+
+  const creator = participants.find(person => person.is_creator)
 
   const handleClose = () => {
     if (onClose) onClose()
@@ -38,6 +48,10 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
     () => calculateTransitLegs(selectedRoute),
     [selectedRoute]
   )
+
+  useEffect(() => {
+    if (selectedRoute) setCurrentRoute(selectedRoute)
+  }, [selectedRoute])
 
   return (
     <Drawer.Root
@@ -109,8 +123,23 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                     {selectedRoute.description}
                   </span>
                   <RouteCard
-                    route={selectedRoute}
+                    route={currentRoute}
                     routeDetailView={true}
+                    onToggleJoin={() =>
+                      toggleJoin(currentRoute, result => {
+                        setCurrentRoute(prev => ({
+                          ...prev,
+                          isJoined: result.joined,
+                          people_going: result.joined
+                            ? (parseInt(prev.people_going) || 0) + 1
+                            : Math.max(
+                                0,
+                                (parseInt(prev.people_going) || 0) - 1
+                              ),
+                        }))
+                        onJoinSuccess?.(result)
+                      })
+                    }
                     onReport={data => {
                       setReportData(data)
                       setShowReport(true)
@@ -176,23 +205,25 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                   <p className="font-semibold pb-2 text-text-primary shrink-0">
                     {routeDetailStrings.organizer}
                   </p>
-                  <UserCard
-                    user={{
-                      id: selectedRoute?.creator_id,
-                      name: selectedRoute?.creator_name,
-                      nickname: selectedRoute?.nickname,
-                      profile_pic: selectedRoute?.profile_pic,
-                      role: selectedRoute?.role,
-                      description: selectedRoute?.creator_description,
-                      active: true,
-                    }}
-                  />
+                  {creator ? (
+                    <UserCard user={creator} />
+                  ) : (
+                    <p className="text-text-secondary text-sm">
+                      {routeDetailStrings.creatorNotJoined}
+                    </p>
+                  )}
                   <p className="font-semibold pt-4 pb-2 text-text-primary shrink-0">
                     {routeDetailStrings.participants}
                   </p>
-                  {participants.map(participant => (
-                    <UserCard key={participant.id} user={participant} />
-                  ))}
+                  {participants.length === 0 ? (
+                    <p className="text-text-secondary text-sm">
+                      {routeDetailStrings.noParticipants}
+                    </p>
+                  ) : (
+                    participants.map(participant => (
+                      <UserCard key={participant.id} user={participant} />
+                    ))
+                  )}
                 </div>
               </Drawer.Content>
             </Drawer.Portal>
@@ -239,7 +270,17 @@ export default function RouteDetail({ selectedRoute, onClose, setAlert }) {
                         type={reportData.type}
                         targetId={reportData.targetId}
                         onClose={() => setShowReport(false)}
-                        setAlert={setAlert}
+                        setAlert={reportAlert => {
+                          if (!reportAlert?.type) return
+
+                          setAlert({
+                            type: reportAlert.type,
+                            message:
+                              reportAlert.type === 'success'
+                                ? reportStrings.reportSuccess
+                                : reportStrings.reportFailed,
+                          })
+                        }}
                       />
                     </>
                   )}
@@ -264,7 +305,9 @@ RouteDetail.propTypes = {
     profile_pic: PropTypes.string,
     role: PropTypes.string,
     creator_description: PropTypes.string,
+    isJoined: PropTypes.bool,
   }),
   onClose: PropTypes.func,
   setAlert: PropTypes.func,
+  onJoinSuccess: PropTypes.func,
 }
