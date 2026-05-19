@@ -88,6 +88,7 @@ class BadgeEvaluator {
           NotificationType.Badge,
           badge.id,
           badge.title,
+          userId,
           serverStrings.badgeEarned,
           false,
           true
