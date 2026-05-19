@@ -113,7 +113,7 @@ function Home() {
         }
       )
       const myTripsData = await myTripsRes.json()
-      const joinedIds = new Set(myTripsData.map(t => t.id))
+      const joinedIds = new Set(myTripsData.map(trip => trip.id))
 
       const processedData = searchData.map(item => {
         if (item.routes) {
