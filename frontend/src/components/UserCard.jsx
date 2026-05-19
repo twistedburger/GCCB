@@ -23,9 +23,11 @@ import GenericCard from './GenericCard.jsx'
 function UserCard({
   user,
   primaryActionLabel,
+  primaryActionDisabled = false,
   onPrimaryAction,
   primaryButtonStyling,
   secondaryActionLabel,
+  secondaryActionDisabled = false,
   onSecondaryAction,
   secondaryButtonStyling,
   className,
@@ -62,6 +64,7 @@ function UserCard({
                 {primaryActionLabel && (
                   <GenericButton
                     onClick={onPrimaryAction}
+                    disabled={primaryActionDisabled}
                     unstyled
                     customStyling={primaryButtonStyling}
                   >
@@ -71,6 +74,7 @@ function UserCard({
                 {secondaryActionLabel && (
                   <GenericButton
                     onClick={onSecondaryAction}
+                    disabled={secondaryActionDisabled}
                     unstyled
                     customStyling={secondaryButtonStyling}
                   >
@@ -100,8 +104,10 @@ UserCard.propTypes = {
 
   primaryActionLabel: PropTypes.string,
   onPrimaryAction: PropTypes.func,
+  primaryActionDisabled: PropTypes.bool,
   secondaryActionLabel: PropTypes.string,
   onSecondaryAction: PropTypes.func,
+  secondaryActionDisabled: PropTypes.bool,
 
   className: PropTypes.string,
   primaryButtonStyling: PropTypes.string,
