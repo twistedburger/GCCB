@@ -132,8 +132,8 @@ export default function RouteCard({
           </div>
         </div>
         <div className="flex flex-col items-center gap-2">
-          <div className={`w-10 h-10 ${hideReportJoin ? 'mr-5' : ''}`}>
-            {onOpenChat && isChatVisible && (
+          {onOpenChat && isChatVisible && (
+            <div className={`w-10 h-10 ${hideReportJoin ? 'mr-5' : ''}`}>
               <GenericButton
                 unstyled
                 onClick={event => {
@@ -144,8 +144,8 @@ export default function RouteCard({
               >
                 <ChatOutlined style={{ fontSize: 25 }} />
               </GenericButton>
-            )}
-          </div>
+            </div>
+          )}
           {!hideReportJoin && (
             <div className="flex flex-col gap-1 items-center">
               {!isDraft && onToggleJoin && onReport && (
@@ -199,7 +199,7 @@ export default function RouteCard({
 
 RouteCard.propTypes = {
   route: PropTypes.object.isRequired,
-  hideReportJoin: PropTypes.string,
+  hideReportJoin: PropTypes.bool,
   isDraft: PropTypes.bool,
   individualView: PropTypes.bool,
   isCompleted: PropTypes.bool,

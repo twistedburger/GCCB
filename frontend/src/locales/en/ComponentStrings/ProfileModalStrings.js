@@ -1,6 +1,8 @@
 export const profileModalStrings = {
   block: 'Block',
   unblock: 'Unblock',
+  report: 'Report',
+  reported: 'Reported',
   recentBadges: 'Recent Badges',
   noBadges: 'No badges earned yet.',
   errors: {

@@ -10,6 +10,7 @@ import {
   TravelMode,
 } from '../utils/RouteUtils'
 import { decode } from 'google-polyline'
+import { TransportMode } from '../../../shared/TransportModes'
 import TransitLegCard from './TransitLegCard'
 import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
@@ -154,6 +155,7 @@ const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
       distance: distance,
       path: route,
       completed: false,
+      isEV: transportationMode === TransportMode.CAR.key ? isEV : false,
       isJoined: true,
       people_going: 1,
     }

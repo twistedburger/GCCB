@@ -544,6 +544,7 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
     path,
     completed,
     description,
+    isEV,
   } = routeData
 
   // Frontend sends distance in metres; convert to km for backend analytics
@@ -553,9 +554,9 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
     `INSERT INTO route (
       title, creator_id, transportation_mode, origin, destination,
       depart_time, max_ppl, distance, path, completed,
-      description, created_at, origin_geog
+      description, created_at, origin_geog, is_ev
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326), $15)
     RETURNING id`,
     [
       title,
@@ -572,6 +573,7 @@ const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
       new Date(),
       originLng,
       originLat,
+      isEV ?? false,
     ]
   )
 
@@ -1701,6 +1703,33 @@ app.get('/api/blockStatus/:id', async (req, res) => {
     res.json({ isBlocked: result.rows.length > 0 })
   } catch (error) {
     console.error('Error checking block status:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Checks if a specific user is reported by the current user.
+ *
+ * @param {number} req.params.id - The ID of the user to check.
+ * @returns {{ isReported: boolean }}
+ */
+app.get('/api/reportStatus/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const blockedUserId = req.params.id
+  const currentUser = await selectUser(req)
+
+  try {
+    const result = await db.query(
+      `SELECT 1 FROM report WHERE reporter_id = $1 AND report_target = 'user' AND target_id = $2`,
+      [currentUser.id, blockedUserId]
+    )
+
+    res.json({ isReported: result.rows.length > 0 })
+  } catch (error) {
+    console.error('Error checking report status:', error)
     res.status(500).send(serverStrings.errors.generic)
   }
 })

@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS "route" (
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reported            INTEGER DEFAULT 0,
     origin_geog         geography(POINT, 4326),
+    is_ev               BOOLEAN NOT NULL DEFAULT false,
     CONSTRAINT fk_route_creator    FOREIGN KEY (creator_id) REFERENCES "user"(id),
     CONSTRAINT fk_route_transport  FOREIGN KEY (transportation_mode) REFERENCES "transportation"(mode)
 );

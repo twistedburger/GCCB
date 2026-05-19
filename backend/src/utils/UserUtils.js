@@ -2,6 +2,7 @@ const db = require('../../db')
 
 /**
  * Select the current user from the DB. user must be authenticated
+ *
  * @returns {Object} the user fetched from the DB, or null
  */
 async function selectUser(req) {
