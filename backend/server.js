@@ -1,42 +1,121 @@
-require('dotenv').config({ path: __dirname + '/.env' })
+const path = require('path')
+const dotenv = require('dotenv')
+
+const envFile =
+  process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
+dotenv.config({ path: path.join(__dirname, envFile) })
 const express = require('express')
 const { auth } = require('express-openid-connect')
 const cors = require('cors')
 const axios = require('axios')
+const cloudinary = require('cloudinary').v2
+const { CloudinaryStorage } = require('multer-storage-cloudinary')
+const multer = require('multer')
 const { serverStrings } = require('./locales/en/serverLocales')
+const { createServer } = require('http')
 
 const app = express()
+const httpServer = createServer(app)
 const db = require('./db')
 const pool = db.pool
 const port = 3000
 
-const { defaultCo2Calculator } = require('./src/utils/co2_calculator')
-const { EMISSIONS_G_PER_KM } = require('./src/constants/emissions')
-const { createAnalyticsHelpers } = require('./src/utils/analytics_helpers')
+const { analyticsServices } = require('./src/services/AnalyticsServices')
+const { BadgeServices } = require('./src/services/BadgeServices')
+const { BadgeEvaluator } = require('./src/services/BadgeEvaluator')
+const { initSocket, broadcast } = require('./sockets/ChatSocket')
+const chatService = require('./src/services/ChatServices')
+const { selectUser } = require('./src/utils/UserUtils')
+const { notificationRouter } = require('./endpoints/NotificationEndpoints')
+const { sendNotification } = require('./src/utils/NotificationUtils')
+const { NotificationType } = require('../shared/NotificationTypes')
 
 const config = {
   authRequired: false,
   auth0Logout: true,
   secret: process.env.AUTH0_SECRET,
-  baseURL: 'http://localhost:3000',
+  baseURL: process.env.BASE_URL || `http://localhost:${port}`,
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_DOMAIN,
 }
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+})
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'gccb_profile_pics',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+    transformation: [{ width: 500, height: 500, crop: 'limit' }],
+  },
+})
+
+const upload = multer({ storage: storage })
+
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 )
-app.use(auth(config))
-app.use(express.json())
 
-const analytics = createAnalyticsHelpers({
-  db,
-  co2Calculator: defaultCo2Calculator,
-  emissions: { EMISSIONS_G_PER_KM },
-})
+app.use(
+  auth({
+    ...config,
+    session: {
+      cookie: {
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  })
+)
+
+app.use(express.json())
+app.use('/api/chat', require('./endpoints/ChatEndpoints'))
+app.use('/api', require('./endpoints/AnalyticsEndpoints'))
+app.use('/api', require('./endpoints/ActivityEndpoints'))
+
+const badgeServices = new BadgeServices({ db })
+const badgeEvaluator = new BadgeEvaluator({ badgeQueries: badgeServices })
+setInterval(async () => {
+  await db.query(`
+    UPDATE route
+    SET completed = TRUE
+    WHERE completed = FALSE
+    AND depart_time < NOW()
+  `)
+
+  const upcomingRoutes = await db.query(`
+    SELECT id, title FROM route
+    WHERE completed = FALSE
+    AND depart_time BETWEEN NOW() AND NOW() + INTERVAL '15 minutes'
+    AND NOT EXISTS (
+      SELECT 1 FROM notification
+      WHERE notification.route_id = route.id
+      AND notification.metadata->>'message' ILIKE '%depart%'
+    )
+  `)
+
+  for (const route of upcomingRoutes.rows) {
+    await sendNotification(
+      NotificationType.Route,
+      route.id,
+      route.title,
+      null,
+      serverStrings.routeDepartSoon,
+      false,
+      true
+    )
+  }
+}, 60 * 1000)
+
+app.use('/notifications', notificationRouter)
 
 /**
  * Proxy server route to fetch map from google maps api
@@ -77,7 +156,7 @@ app.get('/maps/api/js', async (req, res) => {
  */
 app.get('/loginRoute', (req, res) => {
   const connection = req.query.connection
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  const returnTo = req.query.returnTo || process.env.FRONTEND_URL
   res.oidc.login({
     returnTo: returnTo,
     authorizationParams: {
@@ -90,11 +169,43 @@ app.get('/loginRoute', (req, res) => {
  * Logout route routes to Auth0 deauthentication. Returns to homepage once logout completed
  */
 app.get('/logoutRoute', (req, res) => {
-  const returnTo = req.query.returnTo || 'http://localhost:5173/'
+  const returnTo = req.query.returnTo || process.env.FRONTEND_URL
   res.oidc.logout({
     returnTo: returnTo,
   })
 })
+
+/**
+ * Middleware to prevent users with more than 3 reports from accessing the app by automatically logging them out.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+const checkBannedStatus = async (req, res, next) => {
+  if (req.oidc.isAuthenticated()) {
+    try {
+      const userEmail = req.oidc.user.email
+      const result = await db.query(
+        'SELECT reported FROM "user" WHERE email = $1',
+        [userEmail]
+      )
+      const user = result.rows[0]
+
+      if (user && user.reported > 3) {
+        res.clearCookie('appSession')
+        return res.status(200).json({
+          isAuthenticated: false,
+          banned: true,
+        })
+      }
+    } catch (error) {
+      console.error(error)
+      return res.status(500).send(serverStrings.errors.generic)
+    }
+  }
+  next()
+}
+
+app.use(checkBannedStatus)
 
 /**
  * Authenticate user route checks if the authentication is valid and fetches the current user from the database
@@ -164,21 +275,6 @@ async function checkAndUpdateActiveStatus(user) {
 }
 
 /**
- * Select the current user from the DB. user must be authenticated
- * @returns {Object} the user fetched from the DB, or null
- */
-async function selectUser(req) {
-  const results = await db.query('SELECT * FROM "user" WHERE email = $1', [
-    req.oidc.user.email,
-  ])
-
-  if (results.rowCount !== 0) {
-    return results.rows[0]
-  }
-  return null
-}
-
-/**
  * Get the current list of SSO partnered schools, and SSO connection strings.
  *
  * If the database has an error, a 500 status code is sent with an error message.
@@ -208,7 +304,7 @@ app.get('/sso_list', async (req, res) => {
  *
  * @returns {Object} a json user objet
  */
-app.post('/createNewUser', async (req, res) => {
+app.post('/createNewUser', upload.single('file'), async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -221,7 +317,8 @@ app.post('/createNewUser', async (req, res) => {
     const newUser = await insertUserFromForm(
       req.oidc.user.name,
       req.oidc.user.email,
-      req.body
+      req.body,
+      req.file
     )
     res.json({ user: newUser })
   } catch (error) {
@@ -239,7 +336,7 @@ app.post('/createNewUser', async (req, res) => {
  * @returns {Object} a json user object of the updated user
 
  */
-app.put('/updateProfile', async (req, res) => {
+app.put('/updateProfile', upload.single('file'), async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -247,9 +344,15 @@ app.put('/updateProfile', async (req, res) => {
   try {
     const currentUser = await selectUser(req)
     const { name, nickname, description } = req.body
+
+    let imageUrl = req.body.imageUrl
+    if (req.file) {
+      imageUrl = req.file.path
+    }
+
     const result = await db.query(
-      'UPDATE "user" SET name = $1, nickname = $2, description = $3 WHERE id = $4 RETURNING *',
-      [name, nickname, description, currentUser.id]
+      'UPDATE "user" SET name = $1, nickname = $2, description = $3, profile_pic = $4 WHERE id = $5 RETURNING *',
+      [name, nickname, description, imageUrl, currentUser.id]
     )
     res.json({ user: result.rows[0] })
   } catch (error) {
@@ -264,13 +367,16 @@ app.put('/updateProfile', async (req, res) => {
  * @param {string} name name of the user
  * @param {string} email email of the user
  * @param {Object} formData an object with nickname and description strings
+ * @param {Object} file profile image of the user
  * @returns {Object} the newly inserted user
  */
-async function insertUserFromForm(name, email, formData) {
+async function insertUserFromForm(name, email, formData, file) {
   const { nickname, description } = formData
+  const imageUrl = file ? file.path : null
+
   const results = await db.query(
-    'INSERT INTO "user" (email, role, name, nickname, description, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [email, 'user', name, nickname, description, new Date()]
+    'INSERT INTO "user" (email, role, name, nickname, description, profile_pic, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [email, 'user', name, nickname, description, imageUrl, new Date()]
   )
   return results.rows[0]
 }
@@ -381,72 +487,6 @@ app.get('/api/events', (req, res) => {
 })
 
 /**
- * Updates the banner_url column in the events table for the given event.
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, or the api call has an error, a 500 status code is sent with an error json {error: string}.
- * If no photo is found, a 404 page not found error is sent with an error json {error: string}.
- *
- * @returns {Object} the new banner_url fetched from the google maps API.
- */
-app.post('/api/refresh-banner', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  const { placeID, eventID } = req.body
-  const eventId = parseInt(eventID, 10)
-
-  try {
-    const response = await axios.get(
-      `https://places.googleapis.com/v1/places/${placeID}`,
-      {
-        headers: {
-          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
-          'X-Goog-FieldMask': 'photos',
-        },
-      }
-    )
-
-    // need the photo name to get the banner url
-    const photoName = response.data.photos?.[0]?.name
-    if (!photoName) {
-      return res.status(404).json({ error: serverStrings.errors.noPhotos })
-    }
-
-    const photoResponse = await axios.get(
-      `https://places.googleapis.com/v1/${photoName}/media`,
-      {
-        params: {
-          maxWidthPx: 800,
-          skipHttpRedirect: true,
-        },
-        headers: {
-          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
-        },
-      }
-    )
-    const newUrl = photoResponse.data.photoUri
-
-    db.query(
-      `UPDATE event SET banner_url = $1 WHERE id = $2;`,
-      [newUrl, eventId],
-      error => {
-        if (error) {
-          console.error('Error updating DB:', error)
-          return res.status(500).send(serverStrings.errors.generic)
-        }
-        res.status(200).json({ bannerUrl: newUrl })
-      }
-    )
-  } catch (err) {
-    const status = err.response?.status ?? 500
-    const message = err.response?.data?.error?.message ?? err.message
-    res.status(status).json({ error: message })
-  }
-})
-
-/**
  * Requests a route from the google maps api.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
@@ -481,74 +521,17 @@ app.post('/api/requestRoute', async (req, res) => {
 })
 
 /**
- * Adds an event to the database
+ * Inserts a new route into the database
  *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error json {error: string}.
- *
- * @returns {Object} the newly added event
+ * @param {client} pg client from the connection pool
+ * @param {eventID} eventID of the event the route is associated with
+ * @param {creatorID} userID of the route creator
+ * @param {routeData} object containing the route data
+ * @param {isJoined} boolean indicating whether the creator has joined the route
+ * @returns
  */
-app.post('/api/createEvent', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    const routeVerified = user.role === 'moderator'
-
-    const {
-      title,
-      eventTime,
-      location,
-      needApproval,
-      description,
-      longitude,
-      latitude,
-      banner,
-      placeID,
-    } = req.body
-
-    const result = await db.query(
-      'INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11, $12) RETURNING *',
-      [
-        title,
-        user.id,
-        eventTime,
-        location,
-        routeVerified,
-        needApproval,
-        description,
-        new Date(),
-        longitude,
-        latitude,
-        banner,
-        placeID,
-      ]
-    )
-
-    res.status(201).json(result.rows[0])
-  } catch (error) {
-    console.error('Database Error:', error)
-    res.status(500).json({ error: serverStrings.errors.eventCreationFailed })
-  }
-})
-
-/**
- * Adds a route to the database
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error json {error: string}.
- *
- * @returns {Object} the newly added route
- */
-app.post('/api/createRoute', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
+const insertRoute = async (client, eventID, creatorID, routeData, isJoined) => {
   const {
-    eventID,
     title,
     transportationMode,
     origin,
@@ -561,62 +544,233 @@ app.post('/api/createRoute', async (req, res) => {
     path,
     completed,
     description,
-    isJoined,
-  } = req.body
+    isEV,
+  } = routeData
 
-  const client = await pool.connect()
+  // Frontend sends distance in metres; convert to km for backend analytics
+  const distanceKm = Number(distance) / 1000
 
-  try {
-    const user = await selectUser(req)
-    await client.query('BEGIN')
-
-    const routeQuery = `
-      INSERT INTO route (
-        title, creator_id, transportation_mode, origin, destination, 
-        depart_time, max_ppl, distance, path, completed, 
-        description, created_at, origin_geog
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326))
-      RETURNING id;
-    `
-
-    const routeResult = await client.query(routeQuery, [
+  const routeResult = await client.query(
+    `INSERT INTO route (
+      title, creator_id, transportation_mode, origin, destination,
+      depart_time, max_ppl, distance, path, completed,
+      description, created_at, origin_geog, is_ev
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ST_SetSRID(ST_MakePoint($13, $14), 4326), $15)
+    RETURNING id`,
+    [
       title,
-      user.id,
+      creatorID,
       transportationMode,
       origin,
       destination,
       departTime,
       maxPpl,
-      distance,
+      distanceKm,
       path,
       completed,
       description,
       new Date(),
       originLng,
       originLat,
-    ])
+      isEV ?? false,
+    ]
+  )
 
-    const routeID = routeResult.rows[0].id
+  const routeID = routeResult.rows[0].id
 
-    const junctionQuery = `
-      INSERT INTO event_route (event_id, route_id)
-      VALUES ($1, $2);
-    `
-    await client.query(junctionQuery, [eventID, routeID])
+  await client.query(
+    'INSERT INTO event_route (event_id, route_id) VALUES ($1, $2)',
+    [eventID, routeID]
+  )
 
-    if (isJoined) {
-      await client.query(
-        'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-        [user.id, routeID]
-      )
+  if (isJoined) {
+    await client.query(
+      'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
+      [creatorID, routeID]
+    )
+  }
+
+  return routeID
+}
+
+/**
+ * Adds an event and optional route to the database
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} the newly added event
+ */
+app.post('/api/createEvent', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const client = await pool.connect()
+
+  try {
+    const user = await selectUser(req)
+    const eventVerified = user.role === 'moderator'
+
+    const {
+      title,
+      eventTime,
+      location,
+      needApproval,
+      description,
+      longitude,
+      latitude,
+      banner,
+      placeID,
+      route,
+    } = req.body
+
+    let bannerUrl = null
+    if (banner) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(banner, {
+          folder: 'gccb_event_banners',
+          allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+          transformation: [{ width: 1200, height: 400, crop: 'fill' }],
+        })
+        bannerUrl = uploadResult.secure_url
+      } catch (uploadError) {
+        console.error(serverStrings.errors.cloudinaryFailed, uploadError)
+      }
     }
 
+    await client.query('BEGIN')
+
+    const eventResult = await client.query(
+      `INSERT INTO event (title, creator_id, event_time, location, verified, need_approval, description, created_at, location_geog, banner_url, place_id) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, ST_SetSRID(ST_MakePoint($9, $10), 4326), $11, $12) 
+       RETURNING *`,
+      [
+        title,
+        user.id,
+        eventTime,
+        location,
+        eventVerified,
+        needApproval,
+        description,
+        new Date(),
+        longitude,
+        latitude,
+        bannerUrl,
+        placeID,
+      ]
+    )
+
+    const newEvent = eventResult.rows[0]
+    if (route) {
+      const routeID = await insertRoute(
+        client,
+        newEvent.id,
+        user.id,
+        route,
+        route.isJoined
+      )
+
+      // create chatroom and add creator as first member
+      const chatCloseTime = route.departTime
+      const { rows: chatroomRows } = await client.query(
+        `INSERT INTO chatroom (route_id, close_at, delete_at) VALUES ($1, $2::timestamp, $2::timestamp + interval '2 days') RETURNING id`,
+        [routeID, chatCloseTime]
+      )
+      const chatroomID = chatroomRows[0].id
+
+      await client.query(
+        `INSERT INTO chatroom_member (chatroom_id, user_id) VALUES ($1, $2)`,
+        [chatroomID, user.id]
+      )
+    }
     await client.query('COMMIT')
+
+    // Evaluate Social badges if a route was created with this event
+    if (route) {
+      try {
+        const summary = await analyticsServices.buildAnalyticsSummary(
+          user.id,
+          false
+        )
+        await badgeEvaluator.evaluateBadges(user.id, summary)
+      } catch (err) {
+        console.error('Badge evaluation failed (createEvent):', err)
+        // 500 error here would mean that badge evaluation failed, not that the route itself was lost.
+        return res
+          .status(500)
+          .json({ error: serverStrings.errors.badgeEvaluationFailed })
+      }
+    }
+
+    res.status(201).json(newEvent)
+  } catch (error) {
+    await client.query('ROLLBACK')
+    console.error('Database Error:', error)
+    res.status(500).json({ error: serverStrings.errors.eventCreationFailed })
+  } finally {
+    client.release()
+  }
+})
+
+/**
+ * Adds a route to the database
+ * Also creates a chatroom for the route and adds the creator as the first member of the chatroom.
+ * The chatroom's close_at is set to the route's depart_time, and delete_at is set to 2 days after the depart_time.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} the newly added route
+ */
+app.post('/api/createRoute', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const { eventID, isJoined, ...routeData } = req.body
+  const client = await pool.connect()
+
+  try {
+    const user = await selectUser(req)
+    await client.query('BEGIN')
+
+    const routeID = await insertRoute(
+      client,
+      eventID,
+      user.id,
+      routeData,
+      isJoined
+    )
+    await chatService.createNewRoom(
+      client,
+      routeID,
+      user.id,
+      routeData.departTime
+    )
+
+    await client.query('COMMIT')
+
+    // Await badge evaluation so Social badges reflect the new route immediately
+    try {
+      const summary = await analyticsServices.buildAnalyticsSummary(
+        user.id,
+        false
+      )
+      await badgeEvaluator.evaluateBadges(user.id, summary)
+    } catch (err) {
+      console.error('Badge evaluation failed (createRoute):', err)
+      // 500 error here would mean that badge evaluation failed, not that the route itself was lost.
+      return res
+        .status(500)
+        .json({ error: serverStrings.errors.badgeEvaluationFailed })
+    }
+
     res.status(201).json({ success: true, routeID })
   } catch (error) {
-    console.error('Database Error Detail:', error)
     await client.query('ROLLBACK')
+    console.error('Database Error Detail:', error)
     res.status(500).json({ error: serverStrings.errors.routeCreationFailed })
   } finally {
     client.release()
@@ -631,7 +785,7 @@ app.post('/api/createRoute', async (req, res) => {
  *
  * @returns {[Object]} routes fetched from the db, or an empty array
  */
-app.get('/api/routes', (req, res) => {
+app.get('/api/routes', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -680,21 +834,49 @@ app.get('/api/routes', (req, res) => {
     }
   }
   conditions.push(`r.reported < 3`)
+
+  const user = await selectUser(req)
+  if (user) {
+    const blocked = await db.query(
+      `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
+      [user.id]
+    )
+    const blockedIds = blocked.rows.map(row =>
+      Number(row.blocker_id) === Number(user.id)
+        ? row.blocked_user_id
+        : row.blocker_id
+    )
+
+    if (blockedIds.length > 0) {
+      const offset = values.length + 1
+      conditions.push(
+        `NOT EXISTS (
+          SELECT 1 FROM user_route ur
+          WHERE ur.route_id = r.id
+          AND ur.user_id IN (${blockedIds.map((_, i) => `$${offset + i}`).join(',')})
+        )`
+      )
+      values.push(...blockedIds)
+    }
+  }
+
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   db.query(
-    `SELECT DISTINCT r.*,
+    `SELECT DISTINCT ON (r.id) r.*,
       u.id as creator_id,
       u.name as creator_name,
       u.nickname,
       u.profile_pic,
       er.event_id,   
+      ST_AsGeoJSON(r.origin_geog)::json->'coordinates' AS origin_coords,
+      ST_AsGeoJSON(e.location_geog)::json->'coordinates' AS destination_coords,
       (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
     FROM route r
     LEFT JOIN "user" u ON u.id = r.creator_id
     LEFT JOIN event_route er ON er.route_id = r.id
     LEFT JOIN event e ON e.id = er.event_id
-    ${where}`,
+    ${where} ORDER BY r.id`,
     values,
     (error, results) => {
       if (error) {
@@ -715,27 +897,67 @@ app.get('/api/routes', (req, res) => {
  * @returns {Object} an event
  */
 app.get('/api/eventdetail/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.json({ isJoined: false })
+  }
+
   const { id } = req.params
+
+  let currentUserId = null
+  if (req.oidc.isAuthenticated()) {
+    const user = await selectUser(req)
+    currentUserId = user.id
+  }
+
   try {
     const eventResult = await db.query(
       `SELECT e.*, 
         u.id as creator_id,
         u.name as creator_name, 
         u.nickname, 
-        u.profile_pic
+        u.profile_pic,
+        u.role,
+        u.description AS creator_description
        FROM event e
        LEFT JOIN "user" u ON u.id = e.creator_id
        WHERE e.id = $1`,
       [id]
     )
 
+    const user = await selectUser(req)
+    const blocked = await db.query(
+      `SELECT * FROM blocked_user WHERE (blocker_id = $1) OR (blocked_user_id = $1)`,
+      [user.id]
+    )
+
+    const blockedIds = blocked.rows.map(row =>
+      Number(row.blocker_id) === Number(user.id)
+        ? row.blocked_user_id
+        : row.blocker_id
+    )
+
     const routesResult = await db.query(
       `SELECT r.*,
-        (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going
-       FROM route r
-       LEFT JOIN event_route er ON er.route_id = r.id
-       WHERE er.event_id = $1`,
-      [id]
+      (SELECT COUNT(*) FROM user_route ur WHERE ur.route_id = r.id) as people_going,
+        EXISTS (
+          SELECT 1 FROM user_route ur 
+          WHERE ur.route_id = r.id AND ur.user_id = $2
+        ) as "isJoined"
+      FROM route r
+      LEFT JOIN event_route er ON er.route_id = r.id
+      WHERE er.event_id = $1
+      AND r.reported < 3
+      AND r.depart_time > NOW()
+      ${
+        blockedIds.length > 0
+          ? `AND NOT EXISTS (
+        SELECT 1 FROM user_route ur
+        WHERE ur.route_id = r.id
+        AND ur.user_id IN (${blockedIds.map((_, i) => `$${i + 3}`).join(',')})
+        )`
+          : ''
+      }`,
+      [id, currentUserId, ...blockedIds]
     )
 
     const event = eventResult.rows[0]
@@ -778,6 +1000,7 @@ app.get('/api/routes/:id/isJoined', async (req, res) => {
 
 /**
  * Adds a user to a route by adding a record to the user_route table.
+ * Also adds the user to the associated chatroom and broadcasts a system message to the chatroom that a new member has joined.s
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -790,16 +1013,93 @@ app.post('/api/routes/:id/join', async (req, res) => {
       .status(403)
       .json({ error: serverStrings.errors.notAuthenticated })
   }
+
   try {
     const user = await selectUser(req)
+    const routeId = req.params.id
+
+    const result = await db.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      `${user.nickname} ${serverStrings.userJoined}`
+    )
+
     await db.query(
       'INSERT INTO user_route (user_id, route_id) VALUES ($1, $2)',
-      [user.id, req.params.id]
+      [user.id, routeId]
     )
+
+    const chatroomRes = await db.query(
+      'SELECT id FROM chatroom WHERE route_id = $1',
+      [routeId]
+    )
+
+    if (chatroomRes.rowCount > 0) {
+      const chatroomId = chatroomRes.rows[0].id
+      const newMember = await chatService.addUserToRoom(chatroomId, user.id)
+      broadcast(chatroomId, 'MEMBER_JOINED', {
+        userId: newMember.data.id,
+        userNickname: newMember.data.nickname,
+      })
+    }
+
     res.json({ success: true })
   } catch (error) {
-    console.error(error)
+    console.error('Error joining route/chat:', error)
     res.status(500).json({ error: serverStrings.errors.joinFailed })
+  }
+})
+
+/**
+ * Deletes a route, removes all associated user_route and event_route records, deletes the associated chatroom and messages.
+ *
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
+ *
+ * @returns {Object} {success: true}
+ */
+app.delete('/api/routes/:id/delete', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
+  const client = await pool.connect()
+
+  try {
+    const routeId = req.params.id
+    const user = await selectUser(req)
+    await client.query('BEGIN')
+    const chatroomId = await chatService.deleteRoom(client, routeId)
+    broadcast(chatroomId, 'ROOM_DELETED', { chatroomId })
+    const result = await client.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      serverStrings.routeDeleted,
+      true
+    )
+    await client.query('DELETE FROM event_route WHERE route_id = $1', [routeId])
+    await client.query('DELETE FROM user_route WHERE route_id = $1', [routeId])
+    await client.query('DELETE FROM route WHERE id = $1', [routeId])
+    await client.query('COMMIT')
+    res.json({ success: true })
+  } catch (error) {
+    await client.query('ROLLBACK')
+    console.error('Route deletion error:', error)
+    res.status(500).json({ error: serverStrings.errors.routeDeletionFailed })
+  } finally {
+    client.release()
   }
 })
 
@@ -812,16 +1112,46 @@ app.post('/api/routes/:id/join', async (req, res) => {
  * @returns {Object} {success:  true}
  */
 app.delete('/api/routes/:id/leave', async (req, res) => {
-  if (!req.oidc.isAuthenticated())
+  if (!req.oidc.isAuthenticated()) {
     return res
       .status(403)
       .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
   try {
     const user = await selectUser(req)
+    const routeId = req.params.id
+
+    const chatroomRes = await db.query(
+      'SELECT id FROM chatroom WHERE route_id = $1',
+      [routeId]
+    )
+
+    const result = await db.query('SELECT title FROM route WHERE id = $1', [
+      routeId,
+    ])
+    await sendNotification(
+      NotificationType.Route,
+      routeId,
+      result.rows[0]?.title,
+      user.id,
+      `${user.nickname} ${serverStrings.userLeft}`
+    )
+
     await db.query(
       'DELETE FROM user_route WHERE user_id = $1 AND route_id = $2',
-      [user.id, req.params.id]
+      [user.id, routeId]
     )
+
+    if (chatroomRes.rowCount > 0) {
+      const chatroomId = chatroomRes.rows[0].id
+      await chatService.removeUserFromRoom(chatroomId, user.id)
+      broadcast(chatroomId, 'MEMBER_LEFT', {
+        userId: user.id,
+        userNickname: user.nickname,
+      })
+    }
+
     res.json({ success: true })
   } catch (error) {
     console.error(error)
@@ -830,7 +1160,7 @@ app.delete('/api/routes/:id/leave', async (req, res) => {
 })
 
 /**
- * Adds a report and corresponding report junction to report_user, report_event, or report_route.
+ * Creates a report.
  *
  * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
  * If the database has an error, a 500 status code is sent with an error json {error: string}.
@@ -870,315 +1200,15 @@ app.post('/api/report', async (req, res) => {
 
     res.json({ success: true })
   } catch (error) {
+    if (error.code === '23505') {
+      return res
+        .status(400)
+        .json({ error: serverStrings.errors.duplicateReport })
+    }
     console.error(error)
     res.status(500).json({ error: serverStrings.errors.reportFailed })
   }
 })
-
-/**
- * Retrieves the commute history for the authenticated user.
- * - Regular users get only their participated completed routes.
- * - Admins, superadmins, moderators do not have access to detailed user commute history.
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- * If user authentication is not "user", a 403 status code is sent with an error json {error: string}.
- *
- * @returns {Object} JSON response containing commute history
- */
-app.get('/api/commute-history', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    if (user.role !== 'user') {
-      return res.status(403).json({
-        error: serverStrings.errors.analyticsUserOnly,
-      })
-    }
-
-    const routes = await analytics.fetchCompletedRoutes(user.id, false, {
-      orderByDepartTime: true,
-    })
-
-    const commuteHistory = []
-
-    for (const route of routes) {
-      const savings = await analytics.computeRouteSavings(route)
-      const contributions = await analytics.toAnalyticsContributions(
-        route,
-        false
-      )
-
-      // Total distance now from segments
-      const totalDistanceKm = contributions.reduce(
-        (sum, contribution) => sum + contribution.distanceKm,
-        0
-      )
-
-      // Dominant mode
-      const totalsByMode = {}
-      for (const contribution of contributions) {
-        totalsByMode[contribution.mode] =
-          (totalsByMode[contribution.mode] || 0) + contribution.distanceKm
-      }
-
-      let dominantMode = 'other'
-      let maxDistance = -1
-
-      for (const [mode, dist] of Object.entries(totalsByMode)) {
-        if (dist > maxDistance) {
-          dominantMode = mode
-          maxDistance = dist
-        }
-      }
-
-      commuteHistory.push({
-        id: route.id,
-        title: route.title,
-        creatorId: route.creatorId,
-        transportationMode: dominantMode,
-        distance: analytics.roundToTwoDecimals(totalDistanceKm),
-
-        origin: route.origin,
-        destination: route.destination,
-        departTime: route.departTime,
-        completed: route.completed,
-        maxPpl: route.maxPpl,
-        description: route.description,
-        path: route.path,
-
-        savedKgUser: savings.savedKgUser,
-        savedKgSystem: savings.savedKgSystem,
-        context: savings.context,
-      })
-    }
-
-    return res.status(200).json({
-      scope: 'user',
-      userId: user.id,
-      count: commuteHistory.length,
-      routes: commuteHistory,
-    })
-  } catch (error) {
-    console.error('Error in /api/commute-history:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-/**
- * Returns a summary of trips, distances, CO2 savings, and trip counts,
- * filtered based on user role (admin or user).
- * - One completed route still counts as one trip
- * - Distance and CO2 savings are distributed across multiple modes
- *   when detailed route path data exists
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- *
- * @returns {Object} JSON response with analytics summary
- */
-app.get('/api/analytics/summary', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    const isAdmin = user.role === 'admin'
-    const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin)
-
-    const summary = {
-      scope: isAdmin ? 'system' : 'user',
-      userId: user.id,
-
-      tripCount: 0,
-      totalDistanceKm: 0,
-      totalCo2SavedKg: 0,
-
-      tripFrequenciesByMode: {
-        walk: 0,
-        bicycle: 0,
-        bus: 0,
-        rail: 0,
-        car: 0,
-        other: 0,
-      },
-      distanceByModeKm: {
-        walk: 0,
-        bicycle: 0,
-        bus: 0,
-        rail: 0,
-        car: 0,
-        other: 0,
-      },
-      co2SavedByModeKg: {
-        walk: 0,
-        bicycle: 0,
-        bus: 0,
-        rail: 0,
-        car: 0,
-        other: 0,
-      },
-    }
-
-    for (const route of routes) {
-      const contributions = await analytics.toAnalyticsContributions(
-        route,
-        isAdmin
-      )
-
-      // One completed route still counts as one trip
-      summary.tripCount += 1
-
-      for (const item of contributions) {
-        const mode =
-          item.mode in summary.tripFrequenciesByMode ? item.mode : 'other'
-
-        summary.totalDistanceKm += item.distanceKm
-        summary.totalCo2SavedKg += item.savedKg
-
-        summary.tripFrequenciesByMode[mode] += item.tripCount
-        summary.distanceByModeKm[mode] += item.distanceKm
-        summary.co2SavedByModeKg[mode] += item.savedKg
-      }
-    }
-
-    summary.totalDistanceKm = analytics.roundToTwoDecimals(
-      summary.totalDistanceKm
-    )
-    summary.totalCo2SavedKg = analytics.roundToTwoDecimals(
-      summary.totalCo2SavedKg
-    )
-
-    for (const key of Object.keys(summary.distanceByModeKm)) {
-      summary.distanceByModeKm[key] = analytics.roundToTwoDecimals(
-        summary.distanceByModeKm[key]
-      )
-      summary.co2SavedByModeKg[key] = analytics.roundToTwoDecimals(
-        summary.co2SavedByModeKg[key]
-      )
-    }
-
-    return res.status(200).json(summary)
-  } catch (error) {
-    console.error('Error in /api/analytics/summary:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-/**
- * Returns analytics grouped by transportation mode (chart-friendly array).
- * - Admins receive system-wide data across all completed routes.
- * - Users receive data only for their completed routes they participated in.
- * - A single completed route contributes distance/CO2 to multiple modes
- * - Trip count remains route-based and is assigned to the most dominant mode
- *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- *
- * @returns {Object} JSON response with analytics data grouped by commute type
- */
-app.get('/api/analytics/by-mode', async (req, res) => {
-  if (!req.oidc.isAuthenticated()) {
-    return res.status(403).send(serverStrings.errors.accessDenied)
-  }
-
-  try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    const isAdmin = user.role === 'admin'
-    const routes = await analytics.fetchCompletedRoutes(user.id, isAdmin)
-
-    const aggregates = {
-      walk: {
-        mode: 'walk',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      bicycle: {
-        mode: 'bicycle',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      bus: {
-        mode: 'bus',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      rail: {
-        mode: 'rail',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      car: {
-        mode: 'car',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-      other: {
-        mode: 'other',
-        tripCount: 0,
-        totalDistanceKm: 0,
-        totalCo2SavedKg: 0,
-      },
-    }
-
-    for (const route of routes) {
-      const contributions = await analytics.toAnalyticsContributions(
-        route,
-        isAdmin
-      )
-
-      for (const item of contributions) {
-        const modeStats = aggregates[item.mode] || aggregates.other
-        modeStats.tripCount += item.tripCount
-        modeStats.totalDistanceKm += item.distanceKm
-        modeStats.totalCo2SavedKg += item.savedKg
-      }
-    }
-
-    const data = ['walk', 'bicycle', 'bus', 'rail', 'car', 'other'].map(key => {
-      const item = aggregates[key]
-      return {
-        mode: item.mode,
-        tripCount: item.tripCount,
-        totalDistanceKm: analytics.roundToTwoDecimals(item.totalDistanceKm),
-        totalCo2SavedKg: analytics.roundToTwoDecimals(item.totalCo2SavedKg),
-      }
-    })
-
-    return res.status(200).json({
-      scope: isAdmin ? 'system' : 'user',
-      userId: user.id,
-      data,
-    })
-  } catch (error) {
-    console.error('Error in /api/analytics/by-mode:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  }
-})
-
-if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`GCCB Backend listening on port ${port}`)
-  })
-}
 
 /**
  * Returns reports to be reviewed by the moderator.
@@ -1244,7 +1274,7 @@ app.get('/api/reports', async (req, res) => {
  *
  * @returns {[Object]} an array of trips a user has joined (via user_route junction table), or an empty array
  */
-app.get('/api/my-trips', async (req, res) => {
+app.get('/api/myTrips', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
@@ -1254,15 +1284,11 @@ app.get('/api/my-trips', async (req, res) => {
     if (!user)
       return res.status(404).json({ error: serverStrings.errors.noUser })
 
-    // "completed" column in route table temporarily overridden by computing "completed" based on event's event_time
-    // while we decide how to compute if a route has been completed (button vs. automatic).
-    // TODO: decide on permanent approach: DB trigger or node-cron job to update the completed
-    // column automatically, or dedicated endpoint if the user needs to manually mark a trip complete.
     const query = `
       SELECT r.*, 
              e.event_time,
              (SELECT COUNT(*) FROM user_route ur2 WHERE ur2.route_id = r.id) as people_going,
-             (e.event_time < NOW()) AS completed
+             ur.completed
       FROM route r
       INNER JOIN user_route ur ON ur.route_id = r.id
       LEFT JOIN event_route er ON r.id = er.route_id
@@ -1270,7 +1296,6 @@ app.get('/api/my-trips', async (req, res) => {
       WHERE ur.user_id = $1
       ORDER BY r.depart_time DESC
     `
-
     const results = await db.query(query, [user.id])
     res.status(200).json(results.rows)
   } catch (error) {
@@ -1397,235 +1422,325 @@ app.get('/api/pendingVerifications', async (req, res) => {
 })
 
 /**
- * Returns platform activity summary for the admin dashboard.
- * Admin-only. Returns KPIs and route status/rejection breakdowns.
- * Arbitrary rolling time frames used:
- * - # of routes created within 7 days
- * - # of routes completed within 30 days
- * - # of routes rejected within 30 days
+ * Returns the joined participants for a selected route.
  *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
  * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- * If user authentication is not "admin", a 403 status code is sent with an error message.
  *
- * @returns {Object} kpis, statusBreakdown, rejectionReasons
+ * @returns {[Object]} joined participants for a given route, or an empty array
  */
-app.get('/api/activity/summary', async (req, res) => {
+app.get('/api/getParticipants/:routeId', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const client = await pool.connect()
+  const { routeId } = req.params
 
   try {
-    const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
+    const result = await db.query(
+      `SELECT u.id, u.name, u.nickname, u.profile_pic, u.role, u.description, u.active,
+        u.id = r.creator_id AS is_creator
+      FROM user_route ur
+      JOIN "user" u ON u.id = ur.user_id
+      JOIN route r ON r.id = ur.route_id
+      WHERE ur.route_id = $1`,
+      [routeId]
+    )
 
-    if (user.role !== 'admin') {
-      return res.status(403).send(serverStrings.errors.accessDenied)
-    }
-
-    const [
-      creatorsRes,
-      completionRes,
-      rejectedRes,
-      statusRes,
-      rejectionRes,
-      groupSizeRes,
-    ] = await Promise.all([
-      client.query(`
-        SELECT COUNT(DISTINCT creator_id)::int AS count
-        FROM route
-        WHERE created_at >= NOW() - INTERVAL '7 days'
-      `),
-      client.query(`
-        SELECT
-          COUNT(*)::int AS total,
-          COUNT(*) FILTER (WHERE completed = true)::int AS completed
-        FROM route
-        WHERE created_at >= NOW() - INTERVAL '30 days'
-      `),
-      client.query(`
-        SELECT COUNT(*)::int AS count
-        FROM route
-        WHERE rejection_reason IS NOT NULL
-          AND created_at >= NOW() - INTERVAL '30 days'
-      `),
-      client.query(`
-        SELECT
-          COUNT(*) FILTER (
-            WHERE completed = false
-              AND rejection_reason IS NULL
-              AND depart_time > NOW()
-          )::int AS upcoming,
-          COUNT(*) FILTER (WHERE completed = true)::int AS completed,
-          COUNT(*) FILTER (WHERE rejection_reason IS NOT NULL)::int AS rejected
-        FROM route
-      `),
-      client.query(`
-        SELECT
-          rejection_reason AS reason,
-          COUNT(*)::int AS count
-        FROM route
-        WHERE rejection_reason IS NOT NULL
-        GROUP BY rejection_reason
-        ORDER BY count DESC
-      `),
-      client.query(`
-        SELECT ROUND(AVG(participant_count)::numeric, 1) AS avg_group_size
-        FROM (
-          SELECT route_id, COUNT(*)::int AS participant_count
-          FROM user_route
-          WHERE route_id IN (SELECT id FROM route WHERE completed = true)
-          GROUP BY route_id
-        ) counts
-      `),
-    ])
-
-    const { total: total30d, completed: completed30d } = completionRes.rows[0]
-
-    return res.status(200).json({
-      kpis: {
-        activeCreators7d: creatorsRes.rows[0]?.count ?? 0,
-        completionRate30d:
-          total30d > 0 ? Math.round((completed30d / total30d) * 100) : 0,
-        rejectedRoutes30d: rejectedRes.rows[0]?.count ?? 0,
-        avgGroupSize: Number(groupSizeRes.rows[0]?.avg_group_size ?? 0),
-      },
-      statusBreakdown: {
-        upcoming: statusRes.rows[0]?.upcoming ?? 0,
-        completed: statusRes.rows[0]?.completed ?? 0,
-        rejected: statusRes.rows[0]?.rejected ?? 0,
-      },
-      rejectionReasons: rejectionRes.rows.map(row => ({
-        reason: row.reason,
-        count: row.count,
-      })),
-    })
+    res.status(200).json(result.rows)
   } catch (error) {
-    console.error('Error in /api/activity/summary:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  } finally {
-    client.release()
+    console.error('Error fetching participants:', error)
+    res.status(500).send(serverStrings.errors.generic)
   }
 })
 
 /**
- * Returns CO₂e baseline vs actual emissions grouped by time period.
- * Admin-only. Used for the time-series chart on the Activity page.
+ * Sets completed column to true for a user_route row.
+ * Evaluates badge progress (once route marked completed) for the user
+ * and awards any newly earned badges; upserts progress for the rest.
  *
- * If the user is not authenticated, a 403 access is forbidden error is sent with an error message.
- * If the database has an error, a 500 status code is sent with an error message.
- * If the user is not in the database, a 404 error is sent with an error message.
- * If user authentication is not "admin", a 403 status code is sent with an error message.
+ * If the user is not authenticated, a 403 access is forbidden error is sent with an error json {error: string}.
+ * If the database has an error, a 500 status code is sent with an error json {error: string}.
  *
- * @returns {Object} granularity and array of { period, baselineKg, actualKg, savedKg }
+ * @returns {Object} {success: true}
  */
-app.get('/api/activity/co2-timeseries', async (req, res) => {
+app.post('/api/completeRoute', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
+  const { routeID } = req.body
+
+  try {
+    const user = await selectUser(req)
+    await db.query(
+      'UPDATE user_route SET completed = true WHERE user_id = $1 AND route_id = $2',
+      [user.id, routeID]
+    )
+
+    analyticsServices
+      .buildAnalyticsSummary(user.id, false)
+      .then(summary => badgeEvaluator.evaluateBadges(user.id, summary))
+      .catch(err => console.error('Badge evaluation failed:', err))
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: serverStrings.errors.routeCompletionFailed })
+  }
+})
+
+/**
+ * Returns all badges for the authenticated user with earned status and progress.
+ *
+ * @returns {{ badges: Object[] }}
+ */
+app.get('/api/badges/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res
+      .status(403)
+      .json({ error: serverStrings.errors.notAuthenticated })
+  }
+
+  const { userId } = req.params
+  try {
+    const badges = await badgeEvaluator.getBadgesForUser(userId)
+    res.json({ badges })
+  } catch (error) {
+    console.error('Error fetching badges:', error)
+    res.status(500).json({ error: serverStrings.errors.generic })
+  }
+})
+
+/**
+ * Returns banned users or blocked users depending on user's role.
+ * Returns banned users, users reported more than 3 times. Moderator access only.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} banned users, or an empty array
+ */
+app.get('/api/bannedUsers', async (req, res) => {
   if (!req.oidc.isAuthenticated()) {
     return res.status(403).send(serverStrings.errors.accessDenied)
   }
 
-  const client = await pool.connect()
-
   try {
     const user = await selectUser(req)
-    if (!user) return res.status(404).send(serverStrings.errors.noUser)
-
-    if (user.role !== 'admin') {
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+    if (user.role !== 'moderator') {
       return res.status(403).send(serverStrings.errors.accessDenied)
     }
 
-    const granularity = ['daily', 'monthly', 'quarterly'].includes(
-      req.query.granularity
-    )
-      ? req.query.granularity
-      : 'daily'
+    const result = await db.query(`
+      SELECT * FROM "user"
+      WHERE reported > 3
+      ORDER BY name
+    `)
 
-    const routes = await analytics.fetchCompletedRoutes(user.id, true)
-
-    if (routes.length === 0) {
-      return res.status(200).json({ granularity, data: [] })
-    }
-
-    const routeIds = routes.map(r => r.id)
-    const participantRes = await client.query(
-      `SELECT
-         ur.route_id,
-         COUNT(*)::int AS participant_count,
-         BOOL_OR(ur.user_id = r.creator_id) AS creator_included
-       FROM user_route ur
-       JOIN route r ON r.id = ur.route_id
-       WHERE ur.route_id = ANY($1)
-       GROUP BY ur.route_id, r.creator_id`,
-      [routeIds]
-    )
-
-    const participantMap = {}
-    for (const row of participantRes.rows) {
-      const count = row.creator_included
-        ? row.participant_count
-        : row.participant_count + 1
-      participantMap[row.route_id] = count
-    }
-
-    function getPeriodKey(date) {
-      const calendarDate = new Date(date)
-      const year = calendarDate.getFullYear()
-      const month = String(calendarDate.getMonth() + 1).padStart(2, '0')
-      const day = String(calendarDate.getDate()).padStart(2, '0')
-
-      if (granularity === 'daily') return `${year}-${month}-${day}`
-      if (granularity === 'monthly') return `${year}-${month}`
-      const quarter = Math.ceil((calendarDate.getMonth() + 1) / 3)
-      return `${year}-Q${quarter}`
-    }
-
-    const periodMap = {}
-
-    for (const route of routes) {
-      const savings = await analytics.computeRouteSavings(route)
-      const participants = participantMap[route.id] ?? 1
-      const distanceKm = Number(route.distance) || 0
-
-      const baselineKg = analytics.roundToTwoDecimals(
-        (participants * distanceKm * EMISSIONS_G_PER_KM.CAR_VEHICLE.PETROL) /
-          1000
-      )
-      const savedKg = savings.savedKgSystem
-      const actualKg = analytics.roundToTwoDecimals(
-        Math.max(0, baselineKg - savedKg)
-      )
-
-      const key = getPeriodKey(route.departTime)
-
-      if (!periodMap[key]) {
-        periodMap[key] = { period: key, baselineKg: 0, actualKg: 0, savedKg: 0 }
-      }
-
-      periodMap[key].baselineKg = analytics.roundToTwoDecimals(
-        periodMap[key].baselineKg + baselineKg
-      )
-      periodMap[key].actualKg = analytics.roundToTwoDecimals(
-        periodMap[key].actualKg + actualKg
-      )
-      periodMap[key].savedKg = analytics.roundToTwoDecimals(
-        periodMap[key].savedKg + savedKg
-      )
-    }
-
-    const data = Object.values(periodMap).sort((a, b) =>
-      a.period.localeCompare(b.period)
-    )
-
-    return res.status(200).json({ granularity, data })
+    res.status(200).json(result.rows)
   } catch (error) {
-    console.error('Error in /api/activity/co2-timeseries:', error)
-    return res.status(500).send(serverStrings.errors.generic)
-  } finally {
-    client.release()
+    console.error('Error fetching banned users:', error)
+    res.status(500).send(serverStrings.errors.generic)
   }
 })
 
-module.exports = app
+/**
+ * Returns users blocked by the authenticated user.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ *
+ * @returns {[Object]} blocked users, or an empty array
+ */
+app.get('/api/blockedUsers', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+
+    const result = await db.query(
+      `
+      SELECT u.* FROM blocked_user bu
+      LEFT JOIN "user" u ON u.id = bu.blocked_user_id
+      WHERE bu.blocker_id = $1
+      ORDER BY u.name
+      `,
+      [user.id]
+    )
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error fetching blocked users:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Resets the reported count for a user, unbanning them. Moderator access only.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+app.post('/api/unbanUser/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+    if (user.role !== 'moderator') {
+      return res.status(403).send(serverStrings.errors.accessDenied)
+    }
+
+    const result = await db.query(
+      `
+      UPDATE "user"
+      SET reported = 0
+      WHERE id = $1
+      RETURNING *
+      `,
+      [req.params.userId]
+    )
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error unbanning user:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Removes the block between the authenticated user and the specified user.
+ *
+ * If the database has an error, a 500 status code is sent with an error message.
+ */
+app.post('/api/unblockUser/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  try {
+    const user = await selectUser(req)
+    if (!user) {
+      return res.status(404).json({ error: serverStrings.errors.noUser })
+    }
+
+    const result = await db.query(
+      `
+      DELETE FROM blocked_user
+      WHERE blocker_id = $1 AND blocked_user_id = $2
+      RETURNING *
+      `,
+      [user.id, req.params.userId]
+    )
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    console.error('Error unblocking user:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Blocks a specific user.
+ *
+ * @param {number} req.body.blocked_user_id - The ID of the user to block.
+ */
+app.post('/api/blockUser/:userId', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const blockedUserId = req.params.userId
+  const currentUser = await selectUser(req)
+  const blockerId = currentUser.id
+
+  try {
+    await db.query(
+      `INSERT INTO "blocked_user" (blocker_id, blocked_user_id) 
+       VALUES ($1, $2)
+       ON CONFLICT (blocker_id, blocked_user_id) DO NOTHING`,
+      [blockerId, blockedUserId]
+    )
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error blocking user:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Checks if a specific user is blocked by the current user.
+ *
+ * @param {number} req.params.id - The ID of the user to check.
+ * @returns {{ isBlocked: boolean }}
+ */
+app.get('/api/blockStatus/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const blockedUserId = req.params.id
+  const currentUser = await selectUser(req)
+
+  try {
+    const result = await db.query(
+      `SELECT 1 FROM blocked_user WHERE blocker_id = $1 AND blocked_user_id = $2`,
+      [currentUser.id, blockedUserId]
+    )
+
+    res.json({ isBlocked: result.rows.length > 0 })
+  } catch (error) {
+    console.error('Error checking block status:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+/**
+ * Checks if a specific user is reported by the current user.
+ *
+ * @param {number} req.params.id - The ID of the user to check.
+ * @returns {{ isReported: boolean }}
+ */
+app.get('/api/reportStatus/:id', async (req, res) => {
+  if (!req.oidc.isAuthenticated()) {
+    return res.status(403).send(serverStrings.errors.accessDenied)
+  }
+
+  const blockedUserId = req.params.id
+  const currentUser = await selectUser(req)
+
+  try {
+    const result = await db.query(
+      `SELECT 1 FROM report WHERE reporter_id = $1 AND report_target = 'user' AND target_id = $2`,
+      [currentUser.id, blockedUserId]
+    )
+
+    res.json({ isReported: result.rows.length > 0 })
+  } catch (error) {
+    console.error('Error checking report status:', error)
+    res.status(500).send(serverStrings.errors.generic)
+  }
+})
+
+initSocket(httpServer)
+console.log('Sockets initialized')
+
+if (require.main === module) {
+  httpServer.listen(port, () => {
+    console.log(`Server & Sockets integrated on port ${port}`)
+  })
+}
+
+module.exports = { app, httpServer }

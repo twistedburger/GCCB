@@ -1,74 +1,15 @@
-// TODO: Things to include -- Settings, maybe user guide
 import GenericButton from '../components/GenericButton'
-import PropTypes from 'prop-types'
 import ProfileForm from '../components/ProfileForm'
 import DashboardMetricCard from '../components/DashboardMetricCard'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  formatKg,
-  formatKm,
-  getMostUsedMode,
-} from '../utils/AnalyticsHelpers.js'
+import { Star } from '@mui/icons-material'
+import { formatKg, formatKm, getMostUsedMode } from '../utils/AnalyticsUtils.js'
 import { useUser } from '../../context/UserContext.jsx'
 import { analyticsStrings } from '../locales/en/AnalyticsStrings'
+import UserCard from '../components/UserCard.jsx'
 
 const dashboardStrings = analyticsStrings.dashboard
-
-/**
- * Component for the profile header.
- *
- * @param {Object} user Current user
- * @param {func} onEdit Callback function for when edit button is clicked
- * @returns {JSX.Element}
- */
-function ProfileHeader({ user, onEdit }) {
-  const displayName = user?.name ?? 'Unknown User'
-  const displayNickname = user?.nickname ?? 'No nickname'
-  const displayRole = user?.role ?? 'user'
-  const displayDescription =
-    user?.description ?? 'No profile description added yet.'
-
-  return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-      <div className="flex items-start gap-4">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-sm text-zinc-500">
-          No Image
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <div className="text-xl font-semibold">{displayName}</div>
-            <div className="text-sm text-zinc-600">({displayNickname})</div>
-          </div>
-
-          <div className="mt-1 text-base text-zinc-600">{displayRole}</div>
-
-          <div className="mt-3 text-sm text-zinc-700">{displayDescription}</div>
-        </div>
-
-        <GenericButton
-          onClick={onEdit}
-          unstyled={true}
-          customStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
-        >
-          Edit Profile
-        </GenericButton>
-      </div>
-    </div>
-  )
-}
-
-ProfileHeader.propTypes = {
-  user: PropTypes.shape({
-    name: PropTypes.string,
-    email: PropTypes.string,
-    nickname: PropTypes.string,
-    role: PropTypes.string,
-    description: PropTypes.string,
-  }),
-  onEdit: PropTypes.func.isRequired,
-}
 
 /**
  * Dashboard page
@@ -81,9 +22,11 @@ function Dashboard() {
   const [summary, setSummary] = useState(null)
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [summaryError, setSummaryError] = useState('')
+  const [recentBadges, setRecentBadges] = useState([])
 
   const { user, loadingUser, userError, setUser } = useUser()
   const navigate = useNavigate()
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     async function fetchSummary() {
@@ -91,12 +34,9 @@ function Dashboard() {
         setLoadingSummary(true)
         setSummaryError('')
 
-        const response = await fetch(
-          'http://localhost:3000/api/analytics/summary',
-          {
-            credentials: 'include',
-          }
-        )
+        const response = await fetch(`${baseURL}/api/analytics/summary`, {
+          credentials: 'include',
+        })
 
         if (!response.ok) {
           throw new Error(
@@ -104,30 +44,66 @@ function Dashboard() {
           )
         }
 
-        const data = await response.json()
-        setSummary(data)
+        const analyticsSummary = await response.json()
+        setSummary(analyticsSummary)
       } catch (error) {
         console.error('Failed to load analytics summary', error)
-        setSummaryError('Failed to load analytics summary.')
+        setSummaryError(dashboardStrings.error.summary)
       } finally {
         setLoadingSummary(false)
       }
     }
 
+    /**
+     * Fetches the badges earned by the user with the three most recently earned badges.
+     * Filters badges to include only earned ones, sorts them by the date earned in descending order
+     */
+    async function fetchRecentBadges() {
+      if (!user?.id) return
+      try {
+        const res = await fetch(`${baseURL}/api/badges/${user.id}`, {
+          credentials: 'include',
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        const earned = (data.badges ?? [])
+          .filter(badge => badge.earned)
+          .sort(
+            (badgeA, badgeB) =>
+              new Date(badgeB.dateEarned) - new Date(badgeA.dateEarned)
+          )
+          .slice(0, 3)
+        setRecentBadges(earned)
+      } catch (err) {
+        console.error('Failed to load recent badges', err)
+      }
+    }
+
     fetchSummary()
-  }, [])
+    if (user?.id) {
+      fetchRecentBadges()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async formData => {
-    const result = await fetch('http://localhost:3000/updateProfile', {
+    const data = new FormData()
+
+    data.append('name', formData.name)
+    data.append('email', formData.email)
+    data.append('nickname', formData.nickname)
+    data.append('description', formData.description)
+
+    if (formData.file) {
+      data.append('file', formData.file)
+    }
+
+    const updateResponse = await fetch(`${baseURL}/updateProfile`, {
       method: 'PUT',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
+      body: data,
     })
-    const response = await result.json()
-    setUser(response.user)
+    const updatedUserData = await updateResponse.json()
+    setUser(updatedUserData.user)
     setIsEditing(false)
   }
 
@@ -136,10 +112,14 @@ function Dashboard() {
   const totalTripsValue = loadingSummary ? '...' : `${summary?.tripCount ?? 0}`
 
   const totalTripsSubtitle = loadingSummary
-    ? 'Loading...'
+    ? analyticsStrings.common.loading
     : isAdmin
-      ? `${formatKm(summary?.totalDistanceKm)} across completed routes`
-      : `${formatKm(summary?.totalDistanceKm)} traveled`
+      ? dashboardStrings.metrics.admin.totalTrips.subtitle(
+          formatKm(summary?.totalDistanceKm)
+        )
+      : dashboardStrings.metrics.user.totalTrips.subtitle(
+          formatKm(summary?.totalDistanceKm)
+        )
 
   const co2Value = loadingSummary ? '...' : formatKg(summary?.totalCo2SavedKg)
 
@@ -148,53 +128,53 @@ function Dashboard() {
     : getMostUsedMode(summary?.tripFrequenciesByMode)
 
   const mostUsedModeSubtitle = loadingSummary
-    ? 'Loading...'
-    : `Across ${summary?.tripCount ?? 0} trips`
+    ? analyticsStrings.common.loading
+    : dashboardStrings.metrics.user.mode.subtitle(summary?.tripCount ?? 0)
 
   const metricCards = isAdmin
     ? [
         {
-          title: 'Total User Trips',
+          title: dashboardStrings.metrics.admin.totalTrips.title,
           value: totalTripsValue,
           subtitle: totalTripsSubtitle,
           onClick: () => navigate('/dashboard/trip-frequency'),
         },
         {
-          title: 'Total CO₂e Saved',
+          title: dashboardStrings.metrics.admin.co2.title,
           value: co2Value,
-          subtitle: 'Estimated from completed trips',
+          subtitle: dashboardStrings.metrics.admin.co2.subtitle,
           onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
-          title: 'Platform Activity',
-          value: 'View',
-          subtitle: 'Route status, creators, rejections',
+          title: dashboardStrings.metrics.admin.activity.title,
+          value: dashboardStrings.metrics.admin.activity.value,
+          subtitle: dashboardStrings.metrics.admin.activity.subtitle,
           onClick: () => navigate('/dashboard/activity'),
         },
       ]
     : [
         {
-          title: 'Total Trips',
+          title: dashboardStrings.metrics.user.totalTrips.title,
           value: totalTripsValue,
           subtitle: totalTripsSubtitle,
           onClick: () => navigate('/dashboard/commutes'),
         },
         {
-          title: 'Personal CO₂ Saved',
+          title: dashboardStrings.metrics.user.co2.title,
           value: co2Value,
-          subtitle: 'From completed trips',
+          subtitle: dashboardStrings.metrics.user.co2.subtitle,
           onClick: () => navigate('/dashboard/co2-savings'),
         },
         {
-          title: 'Most Used Mode',
+          title: dashboardStrings.metrics.user.mode.title,
           value: mostUsedModeValue,
           subtitle: mostUsedModeSubtitle,
           onClick: () => navigate('/dashboard/trip-frequency'),
         },
         {
-          title: 'Badges',
-          value: '0',
-          subtitle: 'Coming soonTM',
+          title: dashboardStrings.metrics.user.badges.title,
+          value: String(recentBadges.length),
+          onClick: () => navigate('/dashboard/badges'),
         },
       ]
 
@@ -221,7 +201,7 @@ function Dashboard() {
 
             <GenericButton
               onClick={() => {
-                window.location.href = 'http://localhost:3000/logoutRoute'
+                window.location.href = `${import.meta.env.VITE_API_BASE_URL}/logoutRoute`
               }}
             >
               {dashboardStrings.logout}
@@ -238,7 +218,36 @@ function Dashboard() {
                 {dashboardStrings.loadingProfile}
               </div>
             ) : (
-              <ProfileHeader user={user} onEdit={() => setIsEditing(true)} />
+              <UserCard
+                user={user}
+                isClickable={false}
+                profileInfoSize={'md'}
+                primaryActionLabel={dashboardStrings.profile.editProfile}
+                onPrimaryAction={() => setIsEditing(true)}
+                primaryButtonStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+                secondaryActionLabel={dashboardStrings.profile.blockedUsers}
+                onSecondaryAction={() => navigate('/bannedusers')}
+                secondaryButtonStyling="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+              />
+            )}
+
+            {recentBadges.length > 0 && (
+              <div className="flex items-center justify-between rounded-xl bg-white border border-zinc-100 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  {recentBadges.map(badge => (
+                    <div
+                      key={badge.id}
+                      title={badge.title}
+                      className="w-8 h-8 rounded-full bg-blue-secondary flex items-center justify-center"
+                    >
+                      <Star
+                        sx={{ fontSize: 18 }}
+                        className="text-blue-primary"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
             {summaryError ? (

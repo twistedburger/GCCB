@@ -4,6 +4,7 @@ DECLARE
   userTwo      INT := 2;  -- jamie@gccb.com   (user)
   adminUser    INT := 3;  -- aaron@gccb.com   (admin)
   modUser      INT := 4;  -- claudia@gccb.com (moderator)
+  blockedUser  INT := 5;  -- blocked@gccb.com (test user to block)
   firstRouteId INT;
   firstEventId INT := 1;
 BEGIN
@@ -13,7 +14,8 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   ('dylan@gccb.com', 'user', 'Dylan Reimer', 'dartFrog', true),
   ('jamie@gccb.com', 'user', 'Jamie Kim', 'justJam', true),
   ('aaron@gccb.com', 'admin', 'Aaron Tsang', 'masked_man', true),
-  ('claudia@gccb.com', 'moderator', 'Claudia Le', 'cloudia', true);
+  ('claudia@gccb.com', 'moderator', 'Claudia Le', 'cloudia', true),
+  ('blocked@gccb.com', 'user', 'Blocked User', 'block to test!', true);
 
   INSERT INTO "vehicle" (driver_id, insurance, license, model, make, number_seats, e_v) VALUES
   (adminUser, true,  'DRV-789',  'Civic',   'Honda', 4, false),
@@ -21,27 +23,30 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   (userTwo,   false, 'DART-456', '320i',    'BMW',   4, true);
 
 -- Events
-  INSERT INTO "event" (title, creator_id, event_time, location, verified, need_approval, description, location_geog) VALUES
+  INSERT INTO "event" (title, creator_id, event_time, location, verified, need_approval, description, location_geog, place_id) VALUES
   ('BCIT Tech Mixer',
    adminUser, '2026-04-10 17:30:00',
    '555 Seymour St, Vancouver, BC V6B 3H6',
    true, false,
    'Networking for computing students.',
-   ST_SetSRID(ST_MakePoint(-123.11528, 49.28341), 4326)),
+   ST_SetSRID(ST_MakePoint(-123.11528, 49.28341), 4326),
+   'ChIJuWkqyXhxhlQR1nJU9YqTQGs'),
 
   ('Earth Day Clean-up',
    modUser, '2026-06-22 09:00:00',
    'Science World, Vancouver',
    true, true,
    'Join us for a morning of eco-action!',
-   ST_SetSRID(ST_MakePoint(-123.10376, 49.27325), 4326)),
+   ST_SetSRID(ST_MakePoint(-123.10376, 49.27325), 4326),
+   'ChIJnZHwi2NxhlQRN3CYHzc3giE'),
 
   ('Late Night Hackathon',
    userOne, '2026-07-15 20:00:00',
    'BCIT Burnaby Campus',
    false, false,
    'Coding until the sun comes up.',
-   ST_SetSRID(ST_MakePoint(-123.0017, 49.2505), 4326));
+   ST_SetSRID(ST_MakePoint(-123.0017, 49.2505), 4326),
+   'ChIJ5f5T_SF3hlQRnRB6ZAeyWjU');
 
 
   -- Routes (7 completed routes, 3 rejected)
@@ -177,5 +182,55 @@ INSERT INTO "user" (email, role, name, nickname, active) VALUES
   (firstEventId + 2, firstRouteId + 7),
   (firstEventId + 2, firstRouteId + 8),
   (firstEventId + 2, firstRouteId + 9);
+
+-- Blocked user 
+INSERT INTO "blocked_user" (blocker_id, blocked_user_id) VALUES
+  (userOne, blockedUser),
+  (userTwo, blockedUser),
+  (adminUser, blockedUser),
+  (modUser, blockedUser);
   
+-- 25 Available Badges  
+INSERT INTO badge (key, title, category, icon_key, metric, metric_arg, threshold, tier)
+VALUES
+
+  -- Eco Impact Badges
+  ('first_step',        'First Step',        'eco_impact', 'leaf',    'co2_saved_kg', NULL,      1,   1),
+  ('carbon_cutter',     'Carbon Cutter',     'eco_impact', 'leaf',    'co2_saved_kg', NULL,      10,  1),
+  ('goin_green',        'Goin'' Green',       'eco_impact', 'leaf',    'co2_saved_kg', NULL,      50,  2),
+  ('eco_enforcer',      'Eco Enforcer',      'eco_impact', 'star',    'co2_saved_kg', NULL,      100, 3),
+  ('planet_protector',  'Planet Protector',  'eco_impact', 'globe',   'co2_saved_kg', NULL,      500, 3),
+
+  -- Trip Milestones Badges
+  ('first_ride',         'First Ride',         'trips', 'bicycle',  'trip_count', NULL, 1,   1),
+  ('routes_regular',     'Routes Regular',     'trips', 'calendar', 'trip_count', NULL, 10,  1),
+  ('frequent_flyer',     'Frequent Flyer',     'trips', 'repeat',   'trip_count', NULL, 25,  2),
+  ('route_runner',       'Route Runner',       'trips', 'repeat',   'trip_count', NULL, 50,  2),
+  ('commute_conqueror',  'Commute Conqueror',  'trips', 'award',    'trip_count', NULL, 100, 3),
+
+  --Mode Explorer — Bicycle Badges
+  ('pedal_pioneer',   'Pedal Pioneer',   'modes', 'bicycle', 'mode_trips', 'bicycle', 3,  1),
+  ('cycle_champion',  'Cycle Champion',  'modes', 'bicycle', 'mode_trips', 'bicycle', 10, 2),
+  ('bicycle_baron',   'Bicycle Baron',   'modes', 'bicycle', 'mode_trips', 'bicycle', 25, 3),
+
+  -- Mode Explorer — Transit Badges
+  ('transit_trekker',     'Transit Trekker',     'modes', 'bus', 'mode_trips', 'transit', 3,  1),
+  ('transit_traveler',    'Transit Traveler',    'modes', 'bus', 'mode_trips', 'transit', 10, 2),
+  ('transit_trailblazer', 'Transit Trailblazer', 'modes', 'bus', 'mode_trips', 'transit', 25, 3),
+
+  -- Mode Explorer Carpool Badges
+  ('carpool_comrade',   'Carpool Comrade',   'modes', 'car', 'mode_trips', 'car', 3,  1),
+  ('carpool_commander', 'Carpool Commander', 'modes', 'car', 'mode_trips', 'car', 10, 2),
+  ('carpool_champion',  'Carpool Champion',  'modes', 'car', 'mode_trips', 'car', 25, 3),
+
+  -- Mode Explorer  Walk Badges 
+  ('wandering_walker', 'Wandering Walker', 'modes', 'walking', 'mode_trips', 'walk', 3,  1),
+  ('pavement_pounder', 'Pavement Pounder', 'modes', 'walking', 'mode_trips', 'walk', 10, 2),
+  ('trek_titan',       'Trek Titan',       'modes', 'walking', 'mode_trips', 'walk', 25, 3),
+
+  -- Social Badges
+  ('route_rookie',       'Route Rookie',       'social', 'plusCircle',  'routes_created', NULL, 1,  1),
+  ('reliable_router',    'Reliable Router',    'social', 'map',         'routes_created', NULL, 10, 2),
+  ('community_champion', 'Community Champion', 'social', 'users',       'routes_created', NULL, 25, 3);
+
 END $$;

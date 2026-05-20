@@ -1,30 +1,47 @@
 import SubmitButton from '../components/submitButton'
 import AsyncSelect from 'react-select/async'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { loginStrings } from '../locales/en/loginLocales'
 import { getSSOProviders, redirect } from '../utils/LoginUtils'
+import Alert from '../components/Alert'
+import PropTypes from 'prop-types'
 
 /**
  * Login Page
  *
+ * @param {boolean} error - Indicates if there is an error to display (e.g., account suspended)
+ *
  * @returns {JSX.Element}
  */
-function Login() {
+function Login({ error }) {
   const [selectedLogin, setSelectedLogin] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
+  const [alert, setAlert] = useState(null)
+
+  useEffect(() => {
+    if (error) {
+      setAlert({
+        message: loginStrings.suspended,
+        type: 'error',
+      })
+    }
+  }, [error])
 
   return (
-    <div className="flex flex-col content-center">
-      <h2 className="my-16 text-center">{loginStrings.welcome}</h2>
+    <div className="flex flex-col content-center mx-6 mt-36">
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onTimeout={() => setAlert(null)}
+        ></Alert>
+      )}
+      <h2 className="text-center">{loginStrings.welcome}</h2>
       <AsyncSelect
         className="m-2 font-medium text-black"
         loadOptions={getSSOProviders}
         defaultOptions
         onChange={option => {
           setSelectedLogin(option.value)
-          if (selectedLogin === 'None' || selectedLogin === '') {
-            setErrorMessage('')
-          }
         }}
         placeholder={loginStrings.searching}
       />
@@ -35,17 +52,23 @@ function Login() {
             /* change to generic button later */
           }
           if (selectedLogin === 'None' || selectedLogin === '') {
-            setErrorMessage(loginStrings.error)
+            setAlert({
+              message: loginStrings.error,
+              type: 'error',
+            })
             return
           }
           redirect(
-            `http://localhost:3000/loginRoute?connection=${selectedLogin}`
+            `${import.meta.env.VITE_API_BASE_URL}/loginRoute?connection=${selectedLogin}`
           )
         }}
       />
-      <p className="my-16 text-center text-red-500">{errorMessage}</p>
     </div>
   )
+}
+
+Login.propTypes = {
+  error: PropTypes.bool,
 }
 
 export default Login

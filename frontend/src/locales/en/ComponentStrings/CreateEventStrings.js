@@ -11,8 +11,13 @@ export const createEventStrings = {
   creationFailed: 'Failed to create event.',
   createEventTitle: 'Create a New Event',
   confirmCreationTitle: 'Confirm Event Creation',
-  confirmCreationMessage: (eventName, routeCount) =>
-    `Are you sure you want to create "${eventName}" with ${routeCount} route(s)?`,
+  confirmRouteRemovalTitle: 'Confirm Route Removal',
+  confirmRouteRemovalMessage:
+    'Leaving this route will remove it from the event. Are you sure you want to proceed?',
+  confirmCreationMessage: (eventName, routeName) =>
+    `Are you sure you want to create "${eventName}" with route "${routeName}"?`,
+  confirmCreationNoRouteMessage: eventName =>
+    `Are you sure you want to create event "${eventName}" with no routes?`,
   nameLabel: 'Event Name',
   locationLabel: 'Location',
   eventLocationPlaceholder: 'Enter event location',
@@ -20,5 +25,16 @@ export const createEventStrings = {
   descriptionLabel: 'Event Description',
   addedRoutesTitle: 'Added Routes',
   addRoute: 'Add a Route',
+  alreadyJoinedRoute: 'Already Joined a Route',
   createEvent: 'Create Event',
+  routeCreationSuccess: 'Route created successfully!',
+  routeCreationError: 'Error creating route. Please try again.',
+  travelOptions: 'Travel Options',
+  noRoutes: 'No travel options available for this event.',
+  createNewRoute: 'Create a New Route',
+
+  a11y: {
+    drawerTitle: 'Event Detail',
+    drawerDescription: 'Event details',
+  },
 }

@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS "route" (
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reported            INTEGER DEFAULT 0,
     origin_geog         geography(POINT, 4326),
+    is_ev               BOOLEAN NOT NULL DEFAULT false,
     CONSTRAINT fk_route_creator    FOREIGN KEY (creator_id) REFERENCES "user"(id),
     CONSTRAINT fk_route_transport  FOREIGN KEY (transportation_mode) REFERENCES "transportation"(mode)
 );
@@ -85,8 +86,9 @@ CREATE TABLE IF NOT EXISTS "event_route" (
 
 -- 7. Junction: user_route
 CREATE TABLE IF NOT EXISTS "user_route" (
-    user_id  INT NOT NULL,
-    route_id INT NOT NULL,
+    user_id   INT NOT NULL,
+    route_id  INT NOT NULL,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (user_id, route_id),
     CONSTRAINT fk_ur_user  FOREIGN KEY (user_id)  REFERENCES "user"(id),
     CONSTRAINT fk_ur_route FOREIGN KEY (route_id) REFERENCES "route"(id)
@@ -95,10 +97,15 @@ CREATE TABLE IF NOT EXISTS "user_route" (
 -- 8. Badge
 CREATE TABLE IF NOT EXISTS "badge" (
     id          SERIAL PRIMARY KEY,
+    key         VARCHAR(64) UNIQUE NOT NULL,
     title       VARCHAR(50) NOT NULL,
-    icon        VARCHAR(255) NOT NULL,
+    description VARCHAR(255),
     category    VARCHAR(50) NOT NULL,
-    description VARCHAR(255)
+    icon_key    VARCHAR(64) NOT NULL,
+    metric      VARCHAR(32) NOT NULL,
+    metric_arg  VARCHAR(32),
+    threshold   NUMERIC(10,2) NOT NULL,
+    tier        SMALLINT NOT NULL DEFAULT 1
 );
 
 -- 9. Junction: user_badge
@@ -109,6 +116,17 @@ CREATE TABLE IF NOT EXISTS "user_badge" (
     PRIMARY KEY (user_id, badge_id),
     CONSTRAINT fk_ub_user  FOREIGN KEY (user_id)  REFERENCES "user"(id),
     CONSTRAINT fk_ub_badge FOREIGN KEY (badge_id) REFERENCES "badge"(id)
+);
+
+-- 9a. Badge progress
+CREATE TABLE IF NOT EXISTS "badge_progress" (
+    user_id       INT NOT NULL,
+    badge_id      INT NOT NULL,
+    current_value NUMERIC(10,2) NOT NULL DEFAULT 0,
+    last_updated  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, badge_id),
+    CONSTRAINT fk_bp_user  FOREIGN KEY (user_id)  REFERENCES "user"(id),
+    CONSTRAINT fk_bp_badge FOREIGN KEY (badge_id) REFERENCES "badge"(id)
 );
 
 -- 10. SSO providers
@@ -130,7 +148,8 @@ CREATE TABLE IF NOT EXISTS "report" (
     rejection_reason VARCHAR(50),
     rejection_detail VARCHAR(100),
     report_target   VARCHAR(10),
-    target_id       INTEGER
+    target_id       INTEGER,
+    CONSTRAINT unique_report UNIQUE (reporter_id, report_target, target_id)
 );
 
 -- 12. Event verification
@@ -146,6 +165,40 @@ CREATE TABLE IF NOT EXISTS "event_verification" (
     CONSTRAINT fk_ev_verified_by FOREIGN KEY (verified_by) REFERENCES "user"(id)
 );
 
+-- 13. Blocked users
+CREATE TABLE IF NOT EXISTS "blocked_user" (
+    blocker_id  INT NOT NULL,
+    blocked_user_id INT NOT NULL,
+    PRIMARY KEY (blocker_id, blocked_user_id),
+    CONSTRAINT fk_bu_blocker         FOREIGN KEY (blocker_id)         REFERENCES "user"(id),
+    CONSTRAINT fk_bu_blocked_user    FOREIGN KEY (blocked_user_id)    REFERENCES "user"(id)
+);
+
+-- 14. Notifications
+CREATE TYPE notification_type_enum AS ENUM (
+  'route',
+  'event',
+  'badge',
+  'message'
+);
+
+CREATE TABLE IF NOT EXISTS "notification" (
+  notification_id   SERIAL PRIMARY KEY,
+  notification_type notification_type_enum NOT NULL,
+  route_id          INT NULL,
+  event_id          INT NULL,
+  badge_id          INT NULL,
+  metadata          JSONB,
+  created_at        TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS "user_notification" (
+  id                SERIAL PRIMARY KEY,
+  user_id           INT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  notification_id   INT NOT NULL REFERENCES "notification"(notification_id) ON DELETE CASCADE,
+  read_at           TIMESTAMP NULL
+);
+
 CREATE INDEX IF NOT EXISTS event_geog_idx ON "event" USING gist(location_geog);
 CREATE INDEX IF NOT EXISTS route_geog_idx ON "route" USING gist(origin_geog);
 
@@ -155,7 +208,7 @@ INSERT INTO "transportation" (mode, carbon_savings) VALUES
 ('Car',     0.00),
 ('Bicycle', 1.0),
 ('Walk',    1.0)
-ON CONFLICT (mode) DO NOTHING;
+ ON CONFLICT (mode) DO NOTHING;
 
 INSERT INTO "sso" (school_name, school_nickname, sso_connection) VALUES
 ('British Columbia Institute of Technology', 'BCIT', 'Username-Password-Authentication'),
@@ -163,3 +216,61 @@ INSERT INTO "sso" (school_name, school_nickname, sso_connection) VALUES
 ('University of British Columbia',           'UBC',  'Username-Password-Authentication'),
 ('Simon Fraser University',                  'SFU',  'Username-Password-Authentication')
 ON CONFLICT (school_name) DO NOTHING;
+
+-- 14. Chatroom and messages
+CREATE TABLE IF NOT EXISTS "chatroom" (
+    id          SERIAL PRIMARY KEY,
+    route_id    INT NOT NULL UNIQUE,
+    is_closed   BOOLEAN NOT NULL DEFAULT FALSE,
+    close_at    TIMESTAMP,
+    delete_at   TIMESTAMP,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_chatroom_route FOREIGN KEY (route_id) REFERENCES "route"(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "chatroom_member" (
+    chatroom_id INT NOT NULL,
+    user_id     INT NOT NULL,
+    PRIMARY KEY (chatroom_id, user_id),
+    CONSTRAINT fk_cm_chatroom FOREIGN KEY (chatroom_id) REFERENCES "chatroom"(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cm_user FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
+
+CREATE TABLE IF NOT EXISTS "chat_message" (
+    id          SERIAL PRIMARY KEY,
+    chatroom_id INT NOT NULL,
+    sender_id   INT NOT NULL,
+    content     TEXT NOT NULL,
+    sent_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_msg_chatroom FOREIGN KEY (chatroom_id) REFERENCES "chatroom"(id) ON DELETE CASCADE,
+    CONSTRAINT fk_msg_sender FOREIGN KEY (sender_id) REFERENCES "user"(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_message_chatroom ON "chat_message"(chatroom_id, sent_at);
+CREATE INDEX IF NOT EXISTS idx_chatroom_member_user ON "chatroom_member"(user_id);
+
+CREATE ROLE main_user WITH LOGIN PASSWORD '';
+
+\set app_role main_user
+
+GRANT SELECT, INSERT, UPDATE         ON TABLE "user"             TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE event              TO :app_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE route              TO :app_role;
+GRANT SELECT, INSERT, DELETE, UPDATE ON TABLE user_route         TO :app_role;
+GRANT SELECT, INSERT, DELETE         ON TABLE event_route        TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE report             TO :app_role;
+GRANT SELECT, UPDATE                 ON TABLE event_verification TO :app_role;
+GRANT SELECT                         ON TABLE sso                TO :app_role;
+GRANT SELECT, INSERT, DELETE ON TABLE blocked_user       TO :app_role;
+GRANT SELECT, INSERT, UPDATE ON TABLE badge              TO :app_role;
+GRANT SELECT, INSERT         ON TABLE user_badge         TO :app_role;
+GRANT SELECT, INSERT, UPDATE ON TABLE badge_progress     TO :app_role;
+GRANT SELECT, INSERT, DELETE         ON TABLE blocked_user       TO :app_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE chatroom           TO :app_role;
+GRANT SELECT, INSERT, DELETE         ON TABLE chatroom_member    TO :app_role;
+GRANT SELECT, INSERT, DELETE         ON TABLE chat_message       TO :app_role;
+GRANT SELECT, INSERT                 ON TABLE notification       TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE user_notification  TO :app_role;
+GRANT SELECT, INSERT, UPDATE         ON TABLE vehicle            TO :app_role;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO :app_role;

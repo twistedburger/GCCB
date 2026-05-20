@@ -14,7 +14,7 @@ import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import ChartCard from '../../components/analytics/ChartCard'
 import GenericButton from '../../components/GenericButton'
-import { formatKm, getMostUsedMode } from '../../utils/AnalyticsHelpers'
+import { formatKm, getMostUsedMode } from '../../utils/AnalyticsUtils'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
 
 const tripStrings = analyticsStrings.tripFrequency
@@ -99,6 +99,7 @@ function TripFrequency() {
   const [byMode, setByMode] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     async function fetchData() {
@@ -107,10 +108,10 @@ function TripFrequency() {
         setError('')
 
         const [summaryRes, byModeRes] = await Promise.all([
-          fetch('http://localhost:3000/api/analytics/summary', {
+          fetch(`${baseURL}/api/analytics/summary`, {
             credentials: 'include',
           }),
-          fetch('http://localhost:3000/api/analytics/by-mode', {
+          fetch(`${baseURL}/api/analytics/by-mode`, {
             credentials: 'include',
           }),
         ])
@@ -135,31 +136,36 @@ function TripFrequency() {
     }
 
     fetchData()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isAdmin = summary?.scope === 'system'
 
   const chartData = useMemo(() => {
     return (byMode?.data ?? [])
       .filter(row => row.tripCount > 0)
-      .map(row => ({
-        ...row,
-        label: MODE_LABELS[row.mode] ?? row.mode,
-        fill: MODE_COLORS[row.mode] ?? '#b3b3b3',
+      .map(modeItem => ({
+        ...modeItem,
+        label: MODE_LABELS[modeItem.mode] ?? modeItem.mode,
+        fill: MODE_COLORS[modeItem.mode] ?? 'var(--color-medium-grey)',
       }))
   }, [byMode?.data])
 
   // Avg distance per trip: modes with at least one trip, sorted longest to shortest
   const avgDistanceChartData = useMemo(() => {
     return (byMode?.data ?? [])
-      .filter(row => row.tripCount > 0 && row.totalDistanceKm > 0)
-      .map(row => ({
-        ...row,
-        label: MODE_LABELS[row.mode] ?? row.mode,
-        fill: MODE_COLORS[row.mode] ?? '#b3b3b3',
-        avgDistancePerTrip: row.totalDistanceKm / row.tripCount,
+      .filter(
+        modeItem => modeItem.tripCount > 0 && modeItem.totalDistanceKm > 0
+      )
+      .map(modeItem => ({
+        ...modeItem,
+        label: MODE_LABELS[modeItem.mode] ?? modeItem.mode,
+        fill: MODE_COLORS[modeItem.mode] ?? 'var(--color-medium-grey)',
+        avgDistancePerTrip: modeItem.totalDistanceKm / modeItem.tripCount,
       }))
-      .sort((a, b) => b.avgDistancePerTrip - a.avgDistancePerTrip)
+      .sort(
+        (firstMode, secondMode) =>
+          secondMode.avgDistancePerTrip - firstMode.avgDistancePerTrip
+      )
   }, [byMode?.data])
 
   const overallMetrics = useMemo(() => {
@@ -304,7 +310,7 @@ function TripFrequency() {
                     <XAxis
                       type="number"
                       tick={AXIS_TICK_STYLE}
-                      tickFormatter={v => `${v.toFixed(1)} km`}
+                      tickFormatter={value => `${value.toFixed(1)} km`}
                     />
                     <YAxis
                       type="category"

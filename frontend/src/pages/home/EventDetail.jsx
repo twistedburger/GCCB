@@ -1,5 +1,5 @@
 import GenericButton from '../../components/GenericButton'
-import OrganizerCard from '../../components/OrganizerCard'
+import UserCard from '../../components/UserCard'
 import RouteCard from '../../components/RouteCard'
 import RouteDetail from './RouteDetail'
 import { Cancel } from '@mui/icons-material'
@@ -15,6 +15,9 @@ import { Drawer } from 'vaul'
 import CreateRoute from '../../components/CreateRoute'
 import Alert from '../../components/Alert'
 import Report from '../../components/Report'
+import { createEventStrings } from '../../locales/en/ComponentStrings/CreateEventStrings'
+import { reportStrings } from '../../locales/en/ComponentStrings/ReportStrings'
+import { useRouteActions } from '../../../context/RouteActionsContext'
 
 /**
  * Displays the event detail drawer
@@ -37,14 +40,20 @@ export default function EventDetail() {
   const [alert, setAlert] = useState(null)
 
   const [reportData, setReportData] = useState(null)
+  const baseURL = import.meta.env.VITE_API_BASE_URL
+  const { toggleJoin, user } = useRouteActions()
+
+  const isAlreadyJoined =
+    event?.routes?.some(route => route.isJoined === true) || false
 
   const handleClose = () => {
     setOpen(false)
     setTimeout(() => navigate(-1), 300)
   }
+
   const handleAddRoute = async routeData => {
     try {
-      const response = await fetch(`http://localhost:3000/api/createRoute`, {
+      const response = await fetch(`${baseURL}/api/createRoute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -59,8 +68,8 @@ export default function EventDetail() {
       setAlert({
         type: response.ok ? 'success' : 'error',
         message: response.ok
-          ? 'Route created successfully!'
-          : 'Error creating route. Please try again.',
+          ? createEventStrings.routeCreationSuccess
+          : createEventStrings.routeCreationError,
       })
 
       if (response.ok) {
@@ -69,6 +78,8 @@ export default function EventDetail() {
           id: result.routeID,
           transportation_mode: routeData.transportationMode,
           created_at: new Date(),
+          isJoined: true,
+          creator_id: user?.id,
         }
         setEvent(prevEvent => ({
           ...prevEvent,
@@ -84,16 +95,50 @@ export default function EventDetail() {
     }
   }
 
+  const handleToggleJoin = route =>
+    toggleJoin(route, ({ routeId, joined, deleted }) => {
+      if (deleted) {
+        setEvent(prev => ({
+          ...prev,
+          routes: prev.routes.filter(r => r.id !== routeId),
+        }))
+      } else {
+        updateLocalJoinStatus(routeId, joined)
+      }
+    })
+
+  const updateLocalJoinStatus = (routeId, joined) => {
+    setEvent(prev => ({
+      ...prev,
+      routes: prev.routes.map(routeItem => {
+        if (routeItem.id === routeId) {
+          const currentCount = parseInt(routeItem.people_going, 10) || 0
+          return {
+            ...routeItem,
+            isJoined: joined,
+            people_going: joined
+              ? currentCount + 1
+              : Math.max(0, currentCount - 1),
+          }
+        }
+        return routeItem
+      }),
+    }))
+  }
+
+  const liveSelectedRoute =
+    event?.routes?.find(r => r.id === selectedRoute?.id) || selectedRoute
+
   useEffect(() => {
     const fetchEvent = async () => {
-      const response = await fetch(
-        `http://localhost:3000/api/eventdetail/${id}`
-      )
+      const response = await fetch(`${baseURL}/api/eventdetail/${id}`, {
+        credentials: 'include',
+      })
       const data = await response.json()
       setEvent(data)
     }
     fetchEvent()
-  }, [id])
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
@@ -116,8 +161,17 @@ export default function EventDetail() {
               marginLeft: '27px',
             }}
           >
-            <GenericButton type="button" onClick={() => setAddRoute(true)}>
-              Add a Route
+            <GenericButton
+              type="button"
+              onClick={() => setAddRoute(true)}
+              disabled={isAlreadyJoined}
+              customStyling={
+                isAlreadyJoined ? 'opacity-50 cursor-not-allowed' : ''
+              }
+            >
+              {isAlreadyJoined
+                ? createEventStrings.alreadyJoinedRoute
+                : createEventStrings.addRoute}
             </GenericButton>
           </div>
         </>
@@ -135,20 +189,20 @@ export default function EventDetail() {
         <Drawer.Portal>
           <Drawer.Overlay style={{ pointerEvents: 'none' }} />
           <Drawer.Content
-            onInteractOutside={e => {
+            onInteractOutside={event => {
               if (addRoute) {
                 const isInsideNested =
-                  e.target.closest('[data-vaul-drawer]') ||
-                  e.target.closest('input')
+                  event.target.closest('[data-vaul-drawer]') ||
+                  event.target.closest('input')
 
                 if (isInsideNested) {
                   return
                 }
-                e.preventDefault()
+                event.preventDefault()
               }
             }}
-            onOpenAutoFocus={e => e.preventDefault()}
-            onCloseAutoFocus={e => e.preventDefault()}
+            onOpenAutoFocus={event => event.preventDefault()}
+            onCloseAutoFocus={event => event.preventDefault()}
             style={{
               zIndex: 40,
               marginLeft: '55px',
@@ -161,9 +215,11 @@ export default function EventDetail() {
               flexDirection: 'column',
             }}
           >
-            <Drawer.Title className="sr-only">Event Detail</Drawer.Title>
+            <Drawer.Title className="sr-only">
+              {createEventStrings.a11y.drawerTitle}
+            </Drawer.Title>
             <Drawer.Description className="sr-only">
-              Event details
+              {createEventStrings.a11y.drawerDescription}
             </Drawer.Description>
             <div
               style={{
@@ -243,7 +299,7 @@ export default function EventDetail() {
                                 })
                               }}
                             >
-                              Report Event
+                              {reportStrings.reportEvent}
                             </MenuItem>
                             <MenuItem
                               onClick={() => {
@@ -255,7 +311,7 @@ export default function EventDetail() {
                                 })
                               }}
                             >
-                              Report Organizer
+                              {reportStrings.reportOrganizer}
                             </MenuItem>
                           </Menu>
                         </>
@@ -274,20 +330,22 @@ export default function EventDetail() {
                     </div>
                   </div>
                   <div className="px-6">
-                    <OrganizerCard
+                    <UserCard
                       user={{
                         id: event.creator_id,
                         name: event.creator_name,
                         nickname: event.nickname,
-                        role: '',
-                        description: '',
+                        role: event.role,
+                        description: event.creator_description,
                         profile_pic: event.profile_pic,
                         active: true,
                       }}
+                      setAlert={setAlert}
+                      showDescription={false}
                     />
                     <div>
                       <p className="font-semibold pt-4 pb-2 text-text-primary">
-                        Travel Options
+                        {createEventStrings.travelOptions}
                       </p>
                       <div className="flex flex-col gap-2">
                         {event.routes && event.routes.length > 0 ? (
@@ -295,8 +353,10 @@ export default function EventDetail() {
                             <RouteCard
                               key={route.id}
                               route={route}
+                              onToggleJoin={() => handleToggleJoin(route)}
                               onReport={data => setReportData(data)}
                               individualView={false}
+                              isDisabled={isAlreadyJoined && !route.isJoined}
                               onSelect={route => {
                                 const fullRoute = {
                                   ...route,
@@ -315,7 +375,7 @@ export default function EventDetail() {
                           ))
                         ) : (
                           <p className="text-text-secondary text-sm text-center py-4">
-                            No travel options available for this event.
+                            {createEventStrings.noRoutes}
                           </p>
                         )}
                       </div>
@@ -348,25 +408,16 @@ export default function EventDetail() {
                           {reportData && (
                             <>
                               <Drawer.Title className="text-lg font-bold mb-4">
-                                Report {reportData.title}
+                                {reportStrings.reportTitle(reportData.title)}
                               </Drawer.Title>
                               <Drawer.Description className="sr-only">
-                                Report Page
+                                {reportStrings.a11y.reportPage}
                               </Drawer.Description>
                               <Report
                                 type={reportData.type}
                                 targetId={reportData.targetId}
                                 onClose={() => setReportData(null)}
-                                setAlert={reportAlert => {
-                                  if (!reportAlert || !reportAlert.type) return
-                                  setAlert({
-                                    ...reportAlert,
-                                    message:
-                                      reportAlert.type === 'success'
-                                        ? 'Report submitted successfully.'
-                                        : 'Failed to submit report.',
-                                  })
-                                }}
+                                setAlert={setAlert}
                               />
                             </>
                           )}
@@ -399,11 +450,12 @@ export default function EventDetail() {
                           </div>
 
                           <Drawer.Title className="text-lg font-bold mb-4">
-                            Create a New Route
+                            {createEventStrings.createNewRoute}
                           </Drawer.Title>
 
                           <CreateRoute
                             initLoc={event.location}
+                            eventTime={event.event_time}
                             onSubmit={routeData => {
                               handleAddRoute(routeData)
                               setAddRoute(false)
@@ -420,23 +472,15 @@ export default function EventDetail() {
         </Drawer.Portal>
       </Drawer.Root>
       <RouteDetail
-        selectedRoute={selectedRoute}
+        selectedRoute={liveSelectedRoute}
+        onToggleJoin={handleToggleJoin}
         onClose={() => {
           setSelectedRoute(null)
           setHomeSelectedRoute(null)
           setEventSnapPoint(1)
           setSnapPoint(1)
         }}
-        setAlert={reportAlert => {
-          if (!reportAlert?.type) return
-          setAlert({
-            ...reportAlert,
-            message:
-              reportAlert.type === 'success'
-                ? 'Report submitted successfully.'
-                : 'Failed to submit report.',
-          })
-        }}
+        setAlert={setAlert}
       />
     </div>
   )

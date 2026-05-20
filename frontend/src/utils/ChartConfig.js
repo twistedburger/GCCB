@@ -3,6 +3,7 @@
  * Note for future dev use:
  * -Recharts reads colours as JS strings, so CSS variables cannot be used directly.
  */
+import { TransportMode } from '../../../shared/TransportModes'
 
 export const THEME_COLORS = {
   blue: '#6fa4ea',
@@ -15,23 +16,15 @@ export const THEME_COLORS = {
   lightGrey: '#e2e2e2',
 }
 
-export const MODE_COLORS = {
-  walk: THEME_COLORS.blue,
-  bicycle: THEME_COLORS.purple,
-  bus: THEME_COLORS.orange,
-  rail: THEME_COLORS.teal,
-  car: THEME_COLORS.green,
-  other: THEME_COLORS.grey,
-}
+/** @type {Object.<string, string>} */
+export const MODE_COLORS = Object.fromEntries(
+  Object.values(TransportMode).map(mode => [mode.key, mode.themeColor])
+)
 
-export const MODE_LABELS = {
-  walk: 'Walk',
-  bicycle: 'Bicycle',
-  bus: 'Bus',
-  rail: 'Rail',
-  car: 'Car / Carpool',
-  other: 'Other',
-}
+/** @type {Object.<string, string>} */
+export const MODE_LABELS = Object.fromEntries(
+  Object.values(TransportMode).map(mode => [mode.key, mode.label])
+)
 
 export const AXIS_TICK_STYLE = {
   fontSize: 12,

@@ -68,22 +68,8 @@ describe('Test Login Page', () => {
     await userEvent.click(screen.getByRole('button'))
 
     expect(redirect).toHaveBeenCalledWith(
-      'http://localhost:3000/loginRoute?connection=UBC_Connection'
+      `${import.meta.env.VITE_API_BASE_URL}/loginRoute?connection=UBC_Connection`
     )
-    expect(screen.queryByText(loginStrings.error)).not.toBeInTheDocument()
-  })
-
-  test('clears error message after making a valid selection', async () => {
-    render(<Login />)
-
-    await userEvent.click(screen.getByRole('button'))
-    expect(screen.getByText(loginStrings.error)).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('combobox'))
-    await waitFor(() => screen.getByText('UBC'))
-    await userEvent.click(screen.getByText('UBC'))
-    await userEvent.click(screen.getByRole('button'))
-
     expect(screen.queryByText(loginStrings.error)).not.toBeInTheDocument()
   })
 

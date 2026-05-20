@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState, useContext, createContext } from 'react'
+import { useState, useContext, createContext, useEffect } from 'react'
 
 const AuthContext = createContext(null)
 
@@ -12,20 +12,30 @@ export const authLevel = {
 
 export const AuthProvider = ({ children }) => {
   const [authorization, setAuthorization] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    authorizeUser()
+  }, [])
 
   const authorizeUser = async () => {
-    const response = await fetch('http://localhost:3000/authorize', {
-      credentials: 'include',
-    })
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/authorize`,
+      {
+        credentials: 'include',
+      }
+    )
     if (response.status != 200) {
       setAuthorization('')
+      setIsLoading(false)
       return
     }
     const user = await response.json()
     setAuthorization(user.authorization)
+    setIsLoading(false)
   }
 
-  const value = { authorization, authorizeUser }
+  const value = { authorization, authorizeUser, isLoading }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

@@ -16,11 +16,14 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [userError, setUserError] = useState('')
+  const baseURL = import.meta.env.VITE_API_BASE_URL
 
   useEffect(() => {
     setLoadingUser(true)
 
-    fetch('http://localhost:3000/authenticateUser', { credentials: 'include' })
+    fetch(`${baseURL}/authenticateUser`, {
+      credentials: 'include',
+    })
       .then(res => {
         if (!res.ok) throw new Error('Failed to authenticate session')
         return res.json()
@@ -36,7 +39,7 @@ export function UserProvider({ children }) {
       .finally(() => {
         setLoadingUser(false)
       })
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const value = useMemo(
     () => ({

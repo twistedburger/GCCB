@@ -80,7 +80,7 @@ export default function ModerationActions({
               unstyled={true}
               customStyling="bg-green-secondary border border-green-primary text-green-primary py-1 px-2 rounded-lg text-xs"
             >
-              <span>Approve</span>
+              <span>{moderationStrings.approve}</span>
             </GenericButton>
             <GenericButton
               onClick={e => {
@@ -90,7 +90,7 @@ export default function ModerationActions({
               unstyled={true}
               customStyling="bg-red-100 border border-red-500 text-red-500 py-1 px-2 rounded-lg text-xs"
             >
-              <span>Reject</span>
+              <span>{moderationStrings.reject}</span>
             </GenericButton>
           </div>
         </div>
@@ -98,27 +98,31 @@ export default function ModerationActions({
 
       {/* Valid report, confirmation dialog */}
       <div className="*:ml-13.75">
-        <ConfirmationDialog
-          isOpen={confirmReport === 'approve'}
-          onClose={handleCancel}
-          onConfirm={() =>
-            handleSubmit(
-              'approved',
-              isReport,
-              information,
-              rejectionReason,
-              rejectionDetail,
-              setAlert,
-              onSuccess
-            )
-          }
-          title={moderationStrings.approve}
-          confirmText={moderationStrings.ok}
-          cancelText={moderationStrings.cancel}
-          variant="primary"
-        >
-          {moderationStrings.confirmApprove(isReport ? 'report' : 'event')}
-        </ConfirmationDialog>
+        <div className="fixed inset-0 z-9999 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto">
+            <ConfirmationDialog
+              isOpen={confirmReport === 'approve'}
+              onClose={handleCancel}
+              onConfirm={() =>
+                handleSubmit(
+                  'approved',
+                  isReport,
+                  information,
+                  rejectionReason,
+                  rejectionDetail,
+                  setAlert,
+                  onSuccess
+                )
+              }
+              title={moderationStrings.approve}
+              confirmText={moderationStrings.ok}
+              cancelText={moderationStrings.cancel}
+              variant="primary"
+            >
+              {moderationStrings.confirmApprove(isReport ? 'report' : 'event')}
+            </ConfirmationDialog>
+          </div>
+        </div>
       </div>
 
       {/* Invalid, moderator must add a reason (dropdown or other + text) */}

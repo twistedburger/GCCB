@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import TextBox from './TextBox'
 import GenericButton from './GenericButton'
 import LocationSearch from './LocationSearch'
@@ -10,10 +10,15 @@ import {
   TravelMode,
 } from '../utils/RouteUtils'
 import { decode } from 'google-polyline'
+import { TransportMode } from '../../../shared/TransportModes'
 import TransitLegCard from './TransitLegCard'
 import MainMap from './MainMap'
 import GenericToggle from './GenericToggle'
 import { createRouteStrings } from '../locales/en/ComponentStrings/CreateRouteStrings'
+import {
+  getDepartureTimeError,
+  formatDateTimeInput,
+} from '../utils/CreateRouteUtils'
 
 /**
  * Component to create a new route.
@@ -23,7 +28,7 @@ import { createRouteStrings } from '../locales/en/ComponentStrings/CreateRouteSt
  * @returns {JSX.Element}
  */
 
-const CreateRoute = ({ initLoc, onSubmit }) => {
+const CreateRoute = ({ initLoc, eventTime, onSubmit }) => {
   const [routeName, setRouteName] = useState('')
   const [routeDesc, setRouteDesc] = useState('')
   const [transportationMode, setTransportationMode] = useState('')
@@ -55,8 +60,17 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
     }
     if (!startLoc) newErrors.startLoc = createRouteStrings.startingLocRequired
     if (!endLoc) newErrors.endLoc = createRouteStrings.destinationLocRequired
-    if (!departTime)
+
+    const timeError = getDepartureTimeError(
+      departTime,
+      eventTime,
+      createRouteStrings.departureAfterEvent
+    )
+    if (!departTime) {
       newErrors.departTime = createRouteStrings.departureTimeRequired
+    } else if (timeError) {
+      newErrors.departTime = timeError
+    }
     if (transportationMode && startLoc && endLoc && departTime && !route) {
       newErrors.route = createRouteStrings.clickGetRoute
     }
@@ -89,7 +103,7 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
             : null,
         }
       )
-      setDistance(route.distanceMeters)
+      setDistance(route.distanceMeters / 1000)
       setRoute(route)
       setErrors(prev => ({ ...prev, route: null }))
     } catch (err) {
@@ -141,6 +155,9 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       distance: distance,
       path: route,
       completed: false,
+      isEV: transportationMode === TransportMode.CAR.key ? isEV : false,
+      isJoined: true,
+      people_going: 1,
     }
     onSubmit(routeData)
   }
@@ -152,6 +169,69 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       map.fitBounds(bounds)
     }
   }, [map, pathCoordinates])
+
+  useEffect(() => {
+    const timeError = getDepartureTimeError(
+      departTime,
+      eventTime,
+      createRouteStrings.departureAfterEvent
+    )
+
+    setErrors(prev => {
+      const next = { ...prev }
+      if (timeError) {
+        next.departTime = timeError
+      } else {
+        delete next.departTime
+      }
+      return next
+    })
+  }, [departTime, eventTime])
+
+  useEffect(() => {
+    if (!eventTime) return
+
+    const eventDate = new Date(eventTime)
+    const defaultDepart = new Date(eventDate.getTime() - 60 * 60 * 1000)
+
+    setDepartTime(formatDateTimeInput(defaultDepart))
+  }, [eventTime])
+
+  const handleMapLoad = useCallback(m => setMap(m), [])
+  const handleMapUnmount = useCallback(() => setMap(null), [])
+
+  const mapSection = useMemo(
+    () => (
+      <div className="rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 h-64 relative shadow-inner">
+        <MainMap
+          defaultCenter={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
+          route={route ? { path: route, transportationMode } : null}
+          onLoad={handleMapLoad}
+          onUnmount={handleMapUnmount}
+          mapKey={mapKey}
+        >
+          {!route && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
+              {transportationMode && departTime && startLoc && endLoc
+                ? createRouteStrings.seePath
+                : createRouteStrings.selectModeTimeOriginDestination}
+            </div>
+          )}
+        </MainMap>
+      </div>
+    ),
+    [
+      pathCoordinates,
+      route,
+      transportationMode,
+      mapKey,
+      departTime,
+      startLoc,
+      endLoc,
+      handleMapLoad,
+      handleMapUnmount,
+    ]
+  )
 
   return (
     <div className="space-y-4">
@@ -213,7 +293,6 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         </div>
       )}
 
-      {/*TODO: ensure departure time doesn't exceed event time */}
       <div>
         <label
           className="text-sm font-semibold text-text-primary ml-1 mb-1.5 block"
@@ -224,8 +303,10 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
         <input
           id="depart-time"
           type="datetime-local"
-          value={departTime}
-          onChange={e => setDepartTime(e.target.value)}
+          value={departTime || ''}
+          onChange={change => {
+            setDepartTime(change.target.value)
+          }}
           className={`w-full px-4 py-3 rounded-xl transition-all duration-200 shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
              bg-gray-50 text-text-primary outline-none border
              ${errors.departTime ? 'border-red-500' : 'border-transparent focus:border-2 focus:border-blue-500 focus:ring-4 focus:ring-blue-100'}`}
@@ -302,27 +383,8 @@ const CreateRoute = ({ initLoc, onSubmit }) => {
       )}
 
       {/* Mini Map */}
-      <div className="rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 h-64 relative shadow-inner">
-        <MainMap
-          defaultCenter={pathCoordinates[0] || { lat: 49.2827, lng: -123.1207 }}
-          route={
-            route
-              ? { path: route, transportationMode: transportationMode }
-              : null
-          }
-          onLoad={setMap}
-          onUnmount={() => setMap(null)}
-          mapKey={mapKey}
-        >
-          {!route && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/80 text-gray-400 text-sm italic px-10 text-center">
-              {transportationMode && departTime && startLoc && endLoc
-                ? createRouteStrings.seePath
-                : createRouteStrings.selectModeTimeOriginDestination}
-            </div>
-          )}
-        </MainMap>
-      </div>
+      {mapSection}
+
       <p className="font-semibold pt-4 pb-2 text-text-primary">
         {transitLegs.length > 0 ? createRouteStrings.transitDetails : ''}
       </p>
@@ -356,5 +418,6 @@ export default CreateRoute
 
 CreateRoute.propTypes = {
   initLoc: PropTypes.string,
+  eventTime: PropTypes.string,
   onSubmit: PropTypes.func.isRequired,
 }

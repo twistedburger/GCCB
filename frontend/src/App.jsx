@@ -7,106 +7,157 @@ import Co2Savings from './pages/dashboard/Co2Savings'
 import Commutes from './pages/dashboard/Commutes'
 import TripFrequency from './pages/dashboard/TripFrequency'
 import Activity from './pages/dashboard/Activity'
+import Badges from './pages/dashboard/Badges'
 import Login from './pages/Login'
 import CreateUser from './pages/CreateUser'
 import UserGuide from './pages/UserGuide'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { authLevel, AuthProvider } from './hooks/Authorization'
 import ProtectedRoute from './components/ProtectedRoute'
 import Filter from './pages/home/Filter'
 import EventDetail from './pages/home/EventDetail'
 import Moderate from './pages/moderate/Moderate'
+import BannedUsers from './pages/BannedUsers'
+import Chats from './pages/Chats'
+import Notifications from './pages/Notifications'
+import { useUser } from '../context/UserContext'
+import { UnreadMessagesProvider } from '../context/UnreadMessagesContext'
 
 function App() {
   const [userAuthenticated, setUserAuthenticated] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
   const [ssoProfile, setSsoProfile] = useState(null)
+  const baseURL = import.meta.env.VITE_API_BASE_URL
+  const frontendUrl = import.meta.env.VITE_FRONTEND_URL
+  const [bannedError] = useState(
+    new URLSearchParams(window.location.search).get('error') === 'banned'
+  )
+  const { user, setUser } = useUser()
+
+  const authenticateUser = useCallback(async () => {
+    try {
+      const response = await fetch(`${baseURL}/authenticateUser`, {
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        console.log(response.status, await response.json())
+        return
+      }
+
+      const data = await response.json()
+      if (data.banned) {
+        window.location.href = `${baseURL}/logoutRoute?returnTo=${encodeURIComponent(`${frontendUrl}/?error=banned`)}`
+        return
+      }
+      if (data) {
+        setUserAuthenticated(data.isAuthenticated)
+        setUser(data.user)
+        setSsoProfile(data.ssoProfile)
+      }
+    } catch (err) {
+      console.error(err.message)
+    }
+  }, [setUser]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     authenticateUser()
-  }, [])
-
-  async function authenticateUser() {
-    const response = await fetch('http://localhost:3000/authenticateUser', {
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.log(response.status + ' ' + errorText)
-      return
-    }
-    const responseJSON = await response.json()
-    if (responseJSON) {
-      setUserAuthenticated(responseJSON.isAuthenticated)
-      setCurrentUser(responseJSON.user)
-      setSsoProfile(responseJSON.ssoProfile)
-    }
-  }
+  }, [authenticateUser])
 
   return (
     <Router>
       <AuthProvider>
         <div className="app-container min-h-screen">
-          {/* pages */}
           <div className="relative w-full min-h-screen flex bg-background-off-white">
-            {userAuthenticated && currentUser && (
-              <Sidebar userRole={currentUser.role} />
-            )}{' '}
-            <main className="flex-1 overflow-y-auto">
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    !userAuthenticated ? (
-                      <Login />
-                    ) : !currentUser ? (
-                      <CreateUser
-                        ssoUser={ssoProfile}
-                        onUserCreated={setCurrentUser}
+            {userAuthenticated ? (
+              <UnreadMessagesProvider>
+                {user && <Sidebar userData={user} />}
+                <main className="flex-1 overflow-y-auto">
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        !user ? (
+                          <CreateUser
+                            ssoUser={ssoProfile}
+                            onUserCreated={newUser => {
+                              setUser(newUser)
+                              setUserAuthenticated(true)
+                            }}
+                          />
+                        ) : (
+                          <Home />
+                        )
+                      }
+                    >
+                      <Route path="filter" element={<Filter />} />
+                      <Route path="event/:id" element={<EventDetail />} />
+                    </Route>
+                    <Route
+                      element={
+                        <ProtectedRoute
+                          requiredAuthorization={authLevel.USER}
+                        />
+                      }
+                    >
+                      <Route path="/mytrip" element={<MyTrip />} />
+                      <Route path="/mytrip/:id" element={<MyTrip />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route
+                        path="/dashboard/co2-savings"
+                        element={<Co2Savings />}
                       />
-                    ) : (
-                      <Home />
-                    )
-                  }
-                >
-                  <Route path="filter" element={<Filter />} />
-                  <Route path="event/:id" element={<EventDetail />} />
-                </Route>
-                <Route
-                  element={
-                    <ProtectedRoute requiredAuthorization={authLevel.USER} />
-                  }
-                >
-                  <Route path="/mytrip" element={<MyTrip />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route
-                    path="/dashboard/co2-savings"
-                    element={<Co2Savings />}
-                  />
-                  <Route path="/dashboard/commutes" element={<Commutes />} />
-                  <Route
-                    path="/dashboard/trip-frequency"
-                    element={<TripFrequency />}
-                  />
-                  <Route path="/user-guide" element={<UserGuide />} />
-                </Route>
-                <Route
-                  element={
-                    <ProtectedRoute requiredAuthorization={authLevel.ADMIN} />
-                  }
-                >
-                  <Route path="/dashboard/activity" element={<Activity />} />
-                </Route>
-                <Route
-                  element={
-                    <ProtectedRoute
-                      requiredAuthorization={authLevel.MODERATOR}
-                    />
-                  }
-                >
-                  <Route path="/moderate" element={<Moderate />} />
-                </Route>
-              </Routes>
-            </main>
+                      <Route
+                        path="/dashboard/commutes"
+                        element={<Commutes />}
+                      />
+                      <Route
+                        path="/dashboard/trip-frequency"
+                        element={<TripFrequency />}
+                      />
+                      <Route path="/dashboard/badges" element={<Badges />} />
+                      <Route
+                        path="/dashboard/badges/:id"
+                        element={<Badges />}
+                      />
+                      <Route path="/user-guide" element={<UserGuide />} />
+                      <Route path="/bannedusers" element={<BannedUsers />} />
+                      <Route path="/chats/*" element={<Chats />} />
+                      <Route
+                        path="/notifications"
+                        element={<Notifications />}
+                      />
+                    </Route>
+                    <Route
+                      element={
+                        <ProtectedRoute
+                          requiredAuthorization={authLevel.ADMIN}
+                        />
+                      }
+                    >
+                      <Route
+                        path="/dashboard/activity"
+                        element={<Activity />}
+                      />
+                    </Route>
+                    <Route
+                      element={
+                        <ProtectedRoute
+                          requiredAuthorization={authLevel.MODERATOR}
+                        />
+                      }
+                    >
+                      <Route path="/moderate" element={<Moderate />} />
+                    </Route>
+                  </Routes>
+                </main>
+              </UnreadMessagesProvider>
+            ) : (
+              <main className="flex-1 overflow-y-auto">
+                <Routes>
+                  <Route path="*" element={<Login error={bannedError} />} />
+                </Routes>
+              </main>
+            )}
           </div>
         </div>
       </AuthProvider>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import GenericToggle from '../components/GenericToggle'
 import RouteCardWrapper from '../components/RouteCardWrapper'
 import Modal from '../components/Modal'
@@ -6,6 +6,20 @@ import Report from '../components/Report'
 import RouteCard from '../components/RouteCard'
 import Alert from '../components/Alert'
 import ConfirmationDialog from '../components/ConfirmationDialog'
+import { useUser } from '../../context/UserContext'
+import { useChatRoom } from '../hooks/UseChatRoom'
+import { useNavigate } from 'react-router-dom'
+import { myTripsStrings } from '../locales/en/MyTripsStrings'
+import {
+  fetchMyTrips,
+  confirmTripAction,
+  getConfirmationTitle,
+  getConfirmationBody,
+  shouldHideReportJoin,
+} from '../utils/MyTripsUtils'
+import { useParams } from 'react-router-dom'
+import HighlightCard from '../components/HighlightCard'
+import { useRouteActions } from '../../context/RouteActionsContext'
 
 /**
  * Display the MyTrips page
@@ -17,10 +31,27 @@ export default function MyTrips() {
   const [completedTrips, setCompletedTrips] = useState([])
   const [viewingActive, setViewingActive] = useState(true)
   const [mapsReady, setMapsReady] = useState(!!window.google?.maps)
-  const [confirmLeave, setConfirmLeave] = useState(null)
   const [reportData, setReportData] = useState(null)
   const [showReport, setShowReport] = useState(false)
+  const [pendingAction, setPendingAction] = useState({ type: null, trip: null })
   const [alert, setAlert] = useState(null)
+  const { user } = useUser()
+  const chat = useChatRoom(user)
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const cardRefs = useRef({})
+  const { toggleJoin } = useRouteActions()
+
+  useEffect(() => {
+    if (!id) return
+
+    if (cardRefs.current[parseInt(id)]) {
+      cardRefs.current[parseInt(id)].scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    }
+  }, [id, activeTrips])
 
   useEffect(() => {
     if (window.google?.maps) {
@@ -36,54 +67,73 @@ export default function MyTrips() {
     return () => clearInterval(interval)
   }, [])
 
-  const fetchMyTrips = async () => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/my-trips`, {
-        credentials: 'include',
-      })
-      const data = await response.json()
-      if (!Array.isArray(data)) return
-
-      setActiveTrips(data.filter(trip => !trip.completed))
-      setCompletedTrips(data.filter(trip => trip.completed))
-    } catch (err) {
-      console.error('Fetch error:', err)
-    }
-  }
-
   useEffect(() => {
-    fetchMyTrips()
+    fetchMyTrips(setActiveTrips, setCompletedTrips).catch(console.error)
   }, [])
 
   const tripsToDisplay = viewingActive ? activeTrips : completedTrips
 
-  const handleLeave = async () => {
-    await fetch(`http://localhost:3000/api/routes/${confirmLeave.id}/leave`, {
-      method: 'DELETE',
-      credentials: 'include',
+  const handleOpenChat = trip => {
+    const room = chat.rooms.find(room => room.route_id === trip.id)
+    if (!room) return
+    navigate('/chats', { state: { openRoomId: room.id } })
+  }
+
+  const handleToggleJoin = trip =>
+    toggleJoin(trip, ({ routeId, joined, deleted }) => {
+      if (deleted || !joined) {
+        fetchMyTrips(setActiveTrips, setCompletedTrips).catch(console.error)
+      } else {
+        const updater = trips =>
+          trips.map(trip =>
+            trip.id === routeId
+              ? {
+                  ...trip,
+                  isJoined: joined,
+                  people_going: joined
+                    ? (parseInt(trip.people_going) || 0) + 1
+                    : Math.max(0, (parseInt(trip.people_going) || 0) - 1),
+                }
+              : trip
+          )
+        setActiveTrips(updater)
+        setCompletedTrips(updater)
+      }
     })
-    await fetchMyTrips()
-    setConfirmLeave(null)
+
+  const handleConfirm = async () => {
+    try {
+      await confirmTripAction(
+        pendingAction,
+        setAlert,
+        setActiveTrips,
+        setCompletedTrips,
+        setPendingAction
+      )
+    } catch (error) {
+      console.error(error)
+      setAlert({ message: myTripsStrings.actionError, type: 'error' })
+    }
   }
 
   return (
     <div>
-      <div className="*:ml-13.75">
-        <ConfirmationDialog
-          isOpen={confirmLeave !== null}
-          onConfirm={handleLeave}
-          onClose={() => setConfirmLeave(null)}
-          title="Leave Route"
-          confirmText={'OK'}
-          cancelText={'Cancel'}
-          variant="primary"
-        >
-          Are you sure you want to leave this route?
-        </ConfirmationDialog>
+      <div className="fixed inset-y-0 right-0 left-13.75 z-50 pointer-events-none">
+        <div className="pointer-events-auto">
+          <ConfirmationDialog
+            isOpen={pendingAction.type !== null}
+            onConfirm={handleConfirm}
+            onClose={() => setPendingAction({ type: null, trip: null })}
+            title={getConfirmationTitle(pendingAction.type)}
+            variant="primary"
+          >
+            {getConfirmationBody(pendingAction.type)}
+          </ConfirmationDialog>
+        </div>
       </div>
       {alert && (
         <Alert
-          message={alert.text}
+          message={alert.message}
           type={alert.type}
           onTimeout={() => setAlert(null)}
         />
@@ -93,52 +143,68 @@ export default function MyTrips() {
           <GenericToggle
             value={viewingActive}
             onChange={setViewingActive}
-            labels={['Active Trips', 'Completed Trips']}
+            labels={[myTripsStrings.activeTrips, myTripsStrings.completedTrips]}
           />
         </div>
         <div className="flex flex-col gap-4">
           {tripsToDisplay.map(trip => (
-            <RouteCardWrapper key={trip.id} route={trip} mapsReady={mapsReady}>
-              <div className="*:shadow-white">
-                <RouteCard
-                  route={trip}
-                  individualView={true}
-                  routeDetailView={true}
-                  isCompleted={trip.completed}
-                  onToggleJoin={() => setConfirmLeave(trip)}
-                  onReport={trip => {
-                    {
-                      setReportData(trip)
+            <HighlightCard
+              key={trip.id}
+              ref={element => (cardRefs.current[trip.id] = element)}
+              shouldFlash={trip.id === parseInt(id)}
+            >
+              <RouteCardWrapper
+                route={trip}
+                mapsReady={mapsReady}
+                onReport={trip => {
+                  setReportData(trip)
+                  setShowReport(true)
+                }}
+                onComplete={() => setPendingAction({ type: 'complete', trip })}
+                onIncomplete={() =>
+                  setPendingAction({ type: 'incomplete', trip })
+                }
+              >
+                <div className="*:shadow-white">
+                  <RouteCard
+                    route={trip}
+                    individualView={true}
+                    routeDetailView={true}
+                    isCompleted={trip.completed}
+                    onToggleJoin={() => handleToggleJoin(trip)}
+                    onReport={data => {
+                      setReportData(data)
                       setShowReport(true)
-                    }
-                  }}
-                />
-              </div>
-            </RouteCardWrapper>
+                    }}
+                    hideReportJoin={shouldHideReportJoin(trip.depart_time)}
+                    onOpenChat={() => handleOpenChat(trip)}
+                  />
+                </div>
+              </RouteCardWrapper>
+            </HighlightCard>
           ))}
         </div>
       </div>
-      <Modal
-        isOpen={showReport}
-        onClose={() => setShowReport(false)}
-        title={'Report Route'}
-      >
-        <Report
-          type={'route'}
-          targetId={reportData?.id}
-          onClose={() => setShowReport(false)}
-          setAlert={reportAlert => {
-            if (!reportAlert?.type) return
-            setAlert({
-              type: reportAlert.type,
-              text:
-                reportAlert.type === 'success'
-                  ? 'Report submitted successfully.'
-                  : 'Failed to submit report.',
-            })
-          }}
-        />
-      </Modal>
+      <div className="*:ml-13.75">
+        <div className="fixed inset-0 z-9999 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto">
+            <Modal
+              isOpen={showReport}
+              onClose={() => setShowReport(false)}
+              title={myTripsStrings.reportTitle}
+            >
+              {reportData && (
+                <Report
+                  type={'route'}
+                  targetId={reportData?.targetId}
+                  onClose={() => setShowReport(false)}
+                  setAlert={setAlert}
+                />
+              )}
+            </Modal>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -4,8 +4,9 @@ import AnalyticsBlock from '../../components/analytics/AnalyticsBlock'
 import KpiGrid from '../../components/analytics/KpiGrid'
 import Select from 'react-select'
 import GenericButton from '../../components/GenericButton'
-import { formatKg, formatKm } from '../../utils/AnalyticsHelpers'
+import { formatKg, formatKm } from '../../utils/AnalyticsUtils'
 import { analyticsStrings } from '../../locales/en/AnalyticsStrings'
+import { TransportMode } from '../../../../shared/TransportModes'
 
 const commuteStrings = analyticsStrings.commutes
 
@@ -29,7 +30,7 @@ function Commutes() {
         setError('')
 
         const response = await fetch(
-          'http://localhost:3000/api/commute-history',
+          `${import.meta.env.VITE_API_BASE_URL}/api/commute-history`,
           {
             credentials: 'include',
           }
@@ -59,16 +60,16 @@ function Commutes() {
    * "bus", "rail", "car", or "other".
    */
   function normalizeMode(rawMode) {
-    if (!rawMode) return 'other'
+    if (!rawMode) return TransportMode.OTHER.key
 
     const value = String(rawMode).trim().toLowerCase()
 
-    if (['walk', 'walking'].includes(value)) return 'walk'
+    if (['walk', 'walking'].includes(value)) return TransportMode.WALK.key
     if (['bicycle', 'bike', 'cycling', 'cycle', 'bicycling'].includes(value)) {
-      return 'bicycle'
+      return TransportMode.BICYCLE.key
     }
     if (['bus', 'transit', 'intercity_bus', 'trolleybus'].includes(value)) {
-      return 'bus'
+      return TransportMode.TRANSIT.key
     }
     if (
       [
@@ -86,11 +87,12 @@ function Commutes() {
         'monorail',
       ].includes(value)
     ) {
-      return 'rail'
+      return TransportMode.RAIL.key
     }
-    if (['car', 'carpool', 'drive', 'driving'].includes(value)) return 'car'
+    if (['car', 'carpool', 'drive', 'driving'].includes(value))
+      return TransportMode.CAR.key
 
-    return 'other'
+    return TransportMode.OTHER.key
   }
 
   /**
@@ -174,16 +176,16 @@ function Commutes() {
   /**
    * Formats a departure time value into a readable string.
    *
-   * @param {string} value The departure time as a date string or object.
+   * @param {string} dateValue The departure time as a date string or object.
    * @returns {string} A formatted date string.
    */
-  function formatDepartTime(value) {
-    if (!value) return 'No departure time'
+  function formatDepartTime(dateValue) {
+    if (!dateValue) return commuteStrings.history.noDepartTime
 
-    const date = new Date(value)
+    const date = new Date(dateValue)
 
     if (Number.isNaN(date.getTime())) {
-      return 'Invalid date'
+      return commuteStrings.history.invalidDate
     }
 
     return date.toLocaleString()
@@ -191,25 +193,25 @@ function Commutes() {
 
   /**
    * Formats a route mode value into a string.
-   * @param {string} value The raw route mode value
+   * @param {string} modeValue The raw route mode value
    * @returns {string} A string representing the route mode.
    */
-  function formatRouteMode(value) {
-    const normalized = normalizeMode(value)
+  function formatRouteMode(modeValue) {
+    const normalized = normalizeMode(modeValue)
 
     switch (normalized) {
-      case 'walk':
-        return 'Walk'
-      case 'bicycle':
-        return 'Bicycle'
-      case 'bus':
-        return 'Bus'
-      case 'rail':
-        return 'Rail'
-      case 'car':
-        return 'Car / Carpool'
+      case TransportMode.WALK.key:
+        return commuteStrings.route.modes.walk
+      case TransportMode.BICYCLE.key:
+        return commuteStrings.route.modes.bicycle
+      case TransportMode.TRANSIT.key:
+        return commuteStrings.route.modes.transit
+      case TransportMode.RAIL.key:
+        return commuteStrings.route.modes.rail
+      case TransportMode.CAR.key:
+        return commuteStrings.route.modes.car
       default:
-        return 'Other'
+        return commuteStrings.route.modes.other
     }
   }
 
@@ -245,9 +247,9 @@ function Commutes() {
                 {commuteStrings.blocks.filters.dateRangeLabel}
               </label>
               <Select
-                options={['all', '7d', '30d'].map(r => ({
-                  value: r,
-                  label: r,
+                options={['all', '7d', '30d'].map(rangeOption => ({
+                  value: rangeOption,
+                  label: rangeOption,
                 }))}
                 value={{ value: dateRange, label: dateRange }}
                 onChange={e => setDateRange(e.value)}
@@ -261,28 +263,23 @@ function Commutes() {
               <Select
                 options={[
                   'all',
-                  'walk',
-                  'bicycle',
-                  'bus',
-                  'rail',
-                  'car',
-                  'other',
-                ].map(r => ({
-                  value: r,
+                  ...Object.values(TransportMode).map(mode => mode.key),
+                ].map(modeOption => ({
+                  value: modeOption,
                   label:
-                    r === 'all'
-                      ? 'All'
-                      : r === 'walk'
-                        ? 'Walk'
-                        : r === 'bicycle'
-                          ? 'Bicycle'
-                          : r === 'bus'
-                            ? 'Bus'
-                            : r === 'rail'
-                              ? 'Rail'
-                              : r === 'car'
-                                ? 'Car / Carpool'
-                                : 'Other',
+                    modeOption === 'all'
+                      ? commuteStrings.route.modes.all
+                      : modeOption === TransportMode.WALK.key
+                        ? commuteStrings.route.modes.walk
+                        : modeOption === TransportMode.BICYCLE.key
+                          ? commuteStrings.route.modes.bicycle
+                          : modeOption === TransportMode.TRANSIT.key
+                            ? commuteStrings.route.modes.transit
+                            : modeOption === TransportMode.RAIL.key
+                              ? commuteStrings.route.modes.rail
+                              : modeOption === TransportMode.CAR.key
+                                ? commuteStrings.route.modes.car
+                                : commuteStrings.route.modes.other,
                 }))}
                 value={{ value: mode, label: mode }}
                 onChange={e => setMode(e.value)}

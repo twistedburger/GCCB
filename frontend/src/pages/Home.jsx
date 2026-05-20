@@ -18,11 +18,17 @@ import {
   handleFormResult,
   locationSetError,
   locationSetSuccess,
+  reverseGeocode,
+  hasMapPanned,
 } from '../utils/HomeUtils'
 import DisplayFilters from '../components/DisplayFilters'
 import MainMap from '../components/MainMap'
 import { createPortal } from 'react-dom'
 import { CircularProgress } from '@mui/material'
+import { homeStrings } from '../locales/en/HomeStrings'
+import { reportStrings } from '../locales/en/ComponentStrings/ReportStrings'
+import { postGISToLatLng } from '../utils/MainMapUtils'
+import { useRouteActions } from '../../context/RouteActionsContext'
 
 const originalWarn = console.warn
 console.warn = (...args) => {
@@ -67,6 +73,11 @@ function Home() {
   const [loading, setLoading] = useState(true)
   const [searchAddress, setSearchAddress] = useState('')
   const locationSearchRef = useRef(null)
+  const [createEventLocation, setCreateEventLocation] = useState(null)
+  const [createEventLatLng, setCreateEventLatLng] = useState(null)
+  const [mapCenter, setMapCenter] = useState(null)
+  const [hasPanned, setHasPanned] = useState(false)
+  const { toggleJoin } = useRouteActions()
 
   const { authorizeUser } = useAuth()
   authorizeUser()
@@ -80,28 +91,52 @@ function Home() {
     }
   }
 
-  const fetchCards = useCallback(() => {
+  const fetchCards = useCallback(async () => {
     if (!userLocation) return
     setLoading(true)
-    const apiMainEvents = isArriving ? filters.mainEventsOnly : false
-    const url = buildSearchURL(
-      { ...filters, mainEventsOnly: apiMainEvents },
-      userLocation,
-      isArriving
-    )
-    fetch(url, { credentials: 'include' })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error: ${res.status}`)
-        return res.json()
+
+    try {
+      const apiMainEvents = isArriving ? filters.mainEventsOnly : false
+      const searchUrl = buildSearchURL(
+        { ...filters, mainEventsOnly: apiMainEvents },
+        userLocation,
+        isArriving,
+        import.meta.env.VITE_API_BASE_URL
+      )
+      const searchRes = await fetch(searchUrl, { credentials: 'include' })
+      const searchData = await searchRes.json()
+
+      const myTripsRes = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/myTrips`,
+        {
+          credentials: 'include',
+        }
+      )
+      const myTripsData = await myTripsRes.json()
+      const joinedIds = new Set(myTripsData.map(trip => trip.id))
+
+      const processedData = searchData.map(item => {
+        if (item.routes) {
+          return {
+            ...item,
+            routes: item.routes.map(route => ({
+              ...route,
+              isJoined: joinedIds.has(route.id),
+            })),
+          }
+        }
+        return {
+          ...item,
+          isJoined: joinedIds.has(item.id),
+        }
       })
-      .then(data => {
-        setCardsToDisplay(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Failed to fetch:', err)
-        setLoading(false)
-      })
+
+      setCardsToDisplay(processedData)
+      setLoading(false)
+    } catch (err) {
+      console.error('Failed to fetch:', err)
+      setLoading(false)
+    }
   }, [filters, userLocation, isArriving])
 
   const handleRouteClick = route => {
@@ -133,6 +168,61 @@ function Home() {
     setFilters(DEFAULT_FILTERS)
   }, [userLocation])
 
+  const handleJoinSuccess = useCallback(({ routeId, joined, deleted }) => {
+    if (deleted) {
+      setCardsToDisplay(prev => prev.filter(card => card.id !== routeId))
+      setSelectedRoute(prev =>
+        Number(prev?.id) === Number(routeId) ? null : prev
+      )
+      return
+    }
+
+    setCardsToDisplay(prev =>
+      prev.map(card => {
+        if (card.id === routeId) {
+          return {
+            ...card,
+            isJoined: joined,
+            people_going: joined
+              ? (parseInt(card.people_going) || 0) + 1
+              : Math.max(0, (parseInt(card.people_going) || 0) - 1),
+          }
+        }
+        if (card.routes) {
+          return {
+            ...card,
+            routes: card.routes.map(route =>
+              Number(route.id) === Number(routeId)
+                ? {
+                    ...route,
+                    isJoined: joined,
+                    people_going: joined
+                      ? (parseInt(route.people_going) || 0) + 1
+                      : Math.max(0, (parseInt(route.people_going) || 0) - 1),
+                  }
+                : route
+            ),
+          }
+        }
+        return card
+      })
+    )
+
+    setSelectedRoute(prev =>
+      prev && Number(prev.id) === Number(routeId)
+        ? {
+            ...prev,
+            isJoined: joined,
+            people_going: joined
+              ? (parseInt(prev.people_going) || 0) + 1
+              : Math.max(0, (parseInt(prev.people_going) || 0) - 1),
+          }
+        : prev
+    )
+  }, [])
+
+  const handleToggleJoin = trip => toggleJoin(trip, handleJoinSuccess)
+
   return (
     <div
       id="app-container"
@@ -149,19 +239,76 @@ function Home() {
 
       <div>
         <MainMap
+          key={
+            userLocation
+              ? `${userLocation.lat}-${userLocation.lng}`
+              : 'loading-location'
+          }
           defaultCenter={userLocation || DEFAULT_COORDINATES}
           route={selectedRoute}
-          defaultPin={true}
+          events={cardsToDisplay.flatMap(item => {
+            if (item.origin_coords) {
+              const coords = isArriving
+                ? item.destination_coords
+                : item.origin_coords
+              if (!coords) return []
+              return [
+                {
+                  ...item,
+                  lat: coords[1],
+                  lng: coords[0],
+                },
+              ]
+            }
+            return [
+              {
+                ...item,
+                ...postGISToLatLng(item.location_geog),
+              },
+            ]
+          })}
+          onRouteClick={route => {
+            setSelectedRoute(route)
+            setSnapPoint(0.085)
+          }}
+          onMapClick={async ({ lat, lng }) => {
+            const address = await reverseGeocode({ lat, lng })
+            setCreateEventLocation(address)
+            setCreateEventLatLng([lat, lng])
+            setShowCreateEvent(true)
+          }}
+          onCenterChanged={({ lat, lng }) => {
+            if (!userLocation) return
+            if (hasMapPanned({ lat, lng }, userLocation)) {
+              setMapCenter({ lat, lng })
+              setHasPanned(true)
+            }
+          }}
+          searchRadius={filters.radius}
         />
 
         {!selectedRoute && !isEventDetail && (
           <LocationSearch
             clearRef={locationSearchRef}
+            displayValue={searchAddress}
             className="rounded-xl absolute inset-x-0 top-0 m-12 z-10 w-auto overflow-visible shadow-[inset_0_2px_4px_0_rgba(0,0,0,0.08)]
             focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
             onSearch={handleSearch}
             disabled={loading}
           />
+        )}
+        {hasPanned && !selectedRoute && !isEventDetail && (
+          <button
+            className="absolute top-26 left-1/2 -translate-x-1/2 z-10 bg-background-off-white text-sm font-medium px-4 py-2 rounded-full shadow-md text-text-primary"
+            onClick={async () => {
+              const address = await reverseGeocode(mapCenter)
+              setSearchAddress(address)
+              setUserLocation(mapCenter)
+              setHasPanned(false)
+            }}
+          >
+            {homeStrings.location.searchThisArea}
+          </button>
         )}
         <Drawer.Root
           open={true}
@@ -176,12 +323,12 @@ function Home() {
         >
           <Drawer.Portal>
             <Drawer.Content
-              onOpenAutoFocus={e => e.preventDefault()}
-              onFocusOutside={e => e.preventDefault()}
-              onFocus={e => {
-                if (e.target === e.currentTarget) {
-                  e.preventDefault()
-                  e.stopPropagation()
+              onOpenAutoFocus={event => event.preventDefault()}
+              onFocusOutside={event => event.preventDefault()}
+              onFocus={event => {
+                if (event.target === event.currentTarget) {
+                  event.preventDefault()
+                  event.stopPropagation()
                 }
               }}
               style={{
@@ -198,9 +345,11 @@ function Home() {
                 pointerEvents: 'auto',
               }}
             >
-              <Drawer.Title className="sr-only">Search Results</Drawer.Title>
+              <Drawer.Title className="sr-only">
+                {homeStrings.a11y.drawerTitle}
+              </Drawer.Title>
               <Drawer.Description className="sr-only">
-                Search results near your location
+                {homeStrings.a11y.drawerDescription}
               </Drawer.Description>
               <div
                 className="flex justify-center p-6"
@@ -221,7 +370,10 @@ function Home() {
                     <GenericToggle
                       value={isArriving}
                       onChange={() => setIsArriving(!isArriving)}
-                      labels={['Arriving Near', 'Departing Near']}
+                      labels={[
+                        homeStrings.toggle.arriving,
+                        homeStrings.toggle.departing,
+                      ]}
                       className="shrink-0"
                     />
                     <GenericButton
@@ -245,8 +397,8 @@ function Home() {
                       {searchAddress ||
                         (userLocation?.lat === DEFAULT_COORDINATES.lat &&
                         userLocation?.lng === DEFAULT_COORDINATES.lng
-                          ? 'Vancouver, BC'
-                          : 'Current Location')}
+                          ? 'Vancouver, BC' // still a hard coded string, but only used as a fallback during development
+                          : homeStrings.location.current)}
                     </GenericButton>
                     <div
                       className="flex gap-2 overflow-x-auto pb-0.5 shrink-0"
@@ -265,7 +417,7 @@ function Home() {
                     </div>
                   ) : cardsToDisplay.length === 0 ? (
                     <p className="text-text-secondary text-sm text-center py-4">
-                      No results found. Try adjusting your filters.
+                      {homeStrings.emptyState}
                     </p>
                   ) : (
                     cardsToDisplay.map(item =>
@@ -283,6 +435,7 @@ function Home() {
                         <RouteCard
                           key={item.id}
                           route={item}
+                          onToggleJoin={() => handleToggleJoin(item)}
                           individualView={true}
                           onSelect={handleRouteClick}
                         />
@@ -294,14 +447,21 @@ function Home() {
             </Drawer.Content>
           </Drawer.Portal>
         </Drawer.Root>
-        <RouteDetail
-          selectedRoute={isEventDetail ? null : selectedRoute}
-          onClose={() => {
-            setSelectedRoute(null)
-            setSnapPoint(1)
-          }}
-          setAlert={setAlert}
-        />
+        {!isEventDetail && location.pathname === '/' && (
+          <RouteDetail
+            selectedRoute={
+              cardsToDisplay
+                .flatMap(item => (item.routes ? item.routes : [item]))
+                .find(route => route.id === selectedRoute?.id) || selectedRoute
+            }
+            onJoinSuccess={handleJoinSuccess}
+            onClose={() => {
+              setSelectedRoute(null)
+              setSnapPoint(1)
+            }}
+            setAlert={setAlert}
+          />
+        )}
         <Outlet
           context={{ filters, setFilters, setSelectedRoute, setSnapPoint }}
         />
@@ -311,9 +471,15 @@ function Home() {
         createPortal(
           <Modal
             isOpen={showCreateEvent}
-            onClose={() => setShowCreateEvent(false)}
+            onClose={() => {
+              setShowCreateEvent(false)
+              setCreateEventLocation(null)
+              setCreateEventLatLng(null)
+            }}
           >
             <CreateEvent
+              initLoc={createEventLocation}
+              initLatLng={createEventLatLng}
               onSubmit={result =>
                 handleFormResult(result, {
                   setShowCreateEvent,
@@ -331,7 +497,11 @@ function Home() {
           <Modal
             isOpen={showReport}
             onClose={() => setShowReport(false)}
-            title={reportData ? `Report ${reportData.title}` : 'Report'}
+            title={
+              reportData
+                ? homeStrings.report.modalTitleWithName(reportData.title)
+                : homeStrings.report.modalTitle
+            }
           >
             {reportData && (
               <Report
@@ -344,8 +514,8 @@ function Home() {
                     type: reportAlert.type,
                     text:
                       reportAlert.type === 'success'
-                        ? 'Report submitted successfully.'
-                        : 'Failed to submit report.',
+                        ? reportStrings.reportSuccess
+                        : reportStrings.reportFailed,
                   })
                 }}
               />
