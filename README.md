@@ -98,7 +98,7 @@ Navigate to the backend folder in the new instance:
 
 Start the server with the following command:
 
-`npm run start`
+`npm run start:dev`
 
 This window will now have the server running and ready to listen. 
 
